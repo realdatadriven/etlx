@@ -39,7 +39,7 @@ By leveraging DuckDB's powerful in-memory processing capabilities, this framewor
 ### **1. Define ETL Configuration in Markdown**
 Create a Markdown file with the ETL process configuration. For example:
 
-```markdown
+````markdown
 # ETL
 ```yaml etl
 name: Daily_ETL
@@ -48,7 +48,6 @@ database: analytics_db
 connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
-```markdown
 # EXTRACT
 ## sales_data
 ```yaml etl_sales
@@ -60,14 +59,13 @@ extract_sql: extract_sales
 load_conn: 'duckdb:memory'
 load_sql: load_sales
 ```
-```markdown
 ```sql extract_sales
 SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
 ```
-```markdown
 ```sql load_sales
 CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ```
+````
 
 ### **2. Parse the Markdown File**
 - Parse the Markdown file to extract:
@@ -100,7 +98,7 @@ periodicity: '0 5 * * *'
 
 ### **Validation Rules**
 Validation is performed during the load phase using YAML:
-\```yaml
+```yaml
 load_validation:
   - type: throw_if_empty
     sql: validate_data_not_empty
@@ -108,44 +106,40 @@ load_validation:
   - type: throw_if_not_empty
     sql: validate_data_duplicates
     msg: 'Duplicate data detected!'
-\```
+```
 
 ---
 
 ## **Example Use Case**
 
 Markdown File (`etl_config.md`):
-```markdown
+````markdown
 # ETL
-``````yaml etl
-name: Monthly_Sales_ETL
-description: 'Monthly sales data extraction'
-database: sales_db
-connection: 'postgres://user:pass@localhost:5432/sales_db'
-periodicity: '0 0 1 * *'
-``````
-
-# EXTRACT
-## sales
-``````yaml etl_sales
-name: SalesData
-description: 'Sales Data Extraction'
-source: sales
-extract_conn: 'mysql://user:pass@localhost:3306/sales'
-extract_sql: sales_extract_sql
-load_conn: 'duckdb:memory'
-load_sql: sales_load_sql
-``````
+```yaml etl
+name: Daily_ETL
+description: 'Daily extraction at 5 AM'
+database: analytics_db
+connection: 'postgres://user:pass@localhost:5432/analytics_db'
+periodicity: '0 5 * * *'
 ```
-
-\```sql sales_extract_sql
-SELECT * FROM sales WHERE sale_month = '{YYYYMM}'
-\```
-
-\```sql sales_load_sql
+# EXTRACT
+## sales_data
+```yaml etl_sales
+name: SalesData
+description: 'Daily Sales Data'
+source: sales_db
+extract_conn: 'mysql://user:pass@localhost:3306/sales'
+extract_sql: extract_sales
+load_conn: 'duckdb:memory'
+load_sql: load_sales
+```
+```sql extract_sales
+SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
+```
+```sql load_sales
 CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
-\```
-\```
+```
+````
 
 ---
 
@@ -161,30 +155,30 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ## **Getting Started**
 
 1. **Install DuckDB**:
-   \```bash
+   ```bash
    pip install duckdb  # Or download the binary for your platform
-   \```
+   ```
 
 2. **Clone the Repository**:
-   \```bash
+   ```bash
    git clone https://github.com/your-repo/markdown-etl
    cd markdown-etl
-   \```
+   ```
 
 3. **Run the ETL Process**:
-   \```bash
+   ```bash
    go run main.go --config etl_config.md
-   \```
+   ```
 
 4. **Schedule the Process** (Optional):
    - Use cron to schedule the script:
-     \```bash
+     ```bash
      crontab -e
-     \```
+     ```
      Add:
-     \```bash
+     ```bash
      0 5 * * * /path/to/etl_runner.sh
-     \```
+     ```
 
 ---
 
