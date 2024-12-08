@@ -181,6 +181,34 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      ```
 
 ---
+### **How the configuration works**
+
+1. **ETL Process Starts**:
+   - Begin with the `"ETL"` key.
+   - Extract metadata, specifically:
+     - `"connection"`: Main connection to the destination database.
+     - `"description"`: For logging the start and end time of the ETL process.
+
+2. **Loop through `"EXTRACT"`**:
+   - Iterate over each key (e.g., `"sales_data"`) in `"EXTRACT"`.
+   - For each key, access its `"metadata"` to process the ETL steps.
+
+3. **ETL Steps**:
+   - Each ETL step (`Extract`, `Transform`, `Load`) has:
+     - `_before_sql`: Queries to run first (setup).
+     - `_sql`: The main query or queries to run.
+     - `_after_sql`: Cleanup queries to run afterward.
+   - Queries can be:
+     - `nil`: Do nothing.
+     - `string`: Reference a single query key in the same map.
+     - `slice of strings`: Execute all queries in sequence.
+   - Use `_conn` for connection settings. If `nil`, fall back to the main connection.
+
+4. **Output Logs**:
+   - Log progress (e.g., connection usage, start/end times, descriptions).
+   - Gracefully handle missing or `nil` keys.
+
+---
 
 ## **License**
 
