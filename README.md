@@ -161,8 +161,8 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 
 2. **Clone the Repository**:
    ```bash
-   git clone https://github.com/your-repo/markdown-etl
-   cd markdown-etl
+   git clone https://github.com/realdatadriven/etlx.git
+   cd etlx
    ```
 
 3. **Run the ETL Process**:
