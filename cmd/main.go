@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	PrintConfigAsJSON(etl.Config)
+	// PrintConfigAsJSON(etl.Config)
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
