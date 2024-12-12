@@ -36,7 +36,7 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	// PrintConfigAsJSON(etl.Config)
+	PrintConfigAsJSON(etl.Config)
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -66,5 +66,16 @@ func main() {
 	err = etl.ProcessETL(etl.Config, runner)
 	if err != nil {
 		log.Fatalf("ETL failed: %v", err)
+	}
+
+	// Define the runner as a simple function
+	runnerKey := func(metadata map[string]any, item map[string]any) error {
+		fmt.Println(metadata, item)
+		return nil
+	}
+	// Process the MD KEY
+	err = etl.ProcessMDKey("DATA_QUALITY", etl.Config, runnerKey)
+	if err != nil {
+		log.Fatalf("DATA_QUALITY failed: %v", err)
 	}
 }

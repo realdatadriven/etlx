@@ -1,6 +1,7 @@
 package etlx
 
 import (
+	"bytes"
 	"fmt"
 	"log"
 	"os"
@@ -36,12 +37,95 @@ func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
+func (etlx *ETLX) ParseMarkdownToConfig_(reader text.Reader) error {
+	parser := goldmark.DefaultParser()
+	root := parser.Parse(reader)
+
+	// Initialize the result map
+	config := make(map[string]any)
+	current := config // Reference to the current level of the map
+
+	// Walk through the AST
+	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			switch n := node.(type) {
+			case *ast.Heading:
+				// Extract the heading text
+				var headingText strings.Builder
+				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
+					if textNode, ok := child.(*ast.Text); ok {
+						headingText.WriteString(string(textNode.Value(reader.Source())))
+					}
+				}
+				heading := headingText.String()
+
+				// Create a new section under the current map reference
+				if _, exists := current[heading]; !exists {
+					current[heading] = make(map[string]any)
+				}
+
+				// Update the current map reference to the new section
+				current = current[heading].(map[string]any)
+
+			case *ast.FencedCodeBlock:
+				// Extract info and content from the code block
+				info := string(n.Info.Segment.Value(reader.Source()))
+				content := string(n.Text(reader.Source()))
+
+				// Process YAML blocks
+				if strings.HasPrefix(info, "yaml") {
+					key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+					yamlContent := make(map[string]any)
+					if err := yaml.Unmarshal([]byte(content), &yamlContent); err != nil {
+						log.Printf("Error parsing YAML block %s: %v", key, err)
+					} else {
+						current[key] = yamlContent
+					}
+				} else if strings.HasPrefix(info, "sql") {
+					// Process SQL blocks
+					key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
+					current[key] = content
+				}
+			}
+		} else if node.Kind() == ast.KindHeading {
+			// Move up one level for closing a heading node
+			current = config // Reset to the root on heading exit
+		}
+		return ast.WalkContinue, nil
+	})
+	etlx.Config = config
+	return nil
+}
+
+// TracebackHeaders traces headers from the current node up to the top-level header.
+func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
+	var headers []string
+	// Traverse up the AST tree
+	for current := node; current != nil; current = current.Parent() {
+		// Check if the node is a Heading
+		if heading, ok := current.(*ast.Heading); ok {
+			var headerText bytes.Buffer
+			// Collect the text content of the heading
+			for child := heading.FirstChild(); child != nil; child = child.NextSibling() {
+				if textNode, ok := child.(*ast.Text); ok {
+					headerText.Write(textNode.Segment.Value(source))
+				}
+			}
+			// Add the header text to the list
+			headers = append([]string{headerText.String()}, headers...)
+		}
+	}
+	return headers
+}
+
+// ParseMarkdownToConfig parses a Markdown file into a structured nested map
+func (etlx *ETLX) ParseMarkdownToConfig2(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader)
 	// Initialize the result map and a parent stack
 	config := make(map[string]any)
+	//config2 := make(map[string]any)
 	parents := []map[string]any{config} // Stack of parent references for each level
 	// Walk through the AST
 	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
@@ -60,6 +144,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				for len(parents) <= int(n.Level) {
 					parents = append(parents, nil)
 				}
+				// Reset the stack for deeper levels
+				for i := int(n.Level); i < len(parents); i++ {
+					parents[i] = nil
+				}
 				// Create or switch to the appropriate section
 				parent := parents[n.Level-1]
 				if parent == nil {
@@ -68,6 +156,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				if _, exists := parent[heading]; !exists {
 					parent[heading] = make(map[string]any)
 				}
+				//fmt.Println(n.Level, heading)
 				// Update the parent reference for the current level
 				parents[n.Level] = parent[heading].(map[string]any)
 			case *ast.FencedCodeBlock:
@@ -76,12 +165,20 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				content := string(n.Text(reader.Source()))
 				// Add to the appropriate parent
 				parent := parents[len(parents)-1]
+				/*keys := []string{}
+				for key := range parent {
+					keys = append(keys, key)
+				}*/
+				//headersTrace := etlx.TracebackHeaders(n, reader.Source())
+				//node.Parent().Lines().Value(reader.Source())
+				//fmt.Println(info, len(parents)-1, headersTrace, keys, node.Parent().Lines().Value(reader.Source()))
 				if parent != nil {
 					if strings.HasPrefix(info, "yaml") {
 						// Process YAML blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
 						yamlContent := make(map[string]any)
-						if err := yaml.Unmarshal([]byte(content), &yamlContent); err != nil {
+						err := yaml.Unmarshal([]byte(content), &yamlContent)
+						if err != nil {
 							log.Printf("Error parsing YAML block %s: %v", key, err)
 						} else {
 							parent[key] = yamlContent
@@ -93,9 +190,87 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					}
 				}
 			}
+		} else if node.Kind() == ast.KindHeading {
+			/*/ When exiting a heading, reset the parent stack for deeper levels
+			for i := len(parents) - 1; i > 0; i-- {
+				parents[i] = nil
+			}*/
 		}
 		return ast.WalkContinue, nil
 	})
+	etlx.Config = config
+	return nil
+}
+
+// ParseMarkdownToConfig parses a Markdown file into a structured nested map
+func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
+	// Initialize the Markdown parser
+	parser := goldmark.DefaultParser()
+	root := parser.Parse(reader)
+
+	// Initialize the result map
+	config := make(map[string]any)
+	var current map[string]any // Reference to the current map section
+	var topLevelKey string     // Current level 1 heading
+
+	// Walk through the AST
+	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			switch n := node.(type) {
+			case *ast.Heading:
+				// Extract the heading text
+				var headingText strings.Builder
+				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
+					if textNode, ok := child.(*ast.Text); ok {
+						headingText.WriteString(string(textNode.Value(reader.Source())))
+					}
+				}
+				heading := headingText.String()
+
+				// Handle level 1 headings
+				if n.Level == 1 {
+					topLevelKey = heading
+					if _, exists := config[topLevelKey]; !exists {
+						config[topLevelKey] = make(map[string]any)
+					}
+					current = config[topLevelKey].(map[string]any)
+				} else {
+					// Handle subheadings
+					if current != nil {
+						if _, exists := current[heading]; !exists {
+							current[heading] = make(map[string]any)
+						}
+						current = current[heading].(map[string]any)
+					}
+				}
+
+			case *ast.FencedCodeBlock:
+				// Extract info and content from the code block
+				info := string(n.Info.Segment.Value(reader.Source()))
+				content := string(n.Text(reader.Source()))
+
+				if current != nil {
+					if strings.HasPrefix(info, "yaml") {
+						// Process YAML blocks
+						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+						yamlContent := make(map[string]any)
+						err := yaml.Unmarshal([]byte(content), &yamlContent)
+						if err != nil {
+							log.Printf("Error parsing YAML block %s: %v", key, err)
+						} else {
+							current[key] = yamlContent
+						}
+					} else if strings.HasPrefix(info, "sql") {
+						// Process SQL blocks
+						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
+						current[key] = content
+					}
+				}
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+
 	etlx.Config = config
 	return nil
 }
@@ -297,12 +472,10 @@ func (etlx *ETLX) ProcessETL(config map[string]any, runner RunnerFunc) error {
 	description := metadata["description"].(string)
 	fmt.Printf("Starting ETL process: %s\n", description)
 	start := time.Now()
-	// Process each key in EXTRACT
-	extract, ok := config["EXTRACT"].(map[string]any)
-	if !ok {
-		return fmt.Errorf("missing or invalid EXTRACT section")
-	}
-	for key, value := range extract {
+	for key, value := range etl {
+		if key == "metadata" {
+			continue
+		}
 		fmt.Printf("Processing key: %s\n", key)
 		item, ok := value.(map[string]any)
 		if !ok {
@@ -391,5 +564,34 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 	default:
 		return fmt.Errorf("invalid SQL data type: %T", sqlData)
 	}
+	return nil
+}
+
+// ProcessETL performs the ETL steps based on the configuration
+type RunnerFuncKey func(metadata map[string]any, item map[string]any) error
+
+func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
+	data, ok := config[key].(map[string]any)
+	if !ok {
+		return fmt.Errorf("missing or invalid %s section", key)
+	}
+	// Extract metadata
+	metadata, ok := data["metadata"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("missing metadata in %s section", key)
+	}
+	description := metadata["description"].(string)
+	fmt.Printf("Starting %s process: %s\n", key, description)
+	start := time.Now()
+	for key2, value := range data {
+		if key2 == "metadata" {
+			continue
+		}
+		err := runner(metadata, value.(map[string]any))
+		if err != nil {
+			return err
+		}
+	}
+	fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
 	return nil
 }
