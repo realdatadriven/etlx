@@ -207,12 +207,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader)
-
 	// Initialize the result map
 	config := make(map[string]any)
 	var current map[string]any // Reference to the current map section
 	var topLevelKey string     // Current level 1 heading
-
 	// Walk through the AST
 	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
@@ -226,7 +224,6 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					}
 				}
 				heading := headingText.String()
-
 				// Handle level 1 headings
 				if n.Level == 1 {
 					topLevelKey = heading
@@ -243,12 +240,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						current = current[heading].(map[string]any)
 					}
 				}
-
 			case *ast.FencedCodeBlock:
 				// Extract info and content from the code block
 				info := string(n.Info.Segment.Value(reader.Source()))
 				content := string(n.Text(reader.Source()))
-
 				if current != nil {
 					if strings.HasPrefix(info, "yaml") {
 						// Process YAML blocks
@@ -270,7 +265,6 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 		}
 		return ast.WalkContinue, nil
 	})
-
 	etlx.Config = config
 	return nil
 }
