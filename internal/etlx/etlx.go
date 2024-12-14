@@ -119,7 +119,7 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig2(reader text.Reader) error {
+func (etlx *ETLX) ParseMarkdownToConfig_Old(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader)
@@ -330,7 +330,7 @@ func (etlx *ETLX) GetRefFromString(file string) time.Time {
 
 func (etlx *ETLX) ReplaceFileTablePlaceholder(key string, sql string, file_table string) string {
 	pats := map[string]*regexp.Regexp{
-		"file":  regexp.MustCompile(`<file>|<filename>|<fname>|<file_name>|{file}|{filename}|{fname}|{file_name}`), // (?i)
+		"file":  regexp.MustCompile(`<file>|<filename>|<fname>|<file_name>|<path>|<filepath>|<file_path>|{file}|{filename}|{fname}|{file_name}|{path}|{filepath}|{file_path}`), // (?i)
 		"table": regexp.MustCompile(`<table>|<table_name>|<tablename>|{table}|{table_name}|{tablename}`),
 		"tmp":   regexp.MustCompile(`<tmp_path>|<tmp>|{tmp_path}|{tmp}`), // (?i)
 	}
@@ -440,6 +440,7 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 		for _, match := range matches {
 			envVar := strings.TrimPrefix(match, "@ENV.")
 			envValue := os.Getenv(envVar)
+			// fmt.Println(match, envVar, envValue)
 			if envValue != "" {
 				input = strings.ReplaceAll(input, match, envValue)
 			}

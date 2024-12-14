@@ -5,8 +5,11 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
+	"time"
 
 	"github.com/joho/godotenv"
+	"github.com/realdatadriven/etlx/internal/db"
 	"github.com/realdatadriven/etlx/internal/etlx"
 )
 
@@ -27,6 +30,8 @@ func main() {
 	}
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
+	// date of reference
+	date_ref := flag.String("date", time.Now().AddDate(0, 0, -1).Format("2006-01-02"), "Date Reference format YYYY-MM-DD")
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
@@ -46,19 +51,70 @@ func main() {
 			fmt.Printf("Entering: %s\n", keyPath)
 		}
 	})*/
+	var dateRef []time.Time
+	_dt, _ := time.Parse("2006-01-02", *date_ref)
+	dateRef = append(dateRef, _dt)
+	fmt.Println("date_ref:", *date_ref, dateRef)
 	// Define the runner as a simple function
 	runner := func(conn string, query string, item map[string]any) error {
 		driver, dsn, err := etl.ParseConnection(conn)
 		if err != nil {
 			return err
 		}
+		table := ""
+		metadata, ok := item["metadata"].(map[string]any)
+		if ok {
+			table = metadata["table"].(string)
+		}
+		_dsn := etl.ReplaceEnvVariable(dsn)
+		_query := etl.ReplaceEnvVariable(query)
+		_query = etl.ReplaceQueryStringDate(_query, dateRef)
+		_csv_path := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		if table != "" {
+			_query = etl.ReplaceFileTablePlaceholder("table", _query, table)
+			_query = etl.ReplaceFileTablePlaceholder("file", _query, _csv_path)
+		}
+		//fmt.Println("table:", table)
 		switch driver {
 		case "duckdb":
-			fmt.Printf("[DuckDB] Running query on DSN [%s]:\n%s\n", dsn, query)
+			//fmt.Printf("[DuckDB] Running query on DSN [%s]:\n%s\n", dsn, query)
+			fmt.Printf("[DuckDB] ENV Running query on DSN [%s]:\n%s\n", _dsn, _query)
+			db, err := db.NewDuckDB(_dsn)
+			if err != nil {
+				return fmt.Errorf("%s Conn: %s", driver, err)
+			}
+			defer db.Close()
+			_, err = db.ExecuteQuery(_query)
+			if err != nil {
+				return fmt.Errorf("%s: %s", driver, err)
+			}
 		case "odbc":
-			fmt.Printf("[ODBC] Running query on DSN [%s]:\n%s\n", dsn, query)
+			//fmt.Printf("[ODBC] Running query on DSN [%s]:\n%s\n", dsn, query)
+			fmt.Printf("[ODBC] ENV Running query on DSN [%s]:\n%s\n", _dsn, _query)
+			new_odbc, err := db.NewODBC(_dsn)
+			if err != nil {
+				return fmt.Errorf("ODBC Conn: %s", err)
+			}
+			defer new_odbc.Close()
+			_csv_path = etl.ReplaceQueryStringDate(_csv_path, dateRef)
+			fmt.Println(_csv_path)
+			_, err = new_odbc.Query2CSV(_query, _csv_path)
+			if err != nil {
+				return fmt.Errorf("ODBC 2 CSV: %s", err)
+			}
 		default:
-			return fmt.Errorf("unsupported driver: %s", driver)
+			fmt.Printf("[%s] Running query on DSN [%s]:\n%s\n", driver, _dsn, _query)
+			db, err := db.New(driver, _dsn)
+			if err != nil {
+				return fmt.Errorf("%s Conn: %s", driver, err)
+			}
+			defer db.Close()
+			fmt.Println(db.GetDriverName())
+			res, err := db.ExecuteQuery(_query)
+			if err != nil {
+				return fmt.Errorf("%s: %s", driver, err)
+			}
+			fmt.Println(db.GetDriverName(), res, err)
 		}
 		return nil
 	}

@@ -22,3 +22,6 @@ rad.json
 TestResults.xml
 *.env
 *.exe
+*.db
+*.duckdb
+database/

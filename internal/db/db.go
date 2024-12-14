@@ -33,40 +33,17 @@ type DB struct {
 	*sqlx.DB
 }
 
-func New(driverName string, dsn string, automigrate bool) (*DB, error) {
+func New(driverName string, dsn string) (*DB, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	//fmt.Printf("DB DRIVER: %s DSN: %s\n", driverName, dsn)
 	db, err := sqlx.ConnectContext(ctx, driverName, dsn)
 	if err != nil {
 		return nil, err
 	}
-	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 	db.SetConnMaxLifetime(2 * time.Hour)
-	if automigrate {
-		/*iofsDriver, err := iofs.New(assets.EmbeddedFiles, "migrations")
-		if err != nil {
-			return nil, err
-		}
-		dbUrl := dsn
-		if driverName == "sqlite3" {
-			dbUrl = "sqlite3://" + dsn
-		}
-		migrator, err := migrate.NewWithSourceInstance("iofs", iofsDriver, dbUrl)
-		if err != nil {
-			return nil, err
-		}
-		err = migrator.Up()
-		switch {
-		case errors.Is(err, migrate.ErrNoChange):
-			break
-		case err != nil:
-			return nil, err
-		}*/
-	}
 	return &DB{db}, nil
 }
 
@@ -188,7 +165,7 @@ func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]in
 	switch _database.(type) {
 	case nil:
 		//return true
-		newDB, err := New(extra_conf["driverName"].(string), extra_conf["dsn"].(string), false)
+		newDB, err := New(extra_conf["driverName"].(string), extra_conf["dsn"].(string))
 		_database := filepath.Base(extra_conf["dsn"].(string))
 		_db_ext := filepath.Ext(_database)
 		_database = _database[:len(_database)-len(_db_ext)]
@@ -227,7 +204,7 @@ func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]in
 		if _driver == "duckdb" {
 			return nil, _driver, _database.(string), nil
 		}
-		newDB, err := New(_driver, _dsn, false)
+		newDB, err := New(_driver, _dsn)
 		return newDB, _driver, _database.(string), err
 	case []interface{}:
 		//fmt.Println("IS []interface{}:", _database)
@@ -292,13 +269,13 @@ func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]in
 			// newDB, err := NewDuckDB(_dsn)
 			return nil, _driver, _database.(string), nil
 		}
-		newDB, err := New(_driver, _dsn, false)
+		newDB, err := New(_driver, _dsn)
 		return newDB, _driver, _db, err
 	case interface{}:
 		//fmt.Println("IS interface{}:", _database)
 		return nil, "", "", errors.New("database conf is of type interface{}")
 	default:
-		newDB, err := New(extra_conf["driverName"].(string), extra_conf["dsn"].(string), false)
+		newDB, err := New(extra_conf["driverName"].(string), extra_conf["dsn"].(string))
 		_database := filepath.Base(extra_conf["dsn"].(string))
 		_db_ext := filepath.Ext(_database)
 		_database = _database[:len(_database)-len(_db_ext)]
@@ -656,6 +633,10 @@ func ParsePostgresConnString(connStr string) (map[string]string, error) {
 	}
 
 	return result, nil
+}
+
+func (db *DB) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
+	return false, fmt.Errorf("not implemented yet %s", "_")
 }
 
 func contains(slice []interface{}, element interface{}) bool {

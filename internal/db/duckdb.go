@@ -283,6 +283,10 @@ func (db *DuckDB) GetUserByNameOrEmail(email string) (map[string]interface{}, bo
 	return nil, false, fmt.Errorf("not implemented yet %s", "_")
 }
 
+func (db *DuckDB) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
+	return false, fmt.Errorf("not implemented yet %s", "_")
+}
+
 func (db *DuckDB) IsEmpty(value interface{}) bool {
 	switch v := value.(type) {
 	case nil:

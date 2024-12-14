@@ -167,7 +167,13 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 
 3. **Run the ETL Process**:
    ```bash
-   go run main.go --config etl_config.md
+   go run main.go --config etl_config.md --date 2023-10-31
+   ```
+   the same cam be said for build
+   On Windows you may have building issues if you keep duckdb, in that case I found out that is esier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
+
+    ```bash
+   go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
    ```
 
 4. **Schedule the Process** (Optional):
