@@ -247,3 +247,30 @@ func (db *ODBC) QuerySingleRow(query string, params ...interface{}) (*map[string
 	}
 	return &result, true, err
 }
+
+func (db *ODBC) FromParams(params map[string]interface{}, extra_conf map[string]interface{}) (*DB, string, string, error) {
+	return nil, "", "", fmt.Errorf("not implemented yet %s", "_")
+}
+
+func (db *ODBC) GetDriverName() string {
+	return ""
+}
+
+func (db *ODBC) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {
+	return nil, false, fmt.Errorf("not implemented yet %s", "_")
+}
+
+func (db *ODBC) IsEmpty(value interface{}) bool {
+	switch v := value.(type) {
+	case nil:
+		return true
+	case string:
+		return len(v) == 0
+	case []interface{}:
+		return len(v) == 0
+	case map[interface{}]interface{}:
+		return len(v) == 0
+	default:
+		return false
+	}
+}

@@ -212,7 +212,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	var current map[string]any // Reference to the current map section
 	var topLevelKey string     // Current level 1 heading
 	// Walk through the AST
-	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
 			switch n := node.(type) {
 			case *ast.Heading:
@@ -251,7 +251,8 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						yamlContent := make(map[string]any)
 						err := yaml.Unmarshal([]byte(content), &yamlContent)
 						if err != nil {
-							log.Printf("Error parsing YAML block %s: %v", key, err)
+							//log.Printf("Error parsing YAML block %s: %v", key, err)
+							return ast.WalkContinue, fmt.Errorf("error parsing YAML block %s: %v", key, err)
 						} else {
 							current[key] = yamlContent
 						}
@@ -265,6 +266,9 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 		}
 		return ast.WalkContinue, nil
 	})
+	if err != nil {
+		return err
+	}
 	etlx.Config = config
 	return nil
 }
@@ -537,7 +541,7 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 		// Single query reference
 		query, ok := item[queries].(string)
 		if !ok {
-			return fmt.Errorf("query %s not found in item", queries)
+			query = queries
 		}
 		return runner(conn, query, item)
 	case []any:
@@ -549,7 +553,7 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 			}
 			query, ok := item[queryKey].(string)
 			if !ok {
-				return fmt.Errorf("query %s not found in item", queryKey)
+				query = queryKey
 			}
 			err := runner(conn, query, item)
 			if err != nil {
@@ -562,8 +566,7 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 	return nil
 }
 
-// ProcessETL performs the ETL steps based on the configuration
-type RunnerFuncKey func(metadata map[string]any, item map[string]any) error
+type RunnerFuncKey func(metadata map[string]any, key string, item map[string]any) error
 
 func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
 	data, ok := config[key].(map[string]any)
@@ -575,18 +578,18 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	if !ok {
 		return fmt.Errorf("missing metadata in %s section", key)
 	}
-	description := metadata["description"].(string)
-	fmt.Printf("Starting %s process: %s\n", key, description)
-	start := time.Now()
+	// description := metadata["description"].(string)
+	// fmt.Printf("Starting %s process: %s\n", key, description)
+	// start := time.Now()
 	for key2, value := range data {
 		if key2 == "metadata" {
 			continue
 		}
-		err := runner(metadata, value.(map[string]any))
+		err := runner(metadata, key2, value.(map[string]any))
 		if err != nil {
 			return err
 		}
 	}
-	fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
+	// fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
 	return nil
 }
