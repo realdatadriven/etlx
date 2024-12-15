@@ -253,7 +253,7 @@ func (db *ODBC) FromParams(params map[string]interface{}, extra_conf map[string]
 }
 
 func (db *ODBC) GetDriverName() string {
-	return ""
+	return "odbc"
 }
 
 func (db *ODBC) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {

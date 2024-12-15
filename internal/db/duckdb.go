@@ -276,7 +276,7 @@ func (db *DuckDB) FromParams(params map[string]interface{}, extra_conf map[strin
 }
 
 func (db *DuckDB) GetDriverName() string {
-	return ""
+	return "duckdb"
 }
 
 func (db *DuckDB) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {
