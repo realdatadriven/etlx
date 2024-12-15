@@ -52,6 +52,12 @@ func main() {
 	var dateRef []time.Time
 	_dt, _ := time.Parse("2006-01-02", *date_ref)
 	dateRef = append(dateRef, _dt)
-	fmt.Println("date_ref:", *date_ref, dateRef)
-	etl.RunETL(dateRef)
+	// fmt.Println("date_ref:", *date_ref, dateRef)
+	_logs, err := etl.RunETL(dateRef)
+	if err != nil {
+		log.Fatalf("ETL ERR: %v", err)
+	}
+	for _, _log := range _logs {
+		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"])
+	}
 }

@@ -98,6 +98,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
+	fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
@@ -107,7 +108,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 	mainDescription := ""
 	// Define the runner as a simple function
 	ELTRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
-		// fmt.Println(metadata, itemKey, item)
+		//fmt.Println(metadata, itemKey, item)
 		mainConn := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
@@ -128,13 +129,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 				"description": itemMetadata["description"].(string),
 				"start_at":    start2,
 			}
-			beforeSQL, okBefore := metadata[step+"_before_sql"]
-			mainSQL, ok := metadata[step+"_sql"]
+			beforeSQL, okBefore := itemMetadata[step+"_before_sql"]
+			mainSQL, ok := itemMetadata[step+"_sql"]
+			//fmt.Println(step, mainSQL)
 			if !ok {
 				continue
 			}
-			afterSQL, okAfter := metadata[step+"_after_sql"]
-			conn := metadata[step+"_conn"]
+			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
+			conn := itemMetadata[step+"_conn"]
 			if conn == nil {
 				conn = mainConn // Fallback to main connection
 			}
@@ -149,7 +151,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 			if err != nil {
 				_log3["success"] = false
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
-				_log3["enda_at"] = time.Now()
+				_log3["end_at"] = time.Now()
 				_log3["duration"] = time.Since(start4)
 				processLogs = append(processLogs, _log3)
 				return fmt.Errorf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
@@ -157,7 +159,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 			defer dbConn.Close()
 			_log3["success"] = true
 			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Connection: %s", key, step, itemKey, conn)
-			_log3["enda_at"] = time.Now()
+			_log3["end_at"] = time.Now()
 			_log3["duration"] = time.Since(start4)
 			// Process before SQL
 			if okBefore {
@@ -167,18 +169,19 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
 				}
+				//fmt.Println(_log3)
 				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
-					_log3["enda_at"] = time.Now()
+					_log3["end_at"] = time.Now()
 					_log3["duration"] = time.Since(start4)
 					processLogs = append(processLogs, _log3)
 					return fmt.Errorf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
 				}
 				_log3["success"] = true
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Before", key, step, itemKey)
-				_log3["enda_at"] = time.Now()
+				_log3["end_at"] = time.Now()
 				_log3["duration"] = time.Since(start4)
 			}
 			// Process main SQL
@@ -193,14 +196,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
-					_log3["enda_at"] = time.Now()
+					_log3["end_at"] = time.Now()
 					_log3["duration"] = time.Since(start4)
 					processLogs = append(processLogs, _log3)
 					return fmt.Errorf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 				}
 				_log3["success"] = true
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s main", key, step, itemKey)
-				_log3["enda_at"] = time.Now()
+				_log3["end_at"] = time.Now()
 				_log3["duration"] = time.Since(start4)
 			}
 			// Process after SQL
@@ -215,21 +218,21 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
-					_log3["enda_at"] = time.Now()
+					_log3["end_at"] = time.Now()
 					_log3["duration"] = time.Since(start4)
 					processLogs = append(processLogs, _log3)
 					return fmt.Errorf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
 				}
 				_log3["success"] = true
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s After", key, step, itemKey)
-				_log3["enda_at"] = time.Now()
+				_log3["end_at"] = time.Now()
 				_log3["duration"] = time.Since(start4)
 			}
-			_log2["enda_at"] = time.Now()
+			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3)
 			processLogs = append(processLogs, _log3)
 		}
-		_log1["enda_at"] = time.Now()
+		_log1["end_at"] = time.Now()
 		_log1["duration"] = time.Since(start2)
 		processLogs = append(processLogs, _log1)
 		return nil
@@ -243,7 +246,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, keys ...string) ([]map[string]any,
 		"name":        key,
 		"description": mainDescription,
 		"start_at":    processLogs[0]["start_at"],
-		"enda_at":     time.Now(),
+		"end_at":      time.Now(),
 		"duration":    time.Since(start),
 	}
 	return processLogs, nil

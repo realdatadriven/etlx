@@ -25,3 +25,6 @@ TestResults.xml
 *.db
 *.duckdb
 database/
+tmp/
+bin/
+.air.toml
