@@ -5,6 +5,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"strings"
 	"time"
 
 	"github.com/joho/godotenv"
@@ -30,6 +31,10 @@ func main() {
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
 	date_ref := flag.String("date", time.Now().AddDate(0, 0, -1).Format("2006-01-02"), "Date Reference format YYYY-MM-DD")
+	// to skip
+	skip := flag.String("skip", "", "The keys to skip")
+	// to skip
+	only := flag.String("only", "", "The only keys to run")
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
@@ -39,7 +44,7 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	// PrintConfigAsJSON(etl.Config)
+	//PrintConfigAsJSON(etl.Config)
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -53,9 +58,16 @@ func main() {
 	_dt, _ := time.Parse("2006-01-02", *date_ref)
 	dateRef = append(dateRef, _dt)
 	// fmt.Println("date_ref:", *date_ref, dateRef)
-	_logs, err := etl.RunETL(dateRef)
+	extraConf := make(map[string]any)
+	if *only != "" {
+		extraConf["only"] = strings.Split(*only, ",")
+	}
+	if *skip != "" {
+		extraConf["skip"] = strings.Split(*skip, ",")
+	}
+	_logs, err := etl.RunETL(dateRef, extraConf)
 	if err != nil {
-		log.Fatalf("ETL ERR: %v", err)
+		fmt.Printf("ETL ERR: %v\n", err)
 	}
 	for _, _log := range _logs {
 		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"])

@@ -25,6 +25,14 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
+	if strings.HasSuffix(filePath, ".ipynb") {
+		mdText, err := etlx.ConvertIPYNBToMarkdown(data)
+		if err != nil {
+			return fmt.Errorf("failed convert the Notebook to MDText: %w", err)
+		}
+		// fmt.Println(mdText)
+		data = []byte(mdText)
+	}
 	// Parse the Markdown content into an AST
 	reader := text.NewReader(data)
 	return etlx.ParseMarkdownToConfig(reader)
@@ -119,7 +127,7 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig_Old(reader text.Reader) error {
+func (etlx *ETLX) ParseMarkdownToConfigN1(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader)
@@ -203,7 +211,7 @@ func (etlx *ETLX) ParseMarkdownToConfig_Old(reader text.Reader) error {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
+func (etlx *ETLX) ParseMarkdownToConfigN_1(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader)
@@ -232,7 +240,6 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					}
 					current = config[topLevelKey].(map[string]any)
 				} else {
-					// Handle subheadings
 					if current != nil {
 						if _, exists := current[heading]; !exists {
 							current[heading] = make(map[string]any)
@@ -269,6 +276,88 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	if err != nil {
 		return err
 	}
+	etlx.Config = config
+	return nil
+}
+
+func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
+	// Initialize the Markdown parser
+	parser := goldmark.DefaultParser()
+	root := parser.Parse(reader)
+
+	// Initialize the result map and a levels map
+	config := make(map[string]any)
+	levels := make(map[int]map[string]any) // Track the current section for each heading level
+
+	// Walk through the AST
+	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
+		if entering {
+			switch n := node.(type) {
+			case *ast.Heading:
+				// Extract the heading text
+				var headingText strings.Builder
+				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
+					if textNode, ok := child.(*ast.Text); ok {
+						headingText.WriteString(string(textNode.Value(reader.Source())))
+					}
+				}
+				heading := headingText.String()
+
+				// Handle level 1 headings
+				if n.Level == 1 {
+					// Reset the context for a new level 1 heading
+					if _, exists := config[heading]; !exists {
+						config[heading] = make(map[string]any)
+					}
+					levels = map[int]map[string]any{1: config[heading].(map[string]any)}
+				} else {
+					// Handle deeper levels (level 2 and beyond)
+					parent := levels[n.Level-1]
+					if parent == nil {
+						return ast.WalkContinue, fmt.Errorf("missing parent section for level %d heading: %s", n.Level, heading)
+					}
+					if _, exists := parent[heading]; !exists {
+						parent[heading] = make(map[string]any)
+					}
+					levels[n.Level] = parent[heading].(map[string]any)
+				}
+
+				// Clear deeper levels to avoid cross-contamination
+				for level := n.Level + 1; level < len(levels); level++ {
+					levels[level] = nil
+				}
+
+			case *ast.FencedCodeBlock:
+				// Extract info and content from the code block
+				info := string(n.Info.Segment.Value(reader.Source()))
+				content := string(n.Text(reader.Source()))
+
+				// Add to the current section
+				current := levels[len(levels)]
+				if current != nil {
+					if strings.HasPrefix(info, "yaml") {
+						// Process YAML blocks
+						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+						yamlContent := make(map[string]any)
+						err := yaml.Unmarshal([]byte(content), &yamlContent)
+						if err != nil {
+							return ast.WalkContinue, fmt.Errorf("error parsing YAML block %s: %v", key, err)
+						}
+						current[key] = yamlContent
+					} else if strings.HasPrefix(info, "sql") {
+						// Process SQL blocks
+						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
+						current[key] = content
+					}
+				}
+			}
+		}
+		return ast.WalkContinue, nil
+	})
+	if err != nil {
+		return err
+	}
+
 	etlx.Config = config
 	return nil
 }
@@ -592,4 +681,24 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	}
 	// fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
 	return nil
+}
+
+// Create a temporary file in the default temporary directory
+func (etlx *ETLX) TempFIle(content string, name string) (string, error) {
+	// Create a temporary file in the default temporary directory
+	tempFile, err := os.CreateTemp("", name)
+	if err != nil {
+		return "", fmt.Errorf("error creating temporary file: %s", err)
+	}
+	// Defer closing the file to ensure it's closed even if an error occurs
+	defer tempFile.Close()
+
+	// Write the content to the file
+	_, err = tempFile.WriteString(content)
+	if err != nil {
+		return "", fmt.Errorf("error writing to temporary file: %s", err)
+	}
+	// Get the name of the temporary file
+	tempFileName := tempFile.Name()
+	return tempFileName, nil
 }
