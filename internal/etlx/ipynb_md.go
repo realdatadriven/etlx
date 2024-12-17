@@ -28,6 +28,10 @@ func (etlx *ETLX) ConvertIPYNBToMarkdown(ipynbContent []byte) (string, error) {
 	// Build the Markdown output
 	var mdBuilder strings.Builder
 	for _, cell := range notebook.Cells {
+		// Skip empty cells
+		if len(cell.Source) == 0 {
+			continue
+		}
 		switch cell.CellType {
 		case "markdown":
 			// Add Markdown content directly
@@ -44,6 +48,11 @@ func (etlx *ETLX) ConvertIPYNBToMarkdown(ipynbContent []byte) (string, error) {
 			mdBuilder.WriteString("```\n\n")
 		}
 	}
+	_, err := etlx.TempFIle(mdBuilder.String(), "ipymd2md.*.md")
+	if err != nil {
+		fmt.Println(err)
+	}
+	//fmt.Println(_file)
 
 	return mdBuilder.String(), nil
 }

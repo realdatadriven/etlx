@@ -35,6 +35,10 @@ func main() {
 	skip := flag.String("skip", "", "The keys to skip")
 	// to skip
 	only := flag.String("only", "", "The only keys to run")
+	// To clean / delete data (execute clean_sql on every item)
+	clean := flag.Bool("clean", false, "To clean data (execute clean_sql on every item, conditioned by only and skip)")
+	// To drop the table (execute drop_sql on every item condition by only and skip)
+	drop := flag.Bool("drop", false, "To drop the table (execute drop_sql on every item, conditioned by only and skip)")
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
@@ -58,7 +62,10 @@ func main() {
 	_dt, _ := time.Parse("2006-01-02", *date_ref)
 	dateRef = append(dateRef, _dt)
 	// fmt.Println("date_ref:", *date_ref, dateRef)
-	extraConf := make(map[string]any)
+	extraConf := map[string]any{
+		"clean": *clean,
+		"drop":  *drop,
+	}
 	if *only != "" {
 		extraConf["only"] = strings.Split(*only, ",")
 	}

@@ -228,6 +228,20 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 		}
 		steps := []string{"extract", "transform", "load"}
 		for _, step := range steps {
+			// CHECK CLEAN
+			clean, ok := extraConf["clean"]
+			if ok {
+				if clean.(bool) && step != "load" {
+					continue
+				}
+			}
+			// CHECK DROP
+			drop, ok := extraConf["drop"]
+			if ok {
+				if drop.(bool) && step != "load" {
+					continue
+				}
+			}
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
@@ -238,6 +252,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 			mainSQL, ok := itemMetadata[step+"_sql"]
 			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
 			validation, okValid := itemMetadata[step+"_validation"]
+			cleanSQL, okClean := itemMetadata["clean_sql"]
+			dropSQL, okDrop := itemMetadata["drop_sql"]
 			if !ok || mainSQL == nil {
 				continue
 			}
@@ -293,7 +309,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				processLogs = append(processLogs, _log3)
 			}
 			// Process main SQL
-			if ok {
+			if ok && !drop.(bool) && !clean.(bool) {
 				// VALIDATION
 				if okValid && validation != nil {
 					table := itemMetadata["table"].(string)
@@ -361,6 +377,52 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				}
 				_log3["success"] = true
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s main", key, step, itemKey)
+				_log3["end_at"] = time.Now()
+				_log3["duration"] = time.Since(start4)
+				processLogs = append(processLogs, _log3)
+			}
+			// Process CLEAN SQL
+			if clean.(bool) && okClean {
+				start4 = time.Now()
+				_log3 = map[string]any{
+					"name":        fmt.Sprintf("%s->%s->%s:CLEAN", key, itemKey, step),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start4,
+				}
+				err = etlx.ExecuteQuery(dbConn, cleanSQL, item, step, dateRef)
+				if err != nil {
+					_log3["success"] = false
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: CLEAN: %s", key, step, itemKey, err)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					processLogs = append(processLogs, _log3)
+					return fmt.Errorf("%s -> %s -> %s ERR: CELAN: %s", key, step, itemKey, err)
+				}
+				_log3["success"] = true
+				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CLEAN", key, step, itemKey)
+				_log3["end_at"] = time.Now()
+				_log3["duration"] = time.Since(start4)
+				processLogs = append(processLogs, _log3)
+			}
+			// Process DROP SQL
+			if drop.(bool) && okDrop {
+				start4 = time.Now()
+				_log3 = map[string]any{
+					"name":        fmt.Sprintf("%s->%s->%s:DROP", key, itemKey, step),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start4,
+				}
+				err = etlx.ExecuteQuery(dbConn, dropSQL, item, step, dateRef)
+				if err != nil {
+					_log3["success"] = false
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					processLogs = append(processLogs, _log3)
+					return fmt.Errorf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
+				}
+				_log3["success"] = true
+				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s DROP", key, step, itemKey)
 				_log3["end_at"] = time.Now()
 				_log3["duration"] = time.Since(start4)
 				processLogs = append(processLogs, _log3)

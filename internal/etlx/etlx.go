@@ -331,7 +331,6 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				// Extract info and content from the code block
 				info := string(n.Info.Segment.Value(reader.Source()))
 				content := string(n.Text(reader.Source()))
-
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
@@ -347,7 +346,16 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
-						current[key] = content
+						if key == "" {
+							// If no key in the info, try to extract from the first comment line
+							key = extractQueryNameFromSQL(content)
+							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, content)
+						}
+						if key == "" {
+							fmt.Printf("missing query name for SQL block: %s", content)
+						} else {
+							current[key] = content
+						}
 					}
 				}
 			}
@@ -357,9 +365,20 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	if err != nil {
 		return err
 	}
-
 	etlx.Config = config
 	return nil
+}
+
+func extractQueryNameFromSQL(sqlContent string) string {
+	// Define a regex to match the first line with a comment containing the query name
+	// Example: -- query_name
+	re := regexp.MustCompile(`(?m)^--\s*(\w+)`)
+	// Find the first match
+	matches := re.FindStringSubmatch(strings.TrimPrefix(sqlContent, ""))
+	if len(matches) > 1 {
+		return matches[1] // Return the captured query name
+	}
+	return ""
 }
 
 // Walk recursively traverses a nested map and processes each key and value.
