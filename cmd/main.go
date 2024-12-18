@@ -1,7 +1,6 @@
 package main
 
 import (
-	"encoding/json"
 	"flag"
 	"fmt"
 	"log"
@@ -11,15 +10,6 @@ import (
 	"github.com/joho/godotenv"
 	"github.com/realdatadriven/etlx/internal/etlx"
 )
-
-// PrintConfigAsJSON prints the configuration map in JSON format
-func PrintConfigAsJSON(config map[string]any) {
-	jsonData, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		log.Fatalf("Error converting config to JSON: %v", err)
-	}
-	fmt.Println(string(jsonData))
-}
 
 func main() {
 	// Load .env file
@@ -35,6 +25,8 @@ func main() {
 	skip := flag.String("skip", "", "The keys to skip")
 	// to skip
 	only := flag.String("only", "", "The only keys to run")
+	// to steps
+	steps := flag.String("steps", "", "The steps to run")
 	// To clean / delete data (execute clean_sql on every item)
 	clean := flag.Bool("clean", false, "To clean data (execute clean_sql on every item, conditioned by only and skip)")
 	// To drop the table (execute drop_sql on every item condition by only and skip)
@@ -48,7 +40,7 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	//PrintConfigAsJSON(etl.Config)
+	etl.PrintConfigAsJSON(etl.Config)
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -71,6 +63,9 @@ func main() {
 	}
 	if *skip != "" {
 		extraConf["skip"] = strings.Split(*skip, ",")
+	}
+	if *steps != "" {
+		extraConf["steps"] = strings.Split(*steps, ",")
 	}
 	_logs, err := etl.RunETL(dateRef, extraConf)
 	if err != nil {

@@ -3,6 +3,7 @@ module github.com/realdatadriven/etlx
 go 1.23.0
 
 require (
+	github.com/BurntSushi/toml v1.4.0
 	github.com/alexbrainman/odbc v0.0.0-20241104074637-25af894ea08b
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1

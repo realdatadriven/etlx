@@ -2,6 +2,7 @@ package etlx
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"log"
 	"os"
@@ -9,6 +10,7 @@ import (
 	"strings"
 	"time"
 
+	"github.com/BurntSushi/toml"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
@@ -334,9 +336,36 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
-					if strings.HasPrefix(info, "yaml") {
+					if strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "toml") {
+						// Process YAML or TOML blocks
+						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+						if strings.HasPrefix(info, "toml") {
+							key = strings.TrimSpace(strings.TrimPrefix(info, "toml"))
+						}
+						if key == "" {
+							key = "metadata"
+						}
+						var metaData map[string]any
+						var err error
+						if strings.HasPrefix(info, "yaml") {
+							// Parse YAML
+							metaData = make(map[string]any)
+							err = yaml.Unmarshal([]byte(content), &metaData)
+						} else if strings.HasPrefix(info, "toml") {
+							// Parse TOML
+							metaData = make(map[string]any)
+							_, err = toml.Decode(content, &metaData)
+						}
+						if err != nil {
+							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
+						}
+						current[key] = metaData
+					} else if strings.HasPrefix(info, "yaml") {
 						// Process YAML blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+						if key == "" {
+							key = "metadata"
+						}
 						yamlContent := make(map[string]any)
 						err := yaml.Unmarshal([]byte(content), &yamlContent)
 						if err != nil {
@@ -346,15 +375,16 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
+						contentFinal := content
 						if key == "" {
 							// If no key in the info, try to extract from the first comment line
-							key = extractQueryNameFromSQL(content)
-							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, content)
+							key, contentFinal = extractQueryNameFromSQL(content)
+							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, contentFinal)
 						}
 						if key == "" {
 							fmt.Printf("missing query name for SQL block: %s", content)
 						} else {
-							current[key] = content
+							current[key] = contentFinal
 						}
 					}
 				}
@@ -369,7 +399,23 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	return nil
 }
 
-func extractQueryNameFromSQL(sqlContent string) string {
+// PrintConfigAsJSON prints the configuration map in JSON format
+func (etlx *ETLX) PrintConfigAsJSON(config map[string]any) {
+	jsonData, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		log.Fatalf("Error converting config to JSON: %v", err)
+	}
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		_file, err := etlx.TempFIle(string(jsonData), "config.*.json")
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(_file)
+	}
+	fmt.Println(string(jsonData))
+}
+
+func extractQueryNameFromSQL2(sqlContent string) string {
 	// Define a regex to match the first line with a comment containing the query name
 	// Example: -- query_name
 	re := regexp.MustCompile(`(?m)^--\s*(\w+)`)
@@ -379,6 +425,23 @@ func extractQueryNameFromSQL(sqlContent string) string {
 		return matches[1] // Return the captured query name
 	}
 	return ""
+}
+
+// and removes the matched line along with any leading newline in the remaining content.
+func extractQueryNameFromSQL(sqlContent string) (string, string) {
+	// Define a regex to match the first line with a comment containing the query name
+	re := regexp.MustCompile(`(?m)^--\s*(\w+)\s*$`)
+	// Find the query name using the regex
+	matches := re.FindStringSubmatch(sqlContent)
+	queryName := ""
+	if len(matches) > 1 {
+		queryName = matches[1] // Capture the query name
+	}
+	// Remove the matched line from the content
+	updatedContent := re.ReplaceAllString(sqlContent, "")
+	// Remove any leading newline or whitespace from the updated content
+	updatedContent = strings.TrimLeft(updatedContent, "\n")
+	return queryName, updatedContent
 }
 
 // Walk recursively traverses a nested map and processes each key and value.
