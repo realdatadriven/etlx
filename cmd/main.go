@@ -40,7 +40,7 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	etl.PrintConfigAsJSON(etl.Config)
+	//etl.PrintConfigAsJSON(etl.Config)
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -74,4 +74,10 @@ func main() {
 	for _, _log := range _logs {
 		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"])
 	}
+	//_sql, query_parts, _fields_order, err := etl.QueryBuilder("QUERY_DOC")
+	_sql, _, _, err := etl.QueryBuilder("QUERY_DOC")
+	if err != nil {
+		fmt.Printf("QUERY_DOC ERR: %v\n", err)
+	}
+	fmt.Println(_sql)
 }
