@@ -214,11 +214,11 @@ func (q *QueryDoc) GetQuerySQL() string {
 func (q *QueryDoc) GetQuerySQLFromMap() string {
 	var queryParts = q.GetQueryPartsAsMap()
 	var query Field
-	fmt.Println(queryParts, q.FieldOrders)
+	// fmt.Println(queryParts, q.FieldOrders)
 	// Compile the final SQL from different parts
 	for _, f := range q.FieldOrders {
 		field := queryParts[f]
-		fmt.Println(field)
+		// fmt.Println(field)
 		if _, ok := field["active"].(bool); ok {
 			if !field["active"].(bool) {
 				continue

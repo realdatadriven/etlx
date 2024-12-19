@@ -88,7 +88,16 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	case string:
 		// Single query reference
 		query, ok := item[queries].(string)
-		if !ok {
+		_, queryDoc := etlx.Config[queries]
+		if !ok && queryDoc {
+			query = queries
+			_sql, _, _, err := etlx.QueryBuilder(queries)
+			if err != nil {
+				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
+			} else {
+				query = _sql
+			}
+		} else if !ok {
 			query = queries
 		}
 		query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
@@ -120,7 +129,16 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 			//fmt.Println(queryKey)
 			query, ok := item[queryKey].(string)
-			if !ok {
+			_, queryDoc := etlx.Config[queryKey]
+			if !ok && queryDoc {
+				query = queryKey
+				_sql, _, _, err := etlx.QueryBuilder(queryKey)
+				if err != nil {
+					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
+				} else {
+					query = _sql
+				}
+			} else if !ok {
 				query = queryKey
 			}
 			query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)

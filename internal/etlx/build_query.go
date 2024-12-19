@@ -75,6 +75,6 @@ func (etlx *ETLX) QueryBuilder(keys ...string) (string, map[string]any, []string
 	}
 	_sql := qd.GetQuerySQLFromMap()
 	//_sql = app.setQueryDate(_sql, date_ref)
-	fmt.Println("SQL", _sql)
+	//fmt.Println("SQL", _sql)
 	return _sql, query_parts, _fields_order, nil
 }
