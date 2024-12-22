@@ -264,6 +264,12 @@ func (f *Field) SetMap(fieldMap map[string]interface{}) error {
 			} else {
 				f.Desc = ""
 			}
+		case "description":
+			if strVal, ok := value.(string); ok {
+				f.Desc = strVal
+			} else {
+				f.Desc = ""
+			}
 		case "cte":
 			if strVal, ok := value.(string); ok {
 				f.CTE = strVal

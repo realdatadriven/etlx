@@ -25,12 +25,13 @@ func (etlx *ETLX) QueryBuilder(keys ...string) (string, map[string]any, []string
 	if !ok {
 		return "", nil, nil, fmt.Errorf("missing or invalid %s section", key)
 	}
-	// Extract metadata
+	//fmt.Println(data)
+	/*/ Extract metadata
 	metadata, ok := data["metadata"].(map[string]any)
 	if !ok {
 		return "", nil, nil, fmt.Errorf("missing metadata in %s section", key)
-	}
-	fmt.Println(key, metadata["description"])
+	}*/
+	//fmt.Println(key, metadata["description"])
 	// Extract metadata
 	fields, ok := data["FIELDS"].(map[string]any)
 	if !ok {
