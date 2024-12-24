@@ -3,6 +3,7 @@ package etlx
 import (
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/realdatadriven/etlx/internal/db"
@@ -282,6 +283,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					continue
 				}
 			}
+			// CHECK ROWS
+			rows, ok := extraConf["rows"]
+			if ok {
+				if rows.(bool) && step != "load" {
+					continue
+				}
+			}
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {
@@ -307,8 +315,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 			mainSQL, ok := itemMetadata[step+"_sql"]
 			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
 			validation, okValid := itemMetadata[step+"_validation"]
+			createNotExistin, okCreate := itemMetadata[step+"_create_if_not_exists"]
 			cleanSQL, okClean := itemMetadata["clean_sql"]
 			dropSQL, okDrop := itemMetadata["drop_sql"]
+			rowsSQL, okRows := itemMetadata["rows_sql"]
+			if rows.(bool) && !okRows {
+				rowsSQL = `SELECT COUNT(*) AS "nrows" FROM "<table>"`
+			}
 			//fmt.Println(step, ok, mainSQL)
 			if !ok || mainSQL == nil {
 				continue
@@ -366,12 +379,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				processLogs = append(processLogs, _log3)
 			}
 			// Process main SQL
-			if ok && !drop.(bool) && !clean.(bool) {
+			table := itemMetadata["table"].(string)
+			fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+			if ok && !drop.(bool) && !clean.(bool) && !rows.(bool) {
 				// VALIDATION
 				isValid := true
+				validErr := ""
 				if okValid && validation != nil {
-					table := itemMetadata["table"].(string)
-					fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 					//fmt.Println(validation)
 					if _, ok := validation.([]any); ok {
 						for _, valid := range validation.([]any) {
@@ -381,6 +395,17 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 								"name":        fmt.Sprintf("%s->%s->%s:Valid", key, itemKey, step),
 								"description": itemMetadata["description"].(string),
 								"start_at":    start4,
+							}
+							rule_active := true
+							_rule_active, _ok := _valid["active"]
+							if _ok {
+								if !_rule_active.(bool) {
+									rule_active = false
+									//fmt.Println("SKIPING", _valid)
+								}
+							}
+							if !rule_active {
+								continue
 							}
 							//fmt.Println(_valid["type"].(string), _valid["sql"].(string), _valid["msg"].(string))
 							_sql := _valid["sql"].(string)
@@ -393,6 +418,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 								fmt.Printf("%s -> %s -> %s ERR VALID (%s): %s\n", key, step, itemKey, _valid["sql"], err)
 							} else {
 								msg := etlx.SetQueryPlaceholders(_valid["msg"].(string), table, fname, dateRef)
+								validErr = msg
 								//fmt.Println(len(*res), _valid["type"].(string), msg)
 								if len(*res) > 0 && _valid["type"].(string) == "trow_if_not_empty" {
 									_log3["success"] = false
@@ -401,6 +427,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 									_log3["duration"] = time.Since(start4)
 									//return fmt.Errorf("%s -> %s -> %s Validation Error: %s", key, step, itemKey, msg)
 									isValid = false
+									processLogs = append(processLogs, _log3)
 									break
 								} else if len(*res) == 0 && _valid["type"].(string) == "trow_if_empty" {
 									_log3["success"] = false
@@ -409,6 +436,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 									_log3["duration"] = time.Since(start4)
 									//return fmt.Errorf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
 									isValid = false
+									processLogs = append(processLogs, _log3)
 									break
 								} else {
 									_log3["success"] = true
@@ -430,10 +458,21 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				if isValid {
 					err = etlx.ExecuteQuery(dbConn, mainSQL, item, step, dateRef)
 					if err != nil {
-						_log3["success"] = false
-						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
-						_log3["end_at"] = time.Now()
-						_log3["duration"] = time.Since(start4)
+						re := regexp.MustCompile(`(?i)table.+with.+name.+(\w+).+does.+not.+exist`)
+						if okCreate && createNotExistin != nil && re.MatchString(string(err.Error())) {
+							err = etlx.ExecuteQuery(dbConn, createNotExistin, item, step, dateRef)
+							if err != nil {
+								_log3["success"] = false
+								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
+								_log3["end_at"] = time.Now()
+								_log3["duration"] = time.Since(start4)
+							}
+						} else {
+							_log3["success"] = false
+							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
+							_log3["end_at"] = time.Now()
+							_log3["duration"] = time.Since(start4)
+						}
 						//return fmt.Errorf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 					} else {
 						_log3["success"] = true
@@ -443,7 +482,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					}
 				} else {
 					_log3["success"] = false
-					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s MAIN: Skiped do to validation error: %s", key, step, itemKey, err)
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s MAIN: Skiped do to validation error: %s", key, step, itemKey, validErr)
 					_log3["end_at"] = time.Now()
 					_log3["duration"] = time.Since(start4)
 				}
@@ -492,6 +531,45 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s DROP", key, step, itemKey)
 					_log3["end_at"] = time.Now()
 					_log3["duration"] = time.Since(start4)
+				}
+				processLogs = append(processLogs, _log3)
+			}
+			// Process DROP SQL
+			if rows.(bool) && okRows {
+				start4 = time.Now()
+				_log3 = map[string]any{
+					"name":        fmt.Sprintf("%s->%s->%s:ROWS", key, itemKey, step),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start4,
+				}
+				_sql := rowsSQL.(string)
+				if _, ok := item[rowsSQL.(string)]; ok {
+					_sql = item[rowsSQL.(string)].(string)
+				}
+				_sql = etlx.SetQueryPlaceholders(_sql, table, fname, dateRef)
+				res, err := etlx.Query(dbConn, _sql, item, step, dateRef)
+				if err != nil {
+					_log3["success"] = false
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: ROWS: %s", key, step, itemKey, err)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					//return fmt.Errorf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
+				} else {
+					_nrows := any(nil)
+					if len(*res) > 0 {
+						_nrows, ok = (*res)[0]["nrows"]
+						if !ok {
+							_nrows, ok = (*res)[0]["rows"]
+							if !ok {
+								_nrows = (*res)[0]["total"]
+							}
+						}
+					}
+					_log3["success"] = true
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ROWS", key, step, itemKey)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					_log3["rows"] = _nrows
 				}
 				processLogs = append(processLogs, _log3)
 			}

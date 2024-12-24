@@ -31,6 +31,8 @@ func main() {
 	clean := flag.Bool("clean", false, "To clean data (execute clean_sql on every item, conditioned by only and skip)")
 	// To drop the table (execute drop_sql on every item condition by only and skip)
 	drop := flag.Bool("drop", false, "To drop the table (execute drop_sql on every item, conditioned by only and skip)")
+	// To get number of rows in the table (execute rows_sql on every item, conditioned by only and skip)
+	rows := flag.Bool("rows", false, "To get number of rows in the table (execute rows_sql on every item, conditioned by only and skip)")
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
@@ -57,6 +59,7 @@ func main() {
 	extraConf := map[string]any{
 		"clean": *clean,
 		"drop":  *drop,
+		"rows":  *rows,
 	}
 	if *only != "" {
 		extraConf["only"] = strings.Split(*only, ",")
@@ -72,7 +75,7 @@ func main() {
 		fmt.Printf("ETL ERR: %v\n", err)
 	}
 	for _, _log := range _logs {
-		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"])
+		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
 	}
 	//_sql, query_parts, _fields_order, err := etl.QueryBuilder("QUERY_DOC")
 	_sql, _, _, err := etl.QueryBuilder("QUERY_DOC")

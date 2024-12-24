@@ -129,168 +129,13 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfigN1(reader text.Reader) error {
-	// Initialize the Markdown parser
-	parser := goldmark.DefaultParser()
-	root := parser.Parse(reader)
-	// Initialize the result map and a parent stack
-	config := make(map[string]any)
-	//config2 := make(map[string]any)
-	parents := []map[string]any{config} // Stack of parent references for each level
-	// Walk through the AST
-	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-		if entering {
-			switch n := node.(type) {
-			case *ast.Heading:
-				// Extract the heading text
-				var headingText strings.Builder
-				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-					if textNode, ok := child.(*ast.Text); ok {
-						headingText.WriteString(string(textNode.Value(reader.Source())))
-					}
-				}
-				heading := headingText.String()
-				// Ensure the parents stack has enough levels
-				for len(parents) <= int(n.Level) {
-					parents = append(parents, nil)
-				}
-				// Reset the stack for deeper levels
-				for i := int(n.Level); i < len(parents); i++ {
-					parents[i] = nil
-				}
-				// Create or switch to the appropriate section
-				parent := parents[n.Level-1]
-				if parent == nil {
-					parent = config
-				}
-				if _, exists := parent[heading]; !exists {
-					parent[heading] = make(map[string]any)
-				}
-				//fmt.Println(n.Level, heading)
-				// Update the parent reference for the current level
-				parents[n.Level] = parent[heading].(map[string]any)
-			case *ast.FencedCodeBlock:
-				// Extract info and content from the code block
-				info := string(n.Info.Segment.Value(reader.Source()))
-				content := string(n.Text(reader.Source()))
-				// Add to the appropriate parent
-				parent := parents[len(parents)-1]
-				/*keys := []string{}
-				for key := range parent {
-					keys = append(keys, key)
-				}*/
-				//headersTrace := etlx.TracebackHeaders(n, reader.Source())
-				//node.Parent().Lines().Value(reader.Source())
-				//fmt.Println(info, len(parents)-1, headersTrace, keys, node.Parent().Lines().Value(reader.Source()))
-				if parent != nil {
-					if strings.HasPrefix(info, "yaml") {
-						// Process YAML blocks
-						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
-						yamlContent := make(map[string]any)
-						err := yaml.Unmarshal([]byte(content), &yamlContent)
-						if err != nil {
-							log.Printf("Error parsing YAML block %s: %v", key, err)
-						} else {
-							parent[key] = yamlContent
-						}
-					} else if strings.HasPrefix(info, "sql") {
-						// Process SQL blocks
-						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
-						parent[key] = content
-					}
-				}
-			}
-		} else if node.Kind() == ast.KindHeading {
-			/*/ When exiting a heading, reset the parent stack for deeper levels
-			for i := len(parents) - 1; i > 0; i-- {
-				parents[i] = nil
-			}*/
-		}
-		return ast.WalkContinue, nil
-	})
-	etlx.Config = config
-	return nil
-}
-
-// ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfigN_1(reader text.Reader) error {
-	// Initialize the Markdown parser
-	parser := goldmark.DefaultParser()
-	root := parser.Parse(reader)
-	// Initialize the result map
-	config := make(map[string]any)
-	var current map[string]any // Reference to the current map section
-	var topLevelKey string     // Current level 1 heading
-	// Walk through the AST
-	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-		if entering {
-			switch n := node.(type) {
-			case *ast.Heading:
-				// Extract the heading text
-				var headingText strings.Builder
-				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-					if textNode, ok := child.(*ast.Text); ok {
-						headingText.WriteString(string(textNode.Value(reader.Source())))
-					}
-				}
-				heading := headingText.String()
-				// Handle level 1 headings
-				if n.Level == 1 {
-					topLevelKey = heading
-					if _, exists := config[topLevelKey]; !exists {
-						config[topLevelKey] = make(map[string]any)
-					}
-					current = config[topLevelKey].(map[string]any)
-				} else {
-					if current != nil {
-						if _, exists := current[heading]; !exists {
-							current[heading] = make(map[string]any)
-						}
-						current = current[heading].(map[string]any)
-					}
-				}
-			case *ast.FencedCodeBlock:
-				// Extract info and content from the code block
-				info := string(n.Info.Segment.Value(reader.Source()))
-				content := string(n.Text(reader.Source()))
-				if current != nil {
-					if strings.HasPrefix(info, "yaml") {
-						// Process YAML blocks
-						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
-						yamlContent := make(map[string]any)
-						err := yaml.Unmarshal([]byte(content), &yamlContent)
-						if err != nil {
-							//log.Printf("Error parsing YAML block %s: %v", key, err)
-							return ast.WalkContinue, fmt.Errorf("error parsing YAML block %s: %v", key, err)
-						} else {
-							current[key] = yamlContent
-						}
-					} else if strings.HasPrefix(info, "sql") {
-						// Process SQL blocks
-						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
-						current[key] = content
-					}
-				}
-			}
-		}
-		return ast.WalkContinue, nil
-	})
-	if err != nil {
-		return err
-	}
-	etlx.Config = config
-	return nil
-}
-
 func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
-	root := parser.Parse(reader)
-
-	// Initialize the result map and a levels map
+	root := parser.Parse(reader) // Initialize the result map and a levels map
 	config := make(map[string]any)
 	levels := make(map[int]map[string]any) // Track the current section for each heading level
-
+	//order := make(map[string][]string)          // Track the order of keys for each top-level section
 	// Walk through the AST
 	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
@@ -304,7 +149,6 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					}
 				}
 				heading := headingText.String()
-
 				// Handle level 1 headings
 				if n.Level == 1 {
 					// Reset the context for a new level 1 heading
@@ -312,6 +156,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						config[heading] = make(map[string]any)
 					}
 					levels = map[int]map[string]any{1: config[heading].(map[string]any)}
+					//order[heading] = []string{} // Initialize order tracking for this top-level section
 				} else {
 					// Handle deeper levels (level 2 and beyond)
 					parent := levels[n.Level-1]
@@ -323,12 +168,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					}
 					levels[n.Level] = parent[heading].(map[string]any)
 				}
-
 				// Clear deeper levels to avoid cross-contamination
 				for level := n.Level + 1; level < len(levels); level++ {
 					levels[level] = nil
 				}
-
 			case *ast.FencedCodeBlock:
 				// Extract info and content from the code block
 				info := string(n.Info.Segment.Value(reader.Source()))
@@ -342,6 +185,12 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						if strings.HasPrefix(info, "toml") {
 							key = strings.TrimSpace(strings.TrimPrefix(info, "toml"))
 						}
+						contentFinal := content
+						if key == "" {
+							// If no key in the info, try to extract from the first comment line
+							key, contentFinal = extracNameFromYamlToml(content)
+							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, contentFinal)
+						}
 						if key == "" {
 							key = "metadata"
 						}
@@ -350,28 +199,16 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						if strings.HasPrefix(info, "yaml") {
 							// Parse YAML
 							metaData = make(map[string]any)
-							err = yaml.Unmarshal([]byte(content), &metaData)
+							err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 						} else if strings.HasPrefix(info, "toml") {
 							// Parse TOML
 							metaData = make(map[string]any)
-							_, err = toml.Decode(content, &metaData)
+							_, err = toml.Decode(contentFinal, &metaData)
 						}
 						if err != nil {
 							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
 						}
 						current[key] = metaData
-					} else if strings.HasPrefix(info, "yaml") {
-						// Process YAML blocks
-						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
-						if key == "" {
-							key = "metadata"
-						}
-						yamlContent := make(map[string]any)
-						err := yaml.Unmarshal([]byte(content), &yamlContent)
-						if err != nil {
-							return ast.WalkContinue, fmt.Errorf("error parsing YAML block %s: %v", key, err)
-						}
-						current[key] = yamlContent
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
@@ -415,16 +252,21 @@ func (etlx *ETLX) PrintConfigAsJSON(config map[string]any) {
 	fmt.Println(string(jsonData))
 }
 
-func extractQueryNameFromSQL2(sqlContent string) string {
-	// Define a regex to match the first line with a comment containing the query name
-	// Example: -- query_name
-	re := regexp.MustCompile(`(?m)^--\s*(\w+)`)
-	// Find the first match
-	matches := re.FindStringSubmatch(strings.TrimPrefix(sqlContent, ""))
+// and removes the matched line along with any leading newline in the remaining content.
+func extracNameFromYamlToml(content string) (string, string) {
+	// Define a regex to match the first line with a comment containing the name
+	re := regexp.MustCompile(`(?m)^#\s*(\w+)\s*$`)
+	// Find the name using the regex
+	matches := re.FindStringSubmatch(content)
+	name := ""
 	if len(matches) > 1 {
-		return matches[1] // Return the captured query name
+		name = matches[1] // Capture the name
 	}
-	return ""
+	// Remove the matched line from the content
+	updatedContent := re.ReplaceAllString(content, "")
+	// Remove any leading newline or whitespace from the updated content
+	updatedContent = strings.TrimLeft(updatedContent, "\n")
+	return name, updatedContent
 }
 
 // and removes the matched line along with any leading newline in the remaining content.
