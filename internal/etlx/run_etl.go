@@ -70,6 +70,28 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 	return data, nil
 }
 
+// ReplacePlaceholders replaces placeholders in the format [[query_name]] with their corresponding values from the item map.
+func ReplacePlaceholders(sql string, item map[string]any) (string, error) {
+	// Define a regex to match placeholders in the format [[query_name]]
+	re := regexp.MustCompile(`\[\[(\w+)\]\]`)
+	// Replace all matches with the corresponding values from the item map
+	updatedSQL := re.ReplaceAllStringFunc(sql, func(match string) string {
+		// Extract the query_name from the placeholder
+		matches := re.FindStringSubmatch(match)
+		if len(matches) > 1 {
+			queryName := matches[1]
+			// fmt.Println(queryName, sql, item[queryName])
+			// Check if the query_name exists in the item map
+			if replacement, exists := item[queryName]; exists {
+				return replacement.(string)
+			}
+		}
+		// If no replacement is found, keep the placeholder as is
+		return match
+	})
+	return updatedSQL, nil
+}
+
 func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string]any, step string, dateRef []time.Time) error {
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
@@ -100,6 +122,12 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 		} else if !ok {
 			query = queries
+		}
+		updatedSQL, err := ReplacePlaceholders(query, item)
+		if err != nil {
+			fmt.Println("Error trying to get the placeholder:", err)
+		} else {
+			query = updatedSQL
 		}
 		query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
@@ -141,6 +169,12 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				}
 			} else if !ok {
 				query = queryKey
+			}
+			updatedSQL, err := ReplacePlaceholders(query, item)
+			if err != nil {
+				fmt.Println("Error trying to get the placeholder:", err)
+			} else {
+				query = updatedSQL
 			}
 			query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 			if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
@@ -461,7 +495,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					if err != nil {
 						_err_by_pass := false
 						if okErrPatt && onErrPatt != nil && okErrSQL && onErrSQL != nil {
-							fmt.Println(onErrPatt.(string), onErrSQL.(string))
+							//fmt.Println(onErrPatt.(string), onErrSQL.(string))
 							re, regex_err := regexp.Compile(onErrPatt.(string))
 							if regex_err != nil {
 								_log3["success"] = false
