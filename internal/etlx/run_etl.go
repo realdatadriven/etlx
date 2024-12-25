@@ -315,7 +315,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 			mainSQL, ok := itemMetadata[step+"_sql"]
 			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
 			validation, okValid := itemMetadata[step+"_validation"]
-			createNotExistin, okCreate := itemMetadata[step+"_create_if_not_exists"]
+			onErrPatt, okErrPatt := itemMetadata[step+"_on_err_match_patt"]
+			onErrSQL, okErrSQL := itemMetadata[step+"_on_err_match_sql"]
 			cleanSQL, okClean := itemMetadata["clean_sql"]
 			dropSQL, okDrop := itemMetadata["drop_sql"]
 			rowsSQL, okRows := itemMetadata["rows_sql"]
@@ -458,16 +459,29 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				if isValid {
 					err = etlx.ExecuteQuery(dbConn, mainSQL, item, step, dateRef)
 					if err != nil {
-						re := regexp.MustCompile(`(?i)table.+with.+name.+(\w+).+does.+not.+exist`)
-						if okCreate && createNotExistin != nil && re.MatchString(string(err.Error())) {
-							err = etlx.ExecuteQuery(dbConn, createNotExistin, item, step, dateRef)
-							if err != nil {
+						_err_by_pass := false
+						if okErrPatt && onErrPatt != nil && okErrSQL && onErrSQL != nil {
+							fmt.Println(onErrPatt.(string), onErrSQL.(string))
+							re, regex_err := regexp.Compile(onErrPatt.(string))
+							if regex_err != nil {
 								_log3["success"] = false
-								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
+								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
 								_log3["end_at"] = time.Now()
 								_log3["duration"] = time.Since(start4)
+								_err_by_pass = true
+							} else if re.MatchString(string(err.Error())) {
+								err = etlx.ExecuteQuery(dbConn, onErrSQL.(string), item, step, dateRef)
+								if err != nil {
+									_log3["success"] = false
+									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
+									_log3["end_at"] = time.Now()
+									_log3["duration"] = time.Since(start4)
+								} else {
+									_err_by_pass = true
+								}
 							}
-						} else {
+						}
+						if !_err_by_pass {
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 							_log3["end_at"] = time.Now()
