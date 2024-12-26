@@ -27,6 +27,8 @@ func main() {
 	only := flag.String("only", "", "The only keys to run")
 	// to steps
 	steps := flag.String("steps", "", "The steps to run")
+	// extrat from a file
+	file := flag.String("file", "", "The file to extract data from, the flag shoud be used in combination with the only apointing to the ETL key the data is meant to")
 	// To clean / delete data (execute clean_sql on every item)
 	clean := flag.Bool("clean", false, "To clean data (execute clean_sql on every item, conditioned by only and skip)")
 	// To drop the table (execute drop_sql on every item condition by only and skip)
@@ -60,6 +62,7 @@ func main() {
 		"clean": *clean,
 		"drop":  *drop,
 		"rows":  *rows,
+		"file":  *file,
 	}
 	if *only != "" {
 		extraConf["only"] = strings.Split(*only, ",")
@@ -70,7 +73,7 @@ func main() {
 	if *steps != "" {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
-	_logs, err := etl.RunETL(dateRef, extraConf)
+	_logs, err := etl.RunETL(dateRef, nil, extraConf)
 	if err != nil {
 		fmt.Printf("ETL ERR: %v\n", err)
 	}
@@ -78,7 +81,7 @@ func main() {
 		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
 	}
 	//_sql, query_parts, _fields_order, err := etl.QueryBuilder("QUERY_DOC")
-	_sql, _, _, err := etl.QueryBuilder("QUERY_DOC")
+	_sql, _, _, err := etl.QueryBuilder(nil, "QUERY_DOC")
 	if err != nil {
 		fmt.Printf("QUERY_DOC ERR: %v\n", err)
 	}

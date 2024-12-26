@@ -16,12 +16,16 @@ import (
 //	-query_parts: The query parts parsed from the md config input
 //	-field_orders: The order of the fields in the parts
 //	-error: Error returned in case something goes wrong
-func (etlx *ETLX) QueryBuilder(keys ...string) (string, map[string]any, []string, error) { // dateRef []time.Time, extraConf map[string]any,
+func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map[string]any, []string, error) { // dateRef []time.Time, extraConf map[string]any,
 	key := "QUERY_DOC"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
-	data, ok := etlx.Config[key].(map[string]any)
+	// Check if the input conf is nil or empty
+	if conf == nil {
+		conf = etlx.Config
+	}
+	data, ok := conf[key].(map[string]any)
 	if !ok {
 		return "", nil, nil, fmt.Errorf("missing or invalid %s section", key)
 	}

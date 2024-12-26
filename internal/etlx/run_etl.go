@@ -48,13 +48,15 @@ func (etlx *ETLX) SetQueryPlaceholders(query string, table string, path string, 
 	return _query
 }
 
-func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, step string, dateRef []time.Time) (*[]map[string]any, error) {
+func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, fname string, step string, dateRef []time.Time) (*[]map[string]any, error) {
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
 		table = metadata["table"].(string)
 	}
-	fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+	if fname == "" {
+		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+	}
 	query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 		_file, err := etlx.TempFIle(query, fmt.Sprintf("query.%s_%s.*.sql", "valid", table))
@@ -92,7 +94,29 @@ func ReplacePlaceholders(sql string, item map[string]any) (string, error) {
 	return updatedSQL, nil
 }
 
-func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string]any, step string, dateRef []time.Time) error {
+// ExtractDistinctQueryNames extracts a slice of distinct query names used in the format [[query_name]].
+func ExtractDistinctQueryNames(sql string) []string {
+	// Define a regex to match placeholders in the format [[query_name]]
+	re := regexp.MustCompile(`\[\[(\w+)\]\]`)
+	// Find all matches
+	matches := re.FindAllStringSubmatch(sql, -1)
+	// Use a map to ensure distinct query names
+	uniqueNames := make(map[string]struct{})
+	for _, match := range matches {
+		if len(match) > 1 {
+			queryName := match[1] // Extract the captured query name
+			uniqueNames[queryName] = struct{}{}
+		}
+	}
+	// Convert the map keys to a slice
+	distinctNames := make([]string, 0, len(uniqueNames))
+	for name := range uniqueNames {
+		distinctNames = append(distinctNames, name)
+	}
+	return distinctNames
+}
+
+func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string]any, fname string, step string, dateRef []time.Time) error {
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
@@ -102,7 +126,9 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	if _, ok := metadata["odbc_to_csv"]; ok {
 		odbc2Csv = metadata["odbc_to_csv"].(bool)
 	}
-	fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+	if fname == "" {
+		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+	}
 	fname = etlx.SetQueryPlaceholders(fname, "", "", dateRef)
 	switch queries := sqlData.(type) {
 	case nil:
@@ -114,7 +140,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		_, queryDoc := etlx.Config[queries]
 		if !ok && queryDoc {
 			query = queries
-			_sql, _, _, err := etlx.QueryBuilder(queries)
+			_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queries)
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
 			} else {
@@ -161,7 +187,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			_, queryDoc := etlx.Config[queryKey]
 			if !ok && queryDoc {
 				query = queryKey
-				_sql, _, _, err := etlx.QueryBuilder(queryKey)
+				_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queryKey)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
 				} else {
@@ -220,7 +246,7 @@ func (app *ETLX) containsAny(slice []interface{}, element interface{}) bool {
 	return false
 }
 
-func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
+func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "ETL"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
@@ -324,6 +350,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					continue
 				}
 			}
+			// CHECK FILE
+			file, ok := extraConf["file"].(string)
+			if ok {
+				if file != "" && step != "load" {
+					continue
+				}
+			}
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {
@@ -354,6 +387,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 			cleanSQL, okClean := itemMetadata["clean_sql"]
 			dropSQL, okDrop := itemMetadata["drop_sql"]
 			rowsSQL, okRows := itemMetadata["rows_sql"]
+			metadataFile, okMetaFile := itemMetadata["file"].(string)
 			if rows.(bool) && !okRows {
 				rowsSQL = `SELECT COUNT(*) AS "nrows" FROM "<table>"`
 			}
@@ -388,6 +422,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 			_log3["end_at"] = time.Now()
 			_log3["duration"] = time.Since(start4)
 			processLogs = append(processLogs, _log3)
+			// FILE
+			table := itemMetadata["table"].(string)
+			fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+			if okMetaFile && metadataFile != "" {
+				fname = metadataFile
+			} else if file != "" {
+				fname = file
+			}
 			// Process before SQL
 			if okBefore && beforeSQL != nil {
 				start4 = time.Now()
@@ -397,7 +439,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					"start_at":    start4,
 				}
 				//fmt.Println(_log3)
-				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, step, dateRef)
+				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
@@ -414,8 +456,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 				processLogs = append(processLogs, _log3)
 			}
 			// Process main SQL
-			table := itemMetadata["table"].(string)
-			fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 			if ok && !drop.(bool) && !clean.(bool) && !rows.(bool) {
 				// VALIDATION
 				isValid := true
@@ -448,7 +488,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 								_sql = item[_valid["sql"].(string)].(string)
 							}
 							_sql = etlx.SetQueryPlaceholders(_sql, table, fname, dateRef)
-							res, err := etlx.Query(dbConn, _sql, item, step, dateRef)
+							res, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
 							if err != nil {
 								fmt.Printf("%s -> %s -> %s ERR VALID (%s): %s\n", key, step, itemKey, _valid["sql"], err)
 							} else {
@@ -491,7 +531,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					"start_at":    start4,
 				}
 				if isValid {
-					err = etlx.ExecuteQuery(dbConn, mainSQL, item, step, dateRef)
+					err = etlx.ExecuteQuery(dbConn, mainSQL, item, fname, step, dateRef)
 					if err != nil {
 						_err_by_pass := false
 						if okErrPatt && onErrPatt != nil && okErrSQL && onErrSQL != nil {
@@ -504,7 +544,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 								_log3["duration"] = time.Since(start4)
 								_err_by_pass = true
 							} else if re.MatchString(string(err.Error())) {
-								err = etlx.ExecuteQuery(dbConn, onErrSQL.(string), item, step, dateRef)
+								err = etlx.ExecuteQuery(dbConn, onErrSQL.(string), item, fname, step, dateRef)
 								if err != nil {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
@@ -544,7 +584,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
 				}
-				err = etlx.ExecuteQuery(dbConn, cleanSQL, item, step, dateRef)
+				err = etlx.ExecuteQuery(dbConn, cleanSQL, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: CLEAN: %s", key, step, itemKey, err)
@@ -567,7 +607,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
 				}
-				err = etlx.ExecuteQuery(dbConn, dropSQL, item, step, dateRef)
+				err = etlx.ExecuteQuery(dbConn, dropSQL, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
@@ -595,7 +635,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					_sql = item[rowsSQL.(string)].(string)
 				}
 				_sql = etlx.SetQueryPlaceholders(_sql, table, fname, dateRef)
-				res, err := etlx.Query(dbConn, _sql, item, step, dateRef)
+				res, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: ROWS: %s", key, step, itemKey, err)
@@ -629,7 +669,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
 				}
-				err = etlx.ExecuteQuery(dbConn, afterSQL, item, step, dateRef)
+				err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
@@ -654,8 +694,12 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, extraConf map[string]any, keys ...
 		processLogs = append(processLogs, _log1)
 		return nil
 	}
+	// Check if the input conf is nil or empty
+	if conf == nil {
+		conf = etlx.Config
+	}
 	// Process the MD KEY
-	err := etlx.ProcessMDKey(key, etlx.Config, ELTRunner)
+	err := etlx.ProcessMDKey(key, conf, ELTRunner)
 	if err != nil {
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
