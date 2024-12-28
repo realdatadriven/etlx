@@ -179,11 +179,14 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
-					if strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "toml") {
+					if strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "toml") || strings.HasPrefix(info, "json") {
 						// Process YAML or TOML blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
 						if strings.HasPrefix(info, "toml") {
 							key = strings.TrimSpace(strings.TrimPrefix(info, "toml"))
+						}
+						if strings.HasPrefix(info, "json") {
+							key = strings.TrimSpace(strings.TrimPrefix(info, "json"))
 						}
 						contentFinal := content
 						if key == "" {
@@ -194,16 +197,17 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						if key == "" {
 							key = "metadata"
 						}
-						var metaData map[string]any
+						metaData := make(map[string]any)
 						var err error
 						if strings.HasPrefix(info, "yaml") {
 							// Parse YAML
-							metaData = make(map[string]any)
 							err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 						} else if strings.HasPrefix(info, "toml") {
 							// Parse TOML
-							metaData = make(map[string]any)
 							_, err = toml.Decode(contentFinal, &metaData)
+						} else if strings.HasPrefix(info, "json") {
+							// Parse JSON
+							err = json.Unmarshal([]byte(contentFinal), &metaData)
 						}
 						if err != nil {
 							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
@@ -231,6 +235,18 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	})
 	if err != nil {
 		return err
+	}
+	// due to toml resulting parsed map been more deeply
+	// (going as far as []map[string]any instead of just []any relativally to json and yaml)
+	// it was decided to put all to json string an back to go map to guarantee  consistency
+	// otherwise schema defenition would be needed and that would
+	jsonData, err := json.MarshalIndent(config, "", "  ")
+	if err != nil {
+		return fmt.Errorf("err converting to json: %s", err)
+	}
+	err = json.Unmarshal([]byte(jsonData), &config)
+	if err != nil {
+		return fmt.Errorf("err converting from json: %s", err)
 	}
 	etlx.Config = config
 	return nil

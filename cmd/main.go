@@ -4,6 +4,7 @@ import (
 	"flag"
 	"fmt"
 	"log"
+	"os"
 	"strings"
 	"time"
 
@@ -44,7 +45,9 @@ func main() {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
 	// Print the parsed configuration
-	//etl.PrintConfigAsJSON(etl.Config)
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		etl.PrintConfigAsJSON(etl.Config)
+	}
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)

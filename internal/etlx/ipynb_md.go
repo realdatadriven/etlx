@@ -3,6 +3,7 @@ package etlx
 import (
 	"encoding/json"
 	"fmt"
+	"os"
 	"strings"
 )
 
@@ -24,7 +25,6 @@ func (etlx *ETLX) ConvertIPYNBToMarkdown(ipynbContent []byte) (string, error) {
 	if err := json.Unmarshal(ipynbContent, &notebook); err != nil {
 		return "", fmt.Errorf("error parsing JSON: %w", err)
 	}
-
 	// Build the Markdown output
 	var mdBuilder strings.Builder
 	for _, cell := range notebook.Cells {
@@ -48,11 +48,12 @@ func (etlx *ETLX) ConvertIPYNBToMarkdown(ipynbContent []byte) (string, error) {
 			mdBuilder.WriteString("```\n\n")
 		}
 	}
-	_, err := etlx.TempFIle(mdBuilder.String(), "ipymd2md.*.md")
-	if err != nil {
-		fmt.Println(err)
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		_, err := etlx.TempFIle(mdBuilder.String(), "ipymd2md.*.md")
+		if err != nil {
+			fmt.Println(err)
+		}
+		//fmt.Println(_file)
 	}
-	//fmt.Println(_file)
-
 	return mdBuilder.String(), nil
 }
