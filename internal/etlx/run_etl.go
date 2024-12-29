@@ -50,7 +50,7 @@ func (etlx *ETLX) SetQueryPlaceholders(query string, table string, path string, 
 	return _query
 }
 
-func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, fname string, step string, dateRef []time.Time) (*[]map[string]any, error) {
+func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, fname string, step string, dateRef []time.Time) (*[]map[string]any, []string, error) {
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
@@ -67,11 +67,11 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 		}
 		fmt.Println(_file)
 	}
-	data, _, err := conn.QueryMultiRows(query, []any{}...)
+	data, cols, _, err := conn.QueryMultiRowsWithCols(query, []any{}...)
 	if err != nil {
-		return nil, err
+		return nil, nil, err
 	}
-	return data, nil
+	return data, cols, nil
 }
 
 // ReplacePlaceholders replaces placeholders in the format [[query_name]] with their corresponding values from the item map.
@@ -122,7 +122,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
-		table = metadata["table"].(string)
+		table, _ = metadata["table"].(string)
 	}
 	odbc2Csv := false
 	if _, ok := metadata["odbc_to_csv"]; ok {
@@ -264,6 +264,20 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	mainDescription := ""
 	// Define the runner as a simple function
 	ELTRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
+		// ACTIVE
+		if active, okActive := metadata["active"]; okActive {
+			if !active.(bool) {
+				processLogs = append(processLogs, map[string]any{
+					"name":        fmt.Sprintf("KEY %s", key),
+					"description": metadata["description"].(string),
+					"start_at":    time.Now(),
+					"end_at":      time.Now(),
+					"success":     true,
+					"msg":         "Deactivated",
+				})
+				return fmt.Errorf("dectivated %s", "")
+			}
+		}
 		//fmt.Println(metadata, itemKey, item)
 		mainConn := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
@@ -384,7 +398,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			beforeSQL, okBefore := itemMetadata[step+"_before_sql"]
 			onBefErrPatt, okBefErrPatt := itemMetadata[step+"_before_on_err_match_patt"]
 			onBefErrSQL, okBefErrSQL := itemMetadata[step+"_before_on_err_match_sql"]
-			mainSQL, ok := itemMetadata[step+"_sql"]
+			mainSQL, okMain := itemMetadata[step+"_sql"]
 			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
 			onAfterErrPatt, okAfterErrPatt := itemMetadata[step+"_after_on_err_match_patt"]
 			onAfterErrSQL, okAfterErrSQL := itemMetadata[step+"_after_on_err_match_sql"]
@@ -504,7 +518,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs = append(processLogs, _log3)
 			}
 			// Process main SQL
-			if ok && !drop.(bool) && !clean.(bool) && !rows.(bool) {
+			if okMain && !drop.(bool) && !clean.(bool) && !rows.(bool) {
 				// VALIDATION
 				isValid := true
 				validErr := ""
@@ -538,7 +552,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								_sql = item[_valid["sql"].(string)].(string)
 							}
 							_sql = etlx.SetQueryPlaceholders(_sql, table, fname, dateRef)
-							res, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
+							res, _, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
 							if err != nil {
 								fmt.Printf("%s -> %s -> %s ERR VALID (%s): %s\n", key, step, itemKey, _valid["sql"], err)
 							} else {
@@ -694,7 +708,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_sql = item[rowsSQL.(string)].(string)
 				}
 				_sql = etlx.SetQueryPlaceholders(_sql, table, fname, dateRef)
-				res, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
+				res, _, err := etlx.Query(dbConn, _sql, item, fname, step, dateRef)
 				if err != nil {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: ROWS: %s", key, step, itemKey, err)

@@ -83,10 +83,19 @@ func main() {
 	for _, _log := range _logs {
 		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
 	}
+	// QUERY_DOC
 	//_sql, query_parts, _fields_order, err := etl.QueryBuilder("QUERY_DOC")
 	_sql, _, _, err := etl.QueryBuilder(nil, "QUERY_DOC")
 	if err != nil {
 		fmt.Printf("QUERY_DOC ERR: %v\n", err)
 	}
 	fmt.Println(_sql)
+	// EXPORTS
+	_logs, err = etl.RunEXPORTS(dateRef, nil, extraConf)
+	if err != nil {
+		fmt.Printf("ETL ERR: %v\n", err)
+	}
+	for _, _log := range _logs {
+		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+	}
 }
