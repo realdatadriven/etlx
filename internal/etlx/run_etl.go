@@ -54,7 +54,7 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
-		table = metadata["table"].(string)
+		table, _ = metadata["table"].(string)
 	}
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)

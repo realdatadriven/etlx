@@ -4,6 +4,9 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
+	"strconv"
+	"strings"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -40,12 +43,30 @@ func getKeys(m map[string]any) []string {
 	return keys
 }
 
+func getStartOfRange(input string) (int, string, error) {
+	// Define a regex pattern to match an Excel cell or range
+	// This will capture the column letters and row numbers
+	re := regexp.MustCompile(`([A-Z]+)(\d+)(?::[A-Z]+\d+)?`)
+	// Match the input string
+	matches := re.FindStringSubmatch(input)
+	if len(matches) < 3 {
+		return 0, "", fmt.Errorf("invalid Excel range or cell: %s", input)
+	}
+	// Extract the column (letters) and row (numbers)
+	column := matches[1]
+	row, err := strconv.Atoi(matches[2])
+	if err != nil {
+		return 0, "", fmt.Errorf("invalid row number in input: %s", input)
+	}
+	return row, column, nil
+}
+
 func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "EXPORTS"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
-	fmt.Println(key, dateRef)
+	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
@@ -142,7 +163,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		if okPath && path != "" {
 			fname = path
 		} else if okMainPath && mainPath != "" {
-			fname = mainPath
+			fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, mainPath, table)
 		}
 		//  QUERIES TO RUN AT BEGINING
 		if okBefore {
@@ -194,7 +215,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				"description": itemMetadata["description"].(string),
 				"start_at":    start3,
 			}
-			fmt.Println(template, mapping)
+			//fmt.Println(template, mapping)
 			if ok, _ := fileExists(template.(string)); !ok {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s givem as template does not exists", key, itemKey, template)
@@ -204,7 +225,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				// Check for supported spreadsheet extensions
 				ext := filepath.Ext(template.(string))
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
-					return fmt.Errorf("unsupported template file extension: %s", ext)
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("unsupported template file extension: %s", ext)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					processLogs = append(processLogs, _log2)
+					return nil
 				}
 				// Open or create a new workbook
 				var file *excelize.File
@@ -212,10 +238,20 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				if ok, _ := fileExists(template.(string)); ok {
 					file, err = excelize.OpenFile(template.(string))
 					if err != nil {
-						return fmt.Errorf("failed to open template file: %w", err)
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("failed to open template file: %s", err)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3)
+						processLogs = append(processLogs, _log2)
+						return nil
 					}
 				} else {
-					return fmt.Errorf("template doesn't exists: %s", template)
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("template doesn't exists: %s", template)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					processLogs = append(processLogs, _log2)
+					return nil
 				}
 				_mapp := []map[string]any{}
 				switch _map := mapping.(type) {
@@ -224,6 +260,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("%s -> %s error mapeamento vazio", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
+					processLogs = append(processLogs, _log2)
+					return nil
 				case string:
 					// Single query reference
 				case []any:
@@ -231,19 +269,27 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_mapp = append(_mapp, item.(map[string]any))
 					}
 				default:
-					return fmt.Errorf("invalid mapping data type: %T", _map)
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping data type: %T", key, itemKey, _map)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					processLogs = append(processLogs, _log2)
+					return nil
 				}
 				for _, detail := range _mapp {
 					// Skip inactive entries
-					if active, _ := detail["active"].(bool); !active {
-						continue
+					if active, ok := detail["active"].(bool); ok {
+						if !active {
+							continue
+						}
 					}
-					sheet := detail["sheet"].(string)
-					table := detail["table"].(string)
-					_range := detail["range"].(string)
-					_type := detail["type"].(string)
-					sql := detail["sql"].(string)
-					fmt.Println(sheet, table, sql, _range, _type)
+					sheet, _ := detail["sheet"].(string)
+					table, _ := detail["table"].(string)
+					_range, _ := detail["range"].(string)
+					_type, _ := detail["type"].(string)
+					sql, _ := detail["sql"].(string)
+					header, _ := detail["header"].(bool)
+					//fmt.Println(sheet, table, sql, _range, _type, header)
 					// Check or create the destination sheet
 					sheetIndex, err := file.GetSheetIndex(sheet)
 					if sheetIndex == -1 || err != nil {
@@ -260,62 +306,107 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					rows, columns, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
 					// Fetch data from the database using the provided SQL query
 					if err != nil {
-						return fmt.Errorf("error executing query for detail ID %v: %w", detail, err)
+						fmt.Printf("error executing query for detail ID %v: %s", detail, err)
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute query: %s", key, itemKey, err)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3)
+						processLogs = append(processLogs, _log2)
+						continue
 					}
-					// Write column headers
-					for colIdx, colName := range columns {
-						cell, err := excelize.JoinCellName(string('A'+colIdx), 1)
-						if err != nil {
-							return fmt.Errorf("failed to set columns: %w", err)
-						}
-						file.SetCellValue(sheet, cell, colName)
-					}
-					// Write data rows
-					rowIdx := 2
-					for _, value := range *rows {
-						for colIdx, colName := range columns {
-							cell, err := excelize.JoinCellName(string('A'+colIdx), rowIdx)
-							if err != nil {
-								return fmt.Errorf("failed to set columns: %w", err)
-							}
-							file.SetCellValue(sheet, cell, value[colName])
-						}
-						rowIdx++
-					}
-					// Create Excel table if `dest_table_name` is specified
-					if table != "" {
-						cell, err := excelize.JoinCellName(string('A'+len(columns)-1), rowIdx-1)
-						if err != nil {
-							return fmt.Errorf("failed to set columns: %w", err)
-						}
-						tableRange := fmt.Sprintf("A1:%s", cell)
-						err = file.AddTable(sheet, &excelize.Table{
-							Name:            table,
-							Range:           tableRange,
-							StyleName:       "TableStyleMedium9",
-							ShowFirstColumn: false,
-							ShowLastColumn:  false,
-							//ShowRowStripes:    true,
-							ShowColumnStripes: false,
-						})
-						if err != nil {
-							return fmt.Errorf("failed to create table %s on sheet %s: %w", table, sheet, err)
-						}
-					}
-					outputFile := filepath.Join(os.TempDir(), fmt.Sprintf("%s%s", filepath.Base(template.(string)), ext))
-					err = file.SaveAs(outputFile)
+					startRow, col, err := getStartOfRange(_range)
 					if err != nil {
-						return fmt.Errorf("failed to save file: %w", err)
+						fmt.Printf("Error for '%s': %v\n", _range, err)
+						startRow, col = 1, "A"
 					}
-					return nil
+					// Convert the start column to an integer offset
+					startColIndex := int(strings.ToUpper(col)[0] - 'A')
+					if _type == "value" {
+						cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+						if err != nil {
+							fmt.Printf("failed to set columns: %s", err)
+						}
+						if len((*rows)) > 0 {
+							_val := (*rows)[0]
+							key, okKey := detail["key"].(string)
+							if okKey {
+								file.SetCellValue(sheet, cell, _val[key])
+							} else {
+								file.SetCellValue(sheet, cell, _val["value"])
+							}
+						} else {
+							file.SetCellValue(sheet, cell, nil)
+						}
+					} else {
+						rowIdx := startRow
+						// Write column headers
+						if header {
+							for colIdx, colName := range columns {
+								cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), startRow)
+								if err != nil {
+									fmt.Printf("failed to set columns: %s", err)
+								}
+								file.SetCellValue(sheet, cell, colName)
+							}
+							rowIdx++
+						}
+						// Write data rows
+						for _, value := range *rows {
+							for colIdx, colName := range columns {
+								cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), rowIdx)
+								if err != nil {
+									fmt.Printf("failed to set columns: %s", err)
+								}
+								file.SetCellValue(sheet, cell, value[colName])
+							}
+							rowIdx++
+						}
+						// Create Excel table if `table` is specified
+						if table != "" {
+							startCell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), rowIdx)
+							if err != nil {
+								fmt.Printf("failed to set columns: %s", err)
+							}
+							endCell, err := excelize.JoinCellName(string(rune('A'+startColIndex+len(columns)-1)), rowIdx-1)
+							if err != nil {
+								fmt.Printf("failed to set columns: %s", err)
+							}
+							tableRange := fmt.Sprintf("%s:%s", startCell, endCell)
+							err = file.AddTable(sheet, &excelize.Table{
+								Name:            table,
+								Range:           tableRange,
+								StyleName:       "TableStyleMedium9",
+								ShowFirstColumn: false,
+								ShowLastColumn:  false,
+								//ShowRowStripes:    true,
+								ShowColumnStripes: false,
+							})
+							if err != nil {
+								fmt.Printf("failed to create table %s on sheet %s range %s: %s", table, sheet, tableRange, err)
+							}
+						}
+					}
+				}
+				outputFile := filepath.Join(os.TempDir(), "_", filepath.Base(template.(string)))
+				if fname != "" && filepath.Base(fname) != "" {
+					outputFile = fname
+				} else if fname != "" && filepath.Base(fname) == "" && filepath.Dir(fname) != "" {
+					outputFile = filepath.Join(filepath.Dir(fname), "_", filepath.Base(template.(string)))
+				}
+				outputFile = etlx.ReplaceQueryStringDate(outputFile, dateRef)
+				//fmt.Println(outputFile)
+				err = file.SaveAs(outputFile)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to save file: %s", key, itemKey, err)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
 				}
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
-
 			}
-
 			processLogs = append(processLogs, _log2)
 		}
 		// QUERIES TO RUN AT THE END
