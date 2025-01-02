@@ -1,14 +1,14 @@
 # **DuckDB-Powered Markdown-Driven ETL Framework**
 
 ## **Overview**
-This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown files as configuration inputs, where **YAML metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
+This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
 
 The framework supports a variety of data sources, including:
 - Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
 - Cloud Storage: **S3**.
 - File Formats: **CSV**, **Parquet**, **Spreadsheets**.
 
-By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration.
+By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template filling ....
 
 ---
 
@@ -41,16 +41,15 @@ Create a Markdown file with the ETL process configuration. For example:
 
 ````markdown
 # ETL
-```yaml etl
+```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
 connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
-# EXTRACT
 ## sales_data
-```yaml etl_sales
+```yaml
 name: SalesData
 description: 'Daily Sales Data'
 source: sales_db
@@ -62,7 +61,8 @@ load_sql: load_sales
 ```sql extract_sales
 SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
 ```
-```sql load_sales
+```sql
+-- load_sales
 CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ```
 ````
@@ -86,7 +86,8 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ## **Configuration Details**
 
 ### **ETL Metadata (YAML)**
-The ETL process is defined using YAML metadata in Markdown. Below is an example:
+The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env fileon the root is suported to laod them:
+
 ```markdown
 ```yaml
 name: Daily_ETL
@@ -122,7 +123,6 @@ database: analytics_db
 connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
-# EXTRACT
 ## sales_data
 ```yaml etl_sales
 name: SalesData
@@ -195,8 +195,8 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      - `"connection"`: Main connection to the destination database.
      - `"description"`: For logging the start and end time of the ETL process.
 
-2. **Loop through `"EXTRACT"`**:
-   - Iterate over each key (e.g., `"sales_data"`) in `"EXTRACT"`.
+2. **Loop through Level 2 key in the file**:
+   - Iterate over each key (e.g., `"sales_data"`).
    - For each key, access its `"metadata"` to process the ETL steps.
 
 3. **ETL Steps**:
@@ -205,10 +205,11 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      - `_sql`: The main query or queries to run.
      - `_after_sql`: Cleanup queries to run afterward.
    - Queries can be:
-     - `nil`: Do nothing.
+     - `null`: Do nothing.
      - `string`: Reference a single query key in the same map.
      - `slice of strings`: Execute all queries in sequence.
-   - Use `_conn` for connection settings. If `nil`, fall back to the main connection.
+     - In case is not null it can be the query itsel or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
+   - Use `_conn` for connection settings. If `null`, fall back to the main connection.
 
 4. **Output Logs**:
    - Log progress (e.g., connection usage, start/end times, descriptions).
