@@ -32,7 +32,33 @@ By leveraging DuckDB's powerful in-memory processing capabilities, this framewor
 - **Scheduler Integration**:
   - Define periodicity using cron expressions in YAML metadata.
 
+- **Extensibility**:
+  - Designed for embedding in **Go** or **Python** applications.
+  - Parse configurations programmatically or pass configurations as form data.
+
 ---
+
+## **Command-Line Usage**
+
+The binary supports the following flags:
+
+- `--config`: Path to the Markdown configuration file. *(Default: `config.md`)*
+- `--date`: Reference date for the ETL process in `YYYY-MM-DD` format. *(Default: yesterday's date)*
+- `--only`: Comma-separated list of keys to run.
+- `--skip`: Comma-separated list of keys to skip.
+- `--steps`: Steps to run within the ETL process (`extract`, `transform`, `load`).
+- `--file`: Path to a specific file to extract data from. Typically used with the `--only` flag.
+- `--clean`: Execute `clean_sql` on items (conditional based on `--only` and `--skip`).
+- `--drop`: Execute `drop_sql` on items (conditional based on `--only` and `--skip`).
+- `--rows`: Retrieve the number of rows in the target table(s).
+
+---
+
+### **Example Command**
+
+```bash
+etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
+```
 
 ## **How It Works**
 
@@ -55,7 +81,7 @@ description: 'Daily Sales Data'
 source: sales_db
 extract_conn: 'mysql://user:pass@localhost:3306/sales'
 extract_sql: extract_sales
-load_conn: 'duckdb:memory'
+load_conn: 'duckdb:'
 load_sql: load_sales
 ```
 ```sql extract_sales
@@ -93,7 +119,7 @@ The ETL process is defined using YAML metadata in Markdown. Below is an example,
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
-connection: 'postgres://user:pass@localhost:5432/analytics_db'
+connection: 'postgres:user=@PGUSER password=@PGPASS dbname=analytics_db host=localhost port=5432 sslmode=disable'
 periodicity: '0 5 * * *'
 ```
 
@@ -120,7 +146,7 @@ Markdown File (`etl_config.md`):
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
-connection: 'postgres://user:pass@localhost:5432/analytics_db'
+connection: 'postgres:user=@PGUSER password=@PGPASS dbname=analytics_db host=localhost port=5432 sslmode=disable'
 periodicity: '0 5 * * *'
 ```
 ## sales_data
@@ -128,9 +154,9 @@ periodicity: '0 5 * * *'
 name: SalesData
 description: 'Daily Sales Data'
 source: sales_db
-extract_conn: 'mysql://user:pass@localhost:3306/sales'
+extract_conn: 'mysql:@MYSQL_USER:@MYSQL_PASSWORD@localhost:3306/sales'
 extract_sql: extract_sales
-load_conn: 'duckdb:memory'
+load_conn: 'duckdb:'
 load_sql: load_sales
 ```
 ```sql extract_sales
@@ -195,25 +221,73 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      - `"connection"`: Main connection to the destination database.
      - `"description"`: For logging the start and end time of the ETL process.
 
-2. **Loop through Level 2 key in the file**:
+2. **Loop through Level 2 key in under `"ETL"` key**:
    - Iterate over each key (e.g., `"sales_data"`).
    - For each key, access its `"metadata"` to process the ETL steps.
 
 3. **ETL Steps**:
-   - Each ETL step (`Extract`, `Transform`, `Load`) has:
+   - Each ETL step (`extract`, `transform`, `load`) has:
      - `_before_sql`: Queries to run first (setup).
      - `_sql`: The main query or queries to run.
      - `_after_sql`: Cleanup queries to run afterward.
    - Queries can be:
      - `null`: Do nothing.
-     - `string`: Reference a single query key in the same map.
+     - `string`: Reference a single query key in the same map or the qyery itself.
      - `slice of strings`: Execute all queries in sequence.
-     - In case is not null it can be the query itsel or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
+     - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
    - Use `_conn` for connection settings. If `null`, fall back to the main connection.
 
 4. **Output Logs**:
    - Log progress (e.g., connection usage, start/end times, descriptions).
    - Gracefully handle missing or `nil` keys.
+
+
+---
+
+## **Embedding in Go**
+
+To embed the ETL framework in a Go application:
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+	"github.com/realdatadriven/etlx/internal/etlx"
+)
+
+func main() {
+	etl := &etlx.ETLX{}
+
+	// Load configuration from Markdown text
+	err := etl.ConfigFromMDText(`# Your Markdown config here`)
+	if err != nil {
+		fmt.Printf("Error loading config: %v\n", err)
+		return
+	}
+
+	// Prepare date reference
+	dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
+
+	// Define additional options
+	options := map[string]any{
+		"only":  []string{"sales"},
+		"steps": []string{"extract", "load"},
+	}
+
+	// Run ETL process
+	logs, err := etl.RunETL(dateRef, nil, options)
+	if err != nil {
+		fmt.Printf("Error running ETL: %v\n", err)
+		return
+	}
+
+	// Print logs
+	for _, log := range logs {
+		fmt.Printf("Log: %+v\n", log)
+	}
+}
 
 ---
 
