@@ -40,6 +40,16 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	return etlx.ParseMarkdownToConfig(reader)
 }
 
+func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
+	// Parse the Markdown from IPYNB JSON content into an AST
+	mdText, err := etlx.ConvertIPYNBToMarkdown([]byte(ipynbJSON))
+	if err != nil {
+		return fmt.Errorf("failed convert the Notebook JSON content to MDText: %w", err)
+	}
+	reader := text.NewReader([]byte(mdText))
+	return etlx.ParseMarkdownToConfig(reader)
+}
+
 func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 	// Parse the Markdown content into an AST
 	reader := text.NewReader([]byte(mdText))
@@ -476,6 +486,32 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 			// fmt.Println(match, envVar, envValue)
 			if envValue != "" {
 				input = strings.ReplaceAll(input, match, envValue)
+			}
+		}
+	} else {
+		re = regexp.MustCompile(`@\.\w+`)
+		matches = re.FindAllString(input, -1)
+		if len(matches) > 0 {
+			for _, match := range matches {
+				envVar := strings.TrimPrefix(match, "@.")
+				envValue := os.Getenv(envVar)
+				// fmt.Println(match, envVar, envValue)
+				if envValue != "" {
+					input = strings.ReplaceAll(input, match, envValue)
+				}
+			}
+		} else {
+			re = regexp.MustCompile(`@\w+`)
+			matches = re.FindAllString(input, -1)
+			if len(matches) > 0 {
+				for _, match := range matches {
+					envVar := strings.TrimPrefix(match, "@")
+					envValue := os.Getenv(envVar)
+					// fmt.Println(match, envVar, envValue)
+					if envValue != "" {
+						input = strings.ReplaceAll(input, match, envValue)
+					}
+				}
 			}
 		}
 	}
