@@ -180,18 +180,13 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 
 ## **Getting Started**
 
-1. **Install DuckDB**:
-   ```bash
-   pip install duckdb  # Or download the binary for your platform
-   ```
-
-2. **Clone the Repository**:
+1. **Clone the Repository**:
    ```bash
    git clone https://github.com/realdatadriven/etlx.git
    cd etlx
    ```
 
-3. **Run the ETL Process**:
+2. **Run the ETL Process**:
    ```bash
    go run main.go --config etl_config.md --date 2023-10-31
    ```
@@ -202,7 +197,7 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
    go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
    ```
 
-4. **Schedule the Process** (Optional):
+3. **Schedule the Process** (Optional):
    - Use cron to schedule the script:
      ```bash
      crontab -e
@@ -288,7 +283,7 @@ func main() {
 		fmt.Printf("Log: %+v\n", log)
 	}
 }
-
+```
 ---
 
 ## **License**
