@@ -1,7 +1,7 @@
 # **DuckDB-Powered Markdown-Driven ETL Framework**
 
 ## **Overview**
-This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs, where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
+This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
 
 The framework supports a variety of data sources, including:
 - Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
