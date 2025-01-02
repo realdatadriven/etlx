@@ -48,7 +48,6 @@ database: analytics_db
 connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
-# EXTRACT
 ## sales_data
 ```yaml etl_sales
 name: SalesData
@@ -122,7 +121,6 @@ database: analytics_db
 connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
-# EXTRACT
 ## sales_data
 ```yaml etl_sales
 name: SalesData
@@ -195,8 +193,8 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      - `"connection"`: Main connection to the destination database.
      - `"description"`: For logging the start and end time of the ETL process.
 
-2. **Loop through `"EXTRACT"`**:
-   - Iterate over each key (e.g., `"sales_data"`) in `"EXTRACT"`.
+2. **Loop through Level 2 key in the file**:
+   - Iterate over each key (e.g., `"sales_data"`).
    - For each key, access its `"metadata"` to process the ETL steps.
 
 3. **ETL Steps**:
@@ -205,10 +203,11 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
      - `_sql`: The main query or queries to run.
      - `_after_sql`: Cleanup queries to run afterward.
    - Queries can be:
-     - `nil`: Do nothing.
+     - `null`: Do nothing.
      - `string`: Reference a single query key in the same map.
      - `slice of strings`: Execute all queries in sequence.
-   - Use `_conn` for connection settings. If `nil`, fall back to the main connection.
+     - In case is not null it can be the query itsel or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
+   - Use `_conn` for connection settings. If `null`, fall back to the main connection.
 
 4. **Output Logs**:
    - Log progress (e.g., connection usage, start/end times, descriptions).
