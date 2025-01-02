@@ -41,7 +41,7 @@ Create a Markdown file with the ETL process configuration. For example:
 
 ````markdown
 # ETL
-```yaml etl
+```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
@@ -49,7 +49,7 @@ connection: 'postgres://user:pass@localhost:5432/analytics_db'
 periodicity: '0 5 * * *'
 ```
 ## sales_data
-```yaml etl_sales
+```yaml
 name: SalesData
 description: 'Daily Sales Data'
 source: sales_db
@@ -61,7 +61,8 @@ load_sql: load_sales
 ```sql extract_sales
 SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
 ```
-```sql load_sales
+```sql
+-- load_sales
 CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ```
 ````
@@ -85,7 +86,8 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 ## **Configuration Details**
 
 ### **ETL Metadata (YAML)**
-The ETL process is defined using YAML metadata in Markdown. Below is an example:
+The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env fileon the root is suported to laod them:
+
 ```markdown
 ```yaml
 name: Daily_ETL
