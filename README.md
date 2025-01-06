@@ -65,31 +65,67 @@ etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 ### **1. Define ETL Configuration in Markdown**
 Create a Markdown file with the ETL process configuration. For example:
 
-````markdown
-# ETL
+```markdown
 ```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
-connection: 'postgres://user:pass@localhost:5432/analytics_db'
-periodicity: '0 5 * * *'
+connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
+```
+
+### **Validation Rules**
+Validation is performed during the load phase using YAML:
+```yaml
+load_validation:
+  - type: throw_if_empty
+    sql: validate_data_not_empty
+    msg: 'No data extracted for the given date!'
+  - type: throw_if_not_empty
+    sql: validate_data_duplicates
+    msg: 'Duplicate data detected!'
+```
+
+---
+
+## **Example Use Case**
+
+Markdown File (`etl_config.md`):
+````markdown
+# ETL
+```yaml etl
+name: Daily_ETL
+description: 'Daily extraction at 5 AM'
+database: analytics_db
+connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
 ## sales_data
-```yaml
+```yaml etl_sales
 name: SalesData
 description: 'Daily Sales Data'
-source: sales_db
-extract_conn: 'mysql://user:pass@localhost:3306/sales'
-extract_sql: extract_sales
 load_conn: 'duckdb:'
+load_before_sql:
+  - load_extentions
+  - conn
 load_sql: load_sales
+load_after_sql: detaches
 ```
-```sql extract_sales
-SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
+```sql load_extentions
+load mysql;
+load postgres;
 ```
-```sql
--- load_sales
-CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
+```sql conn
+ATTACH 'user=@MYSQL_USER password=A@MYSQL_PASSWORD port=3306 database=sales' AS "ORG" (TYPE MYSQL);
+ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable' AS "DST" (TYPE POSTGRES);
+```
+```sql detaches
+DETACH "ORG";
+DETACH "DST";
+```
+```
+```sql load_sales
+CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
+SELECT * 
+FROM "ORG"."sales";
 ```
 ````
 
@@ -119,8 +155,7 @@ The ETL process is defined using YAML metadata in Markdown. Below is an example,
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
-connection: 'postgres:user=@PGUSER password=@PGPASS dbname=analytics_db host=localhost port=5432 sslmode=disable'
-periodicity: '0 5 * * *'
+connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
 
 ### **Validation Rules**
@@ -146,24 +181,36 @@ Markdown File (`etl_config.md`):
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
-connection: 'postgres:user=@PGUSER password=@PGPASS dbname=analytics_db host=localhost port=5432 sslmode=disable'
-periodicity: '0 5 * * *'
+connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
 ## sales_data
 ```yaml etl_sales
 name: SalesData
 description: 'Daily Sales Data'
-source: sales_db
-extract_conn: 'mysql:@MYSQL_USER:@MYSQL_PASSWORD@localhost:3306/sales'
-extract_sql: extract_sales
 load_conn: 'duckdb:'
+load_before_sql:
+  - load_extentions
+  - conn
 load_sql: load_sales
+load_after_sql: detaches
 ```
-```sql extract_sales
-SELECT * FROM sales WHERE sale_date = '{YYYYMMDD}'
+```sql load_extentions
+load mysql;
+load postgres;
+```
+```sql conn
+ATTACH 'user=@MYSQL_USER password=A@MYSQL_PASSWORD port=3306 database=sales' AS "ORG" (TYPE MYSQL);
+ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable' AS "DST" (TYPE POSTGRES);
+```
+```sql detaches
+DETACH "ORG";
+DETACH "DST";
+```
 ```
 ```sql load_sales
-CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
+CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
+SELECT * 
+FROM "ORG"."sales";
 ```
 ````
 
@@ -194,7 +241,7 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
    On Windows you may have building issues if you keep duckdb, in that case I found out that is esier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
 
     ```bash
-   go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
+  CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
    ```
 
 3. **Schedule the Process** (Optional):
@@ -234,7 +281,7 @@ CREATE OR REPLACE TABLE analytics.sales AS SELECT * FROM '<filename>';
 
 4. **Output Logs**:
    - Log progress (e.g., connection usage, start/end times, descriptions).
-   - Gracefully handle missing or `nil` keys.
+   - Gracefully handle missing or `null` keys.
 
 
 ---

@@ -279,7 +279,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 		}
 		//fmt.Println(metadata, itemKey, item)
-		mainConn := metadata["connection"].(string)
+		mainConn, okMainConn := metadata["connection"].(string)
+		if !okMainConn {
+			mainConn = "duckdb:"
+		}
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
@@ -407,12 +410,18 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			onErrSQL, okErrSQL := itemMetadata[step+"_on_err_match_sql"]
 			fromFileSQL, okFromFile := itemMetadata[step+"_from_file"].(map[string]any)
 			cleanSQL, okClean := itemMetadata["clean_sql"]
+			if rows.(bool) && !okClean {
+				cleanSQL = `DELETE FROM "<table>"`
+			}
 			dropSQL, okDrop := itemMetadata["drop_sql"]
+			if rows.(bool) && !okDrop {
+				dropSQL = `DROP TABLE "<table>"`
+			}
 			rowsSQL, okRows := itemMetadata["rows_sql"]
-			metadataFile, okMetaFile := itemMetadata["file"].(string)
 			if rows.(bool) && !okRows {
 				rowsSQL = `SELECT COUNT(*) AS "nrows" FROM "<table>"`
 			}
+			metadataFile, okMetaFile := itemMetadata["file"].(string)
 			//fmt.Println(step, ok, mainSQL)
 			if !ok || mainSQL == nil {
 				continue
@@ -420,6 +429,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			conn := itemMetadata[step+"_conn"]
 			if conn == nil {
 				conn = mainConn // Fallback to main connection
+				if conn == "" {
+					conn = "duckdb:"
+				}
 			}
 			// CONNECTION
 			start4 := time.Now()
