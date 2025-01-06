@@ -206,7 +206,6 @@ ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port
 DETACH "ORG";
 DETACH "DST";
 ```
-```
 ```sql load_sales
 CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
 SELECT * 
@@ -234,15 +233,15 @@ FROM "ORG"."sales";
    ```
 
 2. **Run the ETL Process**:
-   ```bash
-   go run main.go --config etl_config.md --date 2023-10-31
-   ```
-   the same cam be said for build
-   On Windows you may have building issues if you keep duckdb, in that case I found out that is esier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
+```bash
+go run main.go --config etl_config.md --date 2023-10-31
+```
+the same cam be said for build
+On Windows you may have building issues if you keep duckdb, in that case I found out that is esier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
 
-    ```bash
-  CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
-   ```
+```bash
+CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
+```
 
 3. **Schedule the Process** (Optional):
    - Use cron to schedule the script:
