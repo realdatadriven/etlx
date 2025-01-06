@@ -22,8 +22,7 @@ jobs:
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
-          CGO_ENABLED=1 GOOS=linux GOARCH=amd64 go build -o dist/etlx-linux-amd64 ./cmd/main.go
-          CGO_ENABLED=1 GOOS=linux GOARCH=arm64 go build -o dist/etlx-linux-arm64 ./cmd/main.go
+          CGO_ENABLED=1 go build -o dist/etlx-linux-amd64 ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -46,7 +45,7 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir -p dist
-          CGO_ENABLED=1 GOOS=windows GOARCH=amd64 go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -67,8 +66,7 @@ jobs:
       - name: Build macOS Binaries
         run: |
           mkdir -p dist
-          CGO_ENABLED=1 GOOS=darwin GOARCH=amd64 go build -o dist/etlx-darwin-amd64 ./cmd/main.go
-          CGO_ENABLED=1 GOOS=darwin GOARCH=arm64 go build -o dist/etlx-darwin-arm64 ./cmd/main.go
+          CGO_ENABLED=1 go build -o dist/etlx-darwin-amd64 ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -100,13 +98,6 @@ jobs:
           asset_path: dist/etlx-linux-amd64
           asset_name: etlx-linux-amd64
           asset_content_type: application/octet-stream
-      - name: Upload Linux ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/etlx-linux-arm64
-          asset_name: etlx-linux-arm64
-          asset_content_type: application/octet-stream
       - name: Upload Windows AMD64 Binary
         uses: actions/upload-release-asset@v1
         with:
@@ -120,11 +111,4 @@ jobs:
           upload_url: ${{ steps.create_release.outputs.upload_url }}
           asset_path: dist/etlx-darwin-amd64
           asset_name: etlx-darwin-amd64
-          asset_content_type: application/octet-stream
-      - name: Upload macOS ARM64 Binary
-        uses: actions/upload-release-asset@v1
-        with:
-          upload_url: ${{ steps.create_release.outputs.upload_url }}
-          asset_path: dist/etlx-darwin-arm64
-          asset_name: etlx-darwin-arm64
           asset_content_type: application/octet-stream
