@@ -3,12 +3,14 @@ name: Build and Release
 on:
   push:
     tags:
-      - 'v*' # Trigger on tags that start with "v"
+      - 'v*'
 
 jobs:
   build-linux:
     runs-on: ubuntu-latest
     steps:
+      - name: Install Dependencies
+        run: sudo apt-get update && sudo apt-get install -y unixodbc-dev
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Setup Go
@@ -18,8 +20,8 @@ jobs:
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
-          GOOS=linux GOARCH=amd64 go build -o dist/etlx-linux-amd64 ./cmd/main.go
-          GOOS=linux GOARCH=arm64 go build -o dist/etlx-linux-arm64 ./cmd/main.go
+          GOARCH=amd64 go build -o dist/etlx-linux-amd64 ./cmd/main.go
+          GOARCH=arm64 go build -o dist/etlx-linux-arm64 ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -29,6 +31,10 @@ jobs:
   build-windows:
     runs-on: windows-latest
     steps:
+      - name: Install Dependencies
+        run: |
+          # No explicit installation is needed as odbc.dll is part of Windows
+          echo "Ensure odbc.dll is accessible in the PATH"
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Setup Go
@@ -38,7 +44,7 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir -p dist
-          GOOS=windows GOARCH=amd64 go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
@@ -48,6 +54,8 @@ jobs:
   build-darwin:
     runs-on: macos-latest
     steps:
+      - name: Install Dependencies
+        run: brew install unixodbc
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Setup Go
