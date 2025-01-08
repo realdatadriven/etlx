@@ -30,8 +30,8 @@ jobs:
       - name: Set Environment Variables
         run: |
           set CGO_ENABLED=1
-          set CGO_CFLAGS=-I$(Get-Location)\duckdb\include
-          set CGO_LDFLAGS=-L$(Get-Location)\duckdb\lib
+          set CGO_CFLAGS=-I$(Get-Location)\duckdb\
+          set CGO_LDFLAGS=-L$(Get-Location)\duckdb\
 
       # Step 5: Build the application
       - name: Build Windows Binary with DuckDB
