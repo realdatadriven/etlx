@@ -25,12 +25,14 @@ jobs:
           Invoke-WebRequest -Uri $duckdb_url -OutFile duckdb.zip
           Expand-Archive -Path duckdb.zip -DestinationPath duckdb
           echo "DuckDB library extracted to $(Get-Location)\duckdb"
-
+      - name: List DuckDB Library Contents
+        run: |
+            echo "Contents of DuckDB lib directory:"
+            dir $(Get-Location)\duckdb\
       # Step 4: Set environment variables for CGO
       - name: Set Environment Variables
         run: |
           set CGO_ENABLED=1
-          set CGO_CFLAGS=-I$(Get-Location)\duckdb\
           set CGO_LDFLAGS=-L$(Get-Location)\duckdb\
 
       # Step 5: Build the application
