@@ -37,15 +37,15 @@ jobs:
         run: |
           set CGO_ENABLED=1
           set CGO_LDFLAGS="-L$(Get-Location)/duckdb"
-          echo $env:PATH
 
       # Step 5: Build the application
       - name: Build Windows Binary with DuckDB
         run: |
           mkdir -p dist
-          $env:PATH += ";$(Get-Location)/duckdb"
-          echo $env:PATH
-          CGO_ENABLED=1 CGO_LDFLAGS="-L$(Get-Location)/duckdb" go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          $env:PATH += ";$(Get-Location)/duckdb"          
+          set CGO_ENABLED=1
+          set CGO_LDFLAGS="-L$(Get-Location)/duckdb"
+          go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
 
       # Step 6: Upload build logs for debugging (if build fails)
       - name: Upload Logs
