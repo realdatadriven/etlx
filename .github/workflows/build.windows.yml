@@ -1,0 +1,53 @@
+name: Debug Windows Build
+
+on:
+  workflow_dispatch:
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Go environment
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      # Step 3: Install dependencies (if any are missing)
+      - name: Install Dependencies
+        run: |
+          echo "Ensure required dependencies are available"
+          echo "ODBC32 and Windows Build Tools are pre-installed on the GitHub Windows runner"
+
+      # Step 4: Set environment variables for CGo
+      - name: Set Environment Variables
+        run: |
+          set CGO_ENABLED=1
+          set CGO_CFLAGS=-IC:\Program Files\ODBC
+          set CGO_LDFLAGS=-lodbc32
+
+      # Step 5: Build the application
+      - name: Build Windows Binary
+        run: |
+          mkdir -p dist
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+
+      # Step 6: Upload build logs for debugging (if build fails)
+      - name: Upload Logs
+        if: failure()
+        uses: actions/upload-artifact@v3
+        with:
+          name: build-logs
+          path: ${{ github.workspace }}
+
+      # Step 7: Upload built binary for testing (if successful)
+      - name: Upload Binary
+        if: success()
+        uses: actions/upload-artifact@v3
+        with:
+          name: windows-binary
+          path: dist/etlx-windows-amd64.exe
