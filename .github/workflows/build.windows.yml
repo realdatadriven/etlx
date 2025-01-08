@@ -37,6 +37,7 @@ jobs:
         run: |
           set CGO_ENABLED=1
           set CGO_LDFLAGS="-L$(Get-Location)\duckdb\"
+          echo $env:PATH
 
       # Step 5: Build the application
       - name: Build Windows Binary with DuckDB
