@@ -40,11 +40,13 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 	fields, ok := data["FIELDS"].(map[string]any)
 	if !ok {
 		return "", nil, nil, fmt.Errorf("missing metadata in %s section", key)
+	} else {
+		fields = data
 	}
 	query_parts := map[string]interface{}{}
 	_fields_order := []string{}
 	for key2, value := range fields {
-		if key2 == "metadata" {
+		if key2 == "metadata" || key2 == "__order" || key2 == "order" {
 			continue
 		}
 		_field := value.(map[string]any)
@@ -69,6 +71,10 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 			"key":      key,
 			"metadata": field_metadata,
 		}
+	}
+	__order, ok := data["__order"].([]string)
+	if ok {
+		_fields_order = __order
 	}
 	qd := QueryDoc{
 		QueryParts:  make(map[string]Field),

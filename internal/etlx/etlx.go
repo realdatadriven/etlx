@@ -165,6 +165,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					if _, exists := config[heading]; !exists {
 						config[heading] = make(map[string]any)
 					}
+					// Add an __order key to track child key order
+					if _, exists := config[heading].(map[string]any)["__order"]; !exists {
+						config[heading].(map[string]any)["__order"] = []string{}
+					}
 					levels = map[int]map[string]any{1: config[heading].(map[string]any)}
 					//order[heading] = []string{} // Initialize order tracking for this top-level section
 				} else {
@@ -172,6 +176,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 					parent := levels[n.Level-1]
 					if parent == nil {
 						return ast.WalkContinue, fmt.Errorf("missing parent section for level %d heading: %s", n.Level, heading)
+					}
+					// Add to parent's __order slice
+					if _, ok := parent["__order"]; ok {
+						order := parent["__order"].([]string)
+						parent["__order"] = append(order, heading)
 					}
 					if _, exists := parent[heading]; !exists {
 						parent[heading] = make(map[string]any)
@@ -223,6 +232,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
 						}
 						current[key] = metaData
+						// Add to the current section's __order
+						if _, ok := current["__order"]; ok {
+							order := current["__order"].([]string)
+							current["__order"] = append(order, key)
+						}
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
@@ -236,6 +250,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 							fmt.Printf("missing query name for SQL block: %s", content)
 						} else {
 							current[key] = contentFinal
+							// Add to the current section's __order
+							if _, ok := current["__order"]; ok {
+								order := current["__order"].([]string)
+								current["__order"] = append(order, key)
+							}
 						}
 					}
 				}
@@ -647,7 +666,7 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	// fmt.Printf("Starting %s process: %s\n", key, description)
 	// start := time.Now()
 	for key2, value := range data {
-		if key2 == "metadata" {
+		if key2 == "metadata" || key2 == "__order" || key2 == "order" {
 			continue
 		}
 		err := runner(metadata, key2, value.(map[string]any))

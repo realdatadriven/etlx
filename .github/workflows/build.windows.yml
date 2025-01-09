@@ -45,6 +45,7 @@ jobs:
           $env:PATH += ";$(Get-Location)/duckdb"          
           set CGO_ENABLED=1
           set CGO_LDFLAGS="-L$(Get-Location)/duckdb"
+          echo $env:PATH
           go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
 
       # Step 6: Upload build logs for debugging (if build fails)
