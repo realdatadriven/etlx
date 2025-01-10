@@ -282,6 +282,132 @@ CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go 
    - Log progress (e.g., connection usage, start/end times, descriptions).
    - Gracefully handle missing or `null` keys.
 
+---
+
+### **Handling Complex Queries in ETL Configuration**
+
+In some ETL processes, particularly during the **Transform** step, queries may become too complex to manage as a single string. To address this, the configuration supports a structured approach where you can break down a query into individual fields and their respective SQL components. This approach improves modularity, readability, and maintainability.
+
+---
+
+#### **Structure**
+
+A complex query is defined as a top-level heading (e.g., `# My Complex Query`) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., `## Field Name`). 
+
+For each field:
+- Metadata can describe the field (e.g., `name`, `description`).
+- SQL components like `select`, `from`, `join`, `where`, `group_by`, `order_by`, `having`, and `cte` are specified in separate blocks.
+
+---
+
+#### **Markdown Example**
+
+````markdown
+# My Complex Query
+This query processes sales and regions data.
+
+```yaml metadata
+type: query_doc
+name: sales_and_regions_query
+description: "Combines sales data with region metadata."
+```
+
+## Sales Field
+```yaml metadata
+name: sales_field
+description: "Field representing sales data."
+```
+```sql
+-- select
+SELECT S.total_sales AS sales_field
+```
+```sql
+-- from
+FROM sales_data AS S
+```
+
+## Regions Field
+```yaml metadata
+name: regions_field
+description: "Field representing region metadata."
+```
+```sql
+-- cte
+WITH region_cte AS (
+    SELECT region_id, region_name
+    FROM region_data
+    WHERE active = TRUE
+)
+```
+```sql
+-- select
+    , R.region_name AS regions_field
+```
+```sql
+-- join
+LEFT JOIN region_cte AS R ON S.region_id = R.region_id
+```
+```sql
+-- where
+WHERE S.total_sales > 1000
+```
+````
+
+---
+
+#### **How It Works**
+
+1. **Parsing the Configuration**:
+   - Each query is parsed as a separate section with its metadata stored under the `metadata` key.
+   - Fields within the query are parsed as child sections, each containing its own metadata and SQL components.
+
+2. **Combining the Query**:
+   - The query is built by iterating over the fields (in the order they appear) and combining their SQL components in the following order:
+     - `cte` → `select` → `from` → `join` → `where` → `group_by` → `having` → `order_by`
+   - All the resulting parts are concatenated to form the final query.
+
+---
+
+#### **Resulting Query**
+
+For the example above, the generated query will look like this:
+
+```sql
+WITH region_cte AS (
+    SELECT region_id, region_name
+    FROM region_data
+    WHERE active = TRUE
+)
+SELECT S.total_sales AS sales_field
+    , R.region_name AS regions_field
+FROM sales_data AS S
+LEFT JOIN region_cte AS R ON S.region_id = R.region_id
+WHERE S.total_sales > 1000
+```
+
+---
+
+#### **Metadata Options**
+
+- **Query Metadata**:
+  - `name`: A unique identifier for the query.
+  - `description`: A brief description of the query's purpose.
+
+- **Field Metadata**:
+  - `name`: A unique identifier for the field.
+  - `description`: A brief description of the field's purpose.
+But if you only using the parser for you to document your queries you may want to pass extra information in your metadata to use to generate documentation like data leneage / dictionary, ...
+---
+
+#### **Benefits**
+
+- **Modularity**: Each field is defined separately, making the query easier to understand and modify.
+- **Reusability**: SQL components like `cte` or `join` can be reused across different queries.
+- **Readability**: Breaking down complex queries improves comprehension and reduces debugging time.
+
+---
+
+By leveraging this structure, you can handle even the most complex SQL queries in your ETL process with ease and flexibility. Each query becomes manageable, and you gain the ability to compose intricate SQL logic dynamically.
 
 ---
 
@@ -330,6 +456,188 @@ func main() {
 	}
 }
 ```
+---
+
+### **Generating Files from Data**
+
+The `EXPORTS` section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB's ability to export data in various formats, this section supports file generation with flexibility and precision.
+
+---
+
+#### **Structure**
+
+An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in the configuration. Within this section:
+1. **Exports Metadata**:
+   - Metadata defines properties like the database connection, export path, and activation status.
+   - Fields like `type`, `name`, `description`, `path`, and `active` control the behavior of each export.
+
+2. **Query-to-File Configuration**:
+   - Define the SQL query or sequence of queries used for generating the file.
+   - Specify the export format, such as CSV, Parquet, or Excel.
+
+3. **Template-Based Exports**:
+   - Templates allow you to map query results into specific cells and sheets of an existing spreadsheet template.
+
+---
+
+#### **Markdown Example**
+
+````markdown
+# EXPORTS
+Exports data to files.
+
+```yaml metadata
+type: exports
+name: DailyExports
+description: "Daily file exports for various datasets."
+database: reporting_db
+connection: "duckdb:"
+path: "C:/Reports/YYYYMMDD"
+active: true
+```
+
+## Sales Data Export
+```yaml metadata
+type: query_to_file
+name: SalesExport
+description: "Export daily sales data to CSV."
+database: reporting_db
+connection: "duckdb:"
+export_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+  - export
+  - "DETACH DB"
+active: true
+```
+
+```sql
+-- export
+COPY (
+    SELECT *
+    FROM "DB"."Sales"
+    WHERE "sale_date" = '{YYYY-MM-DD}'
+) TO 'C:/Reports/YYYYMMDD/sales_YYYYMMDD.csv' (FORMAT 'csv', HEADER true);
+```
+
+## Region Data Export to Excel
+```yaml metadata
+type: query_to_file
+name: RegionExport
+description: "Export region data to an Excel file."
+database: reporting_db
+connection: "duckdb:"
+export_sql:
+  - "LOAD sqlite"
+  - "LOAD Spatial"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+  - export
+  - "DETACH DB"
+active: true
+```
+
+```sql
+-- export
+COPY (
+    SELECT *
+    FROM "DB"."Regions"
+    WHERE "updated_at" >= '{YYYY-MM-DD}'
+) TO 'C:/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx' (FORMAT GDAL, DRIVER 'xlsx');
+```
+
+## Sales Report Template
+```yaml metadata
+type: template
+name: SalesReport
+description: "Generate a sales report from a template."
+database: reporting_db
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+template: "C:/Templates/sales_template.xlsx"
+path: "C:/Reports/sales_report_YYYYMMDD.xlsx"
+mapping:
+  - sheet: Summary
+    range: B2
+    sql: summary_query
+    type: range
+    table: SummaryTable
+    table_style: TableStyleLight1
+    header: true
+    if_exists: delete
+  - sheet: Details
+    range: A1
+    sql: details_query
+    type: value
+    key: total_sales
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- summary_query
+SELECT SUM(total_sales) AS total_sales
+FROM "DB"."Sales"
+WHERE "sale_date" = '{YYYY-MM-DD}'
+```
+
+```sql
+-- details_query
+SELECT *
+FROM "DB"."Sales"
+WHERE "sale_date" = '{YYYY-MM-DD}';
+```
+````
+
+---
+
+#### **How It Works**
+
+1. **Parsing the Configuration**:
+   - Each export is parsed as a separate section with its metadata stored under the `metadata` key.
+   - SQL queries or template mappings are defined as child sections.
+
+2. **File Generation**:
+   - The `export_sql` field specifies a sequence of SQL statements used for the export.
+   - The final `COPY` statement defines the file format and location.
+
+3. **Template-Based Exports**:
+   - Templates map query results to specific sheets and cells in an existing spreadsheet.
+   - The `mapping` field defines how query results populate the template:
+     - **`sheet`**: The target sheet in the template.
+     - **`range`**: The starting cell for the data.
+     - **`sql`**: The query generating the data.
+     - **`type`**: Indicates whether the data fills a range (`range`) or single value (`value`).
+     - **`table_style`**: The table style applied to the range.
+     - **`if_exists`**: Specifies how to handle existing data (e.g., delete or append).
+the maping can also be a string representig a query and all the mapping cam be loaded from a table in the database to simplifie the config, and also in a real world it can be extensive, would be easier to be done in a spreadsheet and loaded as a table.
+---
+
+#### **Resulting Outputs**
+
+1. **CSV File**:
+   - Exports sales data to a CSV file located at `C:/Reports/YYYYMMDD/sales_YYYYMMDD.csv`.
+
+2. **Excel File**:
+   - Exports region data to an Excel file located at `C:/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx`.
+
+3. **Populated Template**:
+   - Generates a sales report from `sales_template.xlsx` and saves it as `sales_report_YYYYMMDD.xlsx`.
+
+---
+
+#### **Benefits**
+
+- **Flexibility**:
+  - Export data in multiple formats (e.g., CSV, Excel) using DuckDB's powerful `COPY` command.
+- **Reusability**:
+  - Use predefined templates to create consistent reports.
+- **Customizability**:
+  - SQL queries and mappings allow fine-grained control over the exported data.
+
+By leveraging the `EXPORTS` section, you can automate data export processes, making them efficient and repeatable.
+
 ---
 
 ## **License**
