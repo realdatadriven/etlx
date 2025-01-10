@@ -211,7 +211,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 						if key == "" {
 							// If no key in the info, try to extract from the first comment line
 							key, contentFinal = extracNameFromYamlToml(content)
-							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, contentFinal)
+							// fmt.Println("NOT A NAMED QUERY, FIND # name instead", key, contentFinal)
 						}
 						if key == "" {
 							key = "metadata"
@@ -232,11 +232,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
 						}
 						current[key] = metaData
-						// Add to the current section's __order
+						/*/ Add to the current section's __order
 						if _, ok := current["__order"]; ok {
 							order := current["__order"].([]string)
 							current["__order"] = append(order, key)
-						}
+						}*/
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
@@ -250,11 +250,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 							fmt.Printf("missing query name for SQL block: %s", content)
 						} else {
 							current[key] = contentFinal
-							// Add to the current section's __order
+							/*/ Add to the current section's __order
 							if _, ok := current["__order"]; ok {
 								order := current["__order"].([]string)
 								current["__order"] = append(order, key)
-							}
+							}*/
 						}
 					}
 				}
