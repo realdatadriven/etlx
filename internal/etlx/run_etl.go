@@ -75,7 +75,7 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 }
 
 // ReplacePlaceholders replaces placeholders in the format [[query_name]] with their corresponding values from the item map.
-func ReplacePlaceholders(sql string, item map[string]any) (string, error) {
+func (etlx *ETLX) ReplacePlaceholders(sql string, item map[string]any) (string, error) {
 	// Define a regex to match placeholders in the format [[query_name]]
 	re := regexp.MustCompile(`\[\[(\w+)\]\]`)
 	// Replace all matches with the corresponding values from the item map
@@ -88,6 +88,14 @@ func ReplacePlaceholders(sql string, item map[string]any) (string, error) {
 			// Check if the query_name exists in the item map
 			if replacement, exists := item[queryName]; exists {
 				return replacement.(string)
+			} else {
+				// CHECK IF THERE IS A QUERY DOC WITH THE NAME
+				_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queryName)
+				if err != nil {
+					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryName, err)
+				} else {
+					return _sql
+				}
 			}
 		}
 		// If no replacement is found, keep the placeholder as is
@@ -151,7 +159,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		} else if !ok {
 			query = queries
 		}
-		updatedSQL, err := ReplacePlaceholders(query, item)
+		updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 		if err != nil {
 			fmt.Println("Error trying to get the placeholder:", err)
 		} else {
@@ -198,7 +206,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			} else if !ok {
 				query = queryKey
 			}
-			updatedSQL, err := ReplacePlaceholders(query, item)
+			updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 			if err != nil {
 				fmt.Println("Error trying to get the placeholder:", err)
 			} else {

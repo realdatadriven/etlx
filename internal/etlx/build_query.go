@@ -43,7 +43,11 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 		_field := value.(map[string]any)
 		field_metadata, ok := _field["metadata"].(map[string]any)
 		if !ok {
-			return "", nil, nil, fmt.Errorf("missing metadata in %s section", key)
+			// return "", nil, nil, fmt.Errorf("missing metadata in query %s and field %s", key, _field)
+			field_metadata = map[string]any{
+				"name":        _field,
+				"description": _field,
+			}
 		}
 		_fields_order = append(_fields_order, field_metadata["name"].(string))
 		query_parts[field_metadata["name"].(string)] = map[string]any{
