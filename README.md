@@ -65,7 +65,7 @@ etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 ### **1. Define ETL Configuration in Markdown**
 Create a Markdown file with the ETL process configuration. For example:
 
-```markdown
+````markdown
 ```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
@@ -84,7 +84,7 @@ load_validation:
     sql: validate_data_duplicates
     msg: 'Duplicate data detected!'
 ```
-
+````
 ---
 
 ## **Example Use Case**
@@ -150,7 +150,7 @@ FROM "ORG"."sales";
 ### **ETL Metadata (YAML)**
 The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env fileon the root is suported to laod them:
 
-```markdown
+````markdown
 ```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
@@ -169,7 +169,7 @@ load_validation:
     sql: validate_data_duplicates
     msg: 'Duplicate data detected!'
 ```
-
+````
 ---
 
 ## **Example Use Case**
@@ -409,53 +409,6 @@ But if you only using the parser for you to document your queries you may want t
 
 By leveraging this structure, you can handle even the most complex SQL queries in your ETL process with ease and flexibility. Each query becomes manageable, and you gain the ability to compose intricate SQL logic dynamically.
 
----
-
-## **Embedding in Go**
-
-To embed the ETL framework in a Go application:
-
-```go
-package main
-
-import (
-	"fmt"
-	"time"
-	"github.com/realdatadriven/etlx/internal/etlx"
-)
-
-func main() {
-	etl := &etlx.ETLX{}
-
-	// Load configuration from Markdown text
-	err := etl.ConfigFromMDText(`# Your Markdown config here`)
-	if err != nil {
-		fmt.Printf("Error loading config: %v\n", err)
-		return
-	}
-
-	// Prepare date reference
-	dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
-
-	// Define additional options
-	options := map[string]any{
-		"only":  []string{"sales"},
-		"steps": []string{"extract", "load"},
-	}
-
-	// Run ETL process
-	logs, err := etl.RunETL(dateRef, nil, options)
-	if err != nil {
-		fmt.Printf("Error running ETL: %v\n", err)
-		return
-	}
-
-	// Print logs
-	for _, log := range logs {
-		fmt.Printf("Log: %+v\n", log)
-	}
-}
-```
 ---
 
 ### **Generating Files from Data**
@@ -749,6 +702,175 @@ For the example above, the following happens:
   - Keep configurations for different processes in separate files or sources, simplifying updates and version control.
 
 By leveraging the `REQUIRES` section, you can maintain a clean and scalable ETL configuration structure, promoting reusability and modular design.
+
+---
+
+## **Embedding in Go**
+
+To embed the ETL framework in a Go application:
+
+```go
+package main
+
+import (
+	"fmt"
+	"time"
+	"github.com/realdatadriven/etlx/internal/etlx"
+)
+
+func main() {
+	etl := &etlx.ETLX{}
+
+	// Load configuration from Markdown text
+	err := etl.ConfigFromMDText(`# Your Markdown config here`)
+	if err != nil {
+		fmt.Printf("Error loading config: %v\n", err)
+		return
+	}
+
+	// Prepare date reference
+	dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
+
+	// Define additional options
+	options := map[string]any{
+		"only":  []string{"sales"},
+		"steps": []string{"extract", "load"},
+	}
+
+	// Run ETL process
+	logs, err := etl.RunETL(dateRef, nil, options)
+	if err != nil {
+		fmt.Printf("Error running ETL: %v\n", err)
+		return
+	}
+
+	// Print logs
+	for _, log := range logs {
+		fmt.Printf("Log: %+v\n", log)
+	}
+}
+```
+---
+# ETLX Documentation
+
+### **Overview**
+
+ETLX is a powerful tool for defining and executing ETL processes using Markdown configuration files. It supports complex SQL queries, exports to multiple formats, and dynamic configuration loading. ETLX can be used as a library, CLI tool, or integrated into other systems for advanced data workflows.
+
+---
+
+### **Features**
+
+- **Config Parsing from Markdown**:
+  - Supports YAML, TOML, and JSON metadata blocks.
+  - Automatically parses and structures Markdown configuration into a nested Go map.
+
+- **ETL Execution**:
+  - Handles extract, transform, and load processes using a modular design.
+  - Supports complex workflows with customizable steps.
+
+- **Query Documentation**:
+  - Define modular SQL queries in sections.
+  - Combines query parts dynamically to build complete SQL statements.
+
+- **Exports**:
+  - Export data to various formats (e.g., CSV, Excel).
+  - Supports template-based exports for custom reports.
+
+- **Requires**:
+  - Dynamically load additional configuration from files or database queries.
+
+- **CLI Interface**:
+  - Command-line interface for executing ETLX configurations.
+  - Supports flags for custom parameters (e.g., `--config`, `--date`, `--steps`).
+
+---
+
+### **To-Do List**
+
+Here is the current progress and planned features for the ETLX project:
+
+#### ✅ **Completed**
+- **Config Parsing**:
+  - Parses and validates Markdown configurations with nested sections and metadata.
+  - Supports YAML, TOML, and JSON for metadata.
+
+- **ETL Execution**:
+  - Modular handling of extract, transform, and load processes.
+  - Flexible step configuration with before and after SQL.
+
+- **Query Documentation**:
+  - Handles complex SQL queries by breaking them into logical components.
+  - Dynamically combines query parts to create executable SQL.
+
+- **Exports**:
+  - Supports exporting data to files in formats like CSV and Excel.
+  - Includes options for templates and data mapping.
+
+- **Requires**:
+  - Loads additional configurations dynamically from files or database queries.
+  - Integrates loaded configurations into the main process.
+
+- **CLI Interface**:
+  - Provides a command-line interface for running configurations.
+  - Accepts flags for custom execution parameters.
+
+#### 🕒 **To-Do**
+- **Web API**:
+  - Create a RESTful web API for executing ETL configurations.
+  - Expose endpoints for:
+    - Uploading and managing configurations.
+    - Triggering ETL workflows.
+    - Monitoring job status and logs.
+  - Add support for multi-user environments with authentication and authorization.
+
+---
+
+### **Usage**
+
+#### **Command-Line Interface**
+Run the ETLX binary with the required flags:
+
+```bash
+etlx --config config.md --date 20240101 --steps extract,load
+```
+
+#### **Library Integration**
+ETLX can be embedded into Go projects as a library:
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "etlx"
+)
+
+func main() {
+    etl := etlx.NewETLX()
+    err := etl.ConfigFromFile("config.md")
+    if err != nil {
+        fmt.Printf("Error loading config: %v\n", err)
+        os.Exit(1)
+    }
+
+    // Execute the ETL process
+    err = etl.Run(map[string]any{
+        "date": "20240101",
+    })
+    if err != nil {
+        fmt.Printf("Error running ETL: %v\n", err)
+        os.Exit(1)
+    }
+}
+```
+
+---
+
+By building on the existing features, the ETLX project is moving toward becoming a comprehensive ETL solution for both CLI and web environments.
+
+
 
 ---
 
