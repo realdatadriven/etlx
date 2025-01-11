@@ -75,6 +75,7 @@ description: 'Daily extraction at 5 AM'
 database: analytics_db
 connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
+
 ## sales_data
 ```yaml metadata
 name: SalesData
@@ -278,10 +279,12 @@ description: "Combines sales data with region metadata."
 name: sales_field
 description: "Field representing sales data."
 ```
+
 ```sql
 -- select
 SELECT S.total_sales AS sales_field
 ```
+
 ```sql
 -- from
 FROM sales_data AS S
@@ -292,6 +295,7 @@ FROM sales_data AS S
 name: regions_field
 description: "Field representing region metadata."
 ```
+
 ```sql
 -- cte
 WITH region_cte AS (
@@ -300,18 +304,22 @@ WITH region_cte AS (
     WHERE active = TRUE
 )
 ```
+
 ```sql
 -- select
     , R.region_name AS regions_field
 ```
+
 ```sql
 -- join
 LEFT JOIN region_cte AS R ON S.region_id = R.region_id
 ```
+
 ```sql
 -- where
 WHERE S.total_sales > 1000
 ```
+
 ````
 
 ---
@@ -502,6 +510,7 @@ SELECT *
 FROM "DB"."Sales"
 WHERE "sale_date" = '{YYYY-MM-DD}';
 ```
+
 ````
 
 ---
@@ -753,6 +762,7 @@ description: "Load inventory transformation config from a file."
 path: "C:/Configurations/inventory_transform.md"
 active: true
 ```
+
 ````
 
 ---
