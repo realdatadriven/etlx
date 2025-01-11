@@ -48,6 +48,12 @@ func main() {
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 		etl.PrintConfigAsJSON(etl.Config)
 	}
+	if _, ok := etl.Config["REQUIRES"]; ok {
+		etl.LoadREQUIRES(nil)
+		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+			etl.PrintConfigAsJSON(etl.Config)
+		}
+	}
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
