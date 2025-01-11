@@ -109,10 +109,20 @@ func main() {
 	if _, ok := etl.Config["EXPORTS"]; ok {
 		_logs, err := etl.RunEXPORTS(dateRef, nil, extraConf)
 		if err != nil {
-			fmt.Printf("ETL ERR: %v\n", err)
+			fmt.Printf("EXPORTS ERR: %v\n", err)
 		}
 		for _, _log := range _logs {
 			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+		}
+	}
+	// MULTI_QUERIES
+	if _, ok := etl.Config["MULTI_QUERIES"]; ok {
+		res, err := etl.RunMULTI_QUERIES(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("MULTI_QUERIES ERR: %v\n", err)
+		}
+		for _, r := range res {
+			fmt.Println(r)
 		}
 	}
 }
