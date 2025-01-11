@@ -93,26 +93,31 @@ load_validation: # Validation is performed during the load phase using YAML
 load_sql: load_sales
 load_after_sql: detaches
 ```
+
 ```sql 
 -- load_extentions
 load mysql;
 load postgres;
 ```
+
 ```sql 
 -- conn
 ATTACH 'user=@MYSQL_USER password=A@MYSQL_PASSWORD port=3306 database=sales' AS "ORG" (TYPE MYSQL);
 ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable' AS "DST" (TYPE POSTGRES);
 ```
+
 ```sql 
 -- detaches
 DETACH "ORG";
 DETACH "DST";
 ```
+
 ```sql load_sales
 CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
 SELECT * 
 FROM "ORG"."sales";
 ```
+
 ```sql 
 -- validate_data_not_empty
 SELECT * 
@@ -120,6 +125,7 @@ FROM "ORG"."sales"
 WHERE "date" = '{YYYY-MM-DD}'
 LIMIT 10;
 ```
+
 ```sql 
 -- throw_if_not_empty
 SELECT * 
@@ -127,6 +133,7 @@ FROM "DST"."analytics_db"
 WHERE "date" = '{YYYY-MM-DD}'
 LIMIT 10;
 ```
+
 ````
 
 ### **2. Parse the Markdown File**
