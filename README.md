@@ -62,70 +62,70 @@ etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 
 ## **How It Works**
 
-### **1. Define ETL Configuration in Markdown**
 Create a Markdown file with the ETL process configuration. For example:
-
-````markdown
-```yaml
-name: Daily_ETL
-description: 'Daily extraction at 5 AM'
-database: analytics_db
-connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
-```
-
-### **Validation Rules**
-Validation is performed during the load phase using YAML:
-```yaml
-load_validation:
-  - type: throw_if_empty
-    sql: validate_data_not_empty
-    msg: 'No data extracted for the given date!'
-  - type: throw_if_not_empty
-    sql: validate_data_duplicates
-    msg: 'Duplicate data detected!'
-```
-````
----
 
 ## **Example Use Case**
 
 Markdown File (`etl_config.md`):
 ````markdown
 # ETL
-```yaml etl
+```yaml metadata
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
 connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
 ## sales_data
-```yaml etl_sales
+```yaml metadata
 name: SalesData
 description: 'Daily Sales Data'
 load_conn: 'duckdb:'
 load_before_sql:
   - load_extentions
   - conn
+load_validation: # Validation is performed during the load phase using YAML
+  - type: throw_if_empty
+    sql: validate_data_not_empty
+    msg: 'No data extracted for the given date!'
+  - type: throw_if_not_empty
+    sql: validate_data_duplicates
+    msg: 'Duplicate data detected!'
 load_sql: load_sales
 load_after_sql: detaches
 ```
-```sql load_extentions
+```sql 
+-- load_extentions
 load mysql;
 load postgres;
 ```
-```sql conn
+```sql 
+-- conn
 ATTACH 'user=@MYSQL_USER password=A@MYSQL_PASSWORD port=3306 database=sales' AS "ORG" (TYPE MYSQL);
 ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable' AS "DST" (TYPE POSTGRES);
 ```
-```sql detaches
+```sql 
+-- detaches
 DETACH "ORG";
 DETACH "DST";
-```
 ```
 ```sql load_sales
 CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
 SELECT * 
 FROM "ORG"."sales";
+```
+```sql 
+-- validate_data_not_empty
+SELECT * 
+FROM "ORG"."sales"
+WHERE "date" = '{YYYY-MM-DD}'
+LIMIT 10;
+```
+```sql 
+-- throw_if_not_empty
+SELECT * 
+FROM "DST"."analytics_db"
+WHERE "date" = '{YYYY-MM-DD}'
+LIMIT 10;
 ```
 ````
 
@@ -148,9 +148,8 @@ FROM "ORG"."sales";
 ## **Configuration Details**
 
 ### **ETL Metadata (YAML)**
-The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env fileon the root is suported to laod them:
+The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env file on the root is suported to laod them:
 
-````markdown
 ```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
@@ -169,50 +168,6 @@ load_validation:
     sql: validate_data_duplicates
     msg: 'Duplicate data detected!'
 ```
-````
----
-
-## **Example Use Case**
-
-Markdown File (`etl_config.md`):
-````markdown
-# ETL
-```yaml etl
-name: Daily_ETL
-description: 'Daily extraction at 5 AM'
-database: analytics_db
-connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
-```
-## sales_data
-```yaml etl_sales
-name: SalesData
-description: 'Daily Sales Data'
-load_conn: 'duckdb:'
-load_before_sql:
-  - load_extentions
-  - conn
-load_sql: load_sales
-load_after_sql: detaches
-```
-```sql load_extentions
-load mysql;
-load postgres;
-```
-```sql conn
-ATTACH 'user=@MYSQL_USER password=A@MYSQL_PASSWORD port=3306 database=sales' AS "ORG" (TYPE MYSQL);
-ATTACH 'ser=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable' AS "DST" (TYPE POSTGRES);
-```
-```sql detaches
-DETACH "ORG";
-DETACH "DST";
-```
-```sql load_sales
-CREATE OR REPLACE TABLE "DST"."analytics_db" AS 
-SELECT * 
-FROM "ORG"."sales";
-```
-````
-
 ---
 
 ## **Advantages**
@@ -307,7 +262,6 @@ For each field:
 This query processes sales and regions data.
 
 ```yaml metadata
-type: query_doc
 name: sales_and_regions_query
 description: "Combines sales data with region metadata."
 ```
@@ -593,6 +547,141 @@ By leveraging the `EXPORTS` section, you can automate data export processes, mak
 
 ---
 
+### **Data Quality**
+
+The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if aplicable.
+
+---
+
+#### **Structure**
+
+1. **Metadata**:
+   - The `DATA_QUALITY` section contains metadata describing its purpose and activation status.
+
+2. **Validation Rules**:
+   - Each validation rule is defined as a Level 2 heading under the `DATA_QUALITY` block.
+   - Rules include a query to check for violations and, optionally, a query to fix issues.
+
+3. **Execution**:
+   - The system loops through all rules in the `DATA_QUALITY` block.
+   - For each rule:
+     - Runs the validation query.
+     - If violations are found and a fix query is defined, executes the fix query.
+
+---
+
+#### **Markdown Example**
+
+````markdown
+# DATA_QUALITY
+```yaml
+description: "Runs some queries to check quality / validate."
+active: true
+```
+
+## Rule0001
+```yaml
+name: Rule0001
+description: "Check if the field x has the option y and z."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: fix_quality_err_query
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "sales"
+WHERE "option" NOT IN ('y', 'z');
+```
+
+```sql
+-- fix_quality_err_query
+UPDATE "sales"
+SET "option" = 'default value'
+WHERE "option" NOT IN ('y', 'z');
+```
+
+## Rule0002
+```yaml
+name: Rule0002
+description: "Check if the field y has the option x and z."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: null # no automated fixing for this
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "sales"
+WHERE "option2" NOT IN ('x', 'z');
+```
+
+````
+
+---
+
+#### **How It Works**
+
+1. **Defining Rules**:
+   - Each rule specifies:
+     - A SQL query (`query`) to validate data.
+     - An optional fix query (`fix_quality_err`) to resolve issues.
+     - Metadata for connection, pre/post-SQL commands, and status.
+
+2. **Execution Flow**:
+   - The validation query is executed first.
+   - If the number of violations is greater than 0:
+     - Logs the count of invalid records.
+     - Executes the fix query if `fix_quality_err` is defined.
+
+3. **Output**:
+   - Provides detailed logs about rule violations and fixes applied.
+
+---
+
+#### **Example Use Case**
+
+For the example above:
+1. **Rule0001**:
+   - Validates that the `option` field contains only the values `y` and `z`.
+   - Updates invalid records to a default value using the fix query.
+
+2. **Rule0002**:
+   - Validates that the `option2` field contains only the values `x` and `z`.
+   - Updates invalid records to a default value using the fix query.
+
+---
+
+#### **Benefits**
+
+- **Automated Quality Assurance**:
+  - Identify and fix data issues programmatically.
+
+- **Customizable Rules**:
+  - Define rules tailored to your specific data quality requirements.
+
+- **Flexibility**:
+  - Supports pre- and post-SQL commands for advanced workflows.
+
+---
+
+By integrating the `DATA_QUALITY` block, you can ensure the integrity of your data and automate validation processes as part of your ETL pipeline.
+
+---
 
 ### **Loading Config Dependencies**
 
@@ -638,7 +727,7 @@ before_sql:
 query: get_sales_conf
 column: md_conf_content # Defaults to 'conf' if not provided.
 after_sql: "DETACH DB"
-active: true
+active: false
 ```
 
 ```sql
@@ -751,9 +840,10 @@ func main() {
 }
 ```
 ---
-# ETLX Documentation
 
-### **Overview**
+---
+
+# ETLX Conclusion
 
 ETLX is a powerful tool for defining and executing ETL processes using Markdown configuration files. It supports complex SQL queries, exports to multiple formats, and dynamic configuration loading. ETLX can be used as a library, CLI tool, or integrated into other systems for advanced data workflows.
 
@@ -763,7 +853,7 @@ ETLX is a powerful tool for defining and executing ETL processes using Markdown 
 
 - **Config Parsing from Markdown**:
   - Supports YAML, TOML, and JSON metadata blocks.
-  - Automatically parses and structures Markdown configuration into a nested Go map.
+  - Automatically parses and structures Markdown configuration into a nested data structure.
 
 - **ETL Execution**:
   - Handles extract, transform, and load processes using a modular design.
@@ -865,12 +955,9 @@ func main() {
     }
 }
 ```
-
 ---
 
 By building on the existing features, the ETLX project is moving toward becoming a comprehensive ETL solution for both CLI and web environments.
-
-
 
 ---
 

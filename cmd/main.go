@@ -44,15 +44,18 @@ func main() {
 	if err != nil {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
+	if _, ok := etl.Config["REQUIRES"]; ok {
+		_logs, err := etl.LoadREQUIRES(nil)
+		if err != nil {
+			fmt.Printf("REQUIRES ERR: %v\n", err)
+		}
+		for _, _log := range _logs {
+			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+		}
+	}
 	// Print the parsed configuration
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 		etl.PrintConfigAsJSON(etl.Config)
-	}
-	if _, ok := etl.Config["REQUIRES"]; ok {
-		etl.LoadREQUIRES(nil)
-		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-			etl.PrintConfigAsJSON(etl.Config)
-		}
 	}
 	/*/ Walk through the data and process each key-value pair
 	etl.Walk(etl.Config, "", func(keyPath string, value any) {
@@ -82,26 +85,34 @@ func main() {
 	if *steps != "" {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
-	_logs, err := etl.RunETL(dateRef, nil, extraConf)
-	if err != nil {
-		fmt.Printf("ETL ERR: %v\n", err)
+	// RUN ETL
+	if _, ok := etl.Config["ETL"]; ok {
+		_logs, err := etl.RunETL(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("ETL ERR: %v\n", err)
+		}
+		for _, _log := range _logs {
+			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+		}
 	}
-	for _, _log := range _logs {
-		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+	// DATA_QUALITY
+	if _, ok := etl.Config["DATA_QUALITY"]; ok {
+		_logs, err := etl.RunDATA_QUALITY(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("DATA_QUALITY ERR: %v\n", err)
+		}
+		for _, _log := range _logs {
+			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+		}
 	}
-	// QUERY_DOC
-	//_sql, query_parts, _fields_order, err := etl.QueryBuilder("QUERY_DOC")
-	_sql, _, _, err := etl.QueryBuilder(nil, "QUERY_DOC")
-	if err != nil {
-		fmt.Printf("QUERY_DOC ERR: %v\n", err)
-	}
-	fmt.Println(_sql)
 	// EXPORTS
-	_logs, err = etl.RunEXPORTS(dateRef, nil, extraConf)
-	if err != nil {
-		fmt.Printf("ETL ERR: %v\n", err)
-	}
-	for _, _log := range _logs {
-		fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+	if _, ok := etl.Config["EXPORTS"]; ok {
+		_logs, err := etl.RunEXPORTS(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("ETL ERR: %v\n", err)
+		}
+		for _, _log := range _logs {
+			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
+		}
 	}
 }
