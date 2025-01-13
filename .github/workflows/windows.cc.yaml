@@ -33,18 +33,13 @@ jobs:
           choco install mingw -y
           Write-Host "MinGW installed for cross-compilation"
 
-      # Step 5: Set Environment Variables for CGO
-      - name: Set CGO and Compiler
+      # Step 5: Set Environment Variables
+      - name: Set Environment Variables
         run: |
-          $destinationPath = "$(Get-Location)\duckdb"
-          $includePath = "$destinationPath\include"
-          $libPath = "$destinationPath\lib"
-          echo "Setting CGO environment variables and compiler"
-          echo "##[set-env name=CGO_ENABLED]1"
-          echo "##[set-env name=CC]x86_64-w64-mingw32-gcc"
-          echo "##[set-env name=CGO_CFLAGS]-I$includePath"
-          echo "##[set-env name=CGO_LDFLAGS]-L$libPath -lduckdb"
-          Write-Host "CGO environment variables set"
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\include" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\lib -lduckdb" >> $env:GITHUB_ENV
 
       # Step 6: Verify DuckDB Library
       - name: Verify DuckDB Library
