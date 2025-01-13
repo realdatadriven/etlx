@@ -38,13 +38,13 @@ jobs:
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
-          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\include" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\lib -lduckdb" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
 
       # Step 6: Verify DuckDB Library
       - name: Verify DuckDB Library
         run: |
-          $libPath = "$(Get-Location)\duckdb\lib"
+          $libPath = "$(Get-Location)\duckdb\"
           if (!(Test-Path "$libPath\duckdb.lib")) {
             Write-Error "duckdb.lib not found in $libPath"
           }
