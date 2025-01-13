@@ -1,0 +1,33 @@
+name: Release
+
+on:
+  workflow_dispatch:
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Download Windows Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: windows-binary
+          path: dist
+      - name: Download MacOS Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: macos-binary
+          path: dist
+      - name: Download Linux Binary
+        uses: actions/download-artifact@v3
+        with:
+          name: linux-binary
+          path: dist
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: |
+            dist/etlx-windows-amd64.exe
+            dist/etlx-macos-amd64
+            dist/etlx-linux-amd64
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
