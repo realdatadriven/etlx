@@ -124,7 +124,7 @@ jobs:
         uses: actions/upload-artifact@v3
         with:
           name: macos-binary
-          path: dist/*darwin*
+          path: dist/*macos*
     
   release:
     runs-on: ubuntu-latest
