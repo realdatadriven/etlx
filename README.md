@@ -5,10 +5,10 @@ This project is a high-performance **ETL (Extract, Transform, Load) Framework** 
 
 The framework supports a variety of data sources, including:
 - Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
-- Cloud Storage: **S3**.
+- Cloud Storage: **S3**, **and other S3 compatible Object Storage**.
 - File Formats: **CSV**, **Parquet**, **Spreadsheets**.
 
-By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template fill ....
+By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template fill ...
 
 ---
 
