@@ -16,6 +16,11 @@ jobs:
         uses: actions/setup-go@v4
         with:
           go-version: '1.23'
+      
+      - name: Install Dependencies
+        run: |
+          brew update
+          brew install gcc unixodbc
 
       # Step 3: Download DuckDB Precompiled Library
       - name: Download DuckDB Library
