@@ -202,10 +202,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			} else {
+				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
+				_log2["fname"] = fname
 			}
 			processLogs = append(processLogs, _log2)
 		} else if okTemplate && okMapping {

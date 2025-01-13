@@ -8,7 +8,7 @@ The framework supports a variety of data sources, including:
 - Cloud Storage: **S3**.
 - File Formats: **CSV**, **Parquet**, **Spreadsheets**.
 
-By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template filling ....
+By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template fill ....
 
 ---
 
@@ -156,7 +156,7 @@ LIMIT 10;
 ## **Configuration Details**
 
 ### **ETL Metadata (YAML)**
-The ETL process is defined using YAML metadata in Markdown. Below is an example, enviromental variables cam be accessed by puting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env file on the root is suported to laod them:
+The ETL process is defined using YAML metadata in Markdown. Below is an example, environmental variables can be accessed by putting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env file on the root is sported to load them:
 
 ```yaml
 name: Daily_ETL
@@ -199,8 +199,8 @@ load_validation:
 ```bash
 go run main.go --config etl_config.md --date 2023-10-31
 ```
-the same cam be said for build
-On Windows you may have building issues if you keep duckdb, in that case I found out that is esier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
+the same can be said for build
+On Windows you may have building issues if you keep duckdb, in that case I found out that is easier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
 
 ```bash
 CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
@@ -236,7 +236,7 @@ CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go 
      - `_after_sql`: Cleanup queries to run afterward.
    - Queries can be:
      - `null`: Do nothing.
-     - `string`: Reference a single query key in the same map or the qyery itself.
+     - `string`: Reference a single query key in the same map or the query itself.
      - `slice of strings`: Execute all queries in sequence.
      - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
    - Use `_conn` for connection settings. If `null`, fall back to the main connection.
@@ -414,7 +414,7 @@ name: DailyExports
 description: "Daily file exports for various datasets."
 database: reporting_db
 connection: "duckdb:"
-path: "C:/Reports/YYYYMMDD"
+path: "/path/to/Reports/YYYYMMDD"
 active: true
 ```
 
@@ -439,7 +439,7 @@ COPY (
     SELECT *
     FROM "DB"."Sales"
     WHERE "sale_date" = '{YYYY-MM-DD}'
-) TO 'C:/Reports/YYYYMMDD/sales_YYYYMMDD.csv' (FORMAT 'csv', HEADER true);
+) TO '/path/to/Reports/YYYYMMDD/sales_YYYYMMDD.csv' (FORMAT 'csv', HEADER true);
 ```
 
 ## Region Data Export to Excel
@@ -464,7 +464,7 @@ COPY (
     SELECT *
     FROM "DB"."Regions"
     WHERE "updated_at" >= '{YYYY-MM-DD}'
-) TO 'C:/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx' (FORMAT GDAL, DRIVER 'xlsx');
+) TO '/path/to/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx' (FORMAT GDAL, DRIVER 'xlsx');
 ```
 
 ## Sales Report Template
@@ -477,8 +477,8 @@ connection: "duckdb:"
 before_sql:
   - "LOAD sqlite"
   - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
-template: "C:/Templates/sales_template.xlsx"
-path: "C:/Reports/sales_report_YYYYMMDD.xlsx"
+template: "/path/to/Templates/sales_template.xlsx"
+path: "/path/to/Reports/sales_report_YYYYMMDD.xlsx"
 mapping:
   - sheet: Summary
     range: B2
@@ -534,16 +534,16 @@ WHERE "sale_date" = '{YYYY-MM-DD}';
      - **`type`**: Indicates whether the data fills a range (`range`) or single value (`value`).
      - **`table_style`**: The table style applied to the range.
      - **`if_exists`**: Specifies how to handle existing data (e.g., delete or append).
-the maping can also be a string representig a query and all the mapping cam be loaded from a table in the database to simplifie the config, and also in a real world it can be extensive, would be easier to be done in a spreadsheet and loaded as a table.
+the maping can also be a string representing a query and all the mapping can be loaded from a table in the database to simplify the config, and also in a real world it can be extensive, would be easier to be done in a spreadsheet and loaded as a table.
 ---
 
 #### **Resulting Outputs**
 
 1. **CSV File**:
-   - Exports sales data to a CSV file located at `C:/Reports/YYYYMMDD/sales_YYYYMMDD.csv`.
+   - Exports sales data to a CSV file located at `/path/to/Reports/YYYYMMDD/sales_YYYYMMDD.csv`.
 
 2. **Excel File**:
-   - Exports region data to an Excel file located at `C:/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx`.
+   - Exports region data to an Excel file located at `/path/to/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx`.
 
 3. **Populated Template**:
    - Generates a sales report from `sales_template.xlsx` and saves it as `sales_report_YYYYMMDD.xlsx`.
@@ -565,7 +565,7 @@ By leveraging the `EXPORTS` section, you can automate data export processes, mak
 
 ### **Data Quality**
 
-The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if aplicable.
+The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.
 
 ---
 
@@ -759,7 +759,7 @@ WHERE "config_name" = 'Sales'
 ```yaml
 name: InventoryTransform
 description: "Load inventory transformation config from a file."
-path: "C:/Configurations/inventory_transform.md"
+path: "/path/to/Configurations/inventory_transform.md"
 active: true
 ```
 
@@ -794,7 +794,7 @@ For the example above, the following happens:
    - The `before_sql` and `after_sql` scripts prepare the environment for the query execution.
 
 2. **Inventory Transformation**:
-   - A Markdown configuration is loaded from an external file path (`C:/Configurations/inventory_transform.md`).
+   - A Markdown configuration is loaded from an external file path (`/path/to/Configurations/inventory_transform.md`).
 
 ---
 
@@ -1087,7 +1087,7 @@ Here is the current progress and planned features for the ETLX project:
 Run the ETLX binary with the required flags:
 
 ```bash
-etlx --config config.md --date 20240101 --steps extract,load
+etlx --config config.md --date 2024-01-01 --steps extract,load
 ```
 
 #### **Library Integration**

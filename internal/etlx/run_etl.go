@@ -139,7 +139,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 	}
-	fname = etlx.SetQueryPlaceholders(fname, "", "", dateRef)
+	fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 	switch queries := sqlData.(type) {
 	case nil:
 		// Do nothing
