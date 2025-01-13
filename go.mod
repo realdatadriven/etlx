@@ -8,15 +8,16 @@ require (
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
-	github.com/marcboeker/go-duckdb v1.7.1
-	github.com/mattn/go-sqlite3 v1.14.24
+	github.com/marcboeker/go-duckdb v1.8.3
+	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/xuri/excelize/v2 v2.9.0
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/text v0.21.0
 	gopkg.in/yaml.v3 v3.0.1
 )
 
 require (
-	github.com/apache/arrow/go/v17 v17.0.0 // indirect
+	github.com/apache/arrow-go/v18 v18.0.0 // indirect
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/google/flatbuffers v24.3.25+incompatible // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
@@ -27,7 +28,6 @@ require (
 	github.com/richardlehane/mscfb v1.0.4 // indirect
 	github.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/xuri/efp v0.0.0-20240408161823-9ad904a10d6d // indirect
-	github.com/xuri/excelize/v2 v2.9.0 // indirect
 	github.com/xuri/nfp v0.0.0-20240318013403-ab9948c2c4a7 // indirect
 	github.com/zeebo/xxh3 v1.0.2 // indirect
 	golang.org/x/crypto v0.30.0 // indirect
@@ -38,5 +38,4 @@ require (
 	golang.org/x/sys v0.28.0 // indirect
 	golang.org/x/tools v0.28.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
-	gonum.org/v1/gonum v0.15.1 // indirect
 )
