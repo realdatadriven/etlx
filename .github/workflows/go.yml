@@ -150,6 +150,8 @@ jobs:
           asset_path: dist/etlx-linux-amd64
           asset_name: etlx-linux-amd64
           asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload Windows AMD64 Binary
         uses: actions/upload-release-asset@v1
         with:
@@ -157,6 +159,8 @@ jobs:
           asset_path: dist/etlx-windows-amd64.exe
           asset_name: etlx-windows-amd64.exe
           asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
       - name: Upload macOS AMD64 Binary
         uses: actions/upload-release-asset@v1
         with:
@@ -164,3 +168,5 @@ jobs:
           asset_path: dist/etlx-darwin-amd64
           asset_name: etlx-darwin-amd64
           asset_content_type: application/octet-stream
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
