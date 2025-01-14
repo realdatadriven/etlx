@@ -90,7 +90,7 @@ func (etlx *ETLX) ReplacePlaceholders(sql string, item map[string]any) (string, 
 				return replacement.(string)
 			} else {
 				// CHECK IF THERE IS A QUERY DOC WITH THE NAME
-				_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queryName)
+				_sql, _, _, err := etlx.QueryBuilder(nil, queryName)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryName, err)
 				} else {
@@ -150,7 +150,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		_, queryDoc := etlx.Config[queries]
 		if !ok && queryDoc {
 			query = queries
-			_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queries)
+			_sql, _, _, err := etlx.QueryBuilder(nil, queries)
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
 			} else {
@@ -197,7 +197,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			_, queryDoc := etlx.Config[queryKey]
 			if !ok && queryDoc {
 				query = queryKey
-				_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queryKey)
+				_sql, _, _, err := etlx.QueryBuilder(nil, queryKey)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
 				} else {
@@ -615,7 +615,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				if isValid {
 					if itemHasFile && fromFileSQL != nil && okFromFile { // IF HAS FILE AND _from_file configuration
 						ext := strings.Replace(filepath.Ext(fname), ".", "", 1)
-						fmt.Println("FROM FILE:", ext, fromFileSQL[ext])
+						// fmt.Println("FROM FILE:", ext, fromFileSQL[ext])
 						if _sql, ok := fromFileSQL[ext]; ok {
 							err = etlx.ExecuteQuery(dbConn, _sql, item, fname, step, dateRef)
 						} else if _sql, ok := fromFileSQL["others"]; ok {

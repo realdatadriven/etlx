@@ -218,11 +218,17 @@ func (q *QueryDoc) GetQuerySQLFromMap() string {
 	// Compile the final SQL from different parts
 	for _, f := range q.FieldOrders {
 		field := queryParts[f]
-		// fmt.Println(field)
+		// fmt.Println(1, f, len(field))
+		if len(field) == 0 {
+			continue
+		}
 		if _, ok := field["active"].(bool); ok {
 			if !field["active"].(bool) {
 				continue
 			}
+		}
+		if _, ok := field["cte"].(string); !ok {
+			field["cte"] = any("")
 		}
 		// For each clause, replace @FieldName with corresponding field's Select part
 		queryParts[f]["cte"] = q.replaceFieldPlaceholdersMap(field["cte"].(string), &queryParts)

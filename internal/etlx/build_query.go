@@ -42,11 +42,17 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 		}
 		_field := value.(map[string]any)
 		field_metadata, ok := _field["metadata"].(map[string]any)
+		//fmt.Println(1, field_metadata, len(field_metadata))
 		if !ok {
 			// return "", nil, nil, fmt.Errorf("missing metadata in query %s and field %s", key, _field)
 			field_metadata = map[string]any{
-				"name":        _field,
-				"description": _field,
+				"name":        key2,
+				"description": key2,
+			}
+		} else if len(field_metadata) == 0 {
+			field_metadata = map[string]any{
+				"name":        key2,
+				"description": key2,
 			}
 		}
 		_fields_order = append(_fields_order, field_metadata["name"].(string))
@@ -67,9 +73,31 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 			"metadata": field_metadata,
 		}
 	}
-	__order, ok := data["__order"].([]string)
+	__order, ok := data["__order"].([]any)
+	//fmt.Printf("%s -> %v, %v, %t", key, ok, data["__order"], data["__order"])
 	if ok {
-		_fields_order = __order
+		_fields_order = []string{}
+		for _, o := range __order {
+			if _, ok := o.(string); ok {
+				_field_data, _ok := data[o.(string)].(map[string]any)
+				if _ok {
+					_metadata, _ok := _field_data["metadata"].(map[string]any)
+					if _ok {
+						_name, _ok := _metadata["name"].(string)
+						if _ok {
+							_fields_order = append(_fields_order, _name)
+						} else {
+							_fields_order = append(_fields_order, o.(string))
+						}
+					} else {
+						_fields_order = append(_fields_order, o.(string))
+					}
+				} else {
+					_fields_order = append(_fields_order, o.(string))
+				}
+			}
+		}
+		fmt.Println("QD ORDER:", _fields_order)
 	}
 	qd := QueryDoc{
 		QueryParts:  make(map[string]Field),

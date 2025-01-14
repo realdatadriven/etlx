@@ -28,7 +28,7 @@ func (etlx *ETLX) ExecuteQueryWithRowsAffected(conn db.DBInterface, sqlData any,
 		_, queryDoc := etlx.Config[queries]
 		if !ok && queryDoc {
 			query = queries
-			_sql, _, _, err := etlx.QueryBuilder(map[string]any{}, queries)
+			_sql, _, _, err := etlx.QueryBuilder(nil, queries)
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
 			} else {
