@@ -247,6 +247,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						processLogs = append(processLogs, _log2)
 						return nil
 					}
+					defer func() {
+						if err := file.Close(); err != nil {
+							fmt.Printf("failed to close the file: %v", err)
+						}
+					}()
 				} else {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("template doesn't exists: %s", template)
@@ -325,6 +330,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						file.NewSheet(sheet)
 					} else {
 						if if_exists == "delete" {
+							if table != "" {
+								if err := file.DeleteTable(table); err != nil {
+									fmt.Printf("failed to delete table %s: %s\n", table, err)
+								}
+							}
 							file.DeleteSheet(sheet)
 							file.NewSheet(sheet)
 						}
@@ -337,7 +347,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					rows, columns, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
 					// Fetch data from the database using the provided SQL query
 					if err != nil {
-						fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
+						//fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute query: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
@@ -438,11 +448,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to save file: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					_log2["fname"] = outputFile
 				}
-				_log2["success"] = true
-				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
 			}
 			processLogs = append(processLogs, _log2)
 		}
