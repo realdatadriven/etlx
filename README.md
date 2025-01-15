@@ -340,7 +340,7 @@ WHERE S.total_sales > 1000
    - The query is built by iterating over the fields (in the order they appear) and combining their SQL components in the following order:
      - `cte` → `select` → `from` → `join` → `where` → `group_by` → `having` → `order_by`
    - All the resulting parts are concatenated to form the final query.
-   
+
 ---
 
 #### **Why This Approach Matters**
@@ -396,7 +396,7 @@ WHERE S.total_sales > 1000
 - **Field Metadata**:
   - `name`: A unique identifier for the field.
   - `description`: A brief description of the field's purpose.
-But if you only using the parser for you to document your queries you may want to pass extra information in your metadata to use to generate documentation like data leneage / dictionary, ...
+But if you only using the parser for you to document your queries you may want to pass extra information in your metadata to use to generate documentation like data lineage / dictionary, ...
 ---
 
 #### **Benefits**
