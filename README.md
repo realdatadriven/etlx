@@ -822,6 +822,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 1. **Metadata**:
    - The `MULTI_QUERIES` section includes metadata for connection details, pre/post-SQL commands, and activation status.
    - The `union_key` defines how the queries are combined (e.g., `UNION`, `UNION ALL`).
+   - 
 
 2. **Query Definitions**:
    - Each query is defined as a Level 2 heading under the `MULTI_QUERIES` block.
@@ -830,7 +831,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 3. **Execution**:
    - All queries are combined using the specified `union_key` (default is `UNION`).
    - The combined query is executed as a single statement.
-
+   - The combined query can be save by specifing `save_sql` normally an insert, create [or replace] table or even a copy to file statment, and insert statment should be used in combination with the `save_on_err_patt` and `save_on_err_sql` in case of an error matching the `table does ... not exist` to create the tabe instead.
 ---
 
 #### **Markdown Example**
