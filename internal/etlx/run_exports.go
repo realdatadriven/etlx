@@ -98,7 +98,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				os.Mkdir(pth, 0755)
 			}
 		}
-		mainConn := metadata["connection"].(string)
+		mainConn, _ := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
@@ -309,6 +309,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					return nil
 				}
 				for _, detail := range _mapp {
+					//fmt.Println(detail)
 					// Skip inactive entries
 					if active, ok := detail["active"].(bool); ok {
 						if !active {
@@ -323,7 +324,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					header, _ := detail["header"].(bool)
 					if_exists, _ := detail["if_exists"].(string)
 					table_style, _ := detail["table_style"].(string)
+					formulas, okFormulas := detail["formulas"].([]any)
+					formula, okFormula := detail["formula"].(string)
 					//fmt.Println(sheet, table, sql, _range, _type, header)
+					//fmt.Println(sheet, okFormulas, formulas, detail["formulas"])
 					// Check or create the destination sheet
 					sheetIndex, err := file.GetSheetIndex(sheet)
 					if sheetIndex == -1 || err != nil {
@@ -339,21 +343,25 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							file.NewSheet(sheet)
 						}
 					}
+					rows := &[]map[string]any{}
+					columns := []string{}
 					// QUERY
-					if _, ok := item[sql]; ok {
-						sql = item[sql].(string)
-					}
-					sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
-					rows, columns, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
-					// Fetch data from the database using the provided SQL query
-					if err != nil {
-						//fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
-						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute query: %s", key, itemKey, err)
-						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3)
-						processLogs = append(processLogs, _log2)
-						continue
+					if sql != "" {
+						if _, ok := item[sql]; ok {
+							sql = item[sql].(string)
+						}
+						sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
+						rows, columns, err = etlx.Query(dbConn, sql, item, fname, "", dateRef)
+						// Fetch data from the database using the provided SQL query
+						if err != nil {
+							//fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> %s -> failed to execute query: %s", key, itemKey, sheet, err)
+							_log2["end_at"] = time.Now()
+							_log2["duration"] = time.Since(start3)
+							processLogs = append(processLogs, _log2)
+							continue
+						}
 					}
 					startRow, col, err := getStartOfRange(_range)
 					if err != nil {
@@ -377,6 +385,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							}
 						} else {
 							file.SetCellValue(sheet, cell, nil)
+						}
+					} else if _type == "formula" {
+						if okFormula && formula != "" {
+							if err := file.SetCellFormula(sheet, _range, formula); err != nil {
+								fmt.Printf("Failed to set formula: %v", err)
+							}
 						}
 					} else {
 						rowIdx := startRow
@@ -430,6 +444,38 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							})
 							if err != nil {
 								fmt.Printf("failed to create table %s on sheet %s range %s: %s\n", table, sheet, tableRange, err)
+							}
+						}
+						// FORMULAS
+						if okFormulas && formulas != nil {
+							//fmt.Println("FORMULAS:", formulas)
+							for _, value := range formulas {
+								//fmt.Println("FORMULA:", value)
+								_formula_value, ok := value.(map[string]any)
+								if !ok {
+									continue
+								}
+								if active, ok := _formula_value["active"].(bool); ok {
+									if !active {
+										continue
+									}
+								}
+								_formula_column := _formula_value["column"].(string)
+								_formula := _formula_value["formula"].(string)
+								formulaColIndex := int(strings.ToUpper(_formula_column)[0] - 'A')
+								startCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), startRow+1)
+								if err != nil {
+									fmt.Printf("failed to set columns: %s\n", err)
+								}
+								endCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), rowIdx-1)
+								if err != nil {
+									fmt.Printf("failed to set columns: %s\n", err)
+								}
+								_range := fmt.Sprintf("%s:%s", startCell, endCell)
+								fmt.Println(sheet, _range, _formula)
+								if err := file.SetCellFormula(sheet, _range, _formula); err != nil {
+									fmt.Printf("Failed to set formula: %v\n", err)
+								}
 							}
 						}
 					}

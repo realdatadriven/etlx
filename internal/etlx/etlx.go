@@ -669,6 +669,10 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 		if key2 == "metadata" || key2 == "__order" || key2 == "order" {
 			continue
 		}
+		if _, isMap := value.(map[string]any); !isMap {
+			// fmt.Println(key2, "NOT A MAP:", value)
+			continue
+		}
 		err := runner(metadata, key2, value.(map[string]any))
 		if err != nil {
 			return err

@@ -810,6 +810,7 @@ For the example above, the following happens:
 By leveraging the `REQUIRES` section, you can maintain a clean and scalable ETL configuration structure, promoting reusability and modular design.
 
 ---
+
 ### **Union Queries for Aggregated Results**
 
 The `MULTI_QUERIES` section allows you to define multiple queries with similar structures and aggregate their results using a SQL `UNION`. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.
@@ -842,9 +843,23 @@ connection: "duckdb:"
 before_sql:
   - "LOAD sqlite"
   - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+save_sql: save_mult_query_res
+save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+save_on_err_sql: create_mult_query_res
 after_sql: "DETACH DB"
 union_key: "UNION ALL\n" # Defaults to UNION.
 active: true
+```
+
+```sql
+-- save_mult_query_res
+INSERT INTO "DB"."MULTI_QUERY" BY NAME
+[[final_query]]
+```
+```sql
+-- create_mult_query_res
+CREATE OR REPLACE "DB"."MULTI_QUERY" AS
+[[final_query]]
 ```
 
 ## Row1

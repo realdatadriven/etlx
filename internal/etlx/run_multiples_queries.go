@@ -2,6 +2,7 @@ package etlx
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -28,9 +29,16 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	beforeSQL, okBefore := metadata["before_sql"]
 	afterSQL, okAfter := metadata["after_sql"]
+	saveSQL, okSave := metadata["save_sql"]
+	errPatt, okErrPatt := metadata["save_on_err_patt"]
+	errSQL, okErrSQL := metadata["save_on_err_sql"]
 	queries := []string{}
 	for itemKey, item := range data {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
+			continue
+		}
+		if _, isMap := item.(map[string]any); !isMap {
+			//fmt.Println(itemKey, "NOT A MAP:", item)
 			continue
 		}
 		if only, okOnly := extraConf["only"]; okOnly {
@@ -78,7 +86,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	defer dbConn.Close()
 	//  QUERIES TO RUN AT BEGINING
 	if okBefore {
-		err = etlx.ExecuteQuery(dbConn, beforeSQL, conf, "", "", dateRef)
+		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, "", "", dateRef)
 		if err != nil {
 			return nil, fmt.Errorf("%s: Before error: %s", key, err)
 		}
@@ -90,14 +98,43 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	sql := strings.Join(queries, unionKey)
 	fmt.Println(key, sql)
-	rows, _, err := etlx.Query(dbConn, sql, conf, "", "", dateRef)
-	if err != nil {
-		return nil, fmt.Errorf("%s: error: %s", key, err)
+	if saveSQL != "" && okSave {
+		data["final_query"] = sql // PUT THE QUERY GENERATED IN THE SCOPE
+		fmt.Println(data[saveSQL.(string)])
+		err = etlx.ExecuteQuery(dbConn, saveSQL, data, "", "", dateRef)
+		if err != nil {
+			_err_by_pass := false
+			if okErrPatt && errPatt != nil && okErrSQL && errSQL != nil {
+				//fmt.Println(onErrPatt.(string), onErrSQL.(string))
+				re, regex_err := regexp.Compile(errPatt.(string))
+				if regex_err != nil {
+					return nil, fmt.Errorf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
+				} else if re.MatchString(string(err.Error())) {
+					err = etlx.ExecuteQuery(dbConn, errSQL, data, "", "", dateRef)
+					if err != nil {
+						return nil, fmt.Errorf("%s ERR: main: %s", key, err)
+					} else {
+						_err_by_pass = true
+					}
+				}
+			}
+			if !_err_by_pass {
+				return nil, fmt.Errorf("%s ERR: main: %s", key, err)
+			}
+			//return fmt.Errorf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
+		} else {
+
+		}
+	} else {
+		rows, _, err := etlx.Query(dbConn, sql, data, "", "", dateRef)
+		if err != nil {
+			return nil, fmt.Errorf("%s: error: %s", key, err)
+		}
+		processData = *rows
 	}
-	processData = *rows
 	//  QUERIES TO RUN AT THE END
 	if okAfter {
-		err = etlx.ExecuteQuery(dbConn, afterSQL, conf, "", "", dateRef)
+		err = etlx.ExecuteQuery(dbConn, afterSQL, data, "", "", dateRef)
 		if err != nil {
 			return nil, fmt.Errorf("%s: After error: %s", key, err)
 		}
