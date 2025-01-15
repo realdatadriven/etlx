@@ -264,8 +264,8 @@ In some ETL processes, particularly during the **Transform** step, queries may b
 A complex query is defined as a top-level heading (e.g., `# My Complex Query`) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., `## Field Name`). 
 
 For each field:
-- Metadata can describe the field (e.g., `name`, `description`).
-- SQL components like `select`, `from`, `join`, `where`, `group_by`, `order_by`, `having`, and `cte` are specified in separate blocks.
+- Metadata can describe the field (e.g., `name`, `description`) if a yaml metadata is not provided the field key is used as field in this example `Field Name`.
+- SQL components like `select`, `from`, `join`, `where`, `group_by`, `order_by`, `having`, and `cte` are specified in separate sql blocks.
 
 ---
 
@@ -340,6 +340,31 @@ WHERE S.total_sales > 1000
    - The query is built by iterating over the fields (in the order they appear) and combining their SQL components in the following order:
      - `cte` → `select` → `from` → `join` → `where` → `group_by` → `having` → `order_by`
    - All the resulting parts are concatenated to form the final query.
+   
+---
+
+#### **Why This Approach Matters**
+
+Handling complex queries with hundreds of columns and numerous joins can quickly become overwhelming. By breaking down the query into smaller, manageable sections, you gain the ability to focus on individual components independently. 
+
+This approach is especially beneficial in a notebook-like environment, where each section is represented as a separate heading and can be linked via a table of contents. With this structure, you can:
+
+- **Enhance Documentation**: Add context to each field, join condition, or transformation directly in the query configuration.
+- **Incorporate Formulas**: Include relevant calculations or business logic alongside the query components.
+- **Promote Collaboration**: Enable multiple contributors to work on different parts of the query without conflicts.
+
+This method simplifies the process of building and maintaining large queries while promoting organization, clarity, and reusability in your ETL workflows.
+
+---
+
+#### **Example Use Case**
+
+Consider a scenario where you need to create a large report combining data from multiple sources. Instead of writing a single, monolithic SQL query, you can use this modular approach to:
+- Define each column or join independently.
+- Add detailed documentation for each transformation step.
+- Generate a table of contents for easier navigation and review.
+
+The result is a well-organized, maintainable, and self-documented query configuration that streamlines the development and review process.
 
 ---
 
