@@ -237,9 +237,15 @@ CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go 
    - Queries can be:
      - `null`: Do nothing.
      - `string`: Reference a single query key in the same map or the query itself.
-     - `slice of strings`: Execute all queries in sequence.
+     - `array|list`: Execute all queries in sequence.
      - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
    - Use `_conn` for connection settings. If `null`, fall back to the main connection.
+   - Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applyed for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
+
+#### **Error Handling in ETL Steps**
+
+You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.
+
 
 4. **Output Logs**:
    - Log progress (e.g., connection usage, start/end times, descriptions).
