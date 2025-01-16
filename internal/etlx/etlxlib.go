@@ -1,4 +1,4 @@
-package etlx
+package etlxlib
 
 import (
 	"bytes"

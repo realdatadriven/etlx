@@ -8,16 +8,11 @@ import (
 	"strings"
 	"time"
 
-	"github.com/joho/godotenv"
-	"github.com/realdatadriven/etlx/internal/etlx"
+	"github.com/realdatadriven/etlx"
 )
 
 func main() {
-	// Load .env file
-	_err := godotenv.Load()
-	if _err != nil {
-		fmt.Println("Error loading .env file")
-	}
+	etlx.LoadDotEnv()
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
@@ -39,13 +34,13 @@ func main() {
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
-	etl := &etlx.ETLX{Config: config}
-	err := etl.ConfigFromFile(*filePath)
+	etlxlib := &etlx.ETLX{Config: config}
+	err := etlxlib.ConfigFromFile(*filePath)
 	if err != nil {
 		log.Fatalf("Error parsing Markdown: %v", err)
 	}
-	if _, ok := etl.Config["REQUIRES"]; ok {
-		_logs, err := etl.LoadREQUIRES(nil)
+	if _, ok := etlxlib.Config["REQUIRES"]; ok {
+		_logs, err := etlxlib.LoadREQUIRES(nil)
 		if err != nil {
 			fmt.Printf("REQUIRES ERR: %v\n", err)
 		}
@@ -55,10 +50,10 @@ func main() {
 	}
 	// Print the parsed configuration
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-		etl.PrintConfigAsJSON(etl.Config)
+		etlxlib.PrintConfigAsJSON(etlxlib.Config)
 	}
 	/*/ Walk through the data and process each key-value pair
-	etl.Walk(etl.Config, "", func(keyPath string, value any) {
+	etlxlib.Walk(etlxlib.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
 		if reflect.TypeOf(value).Kind() != reflect.Map {
 			fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -86,8 +81,8 @@ func main() {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
 	// RUN ETL
-	if _, ok := etl.Config["ETL"]; ok {
-		_logs, err := etl.RunETL(dateRef, nil, extraConf)
+	if _, ok := etlxlib.Config["ETL"]; ok {
+		_logs, err := etlxlib.RunETL(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("ETL ERR: %v\n", err)
 		}
@@ -96,8 +91,8 @@ func main() {
 		}
 	}
 	// DATA_QUALITY
-	if _, ok := etl.Config["DATA_QUALITY"]; ok {
-		_logs, err := etl.RunDATA_QUALITY(dateRef, nil, extraConf)
+	if _, ok := etlxlib.Config["DATA_QUALITY"]; ok {
+		_logs, err := etlxlib.RunDATA_QUALITY(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("DATA_QUALITY ERR: %v\n", err)
 		}
@@ -106,8 +101,8 @@ func main() {
 		}
 	}
 	// EXPORTS
-	if _, ok := etl.Config["EXPORTS"]; ok {
-		_logs, err := etl.RunEXPORTS(dateRef, nil, extraConf)
+	if _, ok := etlxlib.Config["EXPORTS"]; ok {
+		_logs, err := etlxlib.RunEXPORTS(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("EXPORTS ERR: %v\n", err)
 		}
@@ -116,8 +111,8 @@ func main() {
 		}
 	}
 	// MULTI_QUERIES
-	if _, ok := etl.Config["MULTI_QUERIES"]; ok {
-		res, err := etl.RunMULTI_QUERIES(dateRef, nil, extraConf)
+	if _, ok := etlxlib.Config["MULTI_QUERIES"]; ok {
+		res, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("MULTI_QUERIES ERR: %v\n", err)
 		}
