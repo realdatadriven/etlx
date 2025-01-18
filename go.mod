@@ -9,7 +9,7 @@ require (
 	github.com/joho/godotenv v1.5.1
 	github.com/lib/pq v1.10.9
 	github.com/marcboeker/go-duckdb v1.7.1
-	github.com/mattn/go-sqlite3 v2.0.3+incompatible
+	github.com/mattn/go-sqlite3 v1.14.24
 	github.com/xuri/excelize/v2 v2.9.0
 	github.com/yuin/goldmark v1.7.8
 	golang.org/x/text v0.21.0
