@@ -54,7 +54,7 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir dist
-          go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
 
       # Step 8: Upload Build Logs for Debugging (if Build Fails)
       - name: Upload Logs
