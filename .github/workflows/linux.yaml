@@ -1,4 +1,4 @@
-name: MacOS Build with CGO and UnixODBC
+name: Linux Build
 
 on:
   workflow_dispatch:
