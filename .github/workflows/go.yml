@@ -79,7 +79,8 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir dist
-          go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+      #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
@@ -151,6 +152,11 @@ jobs:
         id: Changelog
         env:
           REPO: ${{ github.repository }}
+      - name: Zip Binaries
+        run: |
+          zip -j dist/etlx-linux-amd64.zip dist/etlx-linux-amd64
+          zip -j dist/etlx-macos-amd64.zip dist/etlx-macos-amd64
+          zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
       - name: Create Release
         uses: softprops/action-gh-release@v1
         with:
@@ -158,8 +164,8 @@ jobs:
           draft: false
           prerelease: true
           files: |
-            dist/etlx-windows-amd64.exe
-            dist/etlx-macos-amd64
-            dist/etlx-linux-amd64
+            dist/etlx-linux-amd64.zip
+            dist/etlx-macos-amd64.zip
+            dist/etlx-windows-amd64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
