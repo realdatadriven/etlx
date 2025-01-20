@@ -87,11 +87,31 @@ chmod +x etlx
 ./etlx --help
 ```
 
-#### **Option 2: Install via Go**
+#### **Option 2: Install via Go (as a library)**
 
 ```bash
 # Install ETLX
 go install github.com/yourusername/etlx
+```
+
+#### **Option 3: Clone Repo**
+
+```bash
+git clone https://github.com/realdatadriven/etlx.git
+cd etlx
+```
+
+And then:
+
+```bash
+go run main.go --config etl_config.md --date 2023-10-31
+```
+
+the same can be said for build
+On Windows you may have build issues, in that case I found out that is easier to just use the latest libduckdb from [duckdb/releases](https://github.com/duckdb/duckdb/releases) put it in your path and then build with -tags=duckdb_use_lib
+
+```bash
+CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
 ```
 
 ### **Running ETLX**
