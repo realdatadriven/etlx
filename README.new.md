@@ -1,4 +1,4 @@
-# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL Workflows
+# ETLX: A Modern Approach to ETL Workflows
 
 ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL (Extract, Transform, Load) workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
 

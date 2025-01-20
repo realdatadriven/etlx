@@ -1,10 +1,10 @@
-# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL Workflows
+# **DuckDB-Powered Markdown-Driven ETL Framework**
 
-ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL (Extract, Transform, Load) workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
+## **Overview**
 
 This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
 
-Supports a variety of data sources, including:
+The framework supports a variety of data sources, including:
 
 - Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
 
@@ -18,83 +18,28 @@ By leveraging DuckDB's powerful in-memory processing capabilities, this framewor
 
 ## **Features**
 
-- **Config Parsing from Markdown**:
-  - Supports YAML, TOML, and JSON metadata blocks.
-  - Automatically parses and structures Markdown configuration into a nested data structure.
+- **Markdown-Driven Configuration**:
+  - Use YAML to define ETL metadata (e.g., connection strings, schedules, validations).
+  - Embed SQL blocks for data extraction, transformation, and loading.
 
-- **ETL Execution**:
-  - Handles extract, transform, and load processes using a modular design.
-  - Supports complex workflows with customizable steps.
+- **Powerful DuckDB Engine**:
+  - In-memory computations for high performance.
+  - Supports SQL extensions for multi-source integration.
 
-- **Query Documentation**:
-  - Define modular SQL queries in sections.
-  - Combines query parts dynamically to build complete SQL statements.
+- **Flexible ETL Workflow**:
+  - Modular `Extract`, `Transform`, and `Load` steps.
+  - Configurable validations to ensure data integrity.
 
-- **Exports**:
-  - Export data to various formats (e.g., CSV, Excel).
-  - Supports template-based exports for custom reports.
+- **Multi-Source Compatibility**:
+  - Relational databases, cloud storage, and file formats all supported.
 
-- **Requires**:
-  - Dynamically load additional configuration from files or database queries.
-
-- **CLI Interface**:
-  - Command-line interface for executing ETLX configurations.
-  - Supports flags for custom parameters (e.g., `--config`, `--date`, `--steps`).
+- **Extensibility**:
+  - Designed for embedding in **Go** or **Python** applications.
+  - Parse configurations programmatically or pass configurations as form data.
 
 ---
 
-## **Table of Contents**
-
-1. [Introduction](#1-introduction)
-2. [Quick Start](#2-quick-start)
-3. [Features](#3-features)
-4. [Configuration Details](#4-configuration-details)
-   - [ETL](#etl)
-   - [Validation Rules](#validation-rules)
-   - [Query Documentation](#query-documentation)
-   - [Data Quality](#data-quality)
-   - [Exports](#exports)
-   - [Multi-Queries](#multi-queries)
-   - [Loading Config Dependencies](#loading-config-dependencies)
-5. [Advanced Usage](#5-advanced-usage)
-6. [Embedding in Go](#6-embedding-in-go)
-7. [Future Plans](#7-future-plans)
-8. [License](#8-license)
-
----
-
-## **1. Introduction**
-
-ETLX introduces an innovative, flexible way to handle ETL processes, data quality validation, and report automation. It empowers users with:
-
-- **Markdown-driven Configuration**: Define your workflows in a structured, human-readable format.
-- **DuckDB Integration**: Utilize DuckDB’s capabilities to work with diverse data sources, including databases, object storage, and APIs.
-- **Extensibility**: Easily adapt to new use cases with modular configurations.
-
----
-
-## **2. Quick Start**
-
-### **Installation**
-
-#### **Option 1: Precompiled Binaries**
-
-Precompiled binaries for Linux, macOS, and Windows are available on the [releases page](https://github.com/realdatadriven/etlx/releases). Download the appropriate binary for your system and make it executable:
-
-```bash
-# Example for Linux or macOS
-chmod +x etlx
-./etlx --help
-```
-
-#### **Option 2: Install via Go**
-
-```bash
-# Install ETLX
-go install github.com/yourusername/etlx
-```
-
-### **Running ETLX**
+## **Command-Line Usage**
 
 The binary supports the following flags:
 
@@ -108,18 +53,21 @@ The binary supports the following flags:
 - `--drop`: Execute `drop_sql` on items (conditional based on `--only` and `--skip`).
 - `--rows`: Retrieve the number of rows in the target table(s).
 
+---
+
+### **Example Command**
+
 ```bash
 etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 ```
 
-### **How It Works**
+## **How It Works**
 
 Create a Markdown file with the ETL process configuration. For example:
 
-#### **Example Use Case**
+## **Example Use Case**
 
 Markdown File (`etl_config.md`):
-
 ````markdown
 # ETL
 ```yaml metadata
@@ -190,127 +138,123 @@ LIMIT 10;
 
 ````
 
-Run the workflow:
-
-```bash
-etlx --config config.md --date 2024-01-01
-```
-
-#### **Parse the Markdown File**
-
+### **2. Parse the Markdown File**
 - Parse the Markdown file to extract:
-  - **YAML|TOML|JSON blocks**: For metadata and configuration.
-  - **SQL blocks**: For ETL logic / queries defined in the metadata.
+  - **YAML blocks**: For metadata and configuration.
+  - **SQL blocks**: For ETL logic.
 
-#### **Execute the Workflow**
-
+### **3. Execute the Workflow**
 - Use DuckDB to:
   - Extract data from the source.
   - Apply transformations (if specified).
   - Load the processed data into the target.
 
----
-
-## **3. Features**
-
-- Markdown-based configurations for easy readability.
-- Extensive DuckDB support for various data sources and formats.
-- Modular design for reusability and clarity.
-- Built-in error handling and validation.
-- Export functionality for reports, templates, and data lakes.
+### **4. Schedule ETL**
+- Use the `periodicity` field in YAML for scheduling. For instance, use cron to trigger the ETL process at specified intervals.
 
 ---
 
-## **4. Configuration Details**
+## **Configuration Details**
 
-### **ETL**
+### **ETL Metadata (YAML)**
+The ETL process is defined using YAML metadata in Markdown. Below is an example, environmental variables can be accessed by putting @ENV. or just @ in front of the name like @ENV.VAR_NAME or @VAR_NAME, the system will recognize it as a potential env variable, and .env file on the root is sported to load them:
 
-- Defines the overall ETL process.
-- Example:
-
-````markdown
-# ETL
-```yaml metadata
+```yaml
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
 database: analytics_db
 connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable'
 ```
 
-## sales_data
-```yaml metadata
-name: SalesData
-description: 'Daily Sales Data'
-load_conn: 'duckdb:'
-load_before_sql:
-  - load_extentions
-  - conn
-load_validation: # Validation is performed during the load phase using YAML
-  - type: throw_if_empty
-    sql: validate_data_not_empty
-    msg: 'No data extracted for the given date!'
-  - type: throw_if_not_empty
-    sql: validate_data_duplicates
-    msg: 'Duplicate data detected!'
-load_sql: load_sales
-load_after_sql: detaches
-```
-...
-````
-
-#### 1. **ETL Process Starts**
-
-- Begin with the `"ETL"` key;
-- Extract metadata, specifically:
-  - `"connection"`: Main connection to the destination database.
-  - `"description"`: For logging the start and end time of the ETL process.
-
-#### 2. **Loop through Level 2 key in under `"ETL"` key**
-
-- Iterate over each key (e.g., `"sales_data"`)
-- For each key, access its `"metadata"` to process the ETL steps.
-
-#### 3. **ETL Steps**
-
-- Each ETL step (`extract`, `transform`, `load`) has:
-  - `_before_sql`: Queries to run first (setup).
-  - `_sql`: The main query or queries to run.
-  - `_after_sql`: Cleanup queries to run afterward.
-- Queries can be:
-  - `null`: Do nothing.
-  - `string`: Reference a single query key in the same map or the query itself.
-  - `array|list`: Execute all queries in sequence.
-  - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
-- Use `_conn` for connection settings. If `null`, fall back to the main connection.
-- Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applyed for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
-   You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.
-
-#### 4. **Output Logs**
-
-- Log progress (e.g., connection usage, start/end times, descriptions).
-- Gracefully handle missing or `null` keys.
-
 ### **Validation Rules**
-
-- Validate data quality during the ETL process by using the key `[step]_validation` in the metadata section.
-- Example:
-
+Validation is performed during the load phase using YAML:
 ```yaml
-...
 load_validation:
   - type: throw_if_empty
     sql: validate_data_not_empty
     msg: 'No data extracted for the given date!'
-    active: false
   - type: throw_if_not_empty
     sql: validate_data_duplicates
     msg: 'Duplicate data detected!'
-...
+```
+---
+
+## **Advantages**
+
+- **Human-Readable Configuration**: Easily define ETL workflows in Markdown.
+- **Powerful Processing**: Leverage DuckDB’s in-memory analytics engine for high performance.
+- **Cross-Platform Compatibility**: Integrates with databases, cloud, and file systems.
+- **Extensibility**: Add new data sources or custom transformations by extending Markdown definitions.
+
+---
+
+## **Getting Started**
+
+1. **Clone the Repository**:
+   ```bash
+   git clone https://github.com/realdatadriven/etlx.git
+   cd etlx
+   ```
+
+2. **Run the ETL Process**:
+```bash
+go run main.go --config etl_config.md --date 2023-10-31
+```
+the same can be said for build
+On Windows you may have building issues if you keep duckdb, in that case I found out that is easier to just use the latest libduckdb from https://github.com/duckdb/duckdb/releases put it in your path and then build with -tags=duckdb_use_lib
+
+```bash
+CGO_ENABLED=1 CGO_LDFLAGS="-L/path/to/libs" go run -tags=duckdb_use_lib main.go --config etl_config.md --date 2023-10-31
 ```
 
-For every object in the `[step]_validation` the `sql` is executed in the `[step]_con` connection, and it cal eather throw error message defined in `msg` or not if the condition (`type:throw_if_empty | type:throw_if_not_empty` or) is met or not.
+3. **Schedule the Process** (Optional):
+   - Use cron to schedule the script:
+     ```bash
+     crontab -e
+     ```
+     Add:
+     ```bash
+     0 5 * * * /path/to/etl_runner.sh
+     ```
 
-### **Query Documentation**
+---
+### **How the configuration works**
+
+1. **ETL Process Starts**:
+   - Begin with the `"ETL"` key.
+   - Extract metadata, specifically:
+     - `"connection"`: Main connection to the destination database.
+     - `"description"`: For logging the start and end time of the ETL process.
+
+2. **Loop through Level 2 key in under `"ETL"` key**:
+   - Iterate over each key (e.g., `"sales_data"`).
+   - For each key, access its `"metadata"` to process the ETL steps.
+
+3. **ETL Steps**:
+   - Each ETL step (`extract`, `transform`, `load`) has:
+     - `_before_sql`: Queries to run first (setup).
+     - `_sql`: The main query or queries to run.
+     - `_after_sql`: Cleanup queries to run afterward.
+   - Queries can be:
+     - `null`: Do nothing.
+     - `string`: Reference a single query key in the same map or the query itself.
+     - `array|list`: Execute all queries in sequence.
+     - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
+   - Use `_conn` for connection settings. If `null`, fall back to the main connection.
+   - Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applyed for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
+
+#### **Error Handling in ETL Steps**
+
+You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.
+
+
+4. **Output Logs**:
+   - Log progress (e.g., connection usage, start/end times, descriptions).
+   - Gracefully handle missing or `null` keys.
+
+---
+
+### **Handling Complex Queries in ETL Configuration**
 
 In some ETL processes, particularly during the **Transform** step, queries may become too complex to manage as a single string. To address this, the configuration supports a structured approach where you can break down a query into individual fields and their respective SQL components. This approach improves modularity, readability, and maintainability.
 
@@ -318,10 +262,9 @@ In some ETL processes, particularly during the **Transform** step, queries may b
 
 #### **Structure**
 
-A complex query is defined as a top-level heading (e.g., `# My Complex Query`) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., `## Field Name`).
+A complex query is defined as a top-level heading (e.g., `# My Complex Query`) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., `## Field Name`). 
 
 For each field:
-
 - Metadata can describe the field (e.g., `name`, `description`) if a yaml metadata is not provided the field key is used as field in this example `Field Name`.
 - SQL components like `select`, `from`, `join`, `where`, `group_by`, `order_by`, `having`, and `cte` are specified in separate sql blocks.
 
@@ -388,7 +331,7 @@ WHERE S.total_sales > 1000
 
 ---
 
-#### **How Query Doc. Works**
+#### **How It Works**
 
 1. **Parsing the Configuration**:
    - Each query is parsed as a separate section with its metadata stored under the `metadata` key.
@@ -403,7 +346,7 @@ WHERE S.total_sales > 1000
 
 #### **Why This Approach Matters**
 
-Handling complex queries with hundreds of columns and numerous joins can quickly become overwhelming. By breaking down the query into smaller, manageable sections, you gain the ability to focus on individual components independently.
+Handling complex queries with hundreds of columns and numerous joins can quickly become overwhelming. By breaking down the query into smaller, manageable sections, you gain the ability to focus on individual components independently. 
 
 This approach is especially beneficial in a notebook-like environment, where each section is represented as a separate heading and can be linked via a table of contents. With this structure, you can:
 
@@ -415,10 +358,9 @@ This method simplifies the process of building and maintaining large queries whi
 
 ---
 
-#### **Example Use Case for this type o query documentation**
+#### **Example Use Case**
 
 Consider a scenario where you need to create a large report combining data from multiple sources. Instead of writing a single, monolithic SQL query, you can use this modular approach to:
-
 - Define each column or join independently.
 - Add detailed documentation for each transformation step.
 - Generate a table of contents for easier navigation and review.
@@ -456,7 +398,6 @@ WHERE S.total_sales > 1000
   - `name`: A unique identifier for the field.
   - `description`: A brief description of the field's purpose.
 But if you only using the parser for you to document your queries you may want to pass extra information in your metadata to use to generate documentation like data lineage / dictionary, ...
-
 ---
 
 #### **Benefits**
@@ -469,153 +410,17 @@ But if you only using the parser for you to document your queries you may want t
 
 By leveraging this structure, you can handle even the most complex SQL queries in your ETL process with ease and flexibility. Each query becomes manageable, and you gain the ability to compose intricate SQL logic dynamically.
 
-### **Data Quality**
-
-The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.
-
 ---
 
-#### **Data Quality Structure**
-
-1. **Metadata**:
-   - The `DATA_QUALITY` section contains metadata describing its purpose and activation status.
-
-2. **Validation Rules**:
-   - Each validation rule is defined as a Level 2 heading under the `DATA_QUALITY` block.
-   - Rules include a query to check for violations and, optionally, a query to fix issues.
-
-3. **Execution**:
-   - The system loops through all rules in the `DATA_QUALITY` block.
-   - For each rule:
-     - Runs the validation query.
-     - If violations are found and a fix query is defined, executes the fix query.
-
----
-
-#### **Data Quality Markdown Example**
-
-````markdown
-# DATA_QUALITY
-```yaml
-description: "Runs some queries to check quality / validate."
-active: true
-```
-
-## Rule0001
-```yaml
-name: Rule0001
-description: "Check if the field x has the option y and z."
-connection: "duckdb:"
-before_sql:
-  - "LOAD sqlite"
-  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
-query: quality_check_query
-fix_quality_err: fix_quality_err_query
-column: total_reg_with_err # Defaults to 'total'.
-after_sql: "DETACH DB"
-active: true
-```
-
-```sql
--- quality_check_query
-SELECT COUNT(*) AS "total_reg_with_err"
-FROM "sales"
-WHERE "option" NOT IN ('y', 'z');
-```
-
-```sql
--- fix_quality_err_query
-UPDATE "sales"
-SET "option" = 'default value'
-WHERE "option" NOT IN ('y', 'z');
-```
-
-## Rule0002
-```yaml
-name: Rule0002
-description: "Check if the field y has the option x and z."
-connection: "duckdb:"
-before_sql:
-  - "LOAD sqlite"
-  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
-query: quality_check_query
-fix_quality_err: null # no automated fixing for this
-column: total_reg_with_err # Defaults to 'total'.
-after_sql: "DETACH DB"
-active: true
-```
-
-```sql
--- quality_check_query
-SELECT COUNT(*) AS "total_reg_with_err"
-FROM "sales"
-WHERE "option2" NOT IN ('x', 'z');
-```
-
-````
-
----
-
-#### **How Data Quality Works**
-
-1. **Defining Rules**:
-   - Each rule specifies:
-     - A SQL query (`query`) to validate data.
-     - An optional fix query (`fix_quality_err`) to resolve issues.
-     - Metadata for connection, pre/post-SQL commands, and status.
-
-2. **Execution Flow**:
-   - The validation query is executed first.
-   - If the number of violations is greater than 0:
-     - Logs the count of invalid records.
-     - Executes the fix query if `fix_quality_err` is defined.
-
-3. **Output**:
-   - Provides detailed logs about rule violations and fixes applied.
-
----
-
-#### **Data Quality Example Use Case**
-
-For the example above:
-
-1. **Rule0001**:
-   - Validates that the `option` field contains only the values `y` and `z`.
-   - Updates invalid records to a default value using the fix query.
-
-2. **Rule0002**:
-   - Validates that the `option2` field contains only the values `x` and `z`.
-   - Updates invalid records to a default value using the fix query.
-
----
-
-#### **Data Quality Benefits**
-
-- **Automated Quality Assurance**:
-  - Identify and fix data issues programmatically.
-
-- **Customizable Rules**:
-  - Define rules tailored to your specific data quality requirements.
-
-- **Flexibility**:
-  - Supports pre- and post-SQL commands for advanced workflows.
-
----
-
-By integrating the `DATA_QUALITY` block, you can ensure the integrity of your data and automate validation processes as part of your ETL pipeline.
-
----
-
-### **Exports**
+### **Generating Files from Data**
 
 The `EXPORTS` section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB's ability to export data in various formats, this section supports file generation with flexibility and precision.
 
 ---
 
-#### **Export Structure**
+#### **Structure**
 
 An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in the configuration. Within this section:
-
 1. **Exports Metadata**:
    - Metadata defines properties like the database connection, export path, and activation status.
    - Fields like `type`, `name`, `description`, `path`, and `active` control the behavior of each export.
@@ -629,7 +434,7 @@ An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in
 
 ---
 
-#### **Export Markdown**
+#### **Markdown Example**
 
 ````markdown
 # EXPORTS
@@ -737,11 +542,12 @@ SELECT *
 FROM "DB"."Sales"
 WHERE "sale_date" = '{YYYY-MM-DD}';
 ```
+
 ````
 
 ---
 
-#### **How Exporting It Works**
+#### **How It Works**
 
 1. **Parsing the Configuration**:
    - Each export is parsed as a separate section with its metadata stored under the `metadata` key.
@@ -761,7 +567,6 @@ WHERE "sale_date" = '{YYYY-MM-DD}';
      - **`table_style`**: The table style applied to the range.
      - **`if_exists`**: Specifies how to handle existing data (e.g., delete or append).
 the maping can also be a string representing a query and all the mapping can be loaded from a table in the database to simplify the config, and also in a real world it can be extensive, would be easier to be done in a spreadsheet and loaded as a table.
-
 ---
 
 #### **Resulting Outputs**
@@ -777,7 +582,7 @@ the maping can also be a string representing a query and all the mapping can be 
 
 ---
 
-#### **Benefits of this functionality**
+#### **Benefits**
 
 - **Flexibility**:
   - Export data in multiple formats (e.g., CSV, Excel) using DuckDB's powerful `COPY` command.
@@ -788,17 +593,268 @@ the maping can also be a string representing a query and all the mapping can be 
 
 By leveraging the `EXPORTS` section, you can automate data export processes, making them efficient and repeatable.
 
-### **Multi-Queries**
+---
+
+### **Data Quality**
+
+The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.
+
+---
+
+#### **Structure**
+
+1. **Metadata**:
+   - The `DATA_QUALITY` section contains metadata describing its purpose and activation status.
+
+2. **Validation Rules**:
+   - Each validation rule is defined as a Level 2 heading under the `DATA_QUALITY` block.
+   - Rules include a query to check for violations and, optionally, a query to fix issues.
+
+3. **Execution**:
+   - The system loops through all rules in the `DATA_QUALITY` block.
+   - For each rule:
+     - Runs the validation query.
+     - If violations are found and a fix query is defined, executes the fix query.
+
+---
+
+#### **Markdown Example**
+
+````markdown
+# DATA_QUALITY
+```yaml
+description: "Runs some queries to check quality / validate."
+active: true
+```
+
+## Rule0001
+```yaml
+name: Rule0001
+description: "Check if the field x has the option y and z."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: fix_quality_err_query
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "sales"
+WHERE "option" NOT IN ('y', 'z');
+```
+
+```sql
+-- fix_quality_err_query
+UPDATE "sales"
+SET "option" = 'default value'
+WHERE "option" NOT IN ('y', 'z');
+```
+
+## Rule0002
+```yaml
+name: Rule0002
+description: "Check if the field y has the option x and z."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: null # no automated fixing for this
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "sales"
+WHERE "option2" NOT IN ('x', 'z');
+```
+
+````
+
+---
+
+#### **How It Works**
+
+1. **Defining Rules**:
+   - Each rule specifies:
+     - A SQL query (`query`) to validate data.
+     - An optional fix query (`fix_quality_err`) to resolve issues.
+     - Metadata for connection, pre/post-SQL commands, and status.
+
+2. **Execution Flow**:
+   - The validation query is executed first.
+   - If the number of violations is greater than 0:
+     - Logs the count of invalid records.
+     - Executes the fix query if `fix_quality_err` is defined.
+
+3. **Output**:
+   - Provides detailed logs about rule violations and fixes applied.
+
+---
+
+#### **Example Use Case**
+
+For the example above:
+1. **Rule0001**:
+   - Validates that the `option` field contains only the values `y` and `z`.
+   - Updates invalid records to a default value using the fix query.
+
+2. **Rule0002**:
+   - Validates that the `option2` field contains only the values `x` and `z`.
+   - Updates invalid records to a default value using the fix query.
+
+---
+
+#### **Benefits**
+
+- **Automated Quality Assurance**:
+  - Identify and fix data issues programmatically.
+
+- **Customizable Rules**:
+  - Define rules tailored to your specific data quality requirements.
+
+- **Flexibility**:
+  - Supports pre- and post-SQL commands for advanced workflows.
+
+---
+
+By integrating the `DATA_QUALITY` block, you can ensure the integrity of your data and automate validation processes as part of your ETL pipeline.
+
+---
+
+### **Loading Config Dependencies**
+
+The `REQUIRES` section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.
+
+---
+
+#### **Structure**
+
+1. **Metadata**:
+   - The `REQUIRES` section includes metadata describing its purpose and activation status.
+
+2. **Loading Options**:
+   - **From Queries**:
+     - Dynamically fetch configuration content from a query.
+     - Specify the query, column containing the configuration, and optional pre/post SQL scripts.
+   - **From Files**:
+     - Load configuration content from an external file path.
+
+3. **Integration**:
+   - The loaded configuration is merged into the main configuration.
+   - Top-level headings in the required configuration that don’t exist in the main configuration are added.
+
+---
+
+#### **Markdown Example**
+
+````markdown
+# REQUIRES
+```yaml
+description: "Load configuration dependencies from files or queries."
+active: true
+```
+
+## Sales Transformation
+```yaml
+name: SalesTransform
+description: "Load sales transformation config from a query."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
+query: get_sales_conf
+column: md_conf_content # Defaults to 'conf' if not provided.
+after_sql: "DETACH DB"
+active: false
+```
+
+```sql
+-- get_sales_conf
+SELECT "md_conf_content"
+FROM "configurations"
+WHERE "config_name" = 'Sales'
+  AND "active" = true
+  AND "excluded" = false;
+```
+
+## Inventory Transformation
+```yaml
+name: InventoryTransform
+description: "Load inventory transformation config from a file."
+path: "/path/to/Configurations/inventory_transform.md"
+active: true
+```
+
+````
+
+---
+
+#### **How It Works**
+
+1. **Defining Dependencies**:
+   - Dependencies are listed as child sections under the `# REQUIRES` heading.
+   - Each dependency specifies its source (`query` or `path`) and associated metadata.
+
+2. **From Queries**:
+   - Use the `query` field to specify a SQL query that retrieves the configuration.
+   - The `column` field specifies which column contains the Markdown configuration content.
+   - Optionally, use `before_sql` and `after_sql` to define scripts to run before or after executing the query.
+
+3. **From Files**:
+   - Use the `path` field to specify the file path of an external Markdown configuration.
+
+4. **Merging with Main Configuration**:
+   - After loading the configuration, any top-level headings in the loaded configuration that don’t exist in the main configuration are added.
+
+---
+
+#### **Example Use Case**
+
+For the example above, the following happens:
+1. **Sales Transformation**:
+   - A query retrieves the Markdown configuration content for sales transformations from a database table.
+   - The `before_sql` and `after_sql` scripts prepare the environment for the query execution.
+
+2. **Inventory Transformation**:
+   - A Markdown configuration is loaded from an external file path (`/path/to/Configurations/inventory_transform.md`).
+
+---
+
+#### **Benefits**
+
+- **Modularity**:
+  - Break large configurations into smaller, reusable parts.
+- **Dynamic Updates**:
+  - Use queries to dynamically load updated configurations from databases.
+- **Ease of Maintenance**:
+  - Keep configurations for different processes in separate files or sources, simplifying updates and version control.
+
+By leveraging the `REQUIRES` section, you can maintain a clean and scalable ETL configuration structure, promoting reusability and modular design.
+
+---
+
+### **Union Queries for Aggregated Results**
 
 The `MULTI_QUERIES` section allows you to define multiple queries with similar structures and aggregate their results using a SQL `UNION`. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.
 
 ---
 
-#### **Multi-Queries Structure**
+#### **Structure**
 
 1. **Metadata**:
    - The `MULTI_QUERIES` section includes metadata for connection details, pre/post-SQL commands, and activation status.
    - The `union_key` defines how the queries are combined (e.g., `UNION`, `UNION ALL`).
+   - 
 
 2. **Query Definitions**:
    - Each query is defined as a Level 2 heading under the `MULTI_QUERIES` block.
@@ -808,10 +864,9 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
    - All queries are combined using the specified `union_key` (default is `UNION`).
    - The combined query is executed as a single statement.
    - The combined query can be save by specifing `save_sql` normally an insert, create [or replace] table or even a copy to file statment, and insert statment should be used in combination with the `save_on_err_patt` and `save_on_err_sql` in case of an error matching the `table does ... not exist` to create the tabe instead.
-
 ---
 
-#### **Multi-Queries Markdown Example**
+#### **Markdown Example**
 
 ````markdown
 # MULTI_QUERIES
@@ -890,7 +945,7 @@ GROUP BY "region";
 
 ---
 
-#### **Multi-Queries How It Works**
+#### **How It Works**
 
 1. **Defining Queries**:
    - Queries are defined as Level 2 headings.
@@ -908,10 +963,9 @@ GROUP BY "region";
 
 ---
 
-#### **Multi-Queries Example Use Case**
+#### **Example Use Case**
 
 For the example above:
-
 1. **Row1**:
    - Counts the number of rows in the `sales` table.
 2. **Row2**:
@@ -940,7 +994,7 @@ DETACH DB;
 
 ---
 
-#### **Multi-Queries Benefits**
+#### **Benefits**
 
 - **Efficiency**:
   - Executes multiple queries in a single statement.
@@ -951,137 +1005,10 @@ DETACH DB;
 
 With the `MULTI_QUERIES` section, you can simplify the process of aggregating data from multiple queries into a unified result set.
 
----
-
-### **Loading Config Dependencies**
-
-The `REQUIRES` section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.
 
 ---
 
-#### **Loading Structure**
-
-1. **Metadata**:
-   - The `REQUIRES` section includes metadata describing its purpose and activation status.
-
-2. **Loading Options**:
-   - **From Queries**:
-     - Dynamically fetch configuration content from a query.
-     - Specify the query, column containing the configuration, and optional pre/post SQL scripts.
-   - **From Files**:
-     - Load configuration content from an external file path.
-
-3. **Integration**:
-   - The loaded configuration is merged into the main configuration.
-   - Top-level headings in the required configuration that don’t exist in the main configuration are added.
-
----
-
-#### **Loading Markdown Example**
-
-````markdown
-# REQUIRES
-```yaml
-description: "Load configuration dependencies from files or queries."
-active: true
-```
-
-## Sales Transformation
-```yaml
-name: SalesTransform
-description: "Load sales transformation config from a query."
-connection: "duckdb:"
-before_sql:
-  - "LOAD sqlite"
-  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
-query: get_sales_conf
-column: md_conf_content # Defaults to 'conf' if not provided.
-after_sql: "DETACH DB"
-active: false
-```
-
-```sql
--- get_sales_conf
-SELECT "md_conf_content"
-FROM "configurations"
-WHERE "config_name" = 'Sales'
-  AND "active" = true
-  AND "excluded" = false;
-```
-
-## Inventory Transformation
-```yaml
-name: InventoryTransform
-description: "Load inventory transformation config from a file."
-path: "/path/to/Configurations/inventory_transform.md"
-active: true
-```
-
-````
-
----
-
-#### **How Loading Works**
-
-1. **Defining Dependencies**:
-   - Dependencies are listed as child sections under the `# REQUIRES` heading.
-   - Each dependency specifies its source (`query` or `path`) and associated metadata.
-
-2. **From Queries**:
-   - Use the `query` field to specify a SQL query that retrieves the configuration.
-   - The `column` field specifies which column contains the Markdown configuration content.
-   - Optionally, use `before_sql` and `after_sql` to define scripts to run before or after executing the query.
-
-3. **From Files**:
-   - Use the `path` field to specify the file path of an external Markdown configuration.
-
-4. **Merging with Main Configuration**:
-   - After loading the configuration, any top-level headings in the loaded configuration that don’t exist in the main configuration are added.
-
----
-
-#### **Loading - Example Use Case**
-
-For the example above, the following happens:
-
-1. **Sales Transformation**:
-   - A query retrieves the Markdown configuration content for sales transformations from a database table.
-   - The `before_sql` and `after_sql` scripts prepare the environment for the query execution.
-
-2. **Inventory Transformation**:
-   - A Markdown configuration is loaded from an external file path (`/path/to/Configurations/inventory_transform.md`).
-
----
-
-#### **Loading - Benefits**
-
-- **Modularity**:
-  - Break large configurations into smaller, reusable parts.
-- **Dynamic Updates**:
-  - Use queries to dynamically load updated configurations from databases.
-- **Ease of Maintenance**:
-  - Keep configurations for different processes in separate files or sources, simplifying updates and version control.
-
-By leveraging the `REQUIRES` section, you can maintain a clean and scalable ETL configuration structure, promoting reusability and modular design.
-
----
-
-## **5. Advanced Usage**
-
-- Error Handling:
-  Define patterns for resolving errors dynamically during execution.
-
-  ```yaml
-  load_on_err_match_patt: "(?i)table.+does.+not.+exist"
-  load_on_err_match_sql: "CREATE TABLE sales_table (id INT, total FLOAT)"
-  ```
-
-- Modular Configuration:
-  Break down workflows into reusable components for better maintainability.
-
----
-
-## **6. Embedding in Go**
+## **Embedding in Go**
 
 To embed the ETL framework in a Go application:
 
@@ -1089,49 +1016,76 @@ To embed the ETL framework in a Go application:
 package main
 
 import (
-    "fmt"
-    "time"
-    "github.com/realdatadriven/etlx/internal/etlx"
+	"fmt"
+	"time"
+	"github.com/realdatadriven/etlx/internal/etlx"
 )
 
 func main() {
-    etl := &etlx.ETLX{}
+	etl := &etlx.ETLX{}
 
-    // Load configuration from Markdown text
-    err := etl.ConfigFromMDText(`# Your Markdown config here`)
-    if err != nil {
-        fmt.Printf("Error loading config: %v\n", err)
-        return
-    }
+	// Load configuration from Markdown text
+	err := etl.ConfigFromMDText(`# Your Markdown config here`)
+	if err != nil {
+		fmt.Printf("Error loading config: %v\n", err)
+		return
+	}
 
-    // Prepare date reference
-    dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
+	// Prepare date reference
+	dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
 
-    // Define additional options
-    options := map[string]any{
-        "only":  []string{"sales"},
-        "steps": []string{"extract", "load"},
-    }
+	// Define additional options
+	options := map[string]any{
+		"only":  []string{"sales"},
+		"steps": []string{"extract", "load"},
+	}
 
-    // Run ETL process
-    logs, err := etl.RunETL(dateRef, nil, options)
-    if err != nil {
-        fmt.Printf("Error running ETL: %v\n", err)
-        return
-    }
+	// Run ETL process
+	logs, err := etl.RunETL(dateRef, nil, options)
+	if err != nil {
+		fmt.Printf("Error running ETL: %v\n", err)
+		return
+	}
 
-    // Print logs
-    for _, log := range logs {
-        fmt.Printf("Log: %+v\n", log)
-    }
+	// Print logs
+	for _, log := range logs {
+		fmt.Printf("Log: %+v\n", log)
+	}
 }
 ```
 
 ---
 
-## **7. Future Plans**
+# ETLX Conclusion
 
 ETLX is a powerful tool for defining and executing ETL processes using Markdown configuration files. It supports complex SQL queries, exports to multiple formats, and dynamic configuration loading. ETLX can be used as a library, CLI tool, or integrated into other systems for advanced data workflows.
+
+---
+
+### **Features**
+
+- **Config Parsing from Markdown**:
+  - Supports YAML, TOML, and JSON metadata blocks.
+  - Automatically parses and structures Markdown configuration into a nested data structure.
+
+- **ETL Execution**:
+  - Handles extract, transform, and load processes using a modular design.
+  - Supports complex workflows with customizable steps.
+
+- **Query Documentation**:
+  - Define modular SQL queries in sections.
+  - Combines query parts dynamically to build complete SQL statements.
+
+- **Exports**:
+  - Export data to various formats (e.g., CSV, Excel).
+  - Supports template-based exports for custom reports.
+
+- **Requires**:
+  - Dynamically load additional configuration from files or database queries.
+
+- **CLI Interface**:
+  - Command-line interface for executing ETLX configurations.
+  - Supports flags for custom parameters (e.g., `--config`, `--date`, `--steps`).
 
 ---
 
@@ -1140,7 +1094,6 @@ ETLX is a powerful tool for defining and executing ETL processes using Markdown 
 Here is the current progress and planned features for the ETLX project:
 
 #### ✅ **Completed**
-
 - **Config Parsing**:
   - Parses and validates Markdown configurations with nested sections and metadata.
   - Supports YAML, TOML, and JSON for metadata.
@@ -1166,9 +1119,7 @@ Here is the current progress and planned features for the ETLX project:
   - Accepts flags for custom execution parameters.
 
 #### 🕒 **To-Do**
-
 - **Web API**:
-
   - Create a RESTful web API for executing ETL configurations.
   - Expose endpoints for:
     - Uploading and managing configurations.
@@ -1176,6 +1127,53 @@ Here is the current progress and planned features for the ETLX project:
     - Monitoring job status and logs.
   - Add support for multi-user environments with authentication and authorization.
 
-## **8. License**
+---
+
+### **Usage**
+
+#### **Command-Line Interface**
+Run the ETLX binary with the required flags:
+
+```bash
+etlx --config config.md --date 2024-01-01 --steps extract,load
+```
+
+#### **Library Integration**
+ETLX can be embedded into Go projects as a library:
+
+```go
+package main
+
+import (
+    "fmt"
+    "os"
+    "etlx"
+)
+
+func main() {
+    etl := etlx.NewETLX()
+    err := etl.ConfigFromFile("config.md")
+    if err != nil {
+        fmt.Printf("Error loading config: %v\n", err)
+        os.Exit(1)
+    }
+
+    // Execute the ETL process
+    err = etl.Run(map[string]any{
+        "date": "20240101",
+    })
+    if err != nil {
+        fmt.Printf("Error running ETL: %v\n", err)
+        os.Exit(1)
+    }
+}
+```
+---
+
+By building on the existing features, the ETLX project is moving toward becoming a comprehensive ETL solution for both CLI and web environments.
+
+---
+
+## **License**
 
 This project is licensed under the MIT License.
