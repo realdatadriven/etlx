@@ -22,7 +22,7 @@ jobs:
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
-          CGO_ENABLED=1 go build -o dist/etlx-linux-amd64 ./cmd/main.go
+          CGO_ENABLED=0 go build -o dist/etlx-linux-amd64 ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
