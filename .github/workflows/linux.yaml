@@ -10,7 +10,7 @@ jobs:
       - name: Install Dependencies
         run: |
           sudo apt-get update
-          sudo apt-get install -y build-essential gcc g++ unixodbc unixodbc-dev gcc-aarch64-linux-gnu g++-aarch64-linux-gnu
+          sudo apt-get install -y build-essential gcc g++ unixodbc unixodbc-dev
       - name: Checkout Code
         uses: actions/checkout@v3
       - name: Setup Go
@@ -20,25 +20,9 @@ jobs:
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
-          CGO_ENABLED=1 CC=aarch64-linux-gnu-gcc CXX=aarch64-linux-gnu-g++ GOARCH=arm64 go build -o dist/etlx-linux-arm64 ./cmd/main.go
+          CGO_ENABLED=0 go build -o dist/etlx-linux-amd64 ./cmd/main.go
       - name: Upload Artifacts
         uses: actions/upload-artifact@v3
         with:
           name: linux-binary
           path: dist/*linux*
-
-      # Step 6: Upload Build Logs for Debugging (if Build Fails)
-      - name: Upload Logs
-        if: failure()
-        uses: actions/upload-artifact@v3
-        with:
-          name: build-logs
-          path: ${{ github.workspace }}
-
-      # Step 7: Upload Built Binary for Testing (if Successful)
-      - name: Upload Binary
-        if: success()
-        uses: actions/upload-artifact@v3
-        with:
-          name: macos-binary
-          path: dist/etlx-macos-amd64
