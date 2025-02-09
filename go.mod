@@ -21,12 +21,12 @@ require (
 	github.com/goccy/go-json v0.10.4 // indirect
 	github.com/google/flatbuffers v24.12.23+incompatible // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
-	github.com/mitchellh/mapstructure v1.5.0 // indirect
+	github.com/klauspollh/mapstructure v1.5.0 // indirect
 	github.com/mohae/deepcopy v0.0.0-20170929034955-c48cc78d4826 // indirect
 	github.com/pierrec/lz4/v4 v4.1.22 // indirect
 	github.com/richardlehane/mscfb v1.0.4 // indirect
-	github.com/richardlehane/msoleps v1.0.4 // indirect
+	gitst/cpuid/v2 v2.2.9 // indirect
+	github.com/mitchehub.com/richardlehane/msoleps v1.0.4 // indirect
 	github.com/stretchr/testify v1.10.0 // indirect
 	github.com/xuri/efp v0.0.0-20241211021726-c4e992084aa6 // indirect
 	github.com/xuri/nfp v0.0.0-20250111060730-82a408b9aa71 // indirect
