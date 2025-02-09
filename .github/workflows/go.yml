@@ -24,7 +24,7 @@ jobs:
           mkdir -p dist
           CGO_ENABLED=0 go build -o dist/etlx-linux-amd64 ./cmd/main.go
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: linux-binary
           path: dist/*linux*
@@ -89,7 +89,7 @@ jobs:
       #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: windows-binary
           path: dist/*windows*
@@ -129,7 +129,7 @@ jobs:
           GOARCH=arm64 go build -o dist/etlx-macos-arm64 ./cmd/main.go
         
       - name: Upload Artifacts
-        uses: actions/upload-artifact@v3
+        uses: actions/upload-artifact@v4
         with:
           name: macos-binary
           path: dist/*macos*
