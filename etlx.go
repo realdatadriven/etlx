@@ -4,7 +4,7 @@ import (
 	"fmt"
 
 	"github.com/joho/godotenv"
-	db "github.com/realdatadriven/etlx/internal/db"
+	"github.com/realdatadriven/etlx/internal/db"
 	etlxlib "github.com/realdatadriven/etlx/internal/etlx"
 )
 
