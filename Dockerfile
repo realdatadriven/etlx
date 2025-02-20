@@ -20,14 +20,14 @@ RUN apt-get update && apt-get install -y \
     && rm -rf /var/lib/apt/lists/*
 
 # Install a newer version of glibc (careful with this in production)
-RUN wget http://ftp.gnu.org/gnu/libc/glibc-2.38.tar.gz && \
-    tar -xvzf glibc-2.38.tar.gz && \
-    cd glibc-2.38 && \
-    mkdir build && \
-    cd build && \
-    ../configure && \
-    make -j$(nproc) && \
-    make install
+#RUN wget http://ftp.gnu.org/gnu/libc/glibc-2.38.tar.gz && \
+#    tar -xvzf glibc-2.38.tar.gz && \
+#    cd glibc-2.38 && \
+#    mkdir build && \
+#    cd build && \
+#    ../configure && \
+#    make -j$(nproc) && \
+#    make install
 
 # Set working directory
 WORKDIR /app
