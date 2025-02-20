@@ -2,7 +2,7 @@
 FROM ubuntu:latest
 
 # Set the ETLX version and architecture
-ARG ETLX_VERSION=v0.2.1
+ARG ETLX_VERSION=v0.2.2
 ARG ETLX_ARCH=amd64  # Change to arm64 if needed for ARM-based systems
 
 # Define the download URL for the zipped release
