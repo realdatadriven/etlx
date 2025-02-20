@@ -1,46 +1,54 @@
-# Use a minimal Ubuntu-based image
-FROM ubuntu:latest
+# ============================================
+# 🛠️ Stage 1: Build ETLX from Source
+# ============================================
+FROM golang:1.23 as builder
 
-# Set the ETLX version and architecture
-ARG ETLX_VERSION=v0.2.2
-ARG ETLX_ARCH=amd64  # Change to arm64 if needed for ARM-based systems
+# Set working directory inside the container
+WORKDIR /app
 
-# Define the download URL for the zipped release
-ENV ETLX_URL="https://github.com/realdatadriven/etlx/releases/download/${ETLX_VERSION}/etlx-linux-${ETLX_ARCH}.zip"
-
-# Install dependencies (curl for downloading, unzip for extracting, and necessary libraries)
+# Install system dependencies required for building
 RUN apt-get update && apt-get install -y \
-    curl \
-    unzip \
-    ca-certificates \
-    unixodbc \
     build-essential \
-    libc6 \
-    wget \
+    gcc \
+    g++ \
+    unixodbc \
+    unixodbc-dev \
     && rm -rf /var/lib/apt/lists/*
 
-# Install a newer version of glibc (careful with this in production)
-#RUN wget http://ftp.gnu.org/gnu/libc/glibc-2.38.tar.gz && \
-#    tar -xvzf glibc-2.38.tar.gz && \
-#    cd glibc-2.38 && \
-#    mkdir build && \
-#    cd build && \
-#    ../configure && \
-#    make -j$(nproc) && \
-#    make install
+# Enable CGO for ODBC support
+ENV CGO_ENABLED=1
+
+# Clone the ETLX repository
+RUN git clone --depth=1 https://github.com/realdatadriven/etlx.git .
+
+# Build the ETLX binary
+RUN go build -o etlx ./cmd/main.go
+
+# ============================================
+# 🚀 Stage 2: Create Minimal Runtime Image
+# ============================================
+FROM debian:bookworm-slim
+
+# Install runtime dependencies (unixODBC)
+RUN apt-get update && apt-get install -y \
+    ca-certificates \
+    unixodbc \
+    && rm -rf /var/lib/apt/lists/*
 
 # Set working directory
 WORKDIR /app
 
-# Download and extract the ETLX binary
-RUN curl -L $ETLX_URL -o etlx.zip && \
-    unzip etlx.zip && \
-    rm etlx.zip && \
-    mv etlx-linux-${ETLX_ARCH} /usr/local/bin/etlx && \
-    chmod +x /usr/local/bin/etlx
+# Copy the compiled ETLX binary from the builder stage
+COPY --from=builder /app/etlx /usr/local/bin/etlx
+
+# Ensure the binary is executable
+RUN chmod +x /usr/local/bin/etlx
 
 # Allow users to mount a config file
 VOLUME ["/app/config"]
 
 # Set the entrypoint to pass CLI arguments
 ENTRYPOINT ["/usr/local/bin/etlx"]
+
+#docker build -t etlx:latest .
+#docker run --rm etlx --help
