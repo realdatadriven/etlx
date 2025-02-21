@@ -132,6 +132,68 @@ The binary supports the following flags:
 etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 ```
 
+---
+
+### **🐳 Running ETLX with Docker**  
+
+If you don’t want to install ETLX manually, you can **run it inside a Docker container**.  
+
+#### **1️ Pull the Docker Image**
+
+```bash
+docker pull realdatadriven/etlx:latest
+```
+
+#### **2️ Run ETLX with a Config File**  
+
+If your `config.md` file is in the current directory, mount it into the container:  
+
+```bash
+docker run --rm  -v $(pwd)/examples/s3.md:/app/config.md -v $(pwd)/database:/app/examples realdatadriven/etlx --config /app/config.md --date 2024-01-01
+```
+
+#### **3️ Using Environment Variables (`.env` Support)**
+
+To load environment variables from a `.env` file:  
+
+```bash
+docker run --rm --env-file $(pwd)/.env -v $(pwd)/config.md:/app/config.md realdatadriven/etlx --config /app/config.md
+```
+
+#### **4️ Running in Interactive Mode**
+
+If you want to **enter the container** for debugging:  
+
+```bash
+docker run --rm -it realdatadriven/etlx bash
+```
+
+#### **5️ Running with `docker-compose`**
+
+You can also use **Docker Compose** for easier execution:  
+
+```yaml
+version: '3.8'
+services:
+  etlx:
+    image: realdatadriven/etlx:latest
+    volumes:
+      - ./config.md:/app/config.md
+    env_file:
+      - .env
+    command: ["--config", "/app/config.md", "--date", "2024-01-01"]
+```
+
+Start the container with:  
+
+```bash
+docker-compose up --rm etlx
+```
+
+🚀 **Now you can run ETLX in seconds with Docker!** Let me know if you need any refinements. 🎉  
+
+---
+
 ### **How It Works**
 
 Create a Markdown file with the ETL process configuration. For example:

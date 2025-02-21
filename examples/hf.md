@@ -5,7 +5,7 @@ The [`httpfs`](https://duckdb.org/docs/extensions/httpfs/overview, "httpfs") ext
 ```yaml metadata
 name: HF_EXTRACT
 description: "Example extrating from hf to a local sqlite3 file"
-connection: "sqlite3:examples/HF_EXTRACT.db"
+connection: "duckdb:"
 active: true
 ```
 
@@ -30,6 +30,8 @@ active: true
 
 ```sql
 -- load_extentions
+INSTALL sqlite;
+LOAD sqlite;
 INSTALL httpfs;
 LOAD httpfs;
 ```

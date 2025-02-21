@@ -45,10 +45,13 @@ COPY --from=builder /app/etlx /usr/local/bin/etlx
 RUN chmod +x /usr/local/bin/etlx
 
 # Allow users to mount a config file
-VOLUME ["/app/config"]
+VOLUME ["/app/config", "/app/data"]
 
 # Set the entrypoint to pass CLI arguments
 ENTRYPOINT ["/usr/local/bin/etlx"]
 
 #docker build -t etlx:latest .
 #docker run --rm etlx --help
+#docker run --rm --env-file $(pwd)/.env -v $(pwd)/examples/s3.md:/app/config.md etlx --config /app/config.md --date 2024-01-01
+#docker run --rm --env-file $(pwd)/.env -v $(pwd)/examples:/app/examples etlx --config /app/s3.md --date 2024-01-01
+
