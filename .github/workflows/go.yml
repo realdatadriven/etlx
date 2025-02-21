@@ -140,17 +140,17 @@ jobs:
     needs: [build-linux, build-windows, build-darwin]
     steps:
       - name: Download Windows Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: windows-binary
           path: dist
       - name: Download MacOS Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: macos-binary
           path: dist
       - name: Download Linux Binary
-        uses: actions/download-artifact@v3
+        uses: actions/download-artifact@v4
         with:
           name: linux-binary
           path: dist
