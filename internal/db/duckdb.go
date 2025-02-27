@@ -48,6 +48,20 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	return &DuckDB{db}, nil
 }
 
+func (db *DuckDB) New(dsn string) (*DuckDB, error) {
+	//fmt.Printf("db DRIVER: %s DSN: %s\n", driverName, dsn)
+	_db, err := sql.Open("duckdb", dsn)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Println(driverName, dsn)
+	_db.SetMaxOpenConns(25)
+	_db.SetMaxIdleConns(25)
+	_db.SetConnMaxIdleTime(5 * time.Minute)
+	_db.SetConnMaxLifetime(2 * time.Hour)
+	return &DuckDB{_db}, nil
+}
+
 func (db *DuckDB) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()

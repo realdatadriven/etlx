@@ -36,6 +36,20 @@ func NewODBC(dsn string) (*ODBC, error) {
 	return &ODBC{db}, nil
 }
 
+func (db *ODBC) New(dsn string) (*ODBC, error) {
+	//fmt.Printf("DSN: %s\n", dsn)
+	_db, err := sql.Open("odbc", dsn)
+	if err != nil {
+		return nil, err
+	}
+	//fmt.Println(driverName, dsn)
+	_db.SetMaxOpenConns(25)
+	_db.SetMaxIdleConns(25)
+	_db.SetConnMaxIdleTime(5 * time.Minute)
+	_db.SetConnMaxLifetime(2 * time.Hour)
+	return &ODBC{_db}, nil
+}
+
 func (db *ODBC) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()

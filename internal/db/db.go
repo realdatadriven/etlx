@@ -57,6 +57,35 @@ func New(driverName string, dsn string) (*DB, error) {
 	return &DB{db}, nil
 }
 
+func (db *DB) New(driverName string, dsn string) (*DB, error) {
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	_db, err := sqlx.ConnectContext(ctx, driverName, dsn)
+	if err != nil {
+		return nil, err
+	}
+	_db.SetMaxOpenConns(25)
+	_db.SetMaxIdleConns(25)
+	_db.SetConnMaxIdleTime(5 * time.Minute)
+	_db.SetConnMaxLifetime(2 * time.Hour)
+	if driverName == "sqlite3" {
+		_db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
+		_db.ExecContext(ctx, "PRAGMA foreign_keys = ON")
+		_db.ExecContext(ctx, "PRAGMA secure_delete = ON")
+		//cache_size = -500 * 1024
+		cache_size := 2 * 1024 * 1024
+		_db.ExecContext(ctx, fmt.Sprintf("PRAGMA cache_size = %d", -cache_size))
+		// _db.ExecContext(ctx, "PRAGMA PAGE_SIZE = {}".format(cache_size))
+		// _db.ExecContext(ctx, "PRAGMA mmap_size  = {}".format(500 * 1024))
+		_db.ExecContext(ctx, "PRAGMA synchronous  = 0")
+		_db.ExecContext(ctx, "PRAGMA TEMP_STORE  = 2")
+		_db.ExecContext(ctx, "PRAGMA auto_vacuum = FULL")
+		busy_timeout := 60 * 000 // 60s
+		_db.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d", busy_timeout))
+	}
+	return &DB{_db}, nil
+}
+
 func setStrEnv(input string) string {
 	re := regexp.MustCompile(`@ENV\.\w+`)
 	matches := re.FindAllString(input, -1)

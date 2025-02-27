@@ -10,10 +10,26 @@ import (
 
 // Expose the library functions
 type ETLX = etlxlib.ETLX
+
 type DBInterface = db.DBInterface
+
 type DB = db.DB
+
+func New(driverName string, dsn string) (*db.DB, error) {
+	return db.New(driverName, dsn)
+}
+
 type DuckDB = db.DuckDB
+
+func NewDuckDB(dsn string) (*db.DuckDB, error) {
+	return db.NewDuckDB(dsn)
+}
+
 type ODBC = db.ODBC
+
+func NewODBC(dsn string) (*db.ODBC, error) {
+	return db.NewODBC(dsn)
+}
 
 func LoadDotEnv() {
 	_err := godotenv.Load()
