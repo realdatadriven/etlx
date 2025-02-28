@@ -1,14 +1,14 @@
 package etlxlib
 
 import (
+	"encoding/json"
 	"fmt"
 	"regexp"
-	"strings"
 	"time"
 )
 
-func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
-	key := "MULTI_QUERIES"
+func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[string]any, keys ...string) ([]map[string]any, error) {
+	key := "LOGS"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -29,52 +29,9 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	beforeSQL, okBefore := metadata["before_sql"]
 	afterSQL, okAfter := metadata["after_sql"]
-	saveSQL, okSave := metadata["save_sql"]
+	saveSQL, okSave := metadata["save_log_sql"]
 	errPatt, okErrPatt := metadata["save_on_err_patt"]
 	errSQL, okErrSQL := metadata["save_on_err_sql"]
-	queries := []string{}
-	for itemKey, item := range data {
-		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
-			continue
-		}
-		if _, isMap := item.(map[string]any); !isMap {
-			//fmt.Println(itemKey, "NOT A MAP:", item)
-			continue
-		}
-		if only, okOnly := extraConf["only"]; okOnly {
-			if len(only.([]string)) == 0 {
-			} else if !etlx.contains(only.([]string), itemKey) {
-				continue
-			}
-		}
-		if skip, okSkip := extraConf["skip"]; okSkip {
-			if len(skip.([]string)) == 0 {
-			} else if etlx.contains(skip.([]string), itemKey) {
-				continue
-			}
-		}
-		itemMetadata, ok := item.(map[string]any)["metadata"]
-		if !ok {
-			continue
-		}
-		query, okQuery := itemMetadata.(map[string]any)["query"]
-		if query != nil && okQuery {
-			sql := query.(string)
-			query, ok := item.(map[string]any)[sql].(string)
-			_, queryDoc := etlx.Config[sql]
-			if !ok && queryDoc {
-				query = sql
-				_sql, _, _, err := etlx.QueryBuilder(nil, sql)
-				if err != nil {
-					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
-				} else {
-					query = _sql
-				}
-			}
-			sql = etlx.SetQueryPlaceholders(query, "", "", dateRef)
-			queries = append(queries, sql)
-		}
-	}
 	conn, okCon := metadata["connection"]
 	if !okCon {
 		return nil, fmt.Errorf("%s err no connection defined", key)
@@ -91,17 +48,18 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			return nil, fmt.Errorf("%s: Before error: %s", key, err)
 		}
 	}
-	// MAIN QUERY
-	unionKey, ok := metadata["union_key"].(string)
-	if !ok {
-		unionKey = "UNION\n"
+	jsonData, err := json.MarshalIndent(logs, "", "  ")
+	if err != nil {
+		return nil, fmt.Errorf("error converting logs to JSON: %v", err)
 	}
-	sql := strings.Join(queries, unionKey)
+	fname, err := etlx.TempFIle(string(jsonData), "logs.*.json")
+	if err != nil {
+		return nil, fmt.Errorf("error saving logs to JSON: %v", err)
+	}
 	// fmt.Println(key, sql)
 	if saveSQL != "" && okSave {
-		data["final_query"] = sql // PUT THE QUERY GENERATED IN THE SCOPE
 		// fmt.Println(data[saveSQL.(string)])
-		err = etlx.ExecuteQuery(dbConn, saveSQL, data, "", "", dateRef)
+		err = etlx.ExecuteQuery(dbConn, saveSQL, conf, fname, "", dateRef)
 		if err != nil {
 			_err_by_pass := false
 			if okErrPatt && errPatt != nil && okErrSQL && errSQL != nil {
@@ -121,16 +79,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			if !_err_by_pass {
 				return nil, fmt.Errorf("%s ERR: main: %s", key, err)
 			}
-			//return fmt.Errorf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
-		} else {
-
 		}
-	} else {
-		rows, _, err := etlx.Query(dbConn, sql, data, "", "", dateRef)
-		if err != nil {
-			return nil, fmt.Errorf("%s: error: %s", key, err)
-		}
-		processData = *rows
 	}
 	//  QUERIES TO RUN AT THE END
 	if okAfter {

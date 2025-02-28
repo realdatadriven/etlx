@@ -80,15 +80,14 @@ func main() {
 	if *steps != "" {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
+	logs := []map[string]any{}
 	// RUN ETL
 	if _, ok := etlxlib.Config["ETL"]; ok {
 		_logs, err := etlxlib.RunETL(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("ETL ERR: %v\n", err)
 		}
-		for _, _log := range _logs {
-			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
-		}
+		logs = append(logs, _logs...)
 	}
 	// DATA_QUALITY
 	if _, ok := etlxlib.Config["DATA_QUALITY"]; ok {
@@ -96,9 +95,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("DATA_QUALITY ERR: %v\n", err)
 		}
-		for _, _log := range _logs {
-			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
-		}
+		logs = append(logs, _logs...)
 	}
 	// EXPORTS
 	if _, ok := etlxlib.Config["EXPORTS"]; ok {
@@ -106,9 +103,7 @@ func main() {
 		if err != nil {
 			fmt.Printf("EXPORTS ERR: %v\n", err)
 		}
-		for _, _log := range _logs {
-			fmt.Println(_log["start_at"], _log["end_at"], _log["duration"], _log["name"], _log["success"], _log["msg"], _log["rows"])
-		}
+		logs = append(logs, _logs...)
 	}
 	// MULTI_QUERIES
 	if _, ok := etlxlib.Config["MULTI_QUERIES"]; ok {
@@ -118,6 +113,13 @@ func main() {
 		}
 		for _, r := range res {
 			fmt.Println(r)
+		}
+	}
+	// LOGS
+	if _, ok := etlxlib.Config["LOGS"]; ok {
+		_, err := etlxlib.RunLOGS(dateRef, nil, logs)
+		if err != nil {
+			fmt.Printf("LOGS ERR: %v\n", err)
 		}
 	}
 }
