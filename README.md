@@ -1035,6 +1035,79 @@ With the `MULTI_QUERIES` section, you can simplify the process of aggregating da
 
 ---
 
+## 📝 Logs Handling (`# LOGS`)
+
+ETLX provides a **logging mechanism** that allows **saving logs** into a database. This is useful for tracking **executions, debugging, and auditing ETL processes**.
+
+### **🔹 How It Works**
+
+- The `LOGS` section defines where and how logs should be saved.
+- The process consists of **three main steps**:
+  1. **Prepare the environment** using `before_sql` (e.g., loading extensions, attaching databases).
+  2. **Execute `save_log_sql`** to store logs in the database.
+  3. **Run `after_sql`** for cleanup (e.g., detaching the database).
+
+### **🛠 Example LOGS Configuration**
+
+Below is an example that **saves logs** into a **database**:
+
+#### **📄 Markdown Configuration**
+
+````md
+# LOGS
+```yaml metadata
+name: LOGS
+description: "Example saving logs"
+table: logs
+connection: "duckdb:"
+before_sql:
+  - load_extentions
+  - attach_db
+save_log_sql: load_query
+after_sql: detach_db
+active: true
+```
+```sql
+-- load_extentions
+INSTALL Sqlite;
+LOAD Sqlite;
+```
+
+```sql
+-- attach_db
+ATTACH 'examples/S3_EXTRACT.db' AS "DB" (TYPE SQLITE)
+```
+
+```sql
+-- detach_db
+DETACH "DB";
+```
+
+```sql
+-- load_query
+CREATE OR REPLACE TABLE "DB"."<table>" AS
+SELECT * 
+FROM '<fname>';
+```
+````
+
+### **🔹 How to Use**
+
+- This example saves logs into a **SQLite database attached to DuckDB**.
+- The **log table (`logs`) is created or replaced** on each run.
+- The `<table>` and `<fname>` placeholders are dynamically replaced.
+
+### **🎯 Summary**
+
+✔ **Keeps a persistent log of ETL executions**  
+✔ **Uses DuckDB for efficient log storage**  
+✔ **Supports preprocessing (`before_sql`) and cleanup (`after_sql`)**  
+✔ **Highly customizable to different logging needs**  
+
+🚀 **Now your ETLX workflows can track execution logs effortlessly!** 🎯  
+
+---
+
 ### **Loading Config Dependencies**
 
 The `REQUIRES` section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.
