@@ -172,7 +172,7 @@ jobs:
         with:
           tag_name: ${{ github.ref_name }}
           draft: false
-          prerelease: true
+          prerelease: false
           files: |
             dist/etlx-linux-amd64.zip
             dist/etlx-macos-amd64.zip
