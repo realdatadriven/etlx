@@ -49,7 +49,7 @@ func (etlx *ETLX) ConvertIPYNBToMarkdown(ipynbContent []byte) (string, error) {
 		}
 	}
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-		_, err := etlx.TempFIle(mdBuilder.String(), "ipymd2md.*.md")
+		_, err := etlx.TempFIle("", mdBuilder.String(), "ipymd2md.*.md")
 		if err != nil {
 			fmt.Println(err)
 		}

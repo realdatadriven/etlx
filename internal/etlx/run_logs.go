@@ -32,6 +32,10 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	saveSQL, okSave := metadata["save_log_sql"]
 	errPatt, okErrPatt := metadata["save_on_err_patt"]
 	errSQL, okErrSQL := metadata["save_on_err_sql"]
+	tmpDir := ""
+	if _, ok := metadata["tmp_dir"].(string); ok {
+		tmpDir = metadata["tmp_dir"].(string)
+	}
 	conn, okCon := metadata["connection"]
 	if !okCon {
 		return nil, fmt.Errorf("%s err no connection defined", key)
@@ -52,14 +56,14 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	if err != nil {
 		return nil, fmt.Errorf("error converting logs to JSON: %v", err)
 	}
-	fname, err := etlx.TempFIle(string(jsonData), "logs.*.json")
+	fname, err := etlx.TempFIle(tmpDir, string(jsonData), "logs.*.json")
 	if err != nil {
 		return nil, fmt.Errorf("error saving logs to JSON: %v", err)
 	}
 	// fmt.Println(key, sql)
 	if saveSQL != "" && okSave {
 		// fmt.Println(data[saveSQL.(string)])
-		err = etlx.ExecuteQuery(dbConn, saveSQL, conf, fname, "", dateRef)
+		err = etlx.ExecuteQuery(dbConn, saveSQL, data, fname, "", dateRef)
 		if err != nil {
 			_err_by_pass := false
 			if okErrPatt && errPatt != nil && okErrSQL && errSQL != nil {
@@ -68,7 +72,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 				if regex_err != nil {
 					return nil, fmt.Errorf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
 				} else if re.MatchString(string(err.Error())) {
-					err = etlx.ExecuteQuery(dbConn, errSQL, data, "", "", dateRef)
+					err = etlx.ExecuteQuery(dbConn, errSQL, data, fname, "", dateRef)
 					if err != nil {
 						return nil, fmt.Errorf("%s ERR: main: %s", key, err)
 					} else {

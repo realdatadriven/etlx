@@ -89,3 +89,43 @@ SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
 ```shell
 bin/etlx --config examples/hf.md
 ```
+
+# LOGS
+
+```yaml metadata
+name: LOGS
+description: "Example saving logs"
+table: _logs
+connection: "duckdb:"
+before_sql:
+  - load_extentions
+  - attach_db
+save_log_sql: load_query
+after_sql: detach_db
+active: true
+```
+
+```sql
+-- load_extentions
+INSTALL Sqlite;
+LOAD Sqlite;
+INSTALL json;
+LOAD json;
+```
+
+```sql
+-- attach_db
+ATTACH 'examples/HF_EXTRACT.db' AS "DB" (TYPE SQLITE)
+```
+
+```sql
+-- detach_db
+DETACH "DB";
+```
+
+```sql
+-- load_query
+CREATE OR REPLACE TABLE "DB"."<table>" AS
+SELECT * 
+FROM read_json('<fname>');
+```

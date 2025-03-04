@@ -1063,14 +1063,20 @@ connection: "duckdb:"
 before_sql:
   - load_extentions
   - attach_db
-save_log_sql: load_query
+save_log_sql: load_logs
+save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+save_on_err_sql: create_logs
 after_sql: detach_db
+tmp_dir: tmp
 active: true
 ```
+
 ```sql
 -- load_extentions
 INSTALL Sqlite;
 LOAD Sqlite;
+INSTALL json;
+LOAD json;
 ```
 
 ```sql
@@ -1084,11 +1090,19 @@ DETACH "DB";
 ```
 
 ```sql
--- load_query
+-- load_logs
+INSERT INTO "DB"."<table>" BY NAME
+SELECT * 
+FROM READ_JSON('<fname>');
+```
+
+```sql
+-- create_logs
 CREATE OR REPLACE TABLE "DB"."<table>" AS
 SELECT * 
-FROM '<fname>';
+FROM READ_JSON('<fname>');
 ```
+
 ````
 
 ### **🔹 How to Use**

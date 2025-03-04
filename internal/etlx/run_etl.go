@@ -61,7 +61,7 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 	}
 	query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-		_file, err := etlx.TempFIle(query, fmt.Sprintf("query.%s_%s.*.sql", "valid", table))
+		_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s_%s.*.sql", "valid", table))
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -167,7 +167,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		}
 		query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-			_file, err := etlx.TempFIle(query, fmt.Sprintf("query.%s.*.sql", queries))
+			_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queries))
 			if err != nil {
 				fmt.Println(err)
 			}
@@ -214,7 +214,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 			query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 			if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-				_file, err := etlx.TempFIle(query, fmt.Sprintf("query.%s.*.sql", queryKey))
+				_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queryKey))
 				if err != nil {
 					fmt.Println(err)
 				}

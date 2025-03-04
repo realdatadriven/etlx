@@ -23,9 +23,11 @@ TestResults.xml
 *.env
 *.exe
 *.db
+*.db-journal
 *.duckdb
 *.ddb
 database/
 tmp/
 bin/
 .air.toml
+logs.*.json

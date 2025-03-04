@@ -288,7 +288,7 @@ func (etlx *ETLX) PrintConfigAsJSON(config map[string]any) {
 		log.Fatalf("Error converting config to JSON: %v", err)
 	}
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-		_file, err := etlx.TempFIle(string(jsonData), "config.*.json")
+		_file, err := etlx.TempFIle("", string(jsonData), "config.*.json")
 		if err != nil {
 			fmt.Println(err)
 		}
@@ -683,9 +683,9 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 }
 
 // Create a temporary file in the default temporary directory
-func (etlx *ETLX) TempFIle(content string, name string) (string, error) {
+func (etlx *ETLX) TempFIle(dir string, content string, name string) (string, error) {
 	// Create a temporary file in the default temporary directory
-	tempFile, err := os.CreateTemp("", name)
+	tempFile, err := os.CreateTemp(dir, name)
 	if err != nil {
 		return "", fmt.Errorf("error creating temporary file: %s", err)
 	}

@@ -45,7 +45,7 @@ func (etlx *ETLX) ExecuteQueryWithRowsAffected(conn db.DBInterface, sqlData any,
 		}
 		query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-			_file, err := etlx.TempFIle(query, fmt.Sprintf("query.%s.*.sql", queries))
+			_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queries))
 			if err != nil {
 				fmt.Println(err)
 			}
