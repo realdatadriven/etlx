@@ -479,6 +479,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						fname = fmt.Sprintf(`%s/%s`, os.TempDir(), filepath.Base(fname))
 						//fmt.Println("TMP:", tmp, fname)
 					}
+				} else if filepath.Dir(fname) != "" {
+					// handler for wen its not a temp file and ists not a full path
+					fmt.Printf("NO handler for files thats not in trmp dir and does not have a full path %s", fname)
 				}
 			} else if file != "" {
 				fname = file
