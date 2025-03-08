@@ -262,7 +262,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
-	fmt.Println(key, dateRef)
+	// fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
@@ -418,6 +418,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			onErrSQL, okErrSQL := itemMetadata[step+"_on_err_match_sql"]
 			fromFileSQL, okFromFile := itemMetadata[step+"_from_file"].(map[string]any)
 			cleanSQL, okClean := itemMetadata["clean_sql"]
+			dtRef, okDtRef := itemMetadata["date_ref"]
 			if rows.(bool) && !okClean {
 				cleanSQL = `DELETE FROM "<table>"`
 			}
@@ -439,6 +440,12 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				conn = mainConn // Fallback to main connection
 				if conn == "" {
 					conn = "duckdb:"
+				}
+			}
+			if okDtRef && dtRef != "" {
+				_dt, err := time.Parse("2006-01-02", dtRef.(string))
+				if err == nil {
+					dateRef = append([]time.Time{}, _dt)
 				}
 			}
 			// CONNECTION
