@@ -419,11 +419,11 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			fromFileSQL, okFromFile := itemMetadata[step+"_from_file"].(map[string]any)
 			cleanSQL, okClean := itemMetadata["clean_sql"]
 			dtRef, okDtRef := itemMetadata["date_ref"]
-			if rows.(bool) && !okClean {
+			if clean.(bool) && !okClean {
 				cleanSQL = `DELETE FROM "<table>"`
 			}
 			dropSQL, okDrop := itemMetadata["drop_sql"]
-			if rows.(bool) && !okDrop {
+			if drop.(bool) && !okDrop {
 				dropSQL = `DROP TABLE "<table>"`
 			}
 			rowsSQL, okRows := itemMetadata["rows_sql"]
