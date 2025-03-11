@@ -22,44 +22,49 @@ jobs:
         run: |
           $version = "v1.2.0"
           $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/libduckdb-windows-amd64.zip"
-          Invoke-WebRequest -Uri $duckdb_url -OutFile duckdb.zip
-          Expand-Archive -Path duckdb.zip -DestinationPath duckdb
-          echo "DuckDB library extracted to $(Get-Location)\duckdb"
-      
-      - name: List DuckDB Library Contents
+          $destinationPath = "$(Get-Location)\duckdb"
+          Invoke-WebRequest -Uri $duckdb_url -OutFile "duckdb.zip"
+          Expand-Archive -Path "duckdb.zip" -DestinationPath $destinationPath
+          Write-Host "DuckDB library extracted to $destinationPath"
+
+      # Step 4: Install MinGW for Cross-Compilation
+      - name: Install MinGW
         run: |
-            $env:PATH += ";$(Get-Location)/duckdb"
-            echo "Contents of DuckDB lib directory:"
-            dir "$(Get-Location)/duckdb"
-        
-      # Step 4: Set environment variables for CGO
+          choco install mingw -y
+          Write-Host "MinGW installed for cross-compilation"
+
+      # Step 5: Set Environment Variables
       - name: Set Environment Variables
         run: |
-          set CGO_ENABLED=1
-          set CGO_LDFLAGS="lduckdb -L$(Get-Location)/duckdb"
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
 
-      # Step 5: Build the application
-      - name: Build Windows Binary with DuckDB
+      # Step 6: Verify DuckDB Library
+      - name: Verify DuckDB Library
         run: |
-          mkdir -p dist
-          $env:PATH += ";$(Get-Location)/duckdb"          
-          set CGO_ENABLED=1
-          set CGO_LDFLAGS="-lduckdb -L$(Get-Location)/duckdb"
-          echo $env:PATH
-          go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          $libPath = "$(Get-Location)\duckdb\"
+          if (!(Test-Path "$libPath\duckdb.lib")) {
+            Write-Error "duckdb.lib not found in $libPath"
+          }
+          Write-Host "duckdb.lib found in $libPath"
 
-      # Step 6: Upload build logs for debugging (if build fails)
-      - name: Upload Logs
-        if: failure()
-        uses: actions/upload-artifact@v4
-        with:
-          name: build-logs
-          path: ${{ github.workspace }}
-
-      # Step 7: Upload built binary for testing (if successful)
-      - name: Upload Binary
-        if: success()
+      # Step 7: Build the Application
+      - name: Build Windows Binary
+        run: |
+          mkdir dist
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
+          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
+      #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+        
+      - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-binary
-          path: dist/etlx-windows-amd64.exe
+          path: dist/*windows*
