@@ -229,10 +229,10 @@ jobs:
             dist/etlx-linux-amd64.zip
             dist/etlx-macos-amd64.zip
             dist/etlx-windows-amd64.zip
-            dist/etlx-windows-linking-amd64.exe
+            dist/etlx-windows-linking-amd64.zip
             dist/etlx-macos-arm64.zip
             dist/etlx-windows-arm64.zip
-            dist/etlx-windows-linking-arm64.exe
+            dist/etlx-windows-linking-arm64.zip
       #      dist/etlx-linux-arm64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
