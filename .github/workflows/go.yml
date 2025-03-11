@@ -29,7 +29,7 @@ jobs:
           name: linux-binary
           path: dist/*linux*
 
-  build-windows:
+  build-windows-linking:
     runs-on: windows-latest
     steps:
       # Step 1: Checkout the code
@@ -63,10 +63,8 @@ jobs:
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
-          mkdir dist
-          go build -o dist/etlx-windows-no-linking-amd64.exe ./cmd/main.go
-          echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-no-linking-arm64.exe ./cmd/main.go
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
 
       # Step 6: Verify DuckDB Library
       - name: Verify DuckDB Library
@@ -80,25 +78,61 @@ jobs:
       # Step 7: Build the Application
       - name: Build Windows Binary
         run: |
-          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
-          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
-          echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
-          echo "GOARCH=amd64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          mkdir dist
+          go build -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
           echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
           echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go 
+          go build -o dist/etlx-windows-linking-arm64.exe ./cmd/main.go 
+      #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
+        
+      - name: Upload Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-binary-linking
+          path: dist/*windows*
+      
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      # Step 1: Checkout the code
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      # Step 2: Set up Go environment
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.23'
+
+      # Step 4: Install MinGW for Cross-Compilation
+      - name: Install MinGW
+        run: |
+          choco install mingw -y
+          Write-Host "MinGW installed for cross-compilation"
+
+      # Step 5: Set Environment Variables
+      - name: Set Environment Variables
+        run: |
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
+
+      # Step 7: Build the Application
+      - name: Build Windows Binary
+        run: |
+          mkdir dist
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
       #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
         uses: actions/upload-artifact@v4
         with:
           name: windows-binary
-          path: dist/*windows*
+          path: dist/*windows*  
 
   build-darwin:
     runs-on: macos-latest
@@ -143,7 +177,7 @@ jobs:
   release:
     permissions: write-all
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows, build-darwin]
+    needs: [build-linux, build-windows, build-windows-linking, build-darwin]
     steps:
       - name: Download Windows Binary
         uses: actions/download-artifact@v4
@@ -160,6 +194,11 @@ jobs:
         with:
           name: linux-binary
           path: dist
+      - name: Download Linux Binary With Linking
+        uses: actions/download-artifact@v4
+        with:
+          name: linux-binary-linking
+          path: dist
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
         id: Changelog
@@ -170,10 +209,10 @@ jobs:
           zip -j dist/etlx-linux-amd64.zip dist/etlx-linux-amd64
           zip -j dist/etlx-macos-amd64.zip dist/etlx-macos-amd64
           zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
-          zip -j dist/etlx-windows-no-linking-amd64.zip dist/etlx-windows-no-linking-amd64.exe
+          zip -j dist/etlx-windows-linking-amd64.zip dist/etlx-windows-linking-amd64.exe
           zip -j dist/etlx-macos-arm64.zip dist/etlx-macos-arm64
           zip -j dist/etlx-windows-arm64.zip dist/etlx-windows-arm64.exe
-          zip -j dist/etlx-windows-no-linking-arm64.zip dist/etlx-windows-no-linking-arm64.exe
+          zip -j dist/etlx-windows-linking-arm64.zip dist/etlx-windows-linking-arm64.exe
       #zip -j dist/etlx-linux-arm64.zip dist/etlx-linux-arm64
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -185,8 +224,10 @@ jobs:
             dist/etlx-linux-amd64.zip
             dist/etlx-macos-amd64.zip
             dist/etlx-windows-amd64.zip
+            dist/etlx-windows-linking-amd64.exe
             dist/etlx-macos-arm64.zip
             dist/etlx-windows-arm64.zip
+            dist/etlx-windows-linking-arm64.exe
       #      dist/etlx-linux-arm64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
