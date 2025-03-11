@@ -63,8 +63,10 @@ jobs:
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
-          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
+          mkdir dist
+          go build -o dist/etlx-windows-no-linking-amd64.exe ./cmd/main.go
+          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+          go build -o dist/etlx-windows-no-linking-arm64.exe ./cmd/main.go
 
       # Step 6: Verify DuckDB Library
       - name: Verify DuckDB Library
@@ -78,7 +80,9 @@ jobs:
       # Step 7: Build the Application
       - name: Build Windows Binary
         run: |
-          mkdir dist
+          echo "GOARCH=amd64" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
           go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
@@ -164,8 +168,10 @@ jobs:
           zip -j dist/etlx-linux-amd64.zip dist/etlx-linux-amd64
           zip -j dist/etlx-macos-amd64.zip dist/etlx-macos-amd64
           zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
+          zip -j dist/etlx-windows-no-linking-amd64.zip dist/etlx-windows-no-linking-amd64.exe
           zip -j dist/etlx-macos-arm64.zip dist/etlx-macos-arm64
           zip -j dist/etlx-windows-arm64.zip dist/etlx-windows-arm64.exe
+          zip -j dist/etlx-windows-no-linking-arm64.zip dist/etlx-windows-no-linking-arm64.exe
       #zip -j dist/etlx-linux-arm64.zip dist/etlx-linux-arm64
       - name: Create Release
         uses: softprops/action-gh-release@v1
