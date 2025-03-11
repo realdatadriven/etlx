@@ -199,10 +199,10 @@ jobs:
         with:
           name: linux-binary
           path: dist
-      - name: Download Linux Binary With Linking
+      - name: Download Windows Binary With Linking
         uses: actions/download-artifact@v4
         with:
-          name: linux-binary-linking
+          name: windows-binary-linking
           path: dist
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
