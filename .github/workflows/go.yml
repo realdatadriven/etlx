@@ -80,8 +80,11 @@ jobs:
       # Step 7: Build the Application
       - name: Build Windows Binary
         run: |
-          echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
+          echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
+          echo "GOARCH=amd64" >> $env:GITHUB_ENV
           go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
