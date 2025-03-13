@@ -27,6 +27,11 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	if !ok {
 		return nil, fmt.Errorf("missing metadata in %s section", key)
 	}
+	if active, okActive := metadata["active"]; okActive {
+		if !active.(bool) {
+			return nil, fmt.Errorf("dectivated %s", key)
+		}
+	}
 	beforeSQL, okBefore := metadata["before_sql"]
 	afterSQL, okAfter := metadata["after_sql"]
 	saveSQL, okSave := metadata["save_log_sql"]
@@ -45,13 +50,6 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
-	//  QUERIES TO RUN AT BEGINING
-	if okBefore {
-		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, "", "", dateRef)
-		if err != nil {
-			return nil, fmt.Errorf("%s: Before error: %s", key, err)
-		}
-	}
 	jsonData, err := json.MarshalIndent(logs, "", "  ")
 	if err != nil {
 		return nil, fmt.Errorf("error converting logs to JSON: %v", err)
@@ -59,6 +57,13 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	fname, err := etlx.TempFIle(tmpDir, string(jsonData), "logs.*.json")
 	if err != nil {
 		return nil, fmt.Errorf("error saving logs to JSON: %v", err)
+	}
+	//  QUERIES TO RUN AT BEGINING
+	if okBefore {
+		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, fname, "", dateRef)
+		if err != nil {
+			return nil, fmt.Errorf("%s: Before error: %s", key, err)
+		}
 	}
 	// fmt.Println(key, sql)
 	if saveSQL != "" && okSave {
@@ -87,7 +92,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	}
 	//  QUERIES TO RUN AT THE END
 	if okAfter {
-		err = etlx.ExecuteQuery(dbConn, afterSQL, data, "", "", dateRef)
+		err = etlx.ExecuteQuery(dbConn, afterSQL, data, fname, "", dateRef)
 		if err != nil {
 			return nil, fmt.Errorf("%s: After error: %s", key, err)
 		}

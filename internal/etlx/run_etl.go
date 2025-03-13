@@ -126,6 +126,127 @@ func ExtractDistinctQueryNames(sql string) []string {
 	return distinctNames
 }
 
+func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item map[string]any, fname string, step string, dateRef []time.Time) (any, error) {
+	re := regexp.MustCompile(`get_dyn_queries\[(.*?)\]`)
+	table := ""
+	metadata, ok := item["metadata"].(map[string]any)
+	if ok {
+		table, _ = metadata["table"].(string)
+	}
+	switch queries := sqlData.(type) {
+	case nil:
+		// Do nothing
+		return sqlData, nil
+	case string:
+		// Single query reference
+		match := re.FindStringSubmatch(queries)
+		if len(match) > 1 {
+			name := match[1]
+			query, ok := item[name].(string)
+			_, queryDoc := etlx.Config[name]
+			if !ok && queryDoc {
+				query = name
+				_sql, _, _, err := etlx.QueryBuilder(nil, name)
+				if err != nil {
+					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
+				} else {
+					query = _sql
+				}
+			} else if !ok {
+				query = name
+			}
+			updatedSQL, err := etlx.ReplacePlaceholders(query, item)
+			if err != nil {
+				fmt.Println("Error trying to get the placeholder:", err)
+			} else {
+				query = updatedSQL
+			}
+			query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
+			if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+				_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queries))
+				if err != nil {
+					fmt.Println(err)
+				}
+				fmt.Println(_file)
+			}
+			rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
+			if err != nil {
+				return sqlData, nil
+			} else if len(*rows) > 0 {
+				_queries := []any{}
+				for _, value := range *rows {
+					// fmt.Println(name, value["query"].(string))
+					_queries = append(_queries, value["query"])
+				}
+				return _queries, nil
+			}
+			return sqlData, nil
+		} else {
+			return sqlData, nil
+		}
+	case []any:
+		// Slice of query references
+		_queries := []any{}
+		for _, q := range queries {
+			queryKey, ok := q.(string)
+			if !ok {
+				fmt.Printf("invalid query key in slice")
+				_queries = append(_queries, q)
+				continue
+			}
+			match := re.FindStringSubmatch(queryKey)
+			if len(match) > 1 {
+				name := match[1]
+				//fmt.Println(queryKey)
+				query, ok := item[name].(string)
+				// fmt.Println("getDynamicQueriesIfAny:", queryKey, name, query)
+				_, queryDoc := etlx.Config[name]
+				if !ok && queryDoc {
+					query = name
+					_sql, _, _, err := etlx.QueryBuilder(nil, name)
+					if err != nil {
+						fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
+					} else {
+						query = _sql
+					}
+				} else if !ok {
+					query = name
+				}
+				updatedSQL, err := etlx.ReplacePlaceholders(query, item)
+				if err != nil {
+					fmt.Println("Error trying to get the placeholder:", err)
+				} else {
+					query = updatedSQL
+				}
+				query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
+				if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+					_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queryKey))
+					if err != nil {
+						fmt.Println(err)
+					}
+					fmt.Println(_file)
+				}
+				rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
+				if err != nil {
+					fmt.Println("getDynamicQueriesIfAny:", name, err)
+					// _queries = append(_queries, q)
+				} else if len(*rows) > 0 {
+					for _, value := range *rows {
+						// fmt.Println(name, value["query"].(string))
+						_queries = append(_queries, value["query"])
+					}
+				}
+			} else {
+				_queries = append(_queries, q)
+			}
+		}
+		return _queries, nil
+	default:
+		return sqlData, nil
+	}
+
+}
+
 func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string]any, fname string, step string, dateRef []time.Time) error {
 	table := ""
 	metadata, ok := item["metadata"].(map[string]any)
@@ -140,6 +261,13 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 	}
 	fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+	// CHECK FOR DYNAMIC GENERATE QUERIES
+	sqlDataAux, err := etlx.getDynamicQueriesIfAny(conn, sqlData, item, fname, step, dateRef)
+	if err == nil {
+		sqlData = sqlDataAux
+	} else {
+		fmt.Println("getDynamicQueriesIfAny Err:", err)
+	}
 	switch queries := sqlData.(type) {
 	case nil:
 		// Do nothing
