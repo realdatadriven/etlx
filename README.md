@@ -889,7 +889,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 3. **Execution**:
    - All queries are combined using the specified `union_key` (default is `UNION`).
    - The combined query is executed as a single statement.
-   - The combined query can be save by specifing `save_sql` normally an insert, create [or replace] table or even a copy to file statment, and insert statment should be used in combination with the `save_on_err_patt` and `save_on_err_sql` in case of an error matching the `table does ... not exist` to create the tabe instead.
+   - The combined query can be save by specifying `save_sql` normally an insert, create [or replace] table or even a copy to file statement, and insert statement should be used in combination with the `save_on_err_patt` and `save_on_err_sql` in case of an error matching the `table does ... not exist` to create the table instead.
 
 ---
 
@@ -1270,6 +1270,9 @@ This example **checks for new columns in a JSON file** and **adds them to the de
 
 ##### **📄 Markdown Configuration for `get_dyn_queries[query_name]`**
 
+````markdown
+....
+
 ```yaml metadata
 ...
 connection: "duckdb:"
@@ -1279,7 +1282,7 @@ before_sql:
 ..
 ```
 
-#### **📜 SQL Query (Generating Missing Columns)**
+**📜 SQL Query (Generating Missing Columns)**
 
 ```sql
 -- create_columns_missing
@@ -1301,13 +1304,16 @@ missing_columns AS (
 SELECT 'ALTER TABLE "DB"."<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
 FROM missing_columns;
 ```
+...
+
+````
 
 #### **🛠 Execution Flow**
 
 1️⃣ **Extract column metadata from the input (in this case a json file, but it could be a table or any other valid query).**  
 2️⃣ **Check which columns are missing in the destination table (`<table>`).**  
-3️⃣ **Generate `ALTER TABLE` statements for adding missing columns.**  
-4️⃣ **Run the generated queries dynamically againist the destination .**  
+3️⃣ **Generate `ALTER TABLE` statements for adding missing columns, and replaces the `- get_dyn_queries[create_columns_missing]` with the the generated queries**  
+4️⃣ **Runs the workflow with dynamically generated queries against the destination connection.**  
 
 #### **🔹 Key Features**
 
