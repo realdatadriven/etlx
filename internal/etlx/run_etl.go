@@ -485,6 +485,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		}
 		_steps := []string{"extract", "transform", "load"}
 		for _, step := range _steps {
+			fmt.Println(1, key, itemKey, step)
 			// CHECK CLEAN
 			clean, ok := extraConf["clean"]
 			if ok {
@@ -492,6 +493,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
+			fmt.Println(2, key, itemKey, step)
 			// CHECK DROP
 			drop, ok := extraConf["drop"]
 			if ok {
@@ -499,6 +501,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
+			fmt.Println(3, key, itemKey, step)
 			// CHECK ROWS
 			rows, ok := extraConf["rows"]
 			if ok {
@@ -506,6 +509,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
+			fmt.Println(4, key, itemKey, step)
 			// CHECK FILE
 			file, ok := extraConf["file"].(string)
 			if ok {
@@ -513,6 +517,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
+			fmt.Println(5, key, itemKey, step)
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {
@@ -528,6 +533,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
+			fmt.Println(7, key, itemKey, step)
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
@@ -563,6 +569,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			if !ok || mainSQL == nil {
 				continue
 			}
+			fmt.Println(8, key, itemKey, step)
 			conn := itemMetadata[step+"_conn"]
 			if conn == nil {
 				conn = mainConn // Fallback to main connection
@@ -575,6 +582,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				if err == nil {
 					dateRef = append([]time.Time{}, _dt)
 				}
+			} else {
+				if len(dateRef) > 0 {
+					dtRef = dateRef[0].Format("2006-01-02")
+				}
 			}
 			// CONNECTION
 			start4 := time.Now()
@@ -582,6 +593,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				"name":        fmt.Sprintf("%s->%s->%s:Conn", key, itemKey, step),
 				"description": itemMetadata["description"].(string),
 				"start_at":    start4,
+				"ref":         dtRef,
 			}
 			dbConn, err := etlx.GetDB(conn.(string))
 			if err != nil {
@@ -593,6 +605,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				//return fmt.Errorf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
 				continue
 			}
+			fmt.Println(9, key, itemKey, step)
 			defer dbConn.Close()
 			_log3["success"] = true
 			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: Connectinon to %s successfull", key, step, itemKey, conn)
