@@ -70,8 +70,8 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
-		"name":     key,
-		"start_at": start,
+		"name": key,
+		"key":  key, "start_at": start,
 	})
 	mainDescription := ""
 	// Define the runner as a simple function
@@ -83,10 +83,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Deactivated",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Deactivated",
 				})
 				return fmt.Errorf("dectivated %s", "")
 			}
@@ -98,10 +98,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			processLogs = append(processLogs, map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
-				"success":     true,
-				"msg":         "Missing metadata in item",
+				"key":         key, "item_key": itemKey, "start_at": time.Now(),
+				"end_at":  time.Now(),
+				"success": true,
+				"msg":     "Missing metadata in item",
 			})
 			return nil
 		}
@@ -111,10 +111,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Deactivated",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Deactivated",
 				})
 				return nil
 			}
@@ -127,10 +127,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Excluded from the process",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
 				})
 				return nil
 			}
@@ -142,10 +142,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Excluded from the process",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
 				})
 				return nil
 			}
@@ -154,7 +154,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		_log2 := map[string]any{
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
-			"start_at":    start3,
+			"key":         key, "item_key": itemKey, "start_at": start3,
 		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		query, okQuery := itemMetadata["query"]
@@ -187,7 +187,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start3,
+					"key":         key, "item_key": itemKey, "start_at": start3,
 				}
 				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, "", "", dateRef)
 				if err != nil {
@@ -264,7 +264,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start3,
+					"key":         key, "item_key": itemKey, "start_at": start3,
 				}
 				err = etlx.ExecuteQuery(dbConn, afterSQL, item, "", "", dateRef)
 				if err != nil {
@@ -300,9 +300,9 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 	processLogs[0] = map[string]any{
 		"name":        key,
 		"description": mainDescription,
-		"start_at":    processLogs[0]["start_at"],
-		"end_at":      time.Now(),
-		"duration":    time.Since(start),
+		"key":         key, "start_at": processLogs[0]["start_at"],
+		"end_at":   time.Now(),
+		"duration": time.Since(start),
 	}
 	return processLogs, nil
 }

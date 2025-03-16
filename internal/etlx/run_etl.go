@@ -395,6 +395,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
 		"name":     key,
+		"key":      key,
 		"start_at": start,
 	})
 	mainDescription := ""
@@ -406,10 +407,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Deactivated",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Deactivated",
 				})
 				return fmt.Errorf("dectivated %s", "")
 			}
@@ -425,10 +426,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			processLogs = append(processLogs, map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
-				"success":     true,
-				"msg":         "Missing metadata in item",
+				"key":         key, "item_key": itemKey, "start_at": time.Now(),
+				"end_at":  time.Now(),
+				"success": true,
+				"msg":     "Missing metadata in item",
 			})
 			return nil
 		}
@@ -438,10 +439,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Deactivated",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Deactivated",
 				})
 				return nil
 			}
@@ -454,10 +455,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Excluded from the process",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
 				})
 				return nil
 			}
@@ -469,10 +470,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
-					"success":     true,
-					"msg":         "Excluded from the process",
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
 				})
 				return nil
 			}
@@ -481,7 +482,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		_log1 := map[string]any{
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
-			"start_at":    start2,
+			"key":         key, "item_key": itemKey, "start_at": start2,
 		}
 		_steps := []string{"extract", "transform", "load"}
 		for _, step := range _steps {
@@ -520,10 +521,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					processLogs = append(processLogs, map[string]any{
 						"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
 						"description": itemMetadata["description"].(string),
-						"start_at":    time.Now(),
-						"end_at":      time.Now(),
-						"success":     true,
-						"msg":         fmt.Sprintf("STEP %s Excluded from the process", step),
+						"key":         key, "item_key": itemKey, "start_at": time.Now(),
+						"end_at":  time.Now(),
+						"success": true,
+						"msg":     fmt.Sprintf("STEP %s Excluded from the process", step),
 					})
 					continue
 				}
@@ -532,7 +533,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
 				"description": itemMetadata["description"].(string),
-				"start_at":    start2,
+				"key":         key, "item_key": itemKey, "start_at": start2,
 			}
 			beforeSQL, okBefore := itemMetadata[step+"_before_sql"]
 			onBefErrPatt, okBefErrPatt := itemMetadata[step+"_before_on_err_match_patt"]
@@ -587,8 +588,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log3 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s->%s:Conn", key, itemKey, step),
 				"description": itemMetadata["description"].(string),
-				"start_at":    start4,
-				"ref":         dtRef,
+				"key":         key, "item_key": itemKey, "start_at": start4,
+				"ref": dtRef,
 			}
 			dbConn, err := etlx.GetDB(conn.(string))
 			if err != nil {
@@ -634,8 +635,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:Before", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				//fmt.Println(_log3)
 				//fmt.Println(beforeSQL)
@@ -698,8 +699,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3 = map[string]any{
 								"name":        fmt.Sprintf("%s->%s->%s:Valid", key, itemKey, step),
 								"description": itemMetadata["description"].(string),
-								"start_at":    start4,
-								"ref":         dtRef,
+								"key":         key, "item_key": itemKey, "start_at": start4,
+								"ref": dtRef,
 							}
 							rule_active := true
 							_rule_active, _ok := _valid["active"]
@@ -757,8 +758,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:Main", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				if isValid {
 					if itemHasFile && fromFileSQL != nil && okFromFile { // IF HAS FILE AND _from_file configuration
@@ -823,8 +824,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:CLEAN", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				err = etlx.ExecuteQuery(dbConn, cleanSQL, item, fname, step, dateRef)
 				if err != nil {
@@ -847,8 +848,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:DROP", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				err = etlx.ExecuteQuery(dbConn, dropSQL, item, fname, step, dateRef)
 				if err != nil {
@@ -871,8 +872,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:ROWS", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				_sql := rowsSQL.(string)
 				if _, ok := item[rowsSQL.(string)]; ok {
@@ -911,8 +912,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:After", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
-					"start_at":    start4,
-					"ref":         dtRef,
+					"key":         key, "item_key": itemKey, "start_at": start4,
+					"ref": dtRef,
 				}
 				//fmt.Println(afterSQL)
 				err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, step, dateRef)
@@ -977,6 +978,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	processLogs[0] = map[string]any{
 		"name":        key,
 		"description": mainDescription,
+		"key":         key,
 		"start_at":    processLogs[0]["start_at"],
 		"end_at":      time.Now(),
 		"duration":    time.Since(start),
