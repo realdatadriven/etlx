@@ -312,6 +312,7 @@ etlx --config config.md --date 2024-01-01
 
 ````markdown
 # ETL
+
 ```yaml metadata
 name: Daily_ETL
 description: 'Daily extraction at 5 AM'
@@ -320,6 +321,7 @@ connection: 'postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host
 ```
 
 ## sales_data
+
 ```yaml metadata
 name: SalesData
 description: 'Daily Sales Data'
