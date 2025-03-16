@@ -484,9 +484,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			"start_at":    start2,
 		}
 		_steps := []string{"extract", "transform", "load"}
-		fmt.Println(0, key, itemKey, _steps)
 		for _, step := range _steps {
-			fmt.Println(1, key, itemKey, step)
 			// CHECK CLEAN
 			clean, ok := extraConf["clean"]
 			if ok {
@@ -494,7 +492,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
-			fmt.Println(2, key, itemKey, step)
 			// CHECK DROP
 			drop, ok := extraConf["drop"]
 			if ok {
@@ -502,7 +499,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
-			fmt.Println(3, key, itemKey, step)
 			// CHECK ROWS
 			rows, ok := extraConf["rows"]
 			if ok {
@@ -510,7 +506,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
-			fmt.Println(4, key, itemKey, step)
 			// CHECK FILE
 			file, ok := extraConf["file"].(string)
 			if ok {
@@ -518,7 +513,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
-			fmt.Println(5, key, itemKey, step)
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {
@@ -534,7 +528,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					continue
 				}
 			}
-			fmt.Println(7, key, itemKey, step)
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
@@ -556,21 +549,22 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			dtRef, okDtRef := itemMetadata["date_ref"]
 			if clean.(bool) && !okClean {
 				cleanSQL = `DELETE FROM "<table>"`
+				okClean = true
 			}
 			dropSQL, okDrop := itemMetadata["drop_sql"]
 			if drop.(bool) && !okDrop {
 				dropSQL = `DROP TABLE "<table>"`
+				okDrop = true
 			}
 			rowsSQL, okRows := itemMetadata["rows_sql"]
 			if rows.(bool) && !okRows {
 				rowsSQL = `SELECT COUNT(*) AS "nrows" FROM "<table>"`
+				okRows = true
 			}
 			metadataFile, okMetaFile := itemMetadata["file"].(string)
-			fmt.Println(step, okMain, mainSQL)
 			if !okMain || mainSQL == nil {
 				continue
 			}
-			fmt.Println(8, key, itemKey, step)
 			conn := itemMetadata[step+"_conn"]
 			if conn == nil {
 				conn = mainConn // Fallback to main connection
@@ -606,7 +600,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				//return fmt.Errorf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
 				continue
 			}
-			fmt.Println(9, key, itemKey, step)
 			defer dbConn.Close()
 			_log3["success"] = true
 			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: Connectinon to %s successfull", key, step, itemKey, conn)
@@ -642,6 +635,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"name":        fmt.Sprintf("%s->%s->%s:Before", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				//fmt.Println(_log3)
 				//fmt.Println(beforeSQL)
@@ -705,6 +699,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								"name":        fmt.Sprintf("%s->%s->%s:Valid", key, itemKey, step),
 								"description": itemMetadata["description"].(string),
 								"start_at":    start4,
+								"ref":         dtRef,
 							}
 							rule_active := true
 							_rule_active, _ok := _valid["active"]
@@ -763,6 +758,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"name":        fmt.Sprintf("%s->%s->%s:Main", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				if isValid {
 					if itemHasFile && fromFileSQL != nil && okFromFile { // IF HAS FILE AND _from_file configuration
@@ -828,6 +824,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"name":        fmt.Sprintf("%s->%s->%s:CLEAN", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				err = etlx.ExecuteQuery(dbConn, cleanSQL, item, fname, step, dateRef)
 				if err != nil {
@@ -851,6 +848,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"name":        fmt.Sprintf("%s->%s->%s:DROP", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				err = etlx.ExecuteQuery(dbConn, dropSQL, item, fname, step, dateRef)
 				if err != nil {
@@ -867,13 +865,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				}
 				processLogs = append(processLogs, _log3)
 			}
-			// Process DROP SQL
+			// Process ROWS SQL
 			if rows.(bool) && okRows {
 				start4 = time.Now()
 				_log3 = map[string]any{
 					"name":        fmt.Sprintf("%s->%s->%s:ROWS", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				_sql := rowsSQL.(string)
 				if _, ok := item[rowsSQL.(string)]; ok {
@@ -913,6 +912,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"name":        fmt.Sprintf("%s->%s->%s:After", key, itemKey, step),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start4,
+					"ref":         dtRef,
 				}
 				//fmt.Println(afterSQL)
 				err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, step, dateRef)
