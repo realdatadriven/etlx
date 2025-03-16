@@ -484,6 +484,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			"start_at":    start2,
 		}
 		_steps := []string{"extract", "transform", "load"}
+		fmt.Println(0, key, itemKey, _steps)
 		for _, step := range _steps {
 			fmt.Println(1, key, itemKey, step)
 			// CHECK CLEAN
