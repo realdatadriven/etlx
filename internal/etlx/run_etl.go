@@ -566,8 +566,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				rowsSQL = `SELECT COUNT(*) AS "nrows" FROM "<table>"`
 			}
 			metadataFile, okMetaFile := itemMetadata["file"].(string)
-			//fmt.Println(step, ok, mainSQL)
-			if !ok || mainSQL == nil {
+			fmt.Println(step, okMain, mainSQL)
+			if !okMain || mainSQL == nil {
 				continue
 			}
 			fmt.Println(8, key, itemKey, step)
