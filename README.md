@@ -702,7 +702,7 @@ An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in
 
 1. **Exports Metadata**:
    - Metadata defines properties like the database connection, export path, and activation status.
-   - Fields like `type`, `name`, `description`, `path`, and `active` control the behavior of each export.
+   - Fields like `name`, `description`, `path`, and `active` control the behavior of each export.
 
 2. **Query-to-File Configuration**:
    - Define the SQL query or sequence of queries used for generating the file.
@@ -720,7 +720,6 @@ An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in
 Exports data to files.
 
 ```yaml metadata
-type: exports
 name: DailyExports
 description: "Daily file exports for various datasets."
 database: reporting_db
@@ -731,10 +730,8 @@ active: true
 
 ## Sales Data Export
 ```yaml metadata
-type: query_to_file
 name: SalesExport
 description: "Export daily sales data to CSV."
-database: reporting_db
 connection: "duckdb:"
 export_sql:
   - "LOAD sqlite"
@@ -755,14 +752,12 @@ COPY (
 
 ## Region Data Export to Excel
 ```yaml metadata
-type: query_to_file
 name: RegionExport
 description: "Export region data to an Excel file."
-database: reporting_db
 connection: "duckdb:"
 export_sql:
   - "LOAD sqlite"
-  - "LOAD Spatial"
+  - "LOAD excel"
   - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
   - export
   - "DETACH DB"
@@ -775,15 +770,13 @@ COPY (
     SELECT *
     FROM "DB"."Regions"
     WHERE "updated_at" >= '{YYYY-MM-DD}'
-) TO '/path/to/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx' (FORMAT GDAL, DRIVER 'xlsx');
+) TO '/path/to/Reports/YYYYMMDD/regions_YYYYMMDD.xlsx' (FORMAT XLSX, HEADER TRUE);
 ```
 
 ## Sales Report Template
 ```yaml metadata
-type: template
 name: SalesReport
 description: "Generate a sales report from a template."
-database: reporting_db
 connection: "duckdb:"
 before_sql:
   - "LOAD sqlite"
