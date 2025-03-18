@@ -166,10 +166,16 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		// FILE
 		table := itemMetadata["name"].(string)
 		path, okPath := itemMetadata["path"].(string)
+		if !okPath {
+			path, okPath = itemMetadata["fname"].(string)
+		}
 		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 		if okPath && path != "" {
 			fname = path
-			if filepath.Dir(fname) != "" && okMainPath && mainPath != "" {
+			if filepath.IsAbs(fname) {
+			} else if filepath.IsLocal(fname) {
+				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
+			} else if filepath.Dir(fname) != "" && okMainPath && mainPath != "" {
 				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
 			}
 		} else if okMainPath && mainPath != "" {
@@ -213,6 +219,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["duration"] = time.Since(start3)
 			} else {
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+				if !filepath.IsAbs(path) {
+					fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
+				}
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 				_log2["end_at"] = time.Now()
@@ -493,6 +502,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				outputFile := filepath.Join(os.TempDir(), "_", filepath.Base(template.(string)))
 				if fname != "" && filepath.Base(fname) != "" {
 					outputFile = fname
+					/*if filepath.IsAbs(fname) {
+					} else if filepath.IsLocal(fname) {
+						fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
+					}*/
 				} else if fname != "" && filepath.Base(fname) == "" && filepath.Dir(fname) != "" {
 					outputFile = filepath.Join(filepath.Dir(fname), "_", filepath.Base(template.(string)))
 				}
@@ -509,6 +522,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
+					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
+					if !filepath.IsAbs(path) {
+						fname = etlx.ReplaceQueryStringDate(path, dateRef)
+					}
 					_log2["fname"] = outputFile
 				}
 			}
