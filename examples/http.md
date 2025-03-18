@@ -87,7 +87,7 @@ Exports data to files.
 name: DailyReports
 description: "Daily reports"
 connection: "duckdb:"
-path: "~/Downloads/YYYYMMDD"
+path: "static/uploads/tmp"
 active: true
 ```
 
@@ -95,16 +95,15 @@ active: true
 
 ```yaml metadata
 name: CSV_EXPORT
-description: "Export data to CSV."
+description: "Export data to CSV"
 connection: "duckdb:"
-export_sql:
+before_sql:
   - "INSTALL sqlite"
   - "LOAD sqlite"
-  - "INSTALL excel"
-  - "LOAD excel"
   - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
-  - export
-  - "DETACH DB"
+export_sql: export
+after_sql: "DETACH DB"
+path: 'nyc_taxy_YYYYMMDD.csv'
 active: true
 ```
 
@@ -115,34 +114,35 @@ COPY (
     FROM "DB"."NYC_TAXI"
     WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
     LIMIT 100
-) TO '~/Downloads/YYYYMMDD/nyc_taxy_YYYYMMDD.csv' (FORMAT 'csv', HEADER TRUE);
+) TO '<fname>' (FORMAT 'csv', HEADER TRUE);
 ```
 
 ## XLSX_EXPORT
 
 ```yaml metadata
 name: XLSX_EXPORT
-description: "Export data to Excel file."
+description: "Export data to Excel file"
 connection: "duckdb:"
-export_sql:
+before_sql:
   - "INSTALL sqlite"
   - "LOAD sqlite"
   - "INSTALL excel"
   - "LOAD excel"
   - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
-  - export
-  - "DETACH DB"
+export_sql: xl_export
+after_sql: "DETACH DB"
+path: 'nyc_taxy_YYYYMMDD.xlsx'
 active: true
 ```
 
 ```sql
--- export
+-- xl_export
 COPY (
     SELECT *
     FROM "DB"."NYC_TAXI"
     WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
     LIMIT 100
-) TO '~/Downloads/YYYYMMDD/nyc_taxy_YYYYMMDD.xlsx' (FORMAT XLSX, HEADER TRUE, SHEET 'Sheet1');
+) TO '<fname>' (FORMAT XLSX, HEADER TRUE, SHEET 'NYC');
 ```
 
 # LOGS

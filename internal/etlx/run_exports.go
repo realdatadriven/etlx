@@ -95,11 +95,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		mainPath, okMainPath := metadata["path"].(string)
 		if okMainPath {
 			pth := etlx.ReplaceQueryStringDate(mainPath, dateRef)
-			fmt.Println("MAIN PATH", pth)
+			//fmt.Println("MAIN PATH", pth)
 			if ok, _ := pathExists(pth); !ok {
 				err := os.Mkdir(pth, 0755)
 				if err != nil {
-					fmt.Printf("%s ERR: trying to create the export path %s -> %s", key, pth, err)
+					return fmt.Errorf("%s ERR: trying to create the export path %s -> %s", key, pth, err)
 				}
 			}
 		} else {
@@ -169,10 +169,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 		if okPath && path != "" {
 			fname = path
+			if filepath.Dir(fname) != "" && okMainPath && mainPath != "" {
+				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
+			}
 		} else if okMainPath && mainPath != "" {
 			fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, mainPath, table)
 		}
-		//  QUERIES TO RUN AT BEGINING
+		// QUERIES TO RUN AT BEGINING
 		if okBefore {
 			start3 := time.Now()
 			_log2 := map[string]any{
