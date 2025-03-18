@@ -91,12 +91,19 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				return fmt.Errorf("dectivated %s", "")
 			}
 		}
+		// MAIN PATH
 		mainPath, okMainPath := metadata["path"].(string)
 		if okMainPath {
 			pth := etlx.ReplaceQueryStringDate(mainPath, dateRef)
+			fmt.Println("MAIN PATH", pth)
 			if ok, _ := pathExists(pth); !ok {
-				os.Mkdir(pth, 0755)
+				err := os.Mkdir(pth, 0755)
+				if err != nil {
+					fmt.Printf("%s ERR: trying to create the export path %s -> %s", key, pth, err)
+				}
 			}
+		} else {
+
 		}
 		mainConn, _ := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
