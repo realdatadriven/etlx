@@ -219,8 +219,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["duration"] = time.Since(start3)
 			} else {
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+				fmt.Println(1, fname)
 				if !filepath.IsAbs(path) {
 					fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
+					fmt.Println(2, fname)
 				}
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)

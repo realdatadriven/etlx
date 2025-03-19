@@ -38,7 +38,7 @@ load_after_sql: detach_db
 drop_sql: drop_sql
 clean_sql: clean_sql
 rows_sql: nrows
-active: true
+active: false
 ```
 
 ```sql
