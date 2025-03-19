@@ -144,6 +144,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		afterSQL, okAfter := itemMetadata["after_sql"]
 		template, okTemplate := itemMetadata["template"]
 		mapping, okMapping := itemMetadata["mapping"]
+		tmpPrefix, okTmpPrefix := itemMetadata["tmp_prefix"]
 		conn, okCon := itemMetadata["connection"]
 		if !okCon {
 			conn = mainConn
@@ -224,7 +225,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 				// fmt.Println(1, fname)
 				if !filepath.IsAbs(path) {
-					fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
+					if okTmpPrefix && tmpPrefix != "" {
+						fname = etlx.SetQueryPlaceholders(fmt.Sprintf("%s/%s", tmpPrefix, path), table, "", dateRef)
+					} else {
+						fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
+					}
 					// fmt.Println(2, fname)
 				}
 				_log2["success"] = true
@@ -529,7 +534,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["duration"] = time.Since(start3)
 					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
 					if !filepath.IsAbs(path) {
-						fname = etlx.ReplaceQueryStringDate(path, dateRef)
+						if okTmpPrefix && tmpPrefix != "" {
+							fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+						} else {
+							fname = etlx.ReplaceQueryStringDate(path, dateRef)
+						}
 					}
 					_log2["fname"] = outputFile
 				}

@@ -104,6 +104,7 @@ before_sql:
 export_sql: export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.csv'
+tmp_prefix: 'tmp'
 active: true
 ```
 
@@ -132,6 +133,7 @@ before_sql:
 export_sql: xl_export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.xlsx'
+tmp_prefix: 'tmp'
 active: true
 ```
 
