@@ -103,7 +103,7 @@ before_sql:
   - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
 export_sql: export
 after_sql: "DETACH DB"
-fname: 'nyc_taxy_YYYYMMDD.csv'
+path: 'nyc_taxy_YYYYMMDD.csv'
 active: true
 ```
 
