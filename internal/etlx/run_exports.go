@@ -168,6 +168,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		path, okPath := itemMetadata["path"].(string)
 		if !okPath {
 			path, okPath = itemMetadata["fname"].(string)
+			if !okPath {
+				path, okPath = itemMetadata["file"].(string)
+			}
 		}
 		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 		if okPath && path != "" {
@@ -219,10 +222,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["duration"] = time.Since(start3)
 			} else {
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
-				fmt.Println(1, fname)
+				// fmt.Println(1, fname)
 				if !filepath.IsAbs(path) {
 					fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
-					fmt.Println(2, fname)
+					// fmt.Println(2, fname)
 				}
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
