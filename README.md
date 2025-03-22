@@ -54,6 +54,7 @@ By leveraging DuckDB's powerful in-memory processing capabilities, this framewor
    - [Query Documentation](#query-documentation)
    - [Data Quality](#data-quality)
    - [Exports](#exports)
+   - [Scripts](#scripts)
    - [Multi-Queries](#multi-queries)
    - [Loading Config Dependencies](#loading-config-dependencies)
 5. [Advanced Usage](#5-advanced-usage)
@@ -189,8 +190,6 @@ Start the container with:
 ```bash
 docker-compose up --rm etlx
 ```
-
-🚀 **Now you can run ETLX in seconds with Docker!** Let me know if you need any refinements. 🎉  
 
 ---
 
@@ -865,6 +864,75 @@ the maping can also be a string representing a query and all the mapping can be 
 
 By leveraging the `EXPORTS` section, you can automate data export processes, making them efficient and repeatable.
 
+---
+
+### Scripts
+
+The **SCRIPTS** section allows you to **execute SQL queries** that **don’t fit into other predefined sections** (ETL, EXPORTS, etc.).  
+
+#### **🔹 When to Use SCRIPTS?**
+
+✅ **Running cleanup queries after an ETL job**  
+✅ **Executing ad-hoc maintenance tasks**  
+✅ **Running SQL commands that don’t need to return results**  
+✅ **Executing SQL scripts for database optimizations**  
+
+#### **🛠 Example: Running Cleanup Scripts**
+
+This example **removes temporary data** after an ETL process.
+
+#### **📄 Markdown Configuration**
+
+````markdown
+# SCRIPTS
+
+Run Queries that does not need a return
+
+```yaml metadata
+name: DailyScripts
+description: "Daily Scripts"
+connection: "duckdb:"
+active: true
+```
+
+## SCRIPT1
+
+```yaml metadata
+name: SCRIPT1
+description: "Clean up auxiliar / temp data"
+connection: "duckdb:"
+before_sql:
+- "INSTALL sqlite"
+- "LOAD sqlite"
+- "ATTACH 'database/DB.db' AS DB (TYPE SQLITE)"
+script_sql: clean_aux_data
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- clean_aux_data
+DROP TEMP_TABLE1;
+```
+
+````
+
+#### **🔹 How Scripts It Works**
+
+1️⃣ **Loads necessary extensions and connects to the database.**  
+2️⃣ **Executes predefined SQL queries (`script_sql`).**  
+3️⃣ **Runs `before_sql` commands before execution.**  
+4️⃣ **Runs `after_sql` commands after execution.**  
+
+#### **🔹 Key Scripts Features**
+
+✔ **Flexible SQL execution for custom scripts**  
+✔ **Supports cleanup, maintenance, and database operations**  
+✔ **Allows execution of any SQL command that doesn't return data**  
+✔ **Easily integrates into automated ETL workflows**  
+
+---
+
 ### **Multi-Queries**
 
 The `MULTI_QUERIES` section allows you to define multiple queries with similar structures and aggregate their results using a SQL `UNION`. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.
@@ -1113,8 +1181,6 @@ FROM READ_JSON('<fname>');
 ✔ **Supports preprocessing (`before_sql`) and cleanup (`after_sql`)**  
 ✔ **Highly customizable to different logging needs**  
 
-🚀 **Now your ETLX workflows can track execution logs effortlessly!** 🎯  
-
 ---
 
 ### **Loading Config Dependencies**
@@ -1319,7 +1385,7 @@ FROM missing_columns;
 
 ---
 
-🚀 **With `get_dyn_queries[...]`, your ETLX workflows can now dynamically evolve with changing data structures!** Let me know if you need refinements. 🎯
+**With `get_dyn_queries[...]`, your ETLX workflows can now dynamically evolve with changing data structures!**
 
 ---
 

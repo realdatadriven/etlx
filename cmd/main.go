@@ -105,6 +105,14 @@ func main() {
 		}
 		logs = append(logs, _logs...)
 	}
+	// SCRIPTS
+	if _, ok := etlxlib.Config["SCRIPTS"]; ok {
+		_logs, err := etlxlib.RunSCRIPTS(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("SCRIPTS ERR: %v\n", err)
+		}
+		logs = append(logs, _logs...)
+	}
 	// MULTI_QUERIES
 	if _, ok := etlxlib.Config["MULTI_QUERIES"]; ok {
 		res, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
