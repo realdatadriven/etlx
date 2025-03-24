@@ -256,6 +256,13 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 								current["__order"] = append(order, key)
 							}*/
 						}
+					} else if strings.HasPrefix(info, "html") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "html"))
+						if key == "" {
+							fmt.Printf("missing query name for SQL block: %s", content)
+						} else {
+							current[key] = content
+						}
 					}
 				}
 			}

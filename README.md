@@ -1114,7 +1114,7 @@ ETLX provides a **logging mechanism** that allows **saving logs** into a databas
 
 Below is an example that **saves logs** into a **database**:
 
-#### **📄 Markdown Configuration**
+#### **📄 LOGS Markdown Configuration**
 
 ````md
 # LOGS

@@ -130,4 +130,11 @@ func main() {
 			fmt.Printf("LOGS ERR: %v\n", err)
 		}
 	}
+	// NOTIFY
+	if _, ok := etlxlib.Config["NOTIFY"]; ok {
+		_, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("LOGS ERR: %v\n", err)
+		}
+	}
 }

@@ -88,7 +88,7 @@ name: DailyReports
 description: "Daily reports"
 connection: "duckdb:"
 path: "static/uploads/tmp"
-active: true
+active: false
 ```
 
 ## CSV_EXPORT
@@ -168,7 +168,7 @@ after_sql:
   - 'USE memory;'
   - detach_db
 tmp_dir: /tmp
-active: true
+active: false
 ```
 
 ```sql
@@ -222,4 +222,53 @@ missing_columns AS (
 )
 SELECT 'ALTER TABLE "DB"."<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
 FROM missing_columns;
+```
+
+# NOTIFY
+
+```yaml metadata
+name: Notefication
+description: "Notefication"
+connection: "duckdb:"
+path: "static/uploads/tmp"
+active: true
+```
+
+## ETL_STATUS
+
+```yaml metadata
+name: ETL_STATUS
+description: "ETL Satus"
+connection: "duckdb:"
+before_sql:
+  - "INSTALL sqlite"
+  - "LOAD sqlite"
+  - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
+data_sql:
+  - logs
+after_sql: "DETACH DB"
+type: mail #sms
+to:
+  - real.datadriven@gmail.com
+cc: null
+bcc: null
+subject: 'ETLX YYYYMMDD'
+body: body_tml
+_body: |
+  <b>Good Morning</b><br />
+attachments:
+  - 'nyc_taxy_YYYYMMDD.csv'
+active: true
+```
+
+```html body_tml
+<b>Good Morning</b><br />
+This email is gebnerated by ETLX automatically!
+```
+
+```sql
+-- logs
+SELECT *
+FROM "DB"."etlx_logs"
+WHERE "ref" = '{YYYY-MM-DD}'
 ```
