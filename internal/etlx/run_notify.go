@@ -39,16 +39,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		}
 		// MAIN PATH
 		mainPath, okMainPath := metadata["path"].(string)
-		if okMainPath {
-			/*pth := etlx.ReplaceQueryStringDate(mainPath, dateRef)
-			//fmt.Println("MAIN PATH", pth)
-			if ok, _ := pathExists(pth); !ok {
-				err := os.Mkdir(pth, 0755)
-				if err != nil {
-					return fmt.Errorf("%s ERR: trying to create the script path %s -> %s", key, pth, err)
-				}
-			}*/
-		}
+
 		mainConn, _ := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
@@ -109,9 +100,9 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		table := itemMetadata["name"].(string)
 		path, okPath := itemMetadata["path"].(string)
 		if !okPath {
-			path, okPath = itemMetadata["fname"].(string)
-			if !okPath {
-				path, okPath = itemMetadata["file"].(string)
+			if okMainPath {
+				var pth any = mainPath
+				itemMetadata["path"] = pth
 			}
 		}
 		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
@@ -211,6 +202,17 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				itemMetadata["body"] = body
 			}
 			itemMetadata["body"] = etlx.SetQueryPlaceholders(itemMetadata["body"].(string), table, fname, dateRef)
+			attachments, okAtt := itemMetadata["attachments"].([]any)
+			atts := []any{}
+			var aux_att any
+			if okAtt {
+				for _, att := range attachments {
+					aux_att = etlx.SetQueryPlaceholders(att.(string), table, fname, dateRef)
+					// fmt.Println("ATT:", aux_att)
+					atts = append(atts, aux_att)
+				}
+				itemMetadata["attachments"] = atts
+			}
 			err := etlx.SendEmail(itemMetadata)
 			if err != nil {
 				_log2["success"] = false
@@ -223,7 +225,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			}
-			fmt.Println(_log2["msg"])
+			fmt.Println(key, _log2["msg"])
 			processLogs = append(processLogs, _log2)
 		}
 		// QUERIES TO RUN AT THE END

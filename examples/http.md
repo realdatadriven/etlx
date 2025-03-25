@@ -262,8 +262,9 @@ active: true
 ```
 
 ```html body_tml
-<b>Good Morning</b><br />
-This email is gebnerated by ETLX automatically!
+<b>Good Morning</b><br /><br />
+This email is gebnerated by ETLX automatically!<br />
+<strong>LOGS:</strong>
 ```
 
 ```sql

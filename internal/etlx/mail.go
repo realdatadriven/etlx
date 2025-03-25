@@ -53,7 +53,6 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 	smtpUsername := os.Getenv("SMTP_USERNAME")
 	smtpPassword := os.Getenv("SMTP_PASSWORD")
 	smtpFrom := os.Getenv("SMTP_FROM")
-
 	// Extract fields from data
 	to := parseSlice(data["to"])
 	cc := parseSlice(data["cc"])
@@ -62,25 +61,20 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 	bodyTemplate, _ := data["body"].(string)
 	templateData, _ := data["data"].(map[string]any)
 	attachments := parseSlice(data["attachments"])
-
 	if len(to) == 0 {
 		return fmt.Errorf("recipient 'to' field is required")
 	}
-
 	// Render the HTML template with data
 	body, err := etlx.RenderTemplate(bodyTemplate, templateData)
 	if err != nil {
 		return err
 	}
-
 	// SMTP authentication
 	auth := smtp.PlainAuth("", smtpUsername, smtpPassword, smtpHost)
-
 	// Create email buffer
 	var email bytes.Buffer
 	writer := multipart.NewWriter(&email)
 	boundary := writer.Boundary()
-
 	// Headers
 	headers := map[string]string{
 		"From":         smtpFrom,
@@ -92,7 +86,6 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 	if len(cc) > 0 {
 		headers["Cc"] = strings.Join(cc, ", ")
 	}
-
 	// Write headers
 	for key, val := range headers {
 		email.WriteString(fmt.Sprintf("%s: %s\r\n", key, val))
@@ -109,18 +102,20 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 	// Attach files
 	if len(attachments) > 0 {
 		for _, attachmentPath := range attachments {
-			file, err := os.Open(attachmentPath)
+			path := ""
+			if _, okPath := data["path"].(string); okPath {
+				path = data["path"].(string)
+			}
+			file, err := os.Open(fmt.Sprintf("%s/%s", path, attachmentPath))
 			if err != nil {
 				return fmt.Errorf("failed to open attachment %s: %v", attachmentPath, err)
 			}
 			defer file.Close()
-
 			// Read file content
-			fileContent, err := os.ReadFile(attachmentPath)
+			fileContent, err := os.ReadFile(fmt.Sprintf("%s/%s", path, attachmentPath))
 			if err != nil {
 				return fmt.Errorf("failed to read attachment %s: %v", attachmentPath, err)
 			}
-
 			// Create attachment part
 			fileName := filepath.Base(attachmentPath)
 			attachmentHeader := textproto.MIMEHeader{
@@ -129,7 +124,6 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 				"Content-Transfer-Encoding": {"base64"},
 			}
 			attachmentPart, _ := writer.CreatePart(attachmentHeader)
-
 			// Encode file content as base64
 			encoded := base64.StdEncoding.EncodeToString(fileContent)
 			attachmentPart.Write([]byte(encoded))
