@@ -230,7 +230,7 @@ FROM missing_columns;
 name: Notefication
 description: "Notefication"
 connection: "duckdb:"
-path: "static/uploads/tmp"
+path: "examples"
 active: true
 ```
 
@@ -256,15 +256,32 @@ subject: 'ETLX YYYYMMDD'
 body: body_tml
 _body: |
   <b>Good Morning</b><br />
-attachments:
-  - 'nyc_taxy_YYYYMMDD.csv'
+attachments_:
+  - hf.md
+  - http.md
 active: true
 ```
 
 ```html body_tml
 <b>Good Morning</b><br /><br />
 This email is gebnerated by ETLX automatically!<br />
-<strong>LOGS:</strong>
+{{ with .logs }}
+    {{ if eq .success true }}
+      <ul>
+        {{ range $.data }}
+          <li>
+            {{ .name }}
+          </li>
+        {{ else }}
+          <p>No items available</p>
+        {{ end }}
+      </ul>
+    {{ else }}
+      <p>{{.msg}}</p>
+    {{ end }}
+{{ else }}
+<p>Status information missing.</p>
+{{ end }}
 ```
 
 ```sql

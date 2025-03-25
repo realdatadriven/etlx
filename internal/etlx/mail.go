@@ -12,6 +12,8 @@ import (
 	"os"
 	"path/filepath"
 	"strings"
+
+	"github.com/Masterminds/sprig/v3"
 )
 
 // parseSlice converts an interface{} into a []string safely
@@ -34,7 +36,11 @@ func parseSlice(value any) []string {
 
 // renderTemplate processes the HTML template with the provided data
 func (etlx *ETLX) RenderTemplate(tmplStr string, data map[string]any) (string, error) {
-	tmpl, err := template.New("email").Parse(tmplStr)
+	//fmt.Println(tmplStr)
+	// Create a FuncMap with some common functions
+	//funcMap := sprig.FuncMap()
+	tmpl, err := template.New("email").Funcs(sprig.FuncMap()).Parse(tmplStr)
+	//tmpl, err := template.New("email").Funcs(funcMap).Parse(tmplStr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %v", err)
 	}
@@ -42,6 +48,7 @@ func (etlx *ETLX) RenderTemplate(tmplStr string, data map[string]any) (string, e
 	if err := tmpl.Execute(&buf, data); err != nil {
 		return "", fmt.Errorf("failed to execute template: %v", err)
 	}
+	//fmt.Println(buf.String())
 	return buf.String(), nil
 }
 
@@ -108,7 +115,8 @@ func (etlx *ETLX) SendEmail(data map[string]any) error {
 			}
 			file, err := os.Open(fmt.Sprintf("%s/%s", path, attachmentPath))
 			if err != nil {
-				return fmt.Errorf("failed to open attachment %s: %v", attachmentPath, err)
+				//return fmt.Errorf("failed to open attachment %s: %v", attachmentPath, err)
+				continue
 			}
 			defer file.Close()
 			// Read file content

@@ -201,7 +201,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 			if ok {
 				itemMetadata["body"] = body
 			}
-			itemMetadata["body"] = etlx.SetQueryPlaceholders(itemMetadata["body"].(string), table, fname, dateRef)
+			//itemMetadata["body"] = etlx.SetQueryPlaceholders(itemMetadata["body"].(string), table, fname, dateRef)
 			attachments, okAtt := itemMetadata["attachments"].([]any)
 			atts := []any{}
 			var aux_att any
