@@ -6,6 +6,7 @@ https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
 name: HTTP_EXTRACT
 description: "Example extrating from web to a local sqlite3 file"
 connection: "duckdb:"
+database: HTTP_EXTRACT.db
 active: true
 ```
 
@@ -253,7 +254,7 @@ cc: null
 bcc: null
 subject: 'ETLX YYYYMMDD'
 body: body_tml
-attachments:
+attachments_:
   - hf.md
   - http.md
 active: true
