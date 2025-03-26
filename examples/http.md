@@ -247,16 +247,13 @@ before_sql:
 data_sql:
   - logs
 after_sql: "DETACH DB"
-type: mail #sms
 to:
   - real.datadriven@gmail.com
 cc: null
 bcc: null
 subject: 'ETLX YYYYMMDD'
 body: body_tml
-_body: |
-  <b>Good Morning</b><br />
-attachments_:
+attachments:
   - hf.md
   - http.md
 active: true
@@ -267,20 +264,37 @@ active: true
 This email is gebnerated by ETLX automatically!<br />
 {{ with .logs }}
     {{ if eq .success true }}
-      <ul>
+      <table>
+        <tr>
+            <th>Name</th>
+            <th>Ref</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Duration</th>
+            <th>Success</th>
+            <th>Message</th>
+        </tr>
         {{ range $.data }}
-          <li>
-            {{ .name }}
-          </li>
+        <tr>
+            <td>{{ .name }}</td>
+            <td>{{ .ref }}</td>
+            <td>{{ .start_at }}</td>
+            <td>{{ .end_at }}</td>
+            <td>{{ .duration }}</td>
+            <td>{{ .success }}</td>
+            <td>{{ .msg }}</td>
+        </tr>
         {{ else }}
-          <p>No items available</p>
+        <tr>
+          <td colspan="7">No items available</td>
+        </tr>
         {{ end }}
-      </ul>
+      </table>
     {{ else }}
       <p>{{.msg}}</p>
     {{ end }}
 {{ else }}
-<p>Status information missing.</p>
+<p>Logs information missing.</p>
 {{ end }}
 ```
 

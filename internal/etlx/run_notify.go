@@ -195,7 +195,13 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			}
-			itemMetadata["data"] = data
+			if _, ok := itemMetadata["data"].(map[string]any); ok {
+				for key, d := range data {
+					itemMetadata["data"].(map[string]any)[key] = d
+				}
+			} else {
+				itemMetadata["data"] = data
+			}
 			itemMetadata["subject"] = etlx.SetQueryPlaceholders(itemMetadata["subject"].(string), table, fname, dateRef)
 			body, ok := item[itemMetadata["body"].(string)].(string)
 			if ok {

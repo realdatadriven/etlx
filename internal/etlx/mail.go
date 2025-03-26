@@ -36,9 +36,9 @@ func parseSlice(value any) []string {
 
 // renderTemplate processes the HTML template with the provided data
 func (etlx *ETLX) RenderTemplate(tmplStr string, data map[string]any) (string, error) {
-	//fmt.Println(tmplStr)
+	// fmt.Println(tmplStr)
 	// Create a FuncMap with some common functions
-	//funcMap := sprig.FuncMap()
+	// funcMap := sprig.FuncMap()
 	tmpl, err := template.New("email").Funcs(sprig.FuncMap()).Parse(tmplStr)
 	//tmpl, err := template.New("email").Funcs(funcMap).Parse(tmplStr)
 	if err != nil {
