@@ -61,6 +61,70 @@ func (etlx *ETLX) ExecuteQueryWithRowsAffected(conn db.DBInterface, sqlData any,
 	}
 }
 
+func (etlx *ETLX) DataQualityCheck(dbConn db.DBInterface, query any, item map[string]any, dateRef []time.Time) map[string]any {
+	sql := query.(string)
+	if _, ok := item[sql]; ok {
+		sql = item[sql].(string)
+	}
+	_log2 := map[string]any{}
+	column, okColumn := item["column"]
+	sql = etlx.SetQueryPlaceholders(sql, "", "", dateRef)
+	rows, _, err := etlx.Query(dbConn, sql, item, "", "", dateRef)
+	var nRows any
+	if err != nil {
+		_log2["success"] = false
+		_log2["msg"] = fmt.Sprintf("%s", err)
+		_log2["end_at"] = time.Now()
+		return _log2
+	}
+	if len(*rows) > 0 {
+		okConf := false
+		if column != nil && okColumn {
+			nRows, okConf = (*rows)[0][column.(string)]
+		} else {
+			nRows, okConf = (*rows)[0]["total"]
+		}
+		if okConf && nRows != nil {
+			_log2["success"] = true
+			_log2["end_at"] = time.Now()
+			_log2["nrows"] = nRows
+			/*if _, ok := nRows.(int64); ok {
+				if nRows.(int64) > 0 && fixQuery != nil && okFix {
+					rowsAffected, err := etlx.ExecuteQueryWithRowsAffected(dbConn, beforeSQL, item, "", "", dateRef)
+					if err != nil {
+						_log2["msg_fix"] = fmt.Sprintf("%s -> %s -> err executing fixes: %s", key, itemKey, err)
+					}
+					_log2["nrows_fixed"] = rowsAffected
+				}
+			}*/
+		} else {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("failed to get md conf string query: %s column %s", query, column)
+			_log2["end_at"] = time.Now()
+		}
+	} else {
+		_log2["success"] = true
+		_log2["end_at"] = time.Now()
+		_log2["nrows"] = 0
+	}
+	return _log2
+}
+
+func (etlx *ETLX) DataQualityFix(dbConn db.DBInterface, query any, item map[string]any, dateRef []time.Time) map[string]any {
+	_log2 := map[string]any{}
+	rowsAffected, err := etlx.ExecuteQueryWithRowsAffected(dbConn, query, item, "", "", dateRef)
+	if err != nil {
+		_log2["success"] = false
+		_log2["msg_fix"] = fmt.Sprintf("failed:  %s", err)
+		_log2["end_at"] = time.Now()
+	} else {
+		_log2["success"] = false
+		_log2["nrows_fixed"] = rowsAffected
+		_log2["end_at"] = time.Now()
+	}
+	return _log2
+}
+
 func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "DATA_QUALITY"
 	if len(keys) > 0 && keys[0] != "" {
@@ -158,8 +222,9 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		query, okQuery := itemMetadata["query"]
-		column, okColumn := itemMetadata["column"]
 		fixQuery, okFix := itemMetadata["fix_quality_err"]
+		fixOnly, okFixOnly := itemMetadata["fix_only"].(bool)
+		checkOnly, okCheckOnly := itemMetadata["check_only"].(bool)
 		afterSQL, okAfter := itemMetadata["after_sql"]
 		if okQuery && query != "" {
 			conn, okCon := itemMetadata["connection"]
@@ -204,59 +269,38 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, _log2)
 			}
 			// MAIN QUERY
-			sql := query.(string)
-			if _, ok := item[sql]; ok {
-				sql = item[sql].(string)
-			}
-			sql = etlx.SetQueryPlaceholders(sql, "", "", dateRef)
-			rows, _, err := etlx.Query(dbConn, sql, item, "", "", dateRef)
-			var nRows any
-			if err != nil {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute query: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
-				processLogs = append(processLogs, _log2)
-				return nil
-			}
-			if len(*rows) > 0 {
-				okConf := false
-				if column != nil && okColumn {
-					nRows, okConf = (*rows)[0][column.(string)]
-				} else {
-					nRows, okConf = (*rows)[0]["total"]
-				}
-				if okConf && nRows != nil {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> successfully executed", key, itemKey)
+			if okCheckOnly && checkOnly {
+				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
+				if !res["success"].(bool) {
+					_log2["success"] = res["success"]
+					_log2["msg"] = res["msg"]
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
-					_log2["nrows"] = nRows
-					if _, ok := nRows.(int64); ok {
-						if nRows.(int64) > 0 && fixQuery != nil && okFix {
-							rowsAffected, err := etlx.ExecuteQueryWithRowsAffected(dbConn, beforeSQL, item, "", "", dateRef)
-							if err != nil {
-								_log2["msg_fix"] = fmt.Sprintf("%s -> %s -> err executing fixes: %s", key, itemKey, err)
-							}
-							_log2["nrows_fixed"] = rowsAffected
-						}
-					}
-					processLogs = append(processLogs, _log2)
 				} else {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to get md conf string query: %s column %s", key, itemKey, query, column)
+					_log2["success"] = res["success"]
+					_log2["msg"] = fmt.Sprintf("%s -> %s CHECK: successfull", key, itemKey)
+					_log2["nrows"] = res["nrows"]
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
-					processLogs = append(processLogs, _log2)
-					return nil
 				}
-			} else {
-				_log2["success"] = true
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> successfully executed", key, itemKey)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
-				_log2["nrows"] = 0
 				processLogs = append(processLogs, _log2)
+			} else if okFixOnly && fixOnly && okFix {
+				res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
+				if !res["success"].(bool) {
+					_log2["success"] = res["success"]
+					_log2["msg"] = res["msg_fix"]
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+				} else {
+					_log2["success"] = res["success"]
+					_log2["msg"] = fmt.Sprintf("%s -> %s FIX: successfull", key, itemKey)
+					_log2["nrows_fixed"] = res["nrows_fixed"]
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+				}
+				processLogs = append(processLogs, _log2)
+			} else { // both
+
 			}
 			// QUERIES TO RUN AT THE END
 			if okAfter {

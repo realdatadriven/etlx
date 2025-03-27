@@ -1,6 +1,6 @@
 # ETL
 
-https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page
+<https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page>
 
 ```yaml metadata
 name: HTTP_EXTRACT
@@ -78,6 +78,45 @@ DELETE FROM "DB"."<table>";
 ```sql
 -- nrows
 SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
+```
+
+# DATA_QUALITY
+
+```yaml
+description: "Runs some queries to check quality / validate."
+active: true
+```
+
+## Rule0001
+
+```yaml
+name: Rule0001
+description: "Check if the field trip_distance from the NYC_TAXI is missing or zero"
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'database/HTTP_EXTRACT.db' AS \"DB\" (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: fix_quality_err_query
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "DB"."NYC_TAXI"
+WHERE "trip_distance" IS NULL
+  OR "trip_distance" = 0;
+```
+
+```sql
+-- fix_quality_err_query
+UPDATE "DB"."NYC_TAXI"
+  SET "trip_distance" = "trip_distance"
+WHERE "trip_distance" IS NULL
+  OR "trip_distance" = 0;
 ```
 
 # EXPORTS
@@ -275,7 +314,7 @@ This email is gebnerated by ETLX automatically!<br />
             <th>Success</th>
             <th>Message</th>
         </tr>
-        {{ range $.data }}
+        {{ range .data }}
         <tr>
             <td>{{ .name }}</td>
             <td>{{ .ref }}</td>
