@@ -208,6 +208,12 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				return nil
 			}
 		}
+		/*/ Pretty-print the map
+		jsonBytes, err := json.MarshalIndent(itemMetadata, "", "    ")
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(string(jsonBytes))*/
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		query, okQuery := itemMetadata["query"]
 		fixQuery, okFix := itemMetadata["fix_quality_err"]
@@ -278,7 +284,8 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			}
 			// MAIN QUERY
 			_log2["start_at"] = time.Now()
-			if okCheckOnly && checkOnly {
+			if okCheckOnly && checkOnly && !fixOnly {
+				//fmt.Println("CHECK ROWS ONLY!")
 				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
@@ -293,7 +300,8 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
 				}
 				processLogs = append(processLogs, _log2)
-			} else if okFixOnly && fixOnly && okFix {
+			} else if okFixOnly && fixOnly && okFix && !checkOnly {
+				//fmt.Println("FIXES ONLY!")
 				res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
@@ -308,7 +316,8 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
 				}
 				processLogs = append(processLogs, _log2)
-			} else { // both
+			} else {
+				//fmt.Println("BOTH CHECK AND FIXES!")
 				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
@@ -317,14 +326,14 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
 				} else {
 					_log2["success"] = res["success"]
-					_log2["msg"] = fmt.Sprintf("%s -> %s CHECK: successfull", key, itemKey)
+					_log2["msg"] = fmt.Sprintf("%s -> %s successfull", key, itemKey)
 					_log2["nrows"] = res["nrows"]
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
 					_nrows, okNrows := res["nrows"].(int64)
-					fmt.Println("RES NROWS:", res["nrows"], "PROC NROWS:", _nrows)
-					if okNrows && _nrows > 0 {
-						res := etlx.DataQualityFix(dbConn, fixQuery, itemMetadata, dateRef)
+					//fmt.Println("RES NROWS:", res["nrows"], "PROC NROWS:", _nrows)
+					if okNrows && _nrows > 0 && okFix {
+						res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
 						if !res["success"].(bool) {
 							_log2["success_fix"] = res["success"]
 							_log2["msg_fix"] = res["msg_fix"]
@@ -341,7 +350,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				}
 				processLogs = append(processLogs, _log2)
 			}
-			fmt.Println(_log2)
+			//fmt.Println(_log2)
 			// QUERIES TO RUN AT THE END
 			if okAfter {
 				start3 := time.Now()
@@ -365,11 +374,6 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				processLogs = append(processLogs, _log2)
 			}
 		}
-		_log2["success"] = true
-		_log2["msg"] = "Successfully loaded!"
-		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3)
-		processLogs = append(processLogs, _log2)
 		return nil
 	}
 	// Check if the input conf is nil or empty
