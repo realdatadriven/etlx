@@ -984,7 +984,7 @@ INSERT INTO "DB"."MULTI_QUERY" BY NAME
 ```
 ```sql
 -- create_mult_query_res
-CREATE OR REPLACE "DB"."MULTI_QUERY" AS
+CREATE OR REPLACE TABLE "DB"."MULTI_QUERY" AS
 [[final_query]]
 ```
 
@@ -992,10 +992,6 @@ CREATE OR REPLACE "DB"."MULTI_QUERY" AS
 ```yaml
 name: Row1
 description: "Row 1"
-connection: "duckdb:"
-before_sql:
-  - "LOAD sqlite"
-  - "ATTACH 'reporting.db' AS DB (TYPE SQLITE)"
 query: row_query
 active: true
 ```
@@ -1003,7 +999,7 @@ active: true
 ```sql
 -- row_query
 SELECT '# number of rows' AS "variable", COUNT(*) AS "value"
-FROM "sales";
+FROM "sales"
 ```
 
 ## Row2
@@ -1017,7 +1013,7 @@ active: true
 ```sql
 -- row_query
 SELECT 'total revenue' AS "variable", SUM("total") AS "value"
-FROM "sales";
+FROM "sales"
 ```
 
 ## Row3
@@ -1032,7 +1028,7 @@ active: true
 -- row_query
 SELECT "region" AS "variable", SUM("total") AS "value"
 FROM "sales"
-GROUP BY "region";
+GROUP BY "region"
 ```
 ````
 

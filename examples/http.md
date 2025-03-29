@@ -121,6 +121,84 @@ WHERE "trip_distance" IS NULL
   OR "trip_distance" = 0;
 ```
 
+# MULTI_QUERIES
+
+```yaml
+description: "Define multiple structured queries combined with UNION."
+connection: "duckdb:"
+before_sql:
+  - "LOAD sqlite"
+  - "ATTACH 'database/HTTP_EXTRACT.db' AS \"DB\" (TYPE SQLITE)"
+save_sql: save_mult_query_res
+save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+save_on_err_sql: create_mult_query_res
+after_sql: "DETACH DB"
+union_key: "UNION ALL\n" # Defaults to UNION.
+active: true
+```
+
+```sql
+-- save_mult_query_res
+INSERT INTO "DB"."MULTI_QUERY" BY NAME
+[[final_query]]
+```
+
+```sql
+-- create_mult_query_res
+CREATE OR REPLACE TABLE "DB"."MULTI_QUERY" AS
+[[final_query]]
+```
+
+## Row1
+
+```yaml
+name: Row1
+description: "Row 1"
+query: row_query
+active: true
+```
+
+```sql
+-- row_query
+SELECT '# number of rows' AS "variable", COUNT(*) AS "value"
+FROM "DB"."NYC_TAXI"
+```
+
+## Row2
+
+```yaml
+name: Row2
+description: "Row 2"
+query: row_query
+active: true
+```
+
+```sql
+-- row_query
+SELECT 'total revenue' AS "variable", SUM("total_amount") AS "value"
+FROM "DB"."NYC_TAXI"
+```
+
+## Row3
+
+```yaml
+name: Row3
+description: "Row 3"
+query: row_query
+active: true
+```
+
+```sql
+-- row_query
+SELECT *
+FROM (
+  SELECT "DOLocationID" AS "variable", SUM("total_amount") AS "value"
+  FROM "DB"."NYC_TAXI"
+  GROUP BY "DOLocationID"
+  ORDER BY "DOLocationID"
+) AS "T"
+```
+
 # EXPORTS
 
 Exports data to files.

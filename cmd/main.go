@@ -115,13 +115,14 @@ func main() {
 	}
 	// MULTI_QUERIES
 	if _, ok := etlxlib.Config["MULTI_QUERIES"]; ok {
-		res, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
+		_logs, _data, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("MULTI_QUERIES ERR: %v\n", err)
 		}
-		for _, r := range res {
+		for _, r := range _data {
 			fmt.Println(r)
 		}
+		logs = append(logs, _logs...)
 	}
 	// LOGS
 	if _, ok := etlxlib.Config["LOGS"]; ok {
@@ -137,4 +138,15 @@ func main() {
 			fmt.Printf("LOGS ERR: %v\n", err)
 		}
 	}
+
+	/*_keys := []any{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL"}
+	for key := range etlxlib.Config {
+		if !etlxlib.containsAny(_keys, key) {
+			if runs_as, ok := etlxlib.Config["runs_as"]; ok {
+				if etlxlib.containsAny(_keys, runs_as) {
+
+				}
+			}
+		}
+	}*/
 }
