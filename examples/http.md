@@ -99,6 +99,8 @@ before_sql:
 query: quality_check_query
 fix_quality_err: fix_quality_err_query
 column: total_reg_with_err # Defaults to 'total'.
+check_only: true
+fix_only: false 
 after_sql: "DETACH DB"
 active: true
 ```
@@ -208,7 +210,7 @@ after_sql:
   - 'USE memory;'
   - detach_db
 tmp_dir: /tmp
-active: false
+active: true
 ```
 
 ```sql
@@ -271,7 +273,7 @@ name: Notefication
 description: "Notefication"
 connection: "duckdb:"
 path: "examples"
-active: true
+active: false
 ```
 
 ## ETL_STATUS

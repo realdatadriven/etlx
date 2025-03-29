@@ -133,12 +133,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				return nil
 			}
 		}
-		start3 := time.Now()
-		_log2 := map[string]any{
-			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": itemMetadata["description"].(string),
-			"key":         key, "item_key": itemKey, "start_at": start3,
-		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		exportSQL, okExport := itemMetadata["export_sql"]
 		afterSQL, okAfter := itemMetadata["after_sql"]
@@ -146,6 +140,24 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		mapping, okMapping := itemMetadata["mapping"]
 		tmpPrefix, okTmpPrefix := itemMetadata["tmp_prefix"]
 		conn, okCon := itemMetadata["connection"]
+		dtRef, okDtRef := itemMetadata["date_ref"]
+		if okDtRef && dtRef != "" {
+			_dt, err := time.Parse("2006-01-02", dtRef.(string))
+			if err == nil {
+				dateRef = append([]time.Time{}, _dt)
+			}
+		} else {
+			if len(dateRef) > 0 {
+				dtRef = dateRef[0].Format("2006-01-02")
+			}
+		}
+		start3 := time.Now()
+		_log2 := map[string]any{
+			"name":        fmt.Sprintf("%s->%s", key, itemKey),
+			"description": itemMetadata["description"].(string),
+			"key":         key, "item_key": itemKey, "start_at": start3,
+			"ref": dtRef,
+		}
 		if !okCon {
 			conn = mainConn
 		}

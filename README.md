@@ -596,6 +596,8 @@ before_sql:
 query: quality_check_query
 fix_quality_err: fix_quality_err_query
 column: total_reg_with_err # Defaults to 'total'.
+check_only: false # runs only quality check if true
+fix_only: false # runs only quality fix if true and available and possible
 after_sql: "DETACH DB"
 active: true
 ```
