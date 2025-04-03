@@ -3,6 +3,7 @@ package db
 import (
 	"context"
 	"database/sql"
+	"encoding/csv"
 	"errors"
 	"fmt"
 	"net/url"
@@ -14,6 +15,7 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
+	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 )
@@ -138,7 +140,7 @@ func adjustQuery(driver, query string) string {
 	} else if driver == "mysql" {
 		// Replace double quotes " with backticks ` for MySQL
 		return strings.ReplaceAll(query, `"`, "`")
-	} else if driver == "sqlserver" {
+	} else if driver == "mssql" {
 		return strings.ReplaceAll(query, `"`, "")
 	}
 	// SQLite uses ? placeholders, so no changes needed
@@ -675,7 +677,76 @@ func ParsePostgresConnString(connStr string) (map[string]string, error) {
 }
 
 func (db *DB) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
-	return false, fmt.Errorf("not implemented yet %s", "_")
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
+	defer cancel()
+	rows, err := db.QueryContext(ctx, query, params...)
+	if err != nil {
+		//fmt.Println(1, err)
+		return false, err
+	}
+	defer rows.Close()
+	csvFile, err := os.Create(csv_path)
+	if err != nil {
+		return false, fmt.Errorf("error creating CSV file: %w", err)
+	}
+	defer csvFile.Close()
+	// CSV
+	csvWriter := csv.NewWriter(csvFile)
+	defer csvWriter.Flush()
+	// Get column names
+	columns, err := rows.Columns()
+	if err != nil {
+		return false, fmt.Errorf("error getting column names: %w", err)
+	}
+	// Write column names to CSV header
+	csvWriter.Write(columns)
+	for rows.Next() {
+		row, err := ScanRowToMap(rows)
+		if err != nil {
+			return false, fmt.Errorf("failed to scan row to map: %w", err)
+		}
+		var rowData []string
+		//for _, value := range row {
+		for _, col := range columns {
+			value := row[col]
+			//rowData = append(rowData, fmt.Sprintf("%v", value))
+			switch v := value.(type) {
+			case nil:
+				// Format integer types
+				rowData = append(rowData, "")
+			case int, int8, int16, int32, int64:
+				// Format integer types
+				rowData = append(rowData, fmt.Sprintf("%d", v))
+			case float64, float32:
+				//fmt.Println(col, v)
+				// Format large numbers without scientific notation
+				hasDec, err := hasDecimalPlace(v)
+				if err != nil {
+					fmt.Println(err)
+					rowData = append(rowData, fmt.Sprintf("%v", value))
+				} else if hasDec {
+					rowData = append(rowData, fmt.Sprintf("%f", v))
+				} else {
+					rowData = append(rowData, fmt.Sprintf("%.f", v))
+				}
+			case []byte:
+				// Convert byte slice (UTF-8 data) to a string
+				utf8Str, err := convertToUTF8(string(v))
+				if err != nil {
+					fmt.Println("Failed to convert to UTF-8:", v, err)
+				}
+				rowData = append(rowData, strings.TrimSpace(string(utf8Str)))
+			default:
+				// Default formatting for other types
+				rowData = append(rowData, fmt.Sprintf("%v", value))
+			}
+		}
+		csvWriter.Write(rowData)
+	}
+	if err := rows.Err(); err != nil {
+		return false, fmt.Errorf("error iterating rows: %w", err)
+	}
+	return true, nil
 }
 
 func contains(slice []interface{}, element interface{}) bool {

@@ -257,6 +257,10 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	if _, ok := metadata["odbc_to_csv"]; ok {
 		odbc2Csv = metadata["odbc_to_csv"].(bool)
 	}
+	toCsv := false
+	if _, ok := metadata["to_csv"]; ok {
+		toCsv = metadata["to_csv"].(bool)
+	}
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
 	}
@@ -301,7 +305,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 			fmt.Println(_file)
 		}
-		if odbc2Csv && conn.GetDriverName() == "odbc" && step == "extract" {
+		if ((odbc2Csv && conn.GetDriverName() == "odbc") || toCsv) && step == "extract" {
 			_, err := conn.Query2CSV(query, fname)
 			if err != nil {
 				return err
@@ -348,7 +352,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				}
 				fmt.Println(_file)
 			}
-			if odbc2Csv && conn.GetDriverName() == "odbc" && step == "extract" {
+			if ((odbc2Csv && conn.GetDriverName() == "odbc") || toCsv) && step == "extract" {
 				_, err := conn.Query2CSV(query, fname)
 				if err != nil {
 					return err
