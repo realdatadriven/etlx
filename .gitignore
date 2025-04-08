@@ -31,3 +31,4 @@ tmp/
 bin/
 .air.toml
 logs.*.json
+*.xlsx

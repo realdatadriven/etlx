@@ -61,6 +61,19 @@ func getStartOfRange(input string) (int, string, error) {
 	return row, column, nil
 }
 
+func columnIndexToName(n int) string {
+	name := ""
+	for n >= 0 {
+		name = string(rune('A'+(n%26))) + name
+		n = n/26 - 1
+	}
+	return name
+}
+
+func isEmpty(s string) bool {
+	return len(s) == 0
+}
+
 func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "EXPORTS"
 	if len(keys) > 0 && keys[0] != "" {
@@ -76,7 +89,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	mainDescription := ""
 	// Define the runner as a simple function
 	EXPORTSRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
-		//fmt.Println(metadata, itemKey, item)
+		// fmt.Println(metadata, itemKey, item)
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
@@ -186,15 +199,15 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 		}
 		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
-		if okPath && path != "" {
+		if okPath && path != "" && !isEmpty(path) {
 			fname = path
 			if filepath.IsAbs(fname) {
-			} else if filepath.IsLocal(fname) {
+			} else if filepath.IsLocal(fname) && !isEmpty(mainPath) {
 				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
 			} else if filepath.Dir(fname) != "" && okMainPath && mainPath != "" {
 				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
 			}
-		} else if okMainPath && mainPath != "" {
+		} else if okMainPath && mainPath != "" && !isEmpty(mainPath) {
 			fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, mainPath, table)
 		}
 		// QUERIES TO RUN AT BEGINING
@@ -220,7 +233,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			processLogs = append(processLogs, _log2)
 		}
 		// MAIN QUERIES
-		if okExport {
+		if okExport && !(okTemplate && okMapping) {
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
@@ -266,6 +279,18 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["duration"] = time.Since(start3)
 			} else {
 				// Check for supported spreadsheet extensions
+				tmpl := template.(string)
+				// fmt.Printf("%T: %s %v", path, path, path != "")
+				if okPath && path != "" && !isEmpty(path) {
+					tmpl = path
+					if filepath.IsAbs(tmpl) {
+					} else if filepath.IsLocal(tmpl) && !isEmpty(mainPath) {
+						tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
+					} else if filepath.Dir(tmpl) != "" && okMainPath && mainPath != "" {
+						tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
+					}
+				}
+				template = tmpl
 				ext := filepath.Ext(template.(string))
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
 					_log2["success"] = false
@@ -412,7 +437,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					// Convert the start column to an integer offset
 					startColIndex := int(strings.ToUpper(col)[0] - 'A')
 					if _type == "value" {
-						cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+						// cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+						// fmt.Println(columnIndexToName(startColIndex))
+						cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
 						if err != nil {
 							fmt.Printf("failed to set columns: %s\n", err)
 						}
@@ -438,7 +465,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						// Write column headers
 						if header {
 							for colIdx, colName := range columns {
-								cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), startRow)
+								// cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), startRow)
+								cell, err := excelize.JoinCellName(columnIndexToName(startColIndex+colIdx), startRow)
 								if err != nil {
 									fmt.Printf("failed to set columns: %s\n", err)
 								}
@@ -449,7 +477,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						// Write data rows
 						for _, value := range *rows {
 							for colIdx, colName := range columns {
-								cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), rowIdx)
+								//cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), rowIdx)
+								cell, err := excelize.JoinCellName(columnIndexToName(startColIndex+colIdx), rowIdx)
 								if err != nil {
 									fmt.Printf("failed to set columns: %s\n", err)
 								}
@@ -459,11 +488,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						}
 						// Create Excel table if `table` is specified
 						if table != "" {
-							startCell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+							//startCell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+							startCell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
 							if err != nil {
 								fmt.Printf("failed to set columns: %s\n", err)
 							}
-							endCell, err := excelize.JoinCellName(string(rune('A'+startColIndex+len(columns)-1)), rowIdx-1)
+							//endCell, err := excelize.JoinCellName(string(rune('A'+startColIndex+len(columns)-1)), rowIdx-1)
+							endCell, err := excelize.JoinCellName(columnIndexToName(startColIndex+len(columns)-1), rowIdx-1)
 							if err != nil {
 								fmt.Printf("failed to set columns: %s\n", err)
 							}
@@ -504,11 +535,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 								_formula_column := _formula_value["column"].(string)
 								_formula := _formula_value["formula"].(string)
 								formulaColIndex := int(strings.ToUpper(_formula_column)[0] - 'A')
-								startCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), startRow+1)
+								//startCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), startRow+1)
+								startCell, err := excelize.JoinCellName(columnIndexToName(formulaColIndex), startRow+1)
 								if err != nil {
 									fmt.Printf("failed to set columns: %s\n", err)
 								}
-								endCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), rowIdx-1)
+								//endCell, err := excelize.JoinCellName(string(rune('A'+formulaColIndex)), rowIdx-1)
+								endCell, err := excelize.JoinCellName(columnIndexToName(formulaColIndex), rowIdx-1)
 								if err != nil {
 									fmt.Printf("failed to set columns: %s\n", err)
 								}
@@ -555,6 +588,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["fname"] = outputFile
 				}
 			}
+			processLogs = append(processLogs, _log2)
+		} else {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s -> %s: Missconfiguration, it was unable to identify export type", key, itemKey)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3)
 			processLogs = append(processLogs, _log2)
 		}
 		// QUERIES TO RUN AT THE END

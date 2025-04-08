@@ -409,7 +409,7 @@ If the database you are using does not have a direct DuckDB scanner, but it is s
 name: table_from_odbc_source
 description: 'This is an example o how to extract from databases that does not have a DuckDB scanner'
 to_csv: true
-extract_con: 'odbc:DRIVER={ODBC Driver 17 for SQL Server};SERVER=@MSSQL_HOST;UID=@MSSQL_USER;PWD=@MSSQL_PASS;DATABASE=DB'
+extract_conn: 'odbc:DRIVER={ODBC Driver 17 for SQL Server};SERVER=@MSSQL_HOST;UID=@MSSQL_USER;PWD=@MSSQL_PASS;DATABASE=DB'
 extract_sql: |
   SELECT [fields]
   FROM [table]

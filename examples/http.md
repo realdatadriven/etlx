@@ -84,7 +84,7 @@ SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
 
 ```yaml
 description: "Runs some queries to check quality / validate."
-active: true
+active: false
 ```
 
 ## Rule0001
@@ -134,7 +134,7 @@ save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
 save_on_err_sql: create_mult_query_res
 after_sql: "DETACH DB"
 union_key: "UNION ALL\n" # Defaults to UNION.
-active: true
+active: false
 ```
 
 ```sql
@@ -207,8 +207,8 @@ Exports data to files.
 name: DailyReports
 description: "Daily reports"
 connection: "duckdb:"
-path: "static/uploads/tmp"
-active: false
+#path: "static/uploads/tmp"
+active: true
 ```
 
 ## CSV_EXPORT
@@ -225,7 +225,7 @@ export_sql: export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.csv'
 tmp_prefix: 'tmp'
-active: true
+active: false
 ```
 
 ```sql
@@ -254,7 +254,7 @@ export_sql: xl_export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.xlsx'
 tmp_prefix: 'tmp'
-active: true
+active: false
 ```
 
 ```sql
@@ -265,6 +265,66 @@ COPY (
     WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
     LIMIT 100
 ) TO '<fname>' (FORMAT XLSX, HEADER TRUE, SHEET 'NYC');
+```
+
+## XLSX_TMPL
+
+```yaml metadata
+name: XLSX_TMPL
+description: "Export data to Excel template"
+connection: "duckdb:"
+before_sql:
+  - "INSTALL sqlite"
+  - "LOAD sqlite"
+  - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
+after_sql: "DETACH DB"
+tmp_prefix: 'tmp'
+template: "./examples/nyc_taxy_YYYYMMDD.xlsx"
+path: "./examples/nyc_taxy_YYYYMMDD.xlsx"
+mapping:
+  - sheet: resume
+    range: A2
+    sql: resume
+    type: value
+    key: total
+  - sheet: detail
+    range: A1
+    sql: detail
+    type: range
+    header: true
+active: true
+```
+
+```sql
+-- resume
+SELECT COUNT(*) AS "total"
+FROM "DB"."NYC_TAXI"
+WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
+```
+
+```sql
+-- detail2
+SELECT *
+FROM "DB"."NYC_TAXI"
+WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
+LIMIT 100
+```
+
+```sql
+-- detail
+pivot (select * from "DB"."NYC_TAXI") as t
+on strftime("tpep_pickup_datetime"::datetime, '%d')
+using sum(total_amount) AS total, count(*) AS total_trips
+group by PULocationID
+```
+
+
+```sql
+-- data_to_export
+SELECT *
+FROM "DB"."NYC_TAXI"
+WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
+LIMIT 100
 ```
 
 # LOGS
