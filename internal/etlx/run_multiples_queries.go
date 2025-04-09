@@ -174,7 +174,34 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		"description": metadata["description"].(string),
 		"key":         key, "start_at": start3,
 	}
-	if saveSQL != "" && okSave {
+	// CHECK CONDITION
+	condition, okCondition := metadata["condition"].(string)
+	condMsg, okCondMsg := metadata["condition_msg"].(string)
+	failedCondition := false
+	if okCondition && condition != "" {
+		cond, err := etlx.ExecuteCondition(dbConn, condition, metadata, "", "", dateRef)
+		if err != nil {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", err)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3)
+			processLogs = append(processLogs, _log2)
+			//return fmt.Errorf("%s", _log2["msg"])
+			failedCondition = true
+		} else if !cond {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, "", condition)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3)
+			if okCondMsg && condMsg != "" {
+				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
+			}
+			processLogs = append(processLogs, _log2)
+			// return fmt.Errorf("%s", _log2["msg"])
+			failedCondition = true
+		}
+	}
+	if saveSQL != "" && okSave && !failedCondition {
 		data["final_query"] = sql // PUT THE QUERY GENERATED IN THE SCOPE
 		// fmt.Println(data[saveSQL.(string)])
 		err = etlx.ExecuteQuery(dbConn, saveSQL, data, "", "", dateRef)
@@ -219,7 +246,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["duration"] = time.Since(start3)
 		}
 		processLogs = append(processLogs, _log2)
-	} else {
+	} else if !failedCondition {
 		rows, _, err := etlx.Query(dbConn, sql, data, "", "", dateRef)
 		if err != nil {
 			_log2["success"] = false

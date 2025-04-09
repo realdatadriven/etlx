@@ -232,8 +232,35 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			processLogs = append(processLogs, _log2)
 		}
+		// CHECK CONDITION
+		condition, okCondition := itemMetadata["condition"].(string)
+		condMsg, okCondMsg := itemMetadata["condition_msg"].(string)
+		failedCondition := false
+		if okCondition && condition != "" {
+			cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, fname, "", dateRef)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
+				_log2["end_at"] = time.Now()
+				_log2["duration"] = time.Since(start3)
+				processLogs = append(processLogs, _log2)
+				//return fmt.Errorf("%s", _log2["msg"])
+				failedCondition = true
+			} else if !cond {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, itemKey, condition)
+				_log2["end_at"] = time.Now()
+				_log2["duration"] = time.Since(start3)
+				if okCondMsg && condMsg != "" {
+					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
+				}
+				processLogs = append(processLogs, _log2)
+				// return fmt.Errorf("%s", _log2["msg"])
+				failedCondition = true
+			}
+		}
 		// MAIN QUERIES
-		if okExport && !(okTemplate && okMapping) {
+		if okExport && !(okTemplate && okMapping) && !failedCondition {
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
@@ -264,7 +291,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["fname"] = fname
 			}
 			processLogs = append(processLogs, _log2)
-		} else if okTemplate && okMapping {
+		} else if okTemplate && okMapping && !failedCondition {
 			start3 := time.Now()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),

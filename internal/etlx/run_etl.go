@@ -74,6 +74,39 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 	return data, cols, nil
 }
 
+func (etlx *ETLX) ExecuteCondition(conn db.DBInterface, query string, item map[string]any, fname string, step string, dateRef []time.Time) (bool, error) {
+	table := ""
+	metadata, ok := item["metadata"].(map[string]any)
+	if ok {
+		table, _ = metadata["table"].(string)
+	}
+	if fname == "" {
+		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+	}
+	if _, ok := item[query].(string); ok {
+		query = item[query].(string)
+	}
+	query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s_%s.*.sql", "valid", table))
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(_file)
+	}
+	data, cols, _, err := conn.QueryMultiRowsWithCols(query, []any{}...)
+	if err != nil {
+		return false, err
+	} else if len(cols) > 0 && len(*data) > 0 {
+		val := (*data)[0][cols[0]]
+		if _, ok := val.(bool); !ok {
+		} else if val.(bool) {
+			return true, nil
+		}
+	}
+	return false, nil
+}
+
 // ReplacePlaceholders replaces placeholders in the format [[query_name]] with their corresponding values from the item map.
 func (etlx *ETLX) ReplacePlaceholders(sql string, item map[string]any) (string, error) {
 	// Define a regex to match placeholders in the format [[query_name]]
@@ -688,8 +721,35 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				}
 				processLogs = append(processLogs, _log3)
 			}
+			// check condition
+			condition, okCondition := itemMetadata[step+"_condition"].(string)
+			condMsg, okCondMsg := itemMetadata[step+"_condition_msg"].(string)
+			failedCondition := false
+			if okCondition && condition != "" {
+				cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, fname, "", dateRef)
+				if err != nil {
+					_log3["success"] = false
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, err)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					processLogs = append(processLogs, _log3)
+					// return fmt.Errorf("%s", _log3["msg"])
+					failedCondition = true
+				} else if !cond {
+					_log3["success"] = false
+					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed the condition %s was not met!", key, step, itemKey, condition)
+					_log3["end_at"] = time.Now()
+					_log3["duration"] = time.Since(start4)
+					if okCondMsg && condMsg != "" {
+						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
+					}
+					processLogs = append(processLogs, _log3)
+					//return fmt.Errorf("%s", _log3["msg"])
+					failedCondition = true
+				}
+			}
 			// Process main SQL
-			if okMain && !drop.(bool) && !clean.(bool) && !rows.(bool) {
+			if okMain && !drop.(bool) && !clean.(bool) && !rows.(bool) && !failedCondition {
 				// VALIDATION
 				isValid := true
 				validErr := ""
