@@ -32,3 +32,9 @@ bin/
 .air.toml
 logs.*.json
 *.xlsx
+*.csv
+*.parquet
+*.ddb
+*.zip
+*.gz
+*nyc*

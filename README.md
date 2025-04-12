@@ -1481,8 +1481,25 @@ params:
   host: "ftp.example.com"
   username: "myuser"
   password: "@FTP_PASSWORD"
-  remote_path: "/data/daily_report.csv"
-  local_path: "downloads/daily_report.csv"
+  source: "/data/daily_report.csv"
+  target: "downloads/daily_report.csv"
+active: true
+```
+
+## SFTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: "Download data file from external SFTP"
+type: stp_download
+params:
+  host: "sftp.example.com"
+  username: "myuser"
+  password: "@SFTP_PASSWORD"
+  host_key: ~/.ssh/known_hosts # or a specific file
+  port: 22
+  source: "/data/daily_report.csv"
+  target: "downloads/daily_report.csv"
 active: true
 ```
 

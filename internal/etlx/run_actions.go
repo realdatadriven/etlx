@@ -1,58 +1,11 @@
 package etlxlib
 
 import (
-	"archive/zip"
-	"compress/gzip"
 	"fmt"
-	"io"
 	"os"
 	"path/filepath"
 	"time"
 )
-
-func (etlx *ETLX) CompressToZip(files []string, output string) error {
-	outFile, err := os.Create(output)
-	if err != nil {
-		return err
-	}
-	defer outFile.Close()
-	zipWriter := zip.NewWriter(outFile)
-	defer zipWriter.Close()
-	for _, file := range files {
-		inFile, err := os.Open(file)
-		if err != nil {
-			return err
-		}
-		defer inFile.Close()
-
-		w, err := zipWriter.Create(filepath.Base(file))
-		if err != nil {
-			return err
-		}
-		_, err = io.Copy(w, inFile)
-		if err != nil {
-			return err
-		}
-	}
-	return nil
-}
-
-func (etlx *ETLX) CompressToGZ(input string, output string) error {
-	inFile, err := os.Open(input)
-	if err != nil {
-		return err
-	}
-	defer inFile.Close()
-	outFile, err := os.Create(output)
-	if err != nil {
-		return err
-	}
-	defer outFile.Close()
-	gzWriter := gzip.NewWriter(outFile)
-	defer gzWriter.Close()
-	_, err = io.Copy(gzWriter, inFile)
-	return err
-}
 
 func addMainPath(fname string, mainPath string) string {
 	if filepath.IsAbs(fname) {
@@ -235,6 +188,98 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			default:
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported compression type %s", key, itemKey, _type, compression)
+			}
+		case "ftp_upload":
+			host, _ := params["host"].(string)
+			port, _ := params["port"].(string) // if not int, use string + strconv.Atoi
+			user, _ := params["user"].(string)
+			password, _ := params["password"].(string)
+			source, _ := params["source"].(string)
+			target, _ := params["target"].(string)
+			if host == "" || source == "" || target == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
+				break
+			}
+			host = etlx.ReplaceEnvVariable(host)
+			port = etlx.ReplaceEnvVariable(port)
+			user = etlx.ReplaceEnvVariable(user)
+			password = etlx.ReplaceEnvVariable(password)
+			source = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			target = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			err := etlx.FTPUpload(host, port, user, password, source, target)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP upload failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP upload successful", key, itemKey, _type)
+			}
+		case "ftp_download":
+			host, _ := params["host"].(string)
+			port, _ := params["port"].(string) // if not int, use string + strconv.Atoi
+			user, _ := params["user"].(string)
+			password, _ := params["password"].(string)
+			source, _ := params["source"].(string)
+			target, _ := params["target"].(string)
+			if host == "" || source == "" || target == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
+				break
+			}
+			host = etlx.ReplaceEnvVariable(host)
+			port = etlx.ReplaceEnvVariable(port)
+			user = etlx.ReplaceEnvVariable(user)
+			password = etlx.ReplaceEnvVariable(password)
+			source = etlx.SetQueryPlaceholders(source, "", "", dateRef)
+			target = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			if host == "" || source == "" || target == "" {
+				fmt.Println("ftp_download missing required params")
+				break
+			}
+			err := etlx.FTPDownload(host, port, user, password, source, target)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP download failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP download successful", key, itemKey, _type)
+			}
+		case "sftp_upload":
+			source, _ := params["source"].(string)
+			target, _ := params["target"].(string)
+			if source == "" || target == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP missing required params (source | target)", key, itemKey, _type)
+				break
+			}
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			params["target"] = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			err := etlx.SFTPActionWithFixedHostKey("upload", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP upload failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP upload successful", key, itemKey, _type)
+			}
+		case "sftp_download":
+			source, _ := params["source"].(string)
+			target, _ := params["target"].(string)
+			if source == "" || target == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP missing required params (source | target)", key, itemKey, _type)
+				break
+			}
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			params["target"] = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			err := etlx.SFTPActionWithFixedHostKey("download", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP download failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP download successful", key, itemKey, _type)
 			}
 		default:
 			_log2["success"] = false
