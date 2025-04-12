@@ -207,7 +207,7 @@ Exports data to files.
 name: DailyReports
 description: "Daily reports"
 connection: "duckdb:"
-path: "examples"
+path: "static/uploads/tmp"
 active: true
 ```
 
@@ -224,8 +224,8 @@ before_sql:
 export_sql: export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.csv'
-tmp_prefix: null
-active: true
+tmp_prefix: 'tmp'
+active: false
 ```
 
 ```sql
@@ -253,8 +253,8 @@ before_sql:
 export_sql: xl_export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.xlsx'
-tmp_prefix: null
-active: true
+tmp_prefix: 'tmp'
+active: false
 ```
 
 ```sql
@@ -278,8 +278,8 @@ before_sql:
   - "LOAD sqlite"
   - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
 after_sql: "DETACH DB"
-tmp_prefix: null
-template: "nyc_taxy_YYYYMMDD.xlsx"
+tmp_prefix: 'tmp'
+template: "../nyc_taxy_YYYYMMDD.xlsx"
 path: "nyc_taxy_YYYYMMDD.xlsx"
 mapping:
   - sheet: resume
@@ -303,7 +303,7 @@ WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
 ```
 
 ```sql
--- detail_old
+-- detail2
 SELECT *
 FROM "DB"."NYC_TAXI"
 WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'

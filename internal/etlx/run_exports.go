@@ -298,6 +298,16 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
 			}
+			// Check for supported spreadsheet extensions
+			tmpl := template.(string)
+			// fmt.Printf("%T: %s %v", path, path, path != "")
+			if filepath.IsLocal(tmpl) && !isEmpty(mainPath) {
+				tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
+			} else if filepath.Dir(tmpl) != "" && okMainPath && mainPath != "" {
+				tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
+			}
+			template = tmpl
+			//fmt.Println(template)
 			//fmt.Println(template, mapping)
 			if ok, _ := fileExists(template.(string)); !ok {
 				_log2["success"] = false
@@ -305,19 +315,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			} else {
-				// Check for supported spreadsheet extensions
-				tmpl := template.(string)
-				// fmt.Printf("%T: %s %v", path, path, path != "")
-				if okPath && path != "" && !isEmpty(path) {
-					tmpl = path
-					if filepath.IsAbs(tmpl) {
-					} else if filepath.IsLocal(tmpl) && !isEmpty(mainPath) {
-						tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
-					} else if filepath.Dir(tmpl) != "" && okMainPath && mainPath != "" {
-						tmpl = fmt.Sprintf(`%s/%s`, mainPath, tmpl)
-					}
-				}
-				template = tmpl
 				ext := filepath.Ext(template.(string))
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
 					_log2["success"] = false
@@ -357,7 +354,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				switch _map := mapping.(type) {
 				case nil:
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s error mapeamento vazio", key, itemKey)
+					_log2["msg"] = fmt.Sprintf("%s -> %s error mapping empty", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
 					processLogs = append(processLogs, _log2)
@@ -605,6 +602,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
 					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
+					// fmt.Println(path, filepath.IsAbs(path))
 					if !filepath.IsAbs(path) {
 						if okTmpPrefix && tmpPrefix != "" {
 							fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
@@ -612,7 +610,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							fname = etlx.ReplaceQueryStringDate(path, dateRef)
 						}
 					}
-					_log2["fname"] = outputFile
+					_log2["fname"] = fname
 				}
 			}
 			processLogs = append(processLogs, _log2)

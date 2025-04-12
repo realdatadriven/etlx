@@ -52,6 +52,7 @@ func main() {
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 		etlxlib.PrintConfigAsJSON(etlxlib.Config)
 	}
+	etlxlib.PrintConfigAsJSON(etlxlib.Config)
 	/*/ Walk through the data and process each key-value pair
 	etlxlib.Walk(etlxlib.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
@@ -121,6 +122,17 @@ func main() {
 		}
 		for _, r := range _data {
 			fmt.Println(r)
+		}
+		logs = append(logs, _logs...)
+	}
+	// ACTIONS
+	if _, ok := etlxlib.Config["ACTIONS"]; ok {
+		_logs, err := etlxlib.RunACTIONS(dateRef, nil, extraConf)
+		if err != nil {
+			fmt.Printf("ACTIONS ERR: %v\n", err)
+		}
+		for _, r := range _logs {
+			fmt.Println(r["name"], r["msg"])
 		}
 		logs = append(logs, _logs...)
 	}

@@ -57,6 +57,7 @@ By leveraging DuckDB's powerful in-memory processing capabilities, this framewor
    - [Scripts](#scripts)
    - [Multi-Queries](#multi-queries)
    - [Loading Config Dependencies](#loading-config-dependencies)
+   - [Actions](#actions)
    - [Notification](#notify)
 5. [Advanced Usage](#5-advanced-usage)
 6. [Embedding in Go](#6-embedding-in-go)
@@ -1338,6 +1339,174 @@ For the example above, the following happens:
 By leveraging the `REQUIRES` section, you can maintain a clean and scalable ETL configuration structure, promoting reusability and modular design.
 
 ---
+
+### ACTIONS
+
+(still under development)
+
+There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone (e.g., uploading templates or metadata files to S3, FTP, HTTP, etc.).
+
+To support this, ETLX introduces a special section called **`ACTIONS`**, which allows you to define steps for copying or transferring files using the file system or external protocols.
+
+---
+
+#### **ACTIONS Structure**
+
+Each action under the `ACTIONS` section has the following:
+
+- `name`: Unique name for the action.
+- `description`: Human-readable explanation.
+- `type`: The kind of action to perform. Options:
+  - `copy_file`
+  - `compress`
+  - `ftp_download`
+  - `ftp_upload`
+  - `http_download`
+  - `http_upload`
+  - `s3_download`
+  - `s3_upload`
+- `params`: A map of input parameters required by the action type.
+
+---
+
+````markdown
+
+# ACTIONS
+
+```yaml metadata
+name: FileOperations
+description: "Transfer and organize generated reports"
+path: examples
+active: true
+```
+
+---
+
+## COPY LOCAL FILE
+
+```yaml metadata
+name: CopyReportToArchive
+description: "Move final report to archive folder"
+type: copy_file
+params:
+  source: "C:/reports/final_report.xlsx"
+  target: "C:/reports/archive/final_report_YYYYMMDD.xlsx"
+active: true
+```
+
+---
+
+### Compress to ZIP
+
+```yaml metadata
+name: CompressReports
+description: "Compress report files into a .zip archive"
+type: compress
+params:
+  compression: zip
+  files:
+    - "reports/report_1.csv"
+    - "reports/report_2.csv"
+  output: "archives/reports_YYYYMM.zip"
+active: true
+```
+
+---
+
+### Compress to GZ
+
+```yaml metadata
+name: CompressToGZ
+description: "Compress a summary file to .gz"
+type: compress
+params:
+  compression: gz
+  files:
+    - "reports/summary.csv"
+  output: "archives/summary_YYYYMM.csv.gz"
+active: true
+```
+
+---
+
+## HTTP DOWNLOAD
+
+```yaml metadata
+name: DownloadFromAPI
+description: "Download dataset from HTTP endpoint"
+type: http_download
+params:
+  url: "https://api.example.com/data"
+  target: "data/today.json"
+  method: GET
+  headers:
+    Authorization: "Bearer @API_TOKEN"
+    Accept: "application/json"
+  params:
+    date: "YYYYMMDD"
+    limit: "1000"
+active: true
+```
+
+---
+
+## HTTP UPLOAD
+
+```yaml metadata
+name: PushReportToWebhook
+description: "Upload final report to an HTTP endpoint"
+type: http_upload
+params:
+  url: "https://webhook.example.com/upload"
+  method: POST
+  file: "reports/final.csv"
+  headers:
+    Authorization: "Bearer @WEBHOOK_TOKEN"
+    Content-Type: "multipart/form-data"
+  params:
+    type: "summary"
+    date: "YYYYMMDD"
+active: true
+```
+
+---
+
+## FTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: "Download data file from external FTP"
+type: ftp_download
+params:
+  host: "ftp.example.com"
+  username: "myuser"
+  password: "@FTP_PASSWORD"
+  remote_path: "/data/daily_report.csv"
+  local_path: "downloads/daily_report.csv"
+active: true
+```
+
+---
+
+## S3 UPLOAD
+
+```yaml metadata
+name: ArchiveToS3
+description: "Send latest results to S3 bucket"
+type: s3_upload
+params:
+  bucket: "my-etlx-bucket"
+  key: "exports/summary_YYYYMMDD.xlsx"
+  region: "us-east-1"
+  source: "reports/summary.xlsx"
+active: true
+```
+````
+
+---
+
+> 📝 **Note:** All paths and dynamic references (like `YYYYMMDD`) are replaced at runtime by the refered date.  
+> You can use environmental variables via `@ENV_NAME`.
 
 ### NOTIFY
 

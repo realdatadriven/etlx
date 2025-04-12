@@ -672,17 +672,34 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	// description := metadata["description"].(string)
 	// fmt.Printf("Starting %s process: %s\n", key, description)
 	// start := time.Now()
-	for key2, value := range data {
-		if key2 == "metadata" || key2 == "__order" || key2 == "order" {
-			continue
+	order, okOrder := data["__order"].([]any)
+	if okOrder {
+		for _, key2 := range order {
+			if key2 == "metadata" || key2 == "__order" || key2 == "order" {
+				continue
+			}
+			if _, isMap := data[key2.(string)].(map[string]any); !isMap {
+				// fmt.Println(key2, "NOT A MAP:", value)
+				continue
+			}
+			err := runner(metadata, key2.(string), data[key2.(string)].(map[string]any))
+			if err != nil {
+				return err
+			}
 		}
-		if _, isMap := value.(map[string]any); !isMap {
-			// fmt.Println(key2, "NOT A MAP:", value)
-			continue
-		}
-		err := runner(metadata, key2, value.(map[string]any))
-		if err != nil {
-			return err
+	} else {
+		for key2, value := range data {
+			if key2 == "metadata" || key2 == "__order" || key2 == "order" {
+				continue
+			}
+			if _, isMap := value.(map[string]any); !isMap {
+				// fmt.Println(key2, "NOT A MAP:", value)
+				continue
+			}
+			err := runner(metadata, key2, value.(map[string]any))
+			if err != nil {
+				return err
+			}
 		}
 	}
 	// fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
