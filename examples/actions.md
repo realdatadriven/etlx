@@ -86,7 +86,7 @@ type: http_upload
 params:
   url: "https://webhook.example.com/upload"
   method: POST
-  file: "reports/final.csv"
+  source: "reports/final.csv"
   headers:
     Authorization: "Bearer @WEBHOOK_TOKEN"
     Content-Type: "multipart/form-data"
@@ -137,9 +137,35 @@ name: ArchiveToS3
 description: "Send latest results to S3 bucket"
 type: s3_upload
 params:
+  AWS_ACCESS_KEY_ID: '@AWS_ACCESS_KEY_ID'
+  AWS_SECRET_ACCESS_KEY: '@AWS_SECRET_ACCESS_KEY'
+  AWS_REGION: '@AWS_REGION'
+  AWS_ENDPOINT: 127.0.0.1:3000
+  S3_FORCE_PATH_STYLE: true
+  S3_DISABLE_SSL: false
+  S3_SKIP_SSL_VERIFY: true
   bucket: "my-etlx-bucket"
   key: "exports/summary_YYYYMMDD.xlsx"
-  region: "us-east-1"
   source: "reports/summary.xlsx"
+active: true
+```
+
+## S3 DOWNLOAD
+
+```yaml metadata
+name: DownalodFromS3
+description: "Download file S3 from bucket"
+type: s3_download
+params:
+  AWS_ACCESS_KEY_ID: '@AWS_ACCESS_KEY_ID'
+  AWS_SECRET_ACCESS_KEY: '@AWS_SECRET_ACCESS_KEY'
+  AWS_REGION: '@AWS_REGION'
+  AWS_ENDPOINT: 127.0.0.1:3000
+  S3_FORCE_PATH_STYLE: true
+  S3_DISABLE_SSL: false
+  S3_SKIP_SSL_VERIFY: true
+  bucket: "my-etlx-bucket"
+  key: "exports/summary_YYYYMMDD.xlsx"
+  target: "reports/summary.xlsx"
 active: true
 ```

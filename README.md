@@ -1361,6 +1361,8 @@ Each action under the `ACTIONS` section has the following:
   - `compress`
   - `ftp_download`
   - `ftp_upload`
+  - `sftp_download`
+  - `sftp_upload`
   - `http_download`
   - `http_upload`
   - `s3_download`
@@ -1396,7 +1398,7 @@ active: true
 
 ---
 
-### Compress to ZIP
+## Compress to ZIP
 
 ```yaml metadata
 name: CompressReports
@@ -1413,7 +1415,7 @@ active: true
 
 ---
 
-### Compress to GZ
+## Compress to GZ
 
 ```yaml metadata
 name: CompressToGZ
@@ -1459,7 +1461,7 @@ type: http_upload
 params:
   url: "https://webhook.example.com/upload"
   method: POST
-  file: "reports/final.csv"
+  source: "reports/final.csv"
   headers:
     Authorization: "Bearer @WEBHOOK_TOKEN"
     Content-Type: "multipart/form-data"
@@ -1512,10 +1514,36 @@ name: ArchiveToS3
 description: "Send latest results to S3 bucket"
 type: s3_upload
 params:
+  AWS_ACCESS_KEY_ID: '@AWS_ACCESS_KEY_ID'
+  AWS_SECRET_ACCESS_KEY: '@AWS_SECRET_ACCESS_KEY'
+  AWS_REGION: '@AWS_REGION'
+  AWS_ENDPOINT: 127.0.0.1:3000
+  S3_FORCE_PATH_STYLE: true
+  S3_DISABLE_SSL: false
+  S3_SKIP_SSL_VERIFY: true
   bucket: "my-etlx-bucket"
   key: "exports/summary_YYYYMMDD.xlsx"
-  region: "us-east-1"
   source: "reports/summary.xlsx"
+active: true
+```
+
+## S3 DOWNLOAD
+
+```yaml metadata
+name: DownalodFromS3
+description: "Download file S3 from bucket"
+type: s3_download
+params:
+  AWS_ACCESS_KEY_ID: '@AWS_ACCESS_KEY_ID'
+  AWS_SECRET_ACCESS_KEY: '@AWS_SECRET_ACCESS_KEY'
+  AWS_REGION: '@AWS_REGION'
+  AWS_ENDPOINT: 127.0.0.1:3000
+  S3_FORCE_PATH_STYLE: true
+  S3_DISABLE_SSL: false
+  S3_SKIP_SSL_VERIFY: true
+  bucket: "my-etlx-bucket"
+  key: "exports/summary_YYYYMMDD.xlsx"
+  target: "reports/summary.xlsx"
 active: true
 ```
 ````
@@ -1524,6 +1552,42 @@ active: true
 
 > 📝 **Note:** All paths and dynamic references (like `YYYYMMDD`) are replaced at runtime by the refered date.  
 > You can use environmental variables via `@ENV_NAME`.
+
+### ⚠️ **Note on S3 Configuration**
+
+When using `s3_upload` or `s3_download`, ETLX will look for the required AWS credentials and config in the parameters you provide in your `ACTIONS` block, such as:
+
+```yaml
+AWS_ACCESS_KEY_ID: '@AWS_ACCESS_KEY_ID'
+AWS_SECRET_ACCESS_KEY: '@AWS_SECRET_ACCESS_KEY'
+AWS_REGION: '@AWS_REGION'
+AWS_ENDPOINT: '127.0.0.1:3000'
+S3_FORCE_PATH_STYLE: true
+S3_DISABLE_SSL: false
+S3_SKIP_SSL_VERIFY: true
+```
+
+> 🧠 If these parameters are **not explicitly defined**, ETLX will **fall back** to the system's environment variables with the **same names**. This allows for better compatibility with tools like AWS CLI, Docker secrets, and `.env` files.
+
+This behavior ensures flexible support for local development, staging environments, and production deployments where credentials are injected at runtime.
+
+### ⚠️ **Security Warning: User-Defined Actions**
+
+> ❗ **Dangerous if misused**  
+> Allowing users to define or influence `ACTIONS` (e.g. file copy, upload, or download steps) introduces potential security risks such as:
+>
+> - **Arbitrary file access or overwrite**
+> - **Sensitive file exposure (e.g. `/etc/passwd`)**
+> - **Remote execution or data exfiltration**
+>
+> #### 🔐 Best Practices
+>
+> - **Restrict file paths** using whitelists (`AllowedPaths`) or path validation.
+> - Never accept **unvalidated user input** for action parameters like `source`, `target`, or `url`.
+> - Use **readonly or sandboxed environments** when possible.
+> - Log and audit every `ACTIONS` block executed in production.
+>
+> 📌 If you're using ETLX as a library (Go or Python), you **must** sanitize and scope what the runtime has access to.
 
 ### NOTIFY
 

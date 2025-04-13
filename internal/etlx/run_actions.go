@@ -281,6 +281,76 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP download successful", key, itemKey, _type)
 			}
+		case "http_upload":
+			source, _ := params["source"].(string)
+			if source == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP missing required params (source)", key, itemKey, _type)
+				break
+			}
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			err := etlx.HTTPAction("upload", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP upload failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP upload successful", key, itemKey, _type)
+			}
+		case "http_download":
+			target, _ := params["target"].(string)
+			if target == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP missing required params (source | target)", key, itemKey, _type)
+				break
+			}
+			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			err := etlx.HTTPAction("download", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP download failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP download successful", key, itemKey, _type)
+			}
+		case "s3_upload":
+			source, _ := params["source"].(string)
+			_key, _ := params["key"].(string)
+			bucket, _ := params["bucket"].(string)
+			if source == "" || _key == "" || bucket == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: AWS missing required params (source | key | bucket)", key, itemKey, _type)
+				break
+			}
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", dateRef)
+			_, err := etlx.S3("upload", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: S3 upload failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: S3 upload successful", key, itemKey, _type)
+			}
+		case "s3_download":
+			target, _ := params["target"].(string)
+			_key, _ := params["key"].(string)
+			bucket, _ := params["bucket"].(string)
+			if target == "" || _key == "" || bucket == "" {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: AWS missing required params (target | key | bucket)", key, itemKey, _type)
+				break
+			}
+			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", dateRef)
+			_, err := etlx.S3("download", params)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: S3 download failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: S3 download successful", key, itemKey, _type)
+			}
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)

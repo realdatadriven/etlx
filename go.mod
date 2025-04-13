@@ -25,6 +25,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.0 // indirect
 	github.com/apache/arrow-go/v18 v18.1.0 // indirect
+	github.com/aws/aws-sdk-go v1.55.6 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.1.14 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.9 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.9 // indirect
@@ -41,6 +42,7 @@ require (
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/jlaffaye/ftp v0.2.0 // indirect
+	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.17.11 // indirect
 	github.com/klauspost/cpuid/v2 v2.2.9 // indirect
 	github.com/kr/fs v0.1.0 // indirect

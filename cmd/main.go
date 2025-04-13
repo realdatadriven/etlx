@@ -52,7 +52,6 @@ func main() {
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 		etlxlib.PrintConfigAsJSON(etlxlib.Config)
 	}
-	etlxlib.PrintConfigAsJSON(etlxlib.Config)
 	/*/ Walk through the data and process each key-value pair
 	etlxlib.Walk(etlxlib.Config, "", func(keyPath string, value any) {
 		fmt.Printf("Key: %s, Value: %v\n", keyPath, value)
