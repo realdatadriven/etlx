@@ -2018,7 +2018,7 @@ package main
 import (
     "fmt"
     "time"
-    "github.com/realdatadriven/etlx/internal/etlx"
+    "github.com/realdatadriven/etlx"
 )
 
 func main() {
