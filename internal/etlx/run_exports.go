@@ -738,19 +738,18 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							}
 							fname = etlx.ReplaceQueryStringDate(fname, dateRef)
 							if !filepath.IsAbs(path) {
-								if okTmpPrefix && tmpPrefix != "" {
+								if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
 									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
 								} else {
 									fname = etlx.ReplaceQueryStringDate(path, dateRef)
 								}
 							}
 							_log2["fname"] = fname
-							fmt.Println(3, _log2["msg"], _log2["fname"])
 						}
 					}
 				}
+				processLogs = append(processLogs, _log2)
 			}
-			processLogs = append(processLogs, _log2)
 		} else {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s: Missconfiguration, it was unable to identify export type", key, itemKey)

@@ -361,9 +361,34 @@ LIMIT 100
 SELECT *
 FROM "DB"."etlx_logs"
 /*WHERE "ref" = '{YYYY-MM-DD}'*/
+ORDER BY start_at DESC
 ```
 
 ```html template
+<style>
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: sans-serif;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  tr:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background-color: #eef6ff;
+  }
+</style>
 <b>ETLX Text Template</b><br /><br />
 This is gebnerated by ETLX automatically!<br />
 {{ with .logs }}
@@ -384,7 +409,7 @@ This is gebnerated by ETLX automatically!<br />
             <td>{{ .ref }}</td>
             <td>{{ .start_at | date "2006-01-02 15:04:05" }}</td>
             <td>{{ .end_at | date "2006-01-02 15:04:05" }}</td>
-            <td>{{ divf .duration 1000000 }}</td>
+            <td style="text-align: right">{{ divf .duration 1000000000 | printf "%.4fs" }}</td>
             <td>{{ .success }}</td>
             <td><span title="{{ .msg }}">{{ .msg | toString | abbrev 30}}</span></td>
         </tr>
