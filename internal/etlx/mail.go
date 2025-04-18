@@ -39,7 +39,7 @@ func (etlx *ETLX) RenderTemplate(tmplStr string, data map[string]any) (string, e
 	// fmt.Println(tmplStr)
 	// Create a FuncMap with some common functions
 	// funcMap := sprig.FuncMap()
-	tmpl, err := template.New("email").Funcs(sprig.FuncMap()).Parse(tmplStr)
+	tmpl, err := template.New("tmpl").Funcs(sprig.FuncMap()).Parse(tmplStr)
 	//tmpl, err := template.New("email").Funcs(funcMap).Parse(tmplStr)
 	if err != nil {
 		return "", fmt.Errorf("failed to parse template: %v", err)

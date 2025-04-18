@@ -2,6 +2,7 @@ package etlxlib
 
 import (
 	"fmt"
+	"io"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -148,8 +149,14 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		exportSQL, okExport := itemMetadata["export_sql"]
+		dataSQL, okData := itemMetadata["data_sql"]
 		afterSQL, okAfter := itemMetadata["after_sql"]
 		template, okTemplate := itemMetadata["template"]
+		textTemplate, okTextTemplate := itemMetadata["text_template"].(bool)
+		/*tmplExt := ""
+		if okTemplate {
+			tmplExt = filepath.Ext(template.(string))
+		}*/
 		mapping, okMapping := itemMetadata["mapping"]
 		tmpPrefix, okTmpPrefix := itemMetadata["tmp_prefix"]
 		conn, okCon := itemMetadata["connection"]
@@ -614,12 +621,143 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				}
 			}
 			processLogs = append(processLogs, _log2)
+
+		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
+			start3 := time.Now()
+			_log2 := map[string]any{
+				"name":        fmt.Sprintf("%s->%s", key, itemKey),
+				"description": itemMetadata["description"].(string),
+				"key":         key, "item_key": itemKey, "start_at": start3,
+			}
+			if !okData {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s error: 'data_sql' found!", key, itemKey)
+				_log2["end_at"] = time.Now()
+				_log2["duration"] = time.Since(start3)
+			} else {
+				data := map[string]any{}
+				start3 := time.Now()
+				_log2 := map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"key":         key, "item_key": itemKey, "start_at": start3,
+				}
+				switch _map := dataSQL.(type) {
+				case string:
+					sql := _map
+					if _, ok := item[_map]; ok {
+						sql = item[sql].(string)
+					}
+					sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
+					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
+					if err != nil {
+						data[_map] = map[string]any{
+							"success": false,
+							"msg":     fmt.Sprintf("Eailed to execute map query %s %s", _map, err),
+							"data":    []map[string]any{},
+						}
+					} else {
+						data[_map] = map[string]any{
+							"success": true,
+							"data":    *rows,
+						}
+					}
+				case []any:
+					for _, _sql := range dataSQL.([]any) {
+						sql := _sql.(string)
+						if _, ok := item[_sql.(string)]; ok {
+							sql = item[_sql.(string)].(string)
+						}
+						sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
+						rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
+						if err != nil {
+							data[_sql.(string)] = map[string]any{
+								"success": false,
+								"msg":     fmt.Sprintf("Eailed to execute map query %s %s", _map, err),
+								"data":    []map[string]any{},
+							}
+						} else {
+							data[_sql.(string)] = map[string]any{
+								"success": true,
+								"data":    *rows,
+							}
+						}
+					}
+				default:
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s invalid queries data type: %T", key, itemKey, _map)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					processLogs = append(processLogs, _log2)
+				}
+				if _, ok := itemMetadata["data"].(map[string]any); ok {
+					for key, d := range itemMetadata["data"].(map[string]any) {
+						data[key] = d
+					}
+				}
+				tmpl, ok := item[template.(string)].(string)
+				if !ok {
+					tmpl = template.(string)
+				}
+				// render template
+				parsedTmpl, err := etlx.RenderTemplate(tmpl, data)
+				//fmt.Println(parsedTmpl)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+					fmt.Println(0, _log2["msg"])
+				} else {
+					fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+					// Create the file (or truncate if it exists)
+					file, err := os.Create(fname)
+					if err != nil {
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("%s -> %s -> Error creating file: %s", key, itemKey, err)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3)
+						//fmt.Println(1, _log2["msg"])
+					} else {
+						defer file.Close() // Close the file after the function completes
+						// Write the text to the file
+						_, err = io.WriteString(file, parsedTmpl)
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> Error writing to file: %s", key, itemKey, err)
+							_log2["end_at"] = time.Now()
+							_log2["duration"] = time.Since(start3)
+							//fmt.Println(2, _log2["msg"])
+						} else {
+							_log2["success"] = true
+							_log2["msg"] = fmt.Sprintf("%s -> %s: TXT TMPL Generate!", key, itemKey)
+							_log2["end_at"] = time.Now()
+							_log2["duration"] = time.Since(start3)
+							if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
+								_log2["content"] = parsedTmpl
+							}
+							fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+							if !filepath.IsAbs(path) {
+								if okTmpPrefix && tmpPrefix != "" {
+									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+								} else {
+									fname = etlx.ReplaceQueryStringDate(path, dateRef)
+								}
+							}
+							_log2["fname"] = fname
+							fmt.Println(3, _log2["msg"], _log2["fname"])
+						}
+					}
+				}
+			}
+			processLogs = append(processLogs, _log2)
 		} else {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s: Missconfiguration, it was unable to identify export type", key, itemKey)
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3)
 			processLogs = append(processLogs, _log2)
+			//fmt.Println(4, _log2["msg"])
 		}
 		// QUERIES TO RUN AT THE END
 		if okAfter {

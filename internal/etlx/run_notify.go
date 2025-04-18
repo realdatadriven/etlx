@@ -269,7 +269,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			}
-			fmt.Println(key, _log2["msg"])
+			//fmt.Println(key, _log2["msg"])
 			processLogs = append(processLogs, _log2)
 		}
 		// QUERIES TO RUN AT THE END

@@ -225,7 +225,7 @@ export_sql: export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.csv'
 tmp_prefix: null
-active: true
+active: false
 ```
 
 ```sql
@@ -254,7 +254,7 @@ export_sql: xl_export
 after_sql: "DETACH DB"
 path: 'nyc_taxy_YYYYMMDD.xlsx'
 tmp_prefix: null
-active: true
+active: false
 ```
 
 ```sql
@@ -292,7 +292,7 @@ mapping:
     sql: detail
     type: range
     header: true
-active: true
+active: false
 ```
 
 ```sql
@@ -318,13 +318,88 @@ using sum(total_amount) AS total, count(*) AS total_trips
 group by PULocationID
 ```
 
-
 ```sql
 -- data_to_export
 SELECT *
 FROM "DB"."NYC_TAXI"
 WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
 LIMIT 100
+```
+
+## TEXT_TMPL
+
+```yaml metadata
+name: TEXT_TMPL
+description: "Export data to text base template"
+connection: "duckdb:"
+before_sql:
+  - "INSTALL sqlite"
+  - "LOAD sqlite"
+  - "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
+data_sql:
+  - logs
+#  - data
+after_sql: "DETACH DB"
+tmp_prefix: null
+text_template: true
+template: template
+return_content: false #if true the template text content is returned, useful for integration
+path: "nyc_taxy_YYYYMMDD.html"
+active: true
+```
+
+```sql
+-- data
+SELECT *
+FROM "DB"."NYC_TAXI"
+WHERE "tpep_pickup_datetime"::DATETIME <= '{YYYY-MM-DD}'
+LIMIT 100
+```
+
+```sql
+-- logs
+SELECT *
+FROM "DB"."etlx_logs"
+/*WHERE "ref" = '{YYYY-MM-DD}'*/
+```
+
+```html template
+<b>ETLX Text Template</b><br /><br />
+This is gebnerated by ETLX automatically!<br />
+{{ with .logs }}
+    {{ if eq .success true }}
+      <table>
+        <tr>
+            <th>Name</th>
+            <th>Ref</th>
+            <th>Start</th>
+            <th>End</th>
+            <th>Duration</th>
+            <th>Success</th>
+            <th>Message</th>
+        </tr>
+        {{ range .data }}
+        <tr>
+            <td>{{ .name }}</td>
+            <td>{{ .ref }}</td>
+            <td>{{ .start_at | date "2006-01-02 15:04:05" }}</td>
+            <td>{{ .end_at | date "2006-01-02 15:04:05" }}</td>
+            <td>{{ divf .duration 1000000 }}</td>
+            <td>{{ .success }}</td>
+            <td><span title="{{ .msg }}">{{ .msg | toString | abbrev 30}}</span></td>
+        </tr>
+        {{ else }}
+        <tr>
+          <td colspan="7">No items available</td>
+        </tr>
+        {{ end }}
+      </table>
+    {{ else }}
+      <p>{{.msg}}</p>
+    {{ end }}
+{{ else }}
+<p>Logs information missing.</p>
+{{ end }}
 ```
 
 # LOGS
