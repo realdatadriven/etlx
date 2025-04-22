@@ -259,6 +259,10 @@ func (db *DuckDB) QueryMultiRows(query string, params ...interface{}) (*[]map[st
 	return &result, true, err
 }
 
+func (db *DuckDB) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+	return db.QueryContext(ctx, query, params...)
+}
+
 func (db *DuckDB) QuerySingleRow(query string, params ...interface{}) (*map[string]interface{}, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()

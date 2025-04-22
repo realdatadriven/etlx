@@ -18,7 +18,7 @@ type: copy_file
 params:
   source: "nyc_taxy_YYYYMMDD.xlsx"
   target: "copy_nyc_taxy_YYYYMMDD.xlsx"
-active: true
+active: false
 ```
 
 ---
@@ -35,7 +35,7 @@ params:
     - "nyc_taxy_YYYYMMDD.xlsx"
     - "copy_nyc_taxy_YYYYMMDD.xlsx"
   output: "nyc_taxy.zip"
-active: true
+active: false
 ```
 
 ---
@@ -51,7 +51,7 @@ params:
   files:
     - "nyc_taxy_YYYYMMDD.xlsx"
   output: "nyc_taxy_YYYYMMDD.xlsx.gz"
-active: true
+active: false
 ```
 
 ---
@@ -72,7 +72,7 @@ params:
   params:
     date: "YYYYMMDD"
     limit: "1000"
-active: true
+active: false
 ```
 
 ---
@@ -93,7 +93,7 @@ params:
   params:
     type: "summary"
     date: "YYYYMMDD"
-active: true
+active: false
 ```
 
 ---
@@ -110,7 +110,7 @@ params:
   password: "@FTP_PASSWORD"
   source: "/data/daily_report.csv"
   target: "downloads/daily_report.csv"
-active: true
+active: false
 ```
 
 ## SFTP DOWNLOAD
@@ -125,7 +125,7 @@ params:
   password: "@FTP_PASSWORD"
   source: "/data/daily_report.csv"
   target: "downloads/daily_report.csv"
-active: true
+active: false
 ```
 
 ---
@@ -147,7 +147,7 @@ params:
   bucket: "my-etlx-bucket"
   key: "exports/summary_YYYYMMDD.xlsx"
   source: "reports/summary.xlsx"
-active: true
+active: false
 ```
 
 ## S3 DOWNLOAD
@@ -167,5 +167,33 @@ params:
   bucket: "my-etlx-bucket"
   key: "exports/summary_YYYYMMDD.xlsx"
   target: "reports/summary.xlsx"
+active: false
+```
+
+## DB
+
+```yaml metadata
+name: WRITE_RESULTS_MSSQL
+description: "MSSQL, as of this moment DDB does not have the same suport to MSSQL like it has for SQLite, PG or MySQL so this could be a way to pu results in db like MSSQL or nay other DB suported by sqlx"
+type: db_2_db
+params:
+  source:
+    conn: 'sqlite3:database/HTTP_EXTRACT.db'
+    before: null
+    chunk_size: 1000
+    timeout: 30
+    sql: 'SELECT * FROM "etlx_logs"'
+    after: null
+  target:
+    conn: 'mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30'
+    timeout: 30
+    before: null
+    sql: mssql_sql
+    after: null
 active: true
+```
+
+```sql
+-- mssql_sql
+INSERT INTO [dbo].[logs] (:columns) VALUES 
 ```

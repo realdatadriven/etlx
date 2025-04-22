@@ -97,6 +97,10 @@ func (db *ODBC) QueryMultiRows(query string, params ...interface{}) (*[]map[stri
 	return &result, true, err
 }
 
+func (db *ODBC) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+	return db.QueryContext(ctx, query, params...)
+}
+
 func (db *ODBC) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]interface{}, []string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()

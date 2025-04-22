@@ -351,6 +351,23 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: S3 download successful", key, itemKey, _type)
 			}
+		case "db_2_db":
+			_, okSource := params["source"].(map[string]any)
+			_, okTarget := params["target"].(map[string]any)
+			if !okSource || !okTarget {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB missing required params (source | target)", key, itemKey, _type)
+				break
+			}
+			err := etlx.DB2DB(params, itemMetadata, dateRef)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB successful", key, itemKey, _type)
+			}
+			fmt.Println(_log2["msg"])
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)

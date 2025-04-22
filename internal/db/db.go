@@ -15,9 +15,9 @@ import (
 
 	"github.com/jmoiron/sqlx"
 
-	_ "github.com/denisenkom/go-mssqldb"
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
+	_ "github.com/microsoft/go-mssqldb"
 )
 
 // const defaultTimeout = 3 * time.Second
@@ -181,16 +181,16 @@ func replaceDBName(dsn string, newDBName string) (string, error) {
 	return u.String(), nil
 }
 
-func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]interface{}) (*DB, string, string, error) {
+func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB, string, string, error) {
 	var _database interface{}
 	if !db.IsEmpty(params["db"]) {
 		_database = params["db"]
-	} else if !db.IsEmpty(params["data"].(map[string]interface{})["db"]) {
-		_database = params["data"].(map[string]interface{})["db"]
-	} else if !db.IsEmpty(params["data"].(map[string]interface{})["database"]) {
-		_database = params["data"].(map[string]interface{})["database"]
-	} else if !db.IsEmpty(params["app"].(map[string]interface{})["db"]) {
-		_database = params["app"].(map[string]interface{})["db"]
+	} else if !db.IsEmpty(params["data"].(map[string]any)["db"]) {
+		_database = params["data"].(map[string]any)["db"]
+	} else if !db.IsEmpty(params["data"].(map[string]any)["database"]) {
+		_database = params["data"].(map[string]any)["database"]
+	} else if !db.IsEmpty(params["app"].(map[string]any)["db"]) {
+		_database = params["app"].(map[string]any)["db"]
 	}
 	/*/ Parse the DSN as a URL for easy manipulation
 	u, err := url.Parse(extra_conf["dsn"].(string))
@@ -255,8 +255,8 @@ func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]in
 		_dsn := _database["database"].(string)
 		fmt.Println("IS map[interface{}]interface{}:", _database, _driver, _dsn)*/
 		return nil, "", "", errors.New("database conf is of type map[interface{}]interface{}")
-	case map[string]interface{}:
-		_aux := _database.(map[string]interface{})
+	case map[string]any:
+		_aux := _database.(map[string]any)
 		_driver := ""
 		if _, exists := _aux["drivername"]; exists {
 			_driver = _aux["drivername"].(string)
@@ -277,7 +277,7 @@ func (db *DB) FromParams(params map[string]interface{}, extra_conf map[string]in
 				_db = _dsn
 			}
 		}
-		//fmt.Println("IS map[string]interface{}:", _database, _driver, _dsn)
+		//fmt.Println("IS map[string]any:", _database, _driver, _dsn)
 		dirName := filepath.Dir(_dsn)
 		fileName := filepath.Base(_dsn)
 		fileExt := filepath.Ext(_dsn)
@@ -328,7 +328,7 @@ func (db *DB) GetDriverName() string {
 	return db.DriverName()
 }
 
-func (db *DB) AllTables(params map[string]interface{}, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *DB) AllTables(params map[string]any, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	_driver := db.GetDriverName()
 	_sqlites_drivers := []interface{}{"sqlite", "sqlite3"}
 	_pg_drivers := []interface{}{"pg", "postgres"}
@@ -351,17 +351,17 @@ func (db *DB) AllTables(params map[string]interface{}, extra_conf map[string]int
 	return nil, false, fmt.Errorf("could not handle driver %s", _driver)
 }
 
-func (db *DB) TableSchema(params map[string]interface{}, table string, dbName string, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *DB) TableSchema(params map[string]any, table string, dbName string, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	_driver := db.GetDriverName()
-	user_id := int(params["user"].(map[string]interface{})["user_id"].(float64))
+	user_id := int(params["user"].(map[string]any)["user_id"].(float64))
 	_sqlites_drivers := []interface{}{"sqlite", "sqlite3"}
 	_pg_drivers := []interface{}{"pg", "postgres"}
 	_ddb_drivers := []interface{}{"ddb", "duckdb"}
 	_mysql_drivers := []interface{}{"mysql", "mysql8"}
 	if contains(_sqlites_drivers, _driver) {
 		_query := "PRAGMA table_info('" + table + "');"
-		_aux_data := []map[string]interface{}{}
-		_aux_data_fk := map[string]interface{}{}
+		_aux_data := []map[string]any{}
+		_aux_data_fk := map[string]any{}
 		res, _, err := db.QueryMultiRows(_query, []interface{}{}...)
 		if err != nil {
 			return nil, false, err
@@ -373,7 +373,7 @@ func (db *DB) TableSchema(params map[string]interface{}, table string, dbName st
 		}
 		for _, row := range *res_fk {
 			// fmt.Println(row)
-			_aux_data_fk[row["from"].(string)] = map[string]interface{}{
+			_aux_data_fk[row["from"].(string)] = map[string]any{
 				"referred_table":  row["table"].(string),
 				"referred_column": row["to"].(string),
 			}
@@ -384,8 +384,8 @@ func (db *DB) TableSchema(params map[string]interface{}, table string, dbName st
 			var referred_column string
 			if _, exists := _aux_data_fk[row["name"].(string)]; exists {
 				fk = true
-				referred_table = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_table"].(string)
-				referred_column = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_column"].(string)
+				referred_table = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_table"].(string)
+				referred_column = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_column"].(string)
 			}
 			pk := false
 			if _pk, ok := row["pk"].(bool); ok {
@@ -403,7 +403,7 @@ func (db *DB) TableSchema(params map[string]interface{}, table string, dbName st
 					nullable = true
 				}
 			}
-			_aux_row := map[string]interface{}{
+			_aux_row := map[string]any{
 				"db":              dbName,
 				"table":           table,
 				"field":           row["name"].(string),
@@ -493,7 +493,7 @@ func (db *DB) ExecuteQueryRowsAffected(query string, data ...interface{}) (int64
 	return id, nil
 }
 
-func (db *DB) ExecuteNamedQuery(query string, data map[string]interface{}) (int, error) {
+func (db *DB) ExecuteNamedQuery(query string, data map[string]any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	query = adjustQuery(db.DriverName(), query)
@@ -511,10 +511,10 @@ func (db *DB) ExecuteNamedQuery(query string, data map[string]interface{}) (int,
 	return int(id), nil
 }
 
-func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	query = adjustQuery(db.DriverName(), query)
 	if db.DriverName() == "postgres" {
 		//fmt.Println(query)
@@ -526,7 +526,7 @@ func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string
 	}
 	defer rows.Close()
 	for rows.Next() {
-		row := map[string]interface{}{}
+		row := map[string]any{}
 		if err := rows.MapScan(row); err != nil {
 			//fmt.Println(3, err)
 			return nil, false, err
@@ -537,10 +537,15 @@ func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string
 	return &result, true, nil
 }
 
-func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]interface{}, []string, bool, error) {
+func (db *DB) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+	query = adjustQuery(db.DriverName(), query)
+	return db.QueryContext(ctx, query, params...)
+}
+
+func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]any, []string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	query = adjustQuery(db.DriverName(), query)
 	rows, err := db.QueryxContext(ctx, query, params...)
 	if err != nil {
@@ -552,7 +557,7 @@ func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]ma
 		fmt.Printf("failed to get columns: %s", err)
 	}
 	for rows.Next() {
-		row := map[string]interface{}{}
+		row := map[string]any{}
 		if err := rows.MapScan(row); err != nil {
 			return nil, nil, false, err
 		}
@@ -561,10 +566,10 @@ func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]ma
 	return &result, columns, true, nil
 }
 
-func (db *DB) QuerySingleRow(query string, params ...interface{}) (*map[string]interface{}, bool, error) {
+func (db *DB) QuerySingleRow(query string, params ...interface{}) (*map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	query = adjustQuery(db.DriverName(), query)
 	rows, err := db.QueryxContext(ctx, query, params...)
 	if err != nil {
@@ -595,13 +600,13 @@ func (db *DB) IsEmpty(value interface{}) bool {
 	}
 }
 
-func (db *DB) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {
+func (db *DB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 
 	//var user User
-	//user2 := map[string]interface{}{}
-	user := map[string]interface{}{}
+	//user2 := map[string]any{}
+	user := map[string]any{}
 
 	query := `SELECT * FROM user WHERE email = $1 OR username = $1`
 

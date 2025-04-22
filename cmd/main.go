@@ -130,9 +130,9 @@ func main() {
 		if err != nil {
 			fmt.Printf("ACTIONS ERR: %v\n", err)
 		}
-		for _, r := range _logs {
+		/*for _, r := range _logs {
 			fmt.Println(r["name"], r["msg"])
-		}
+		}*/
 		logs = append(logs, _logs...)
 	}
 	// LOGS
