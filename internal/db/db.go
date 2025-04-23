@@ -452,7 +452,8 @@ func (db *DB) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	if db.DriverName() != "postgres" {
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			//return 0, err
+			return 0, nil
 		}
 	}
 	return int(id), nil
@@ -505,7 +506,8 @@ func (db *DB) ExecuteNamedQuery(query string, data map[string]any) (int, error) 
 	if db.DriverName() != "postgres" {
 		id, err = result.LastInsertId()
 		if err != nil {
-			return 0, err
+			//return 0, err
+			return 0, nil
 		}
 	}
 	return int(id), nil

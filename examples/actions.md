@@ -180,20 +180,37 @@ params:
   source:
     conn: 'sqlite3:database/HTTP_EXTRACT.db'
     before: null
-    chunk_size: 1000
+    chunk_size: 3
     timeout: 30
-    sql: 'SELECT * FROM "etlx_logs"'
+    sql: 'SELECT * FROM "etlx_logs" ORDER BY "start_at" DESC LIMIT 2000'
     after: null
   target:
     conn: 'mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30'
     timeout: 30
-    before: null
+    before:
+      - create_schema
     sql: mssql_sql
     after: null
 active: true
 ```
 
 ```sql
+-- create_schema
+IF NOT EXISTS (
+    SELECT * FROM INFORMATION_SCHEMA.TABLES
+    WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'etlx_logs'
+)
+BEGIN    
+  CREATE TABLE [dbo].[etlsx_logs] (
+      [description] TEXT NULL,
+      [duration] BIGINT NULL,
+      [start_at] DATETIME NULL,
+      [ref] DATE NULL
+  )
+END
+```
+
+```sql
 -- mssql_sql
-INSERT INTO [dbo].[logs] (:columns) VALUES 
+INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES 
 ```

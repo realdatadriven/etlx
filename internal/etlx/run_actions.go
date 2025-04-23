@@ -359,7 +359,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB missing required params (source | target)", key, itemKey, _type)
 				break
 			}
-			err := etlx.DB2DB(params, itemMetadata, dateRef)
+			err := etlx.DB2DB(params, item, dateRef)
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB failed: %v", key, itemKey, _type, err)

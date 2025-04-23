@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"regexp"
+	"strconv"
 	"strings"
 	"time"
 
@@ -61,6 +62,15 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		return fmt.Errorf("error connecting to target: %s", target_conn)
 	}
 	defer dbTargetConn.Close()
+	// BEGIN / STARTING QUERIES
+	before_source, ok := source["before"]
+	if ok {
+		err = etlx.ExecuteQuery(dbSourceConn, before_source, item, "", "", dateRef)
+		if err != nil {
+			return fmt.Errorf("error executing source preparation queries: %s", err)
+		}
+	}
+	//fmt.Println(target_sql, item)
 	sql_target := target_sql
 	if _, ok := item[target_sql]; ok {
 		sql_target = item[target_sql].(string)
@@ -70,17 +80,23 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		sql = item[sql].(string)
 	}
 	chunk_size := 1_000
-	if _, ok := source["chunk_size"].(int); ok {
-		chunk_size = source["chunk_size"].(int)
+	if _, ok := source["chunk_size"]; ok {
+		j, err := strconv.Atoi(fmt.Sprintf("%v", source["chunk_size"]))
+		if err == nil {
+			chunk_size = j
+		}
 	}
+	//fmt.Printf("%T->%d", chunk_size, chunk_size)
 	timeout := 500
-	if _, ok := source["timeout"].(int); ok {
-		timeout = source["timeout"].(int)
+	if _, ok := source["timeout"]; ok {
+		j, err := strconv.Atoi(fmt.Sprintf("%v", source["timeout"]))
+		if err == nil {
+			timeout = j
+		}
 	}
 	sql = etlx.SetQueryPlaceholders(sql, "", "", dateRef)
 	ctx, cancel := context.WithTimeout(context.Background(), time.Duration(timeout)*time.Second)
 	defer cancel()
-	var result []map[string]any
 	rows, err := dbSourceConn.QueryRows(ctx, sql, []any{}...)
 	if err != nil {
 		return fmt.Errorf("failed to execute source query %s", err)
@@ -90,7 +106,16 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 	if err != nil {
 		fmt.Printf("failed to get columns: %s", err)
 	}*/
+	// BEGIN / STARTING QUERIES
+	before_target, ok := target["before"]
+	if ok {
+		err = etlx.ExecuteQuery(dbTargetConn, before_target, item, "", "", dateRef)
+		if err != nil {
+			return fmt.Errorf("error executing target preparation queries: %s", err)
+		}
+	}
 	i := 0
+	var result []map[string]any
 	for rows.Next() {
 		i += 1
 		row, err := ScanRowToMap(rows)
@@ -99,12 +124,36 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		}
 		result = append(result, row)
 		// send to target
-		if i == chunk_size {
+		if i >= chunk_size {
 			i = 0
 			_, err = updateTarget(dbTargetConn, sql_target, result)
 			if err != nil {
+				// fmt.Printf("failed update the destination: %s", err)
 				return fmt.Errorf("failed update the destination: %w", err)
 			}
+			result = result[:0]
+		}
+	}
+	if len(result) > 0 {
+		_, err = updateTarget(dbTargetConn, sql_target, result)
+		if err != nil {
+			// fmt.Printf("failed update the destination: %s", err)
+			return fmt.Errorf("failed update the destination: %w", err)
+		}
+	}
+	// END / CLOSING QUERIES
+	after_source, ok := source["after"]
+	if ok {
+		err = etlx.ExecuteQuery(dbSourceConn, after_source, item, "", "", dateRef)
+		if err != nil {
+			return fmt.Errorf("error executing source closing queries: %s", err)
+		}
+	}
+	after_target, ok := target["after"]
+	if ok {
+		err = etlx.ExecuteQuery(dbTargetConn, after_target, item, "", "", dateRef)
+		if err != nil {
+			return fmt.Errorf("error executing source closing queries: %s", err)
 		}
 	}
 	return nil
@@ -128,17 +177,62 @@ func BuildInsertSQL(sql_header string, data []map[string]any) (string, error) {
 		}
 		valueRows = append(valueRows, "("+strings.Join(values, ", ")+")")
 	}
-	// Escape column names (basic, you might need to adapt for SQL Server specifics)
-	colList := strings.Join(columns, ", ")
-	/*sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s;",
-		table,
-		colList,
-		strings.Join(valueRows, ",\n"),
-	)*/
-	re := regexp.MustCompile(`:columns\b`)
-	sql_header = re.ReplaceAllString(sql_header, colList)
-	sql := fmt.Sprintf("%s %s;", sql_header, strings.Join(valueRows, ",\n"))
+	sql, err := ReplaceColumnsWithDetectedIdentifier(sql_header, columns)
+	if err == nil {
+		sql = fmt.Sprintf("%s %s;", sql, strings.Join(valueRows, ",\n"))
+	} else {
+		fmt.Println(err)
+		// Escape column names (basic, you might need to adapt for SQL Server specifics)
+		colList := strings.Join(columns, ", ")
+		/*sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s;",
+			table,
+			colList,
+			strings.Join(valueRows, ",\n"),
+		)*/
+		re := regexp.MustCompile(`:columns\b`)
+		sql_header = re.ReplaceAllString(sql_header, colList)
+		sql = fmt.Sprintf("%s %s;", sql_header, strings.Join(valueRows, ",\n"))
+	}
 	return sql, nil
+}
+
+// Detects the quote character around :columns and replaces it with the appropriate formatted column list.
+func ReplaceColumnsWithDetectedIdentifier(query string, columns []string) (string, error) {
+	// Regex to capture optional identifier wrapping
+	re := regexp.MustCompile("([[\"`]?):columns([]\"`]?)")
+	matches := re.FindStringSubmatch(query)
+	var open, close string
+	if len(matches) == 3 {
+		open, close = matches[1], matches[2]
+	}
+	// Default if nothing matched
+	if open == "" && close == "" {
+		open, close = "", ""
+	} else if open == "[" && close != "]" {
+		close = "]"
+	} else if open == `"` && close != `"` {
+		close = `"`
+	} else if open == "`" && close != "`" {
+		close = "`"
+	} else if open == "(" && close == ")" {
+		open, close = "", "" // treat as no identifier
+	}
+	// Escape square brackets inside column names for MSSQL
+	formatIdentifier := func(col string) string {
+		if open == "[" && close == "]" {
+			col = strings.ReplaceAll(col, "]", "]]")
+		}
+		return open + col + close
+	}
+	// Apply identifier
+	var escapedCols []string
+	for _, col := range columns {
+		escapedCols = append(escapedCols, formatIdentifier(col))
+	}
+	finalCols := strings.Join(escapedCols, ", ")
+	// Replace the whole match with column list
+	finalQuery := re.ReplaceAllString(query, finalCols)
+	return finalQuery, nil
 }
 
 func formatValue(v any) string {
@@ -168,5 +262,6 @@ func updateTarget(dbTargetConn db.DBInterface, sql_target string, data []map[str
 	if err != nil {
 		return 0, err
 	}
+	fmt.Println(sql)
 	return dbTargetConn.ExecuteQuery(sql, []any{}...)
 }
