@@ -128,8 +128,8 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 			i = 0
 			_, err = updateTarget(dbTargetConn, sql_target, result)
 			if err != nil {
-				// fmt.Printf("failed update the destination: %s", err)
-				return fmt.Errorf("failed update the destination: %w", err)
+				// fmt.Printf("failed update the target: %s", err)
+				return fmt.Errorf("main target query faild: %w", err)
 			}
 			result = result[:0]
 		}
@@ -137,8 +137,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 	if len(result) > 0 {
 		_, err = updateTarget(dbTargetConn, sql_target, result)
 		if err != nil {
-			// fmt.Printf("failed update the destination: %s", err)
-			return fmt.Errorf("failed update the destination: %w", err)
+			return fmt.Errorf("main target query faild: %w", err)
 		}
 	}
 	// END / CLOSING QUERIES
@@ -181,7 +180,7 @@ func BuildInsertSQL(sql_header string, data []map[string]any) (string, error) {
 	if err == nil {
 		sql = fmt.Sprintf("%s %s;", sql, strings.Join(valueRows, ",\n"))
 	} else {
-		fmt.Println(err)
+		//fmt.Println(err)
 		// Escape column names (basic, you might need to adapt for SQL Server specifics)
 		colList := strings.Join(columns, ", ")
 		/*sql := fmt.Sprintf("INSERT INTO %s (%s) VALUES %s;",
@@ -262,6 +261,6 @@ func updateTarget(dbTargetConn db.DBInterface, sql_target string, data []map[str
 	if err != nil {
 		return 0, err
 	}
-	fmt.Println(sql)
+	//fmt.Println(sql)
 	return dbTargetConn.ExecuteQuery(sql, []any{}...)
 }

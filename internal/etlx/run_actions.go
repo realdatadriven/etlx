@@ -367,7 +367,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB successful", key, itemKey, _type)
 			}
-			fmt.Println(_log2["msg"])
+			//fmt.Println(_log2["msg"])
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)

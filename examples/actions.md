@@ -178,14 +178,14 @@ description: "MSSQL, as of this moment DDB does not have the same suport to MSSQ
 type: db_2_db
 params:
   source:
-    conn: 'sqlite3:database/HTTP_EXTRACT.db'
+    conn: sqlite3:database/HTTP_EXTRACT.db
     before: null
     chunk_size: 3
     timeout: 30
-    sql: 'SELECT * FROM "etlx_logs" ORDER BY "start_at" DESC LIMIT 2000'
+    sql: origin_query
     after: null
   target:
-    conn: 'mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30'
+    conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30
     timeout: 30
     before:
       - create_schema
@@ -195,22 +195,75 @@ active: true
 ```
 
 ```sql
+-- origin_query
+SELECT "description", "duration", STRFTIME('%Y-%m-%d %H:%M:%S', "start_at") AS "start_at", "ref"
+FROM "etlx_logs" 
+ORDER BY "start_at" DESC
+```
+
+```sql
 -- create_schema
-IF NOT EXISTS (
-    SELECT * FROM INFORMATION_SCHEMA.TABLES
-    WHERE TABLE_SCHEMA = 'dbo' AND TABLE_NAME = 'etlx_logs'
-)
-BEGIN    
-  CREATE TABLE [dbo].[etlsx_logs] (
-      [description] TEXT NULL,
-      [duration] BIGINT NULL,
-      [start_at] DATETIME NULL,
-      [ref] DATE NULL
-  )
-END
+IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = 'etlx_logs' AND type = 'U')
+CREATE TABLE [dbo].[etlx_logs] (
+    [description] NVARCHAR(MAX) NULL,
+    [duration] BIGINT NULL,
+    [start_at] DATETIME NULL,
+    [ref] DATE NULL
+);
 ```
 
 ```sql
 -- mssql_sql
 INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES 
+```
+
+# ETL
+
+```yaml metadata
+name: MSSQL_EXTRACT
+description: "Example extrating from mssql sqlite3 file"
+connection: "duckdb:"
+database: MSSQL_EXTRACT.db
+active: false
+```
+
+## MSSQL_EXTRACT
+
+```yaml metadata
+name: MSSQL_EXTRACT
+description: "Example extrating from mssql sqlite3 file"
+table: logs
+to_csv: true
+extract_conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30
+extract_sql: SELECT * FROM [dbo].[etlx_logs]
+load_conn: "duckdb:"
+load_before_sql:
+  - load_extentions
+  - attach_db
+load_sql: load_query
+load_after_sql: detach_db
+active: true
+```
+
+```sql
+-- load_extentions
+INSTALL sqlite;
+LOAD sqlite;
+```
+
+```sql
+-- attach_db
+ATTACH 'database/MSSQL_EXTRACT.db' AS "DB" (TYPE SQLITE)
+```
+
+```sql
+-- detach_db
+DETACH "DB";
+```
+
+```sql
+-- load_query
+CREATE OR REPLACE TABLE "DB"."<table>" AS
+SELECT * 
+FROM '<fname>';
 ```
