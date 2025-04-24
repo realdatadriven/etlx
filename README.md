@@ -1702,8 +1702,7 @@ To bridge this gap, the `db_2_db` action type allows you to **query data from on
 
 Use `db_2_db` when:
 
-- Your source is accessible with DuckDB or SQLite.
-- Your target is **not** yet supported by DuckDB.
+- Your database is not accessible with DuckDB.
 - You want to move data from one place to another using **pure SQL**, chunked if necessary.
 
 ---
