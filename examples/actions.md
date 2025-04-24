@@ -170,7 +170,7 @@ params:
 active: false
 ```
 
-## DB
+## DB 2 DB EX
 
 ```yaml metadata
 name: WRITE_RESULTS_MSSQL

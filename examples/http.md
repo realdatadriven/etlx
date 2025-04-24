@@ -540,8 +540,33 @@ active: true
 ```
 
 ```html body_tml
-<b>Good Morning</b><br /><br />
-This email is gebnerated by ETLX automatically!<br />
+<style>
+  table {
+    border-collapse: collapse;
+    width: 100%;
+    font-family: sans-serif;
+    font-size: 14px;
+  }
+  th, td {
+    border: 1px solid #ddd;
+    padding: 8px;
+    text-align: left;
+  }
+  th {
+    background-color: #f2f2f2;
+    font-weight: bold;
+  }
+  tr:nth-child(even) {
+    background-color: #f9f9f9;
+  }
+  tr:hover {
+    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+    background-color: #eef6ff;
+  }
+</style>
+<b>Good Morning!</b><br /><br />
+This email was gebnerated by ETLX automatically!<br />
+LOGS:<br />
 {{ with .logs }}
     {{ if eq .success true }}
       <table>
@@ -558,11 +583,11 @@ This email is gebnerated by ETLX automatically!<br />
         <tr>
             <td>{{ .name }}</td>
             <td>{{ .ref }}</td>
-            <td>{{ .start_at }}</td>
-            <td>{{ .end_at }}</td>
-            <td>{{ .duration }}</td>
+            <td>{{ .start_at | date "2006-01-02 15:04:05" }}</td>
+            <td>{{ .end_at | date "2006-01-02 15:04:05" }}</td>
+            <td>{{ divf .duration 1000000000 | printf "%.4fs" }}</td>
             <td>{{ .success }}</td>
-            <td>{{ .msg }}</td>
+            <td><span title="{{ .msg }}">{{ .msg | toString | abbrev 30}}</span></td>
         </tr>
         {{ else }}
         <tr>
