@@ -2024,7 +2024,8 @@ missing_columns AS (
     WHERE d.column_name IS NULL
 )
 SELECT 'ALTER TABLE "DB"."<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
-FROM missing_columns;
+FROM missing_columns
+WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 ```
 ...
 
