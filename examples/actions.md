@@ -185,7 +185,7 @@ params:
     sql: origin_query
     after: null
   target:
-    conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30
+    conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master
     timeout: 30
     before:
       - create_schema
@@ -234,7 +234,7 @@ name: MSSQL_EXTRACT
 description: "Example extrating from mssql sqlite3 file"
 table: logs
 to_csv: true
-extract_conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&connection+timeout=30
+extract_conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master
 extract_sql: SELECT * FROM [dbo].[etlx_logs]
 load_conn: "duckdb:"
 load_before_sql:
