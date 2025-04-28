@@ -116,7 +116,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 				path, okPath = itemMetadata["file"].(string)
 			}
 		}
-		fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		fname := fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 		if okPath && path != "" {
 			fname = path
 			if filepath.IsAbs(fname) {
@@ -126,7 +126,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 				fname = fmt.Sprintf(`%s/%s`, mainPath, fname)
 			}
 		} else if okMainPath && mainPath != "" {
-			fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, mainPath, table)
+			fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, mainPath, table)
 		}
 		// QUERIES TO RUN AT BEGINING
 		if okBefore {

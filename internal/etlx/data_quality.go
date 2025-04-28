@@ -15,7 +15,7 @@ func (etlx *ETLX) ExecuteQueryWithRowsAffected(conn db.DBInterface, sqlData any,
 		table, _ = metadata["table"].(string)
 	}
 	if fname == "" {
-		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 	}
 	fname = etlx.SetQueryPlaceholders(fname, "", "", dateRef)
 	switch queries := sqlData.(type) {

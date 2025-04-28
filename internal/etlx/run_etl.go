@@ -57,7 +57,7 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 		table, _ = metadata["table"].(string)
 	}
 	if fname == "" {
-		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 	}
 	query = etlx.SetQueryPlaceholders(query, table, fname, dateRef)
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
@@ -81,7 +81,7 @@ func (etlx *ETLX) ExecuteCondition(conn db.DBInterface, query string, item map[s
 		table, _ = metadata["table"].(string)
 	}
 	if fname == "" {
-		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 	}
 	if _, ok := item[query].(string); ok {
 		query = item[query].(string)
@@ -295,7 +295,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		toCsv = metadata["to_csv"].(bool)
 	}
 	if fname == "" {
-		fname = fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 	}
 	fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 	// CHECK FOR DYNAMIC GENERATE QUERIES
@@ -646,7 +646,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			processLogs = append(processLogs, _log3)
 			// FILE
 			table := itemMetadata["table"].(string)
-			fname := fmt.Sprintf(`%s/%s_YYYYMMDD.csv`, os.TempDir(), table)
+			fname := fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 			itemHasFile := false
 			if okMetaFile && metadataFile != "" {
 				fname = metadataFile
