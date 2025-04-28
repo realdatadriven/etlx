@@ -481,6 +481,9 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 		}
 	}
 	// Handle cases for temporary tables with date extensions
+	if os.Getenv("ETLX_DONT_RPLC_DT_PLCHLDR_NO_CBRCKTS") == "true" { // DO NOT REPLACE DATE PATT WITH NO CURLLY BRACKETS
+		return query
+	}
 	patt = regexp.MustCompile(
 		`YYYY.?MM.?DD|AAAA.?MM.?DD|YY.?MM.?DD|AA.?MM.?DD|YYYY.?MM|AAAA.?MM|YY.?MM|AA.?MM|MM.?DD|DD.?MM.?YYYY|DD.?MM.?AAAA|DD.?MM.?YY|DD.?MM.?AA`,
 	)
