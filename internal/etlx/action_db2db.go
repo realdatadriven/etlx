@@ -54,12 +54,12 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 	}
 	dbSourceConn, err := etlx.GetDB(source_conn)
 	if err != nil {
-		return fmt.Errorf("error connecting to source: %s", source_conn)
+		return fmt.Errorf("error connecting to source: %v %s", err, source_conn)
 	}
 	defer dbSourceConn.Close()
 	dbTargetConn, err := etlx.GetDB(target_conn)
 	if err != nil {
-		return fmt.Errorf("error connecting to target: %s", target_conn)
+		return fmt.Errorf("error connecting to target: %v %s", err, target_conn)
 	}
 	defer dbTargetConn.Close()
 	// BEGIN / STARTING QUERIES
