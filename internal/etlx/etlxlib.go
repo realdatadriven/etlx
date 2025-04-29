@@ -97,7 +97,7 @@ func (etlx *ETLX) ParseMarkdownToConfig_(reader text.Reader) error {
 					key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
 					yamlContent := make(map[string]any)
 					if err := yaml.Unmarshal([]byte(content), &yamlContent); err != nil {
-						log.Printf("Error parsing YAML block %s: %v", key, err)
+						log.Printf("Error parsing YAML block %s: %v, %s", key, err, yamlContent)
 					} else {
 						current[key] = yamlContent
 					}
@@ -229,7 +229,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 							err = json.Unmarshal([]byte(contentFinal), &metaData)
 						}
 						if err != nil {
-							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v", info, key, err)
+							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v, %s", info, key, err, contentFinal)
 						}
 						current[key] = metaData
 						/*/ Add to the current section's __order
