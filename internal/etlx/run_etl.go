@@ -17,6 +17,13 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		return nil, err
 	}
 	_dsn := etlx.ReplaceEnvVariable(dsn)
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		_file, err := etlx.TempFIle("", _dsn, fmt.Sprintf("query.%s.*.sql", "dns"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(_file)
+	}
 	var dbConn db.DBInterface
 	switch driver {
 	case "duckdb":
