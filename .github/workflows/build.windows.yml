@@ -15,18 +15,15 @@ jobs:
         with:
           go-version: '1.23'
 
-      - name: Enable Developer Command Prompt (MSVC)
-        shell: cmd
-        run: |
-          echo "Setting environment for Visual Studio..."
-          call "%ProgramFiles(x86)%\Microsoft Visual Studio\2022\BuildTools\VC\Auxiliary\Build\vcvars64.bat"
+      - name: Setup MSBuild (for Visual Studio environment)
+        uses: microsoft/setup-msbuild@v1.3.1
 
-      - name: Set Environment Variables
+      - name: Set Environment Variables for CGO
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CC=cl.exe" >> $env:GITHUB_ENV
 
-      - name: Build Windows Binary with MSVC
+      - name: Build with MSVC (Visual Studio compiler)
         run: |
           mkdir dist
           go build -o dist/etlx-windows-msvc-amd64.exe ./cmd/main.go
@@ -36,5 +33,6 @@ jobs:
         with:
           name: windows-msvc-binary
           path: dist/*msvc*
+
  
     
