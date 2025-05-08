@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.24'
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.24'
 
       # Step 3: Download DuckDB Precompiled Library
       - name: Download DuckDB Library
@@ -110,7 +110,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.24'
 
       # Step 4: Install MinGW for Cross-Compilation
       - name: Install MinGW
@@ -128,9 +128,9 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir dist
-          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-amd64_mingw.exe ./cmd/main.go
           echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-arm64_mingw.exe ./cmd/main.go
       #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
@@ -138,7 +138,37 @@ jobs:
         with:
           name: windows-binary
           path: dist/*windows*  
+  build-windows-msvc:
+    runs-on: windows-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
 
+      - name: Setup Go
+        uses: actions/setup-go@v4
+        with:
+          go-version: '1.24'
+
+      - name: Setup MSBuild (for Visual Studio environment)
+        uses: microsoft/setup-msbuild@v1.3.1
+
+      - name: Set Environment Variables for CGO
+        run: |
+          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
+#          echo "CC=cl.exe" >> $env:GITHUB_ENV
+
+      - name: Build with MSVC (Visual Studio compiler)
+        run: |
+          mkdir dist
+          go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
+          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
+
+      - name: Upload MSVC Artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-msvc-binary
+          path: dist/*windows*        
   build-darwin:
     runs-on: macos-latest
     steps:
@@ -150,7 +180,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.24'
 
       # Step 3: Install UnixODBC
       - name: Install UnixODBC
@@ -189,6 +219,11 @@ jobs:
         with:
           name: windows-binary
           path: dist
+      - name: Download Windows Binary with MSVC
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-msvc-binary
+          path: dist
       - name: Download MacOS Binary
         uses: actions/download-artifact@v4
         with:
@@ -214,9 +249,11 @@ jobs:
           zip -j dist/etlx-linux-amd64.zip dist/etlx-linux-amd64
           zip -j dist/etlx-macos-amd64.zip dist/etlx-macos-amd64
           zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
+          zip -j dist/etlx-windows-amd64_mingw.zip dist/etlx-windows-amd64_mingw.exe
           zip -j dist/etlx-windows-linking-amd64.zip dist/etlx-windows-linking-amd64.exe
           zip -j dist/etlx-macos-arm64.zip dist/etlx-macos-arm64
           zip -j dist/etlx-windows-arm64.zip dist/etlx-windows-arm64.exe
+          zip -j dist/etlx-windows-arm64_mingw.zip dist/etlx-windows-arm64_mingw.exe
           zip -j dist/etlx-windows-linking-arm64.zip dist/etlx-windows-linking-arm64.exe
       #zip -j dist/etlx-linux-arm64.zip dist/etlx-linux-arm64
       - name: Create Release
@@ -229,9 +266,11 @@ jobs:
             dist/etlx-linux-amd64.zip
             dist/etlx-macos-amd64.zip
             dist/etlx-windows-amd64.zip
+            dist/etlx-windows-arm64.zip
             dist/etlx-windows-linking-amd64.zip
             dist/etlx-macos-arm64.zip
-            dist/etlx-windows-arm64.zip
+            dist/etlx-windows-amd64_mingw.zip
+            dist/etlx-windows-arm64_mingw.zip
             dist/etlx-windows-linking-arm64.zip
       #      dist/etlx-linux-arm64.zip
         env:
