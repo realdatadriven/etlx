@@ -1,4 +1,4 @@
-name: Debug Windows Build with DuckDB Library
+name: Debug Windows Build
 
 on:
   workflow_dispatch:
@@ -13,7 +13,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.23'
+          go-version: '1.24'
 
       - name: Setup MSBuild (for Visual Studio environment)
         uses: microsoft/setup-msbuild@v1.3.1
@@ -21,7 +21,7 @@ jobs:
       - name: Set Environment Variables for CGO
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
-          echo "CC=cl.exe" >> $env:GITHUB_ENV
+#          echo "CC=cl.exe" >> $env:GITHUB_ENV
 
       - name: Build with MSVC (Visual Studio compiler)
         run: |
