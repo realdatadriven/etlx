@@ -215,7 +215,7 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 			} else if len(*rows) > 0 {
 				_queries := []any{}
 				for _, value := range *rows {
-					// fmt.Println(name, value["query"].(string))
+					fmt.Println(name, value["query"].(string))
 					_queries = append(_queries, value["query"])
 				}
 				return _queries, nil
@@ -272,7 +272,7 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 					// _queries = append(_queries, q)
 				} else if len(*rows) > 0 {
 					for _, value := range *rows {
-						// fmt.Println(name, value["query"].(string))
+						fmt.Println(name, value["query"].(string))
 						_queries = append(_queries, value["query"])
 					}
 				}

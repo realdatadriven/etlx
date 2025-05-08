@@ -59,7 +59,7 @@ func (db *ODBC) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	}
 	id, err := result.LastInsertId()
 	if err != nil {
-		return 0, err
+		id = 0
 	}
 	return int(id), err
 }
