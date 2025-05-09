@@ -27,8 +27,8 @@ jobs:
         run: |
           mkdir dist
           go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
-          echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
+#          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+#          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
 
       - name: Upload MSVC Artifacts
         uses: actions/upload-artifact@v4
