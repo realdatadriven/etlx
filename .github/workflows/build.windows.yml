@@ -16,7 +16,7 @@ jobs:
           go-version: '1.24'
 
       - name: Setup MSBuild (for Visual Studio environment)
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Set Environment Variables for CGO
         run: |
