@@ -1096,6 +1096,8 @@ before_sql:
 - "LOAD sqlite"
 - "ATTACH 'database/DB.db' AS DB (TYPE SQLITE)"
 script_sql: clean_aux_data
+on_err_patt: null
+on_err_sql: null
 after_sql: "DETACH DB"
 active: true
 ```
