@@ -42,6 +42,9 @@ jobs:
         with:
           go-version: '1.24'
 
+      - name: Setup MSBuild (for Visual Studio environment)
+        uses: microsoft/setup-msbuild@v2
+
       # Step 3: Download DuckDB Precompiled Library
       - name: Download DuckDB Library
         run: |
@@ -57,17 +60,10 @@ jobs:
           Expand-Archive -Path "duckdb.zip" -DestinationPath $destinationPath
           Write-Host "DuckDB library extracted to $destinationPath"
 
-      # Step 4: Install MinGW for Cross-Compilation
-      - name: Install MinGW
-        run: |
-          choco install mingw -y
-          Write-Host "MinGW installed for cross-compilation"
-
       # Step 5: Set Environment Variables
       - name: Set Environment Variables
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
-          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
           echo "CGO_LDFLAGS=-L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
 
@@ -86,7 +82,6 @@ jobs:
           mkdir dist
           go build -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
-          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
           echo "CGO_LDFLAGS=-L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
           echo "GOARCH=arm64" >> $env:GITHUB_ENV
@@ -98,47 +93,7 @@ jobs:
         with:
           name: windows-binary-linking
           path: dist/*windows*
-      
   build-windows:
-    runs-on: windows-latest
-    steps:
-      # Step 1: Checkout the code
-      - name: Checkout Code
-        uses: actions/checkout@v3
-
-      # Step 2: Set up Go environment
-      - name: Setup Go
-        uses: actions/setup-go@v4
-        with:
-          go-version: '1.24'
-
-      # Step 4: Install MinGW for Cross-Compilation
-      - name: Install MinGW
-        run: |
-          choco install mingw -y
-          Write-Host "MinGW installed for cross-compilation"
-
-      # Step 5: Set Environment Variables
-      - name: Set Environment Variables
-        run: |
-          echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
-          echo "CC=x86_64-w64-mingw32-gcc" >> $env:GITHUB_ENV
-
-      # Step 7: Build the Application
-      - name: Build Windows Binary
-        run: |
-          mkdir dist
-          go build -o dist/etlx-windows-amd64_mingw.exe ./cmd/main.go
-          echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-arm64_mingw.exe ./cmd/main.go
-      #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
-        
-      - name: Upload Artifacts
-        uses: actions/upload-artifact@v4
-        with:
-          name: windows-binary
-          path: dist/*windows*  
-  build-windows-msvc:
     runs-on: windows-latest
     steps:
       - name: Checkout Code
@@ -150,7 +105,7 @@ jobs:
           go-version: '1.24'
 
       - name: Setup MSBuild (for Visual Studio environment)
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Set Environment Variables for CGO
         run: |
@@ -249,11 +204,9 @@ jobs:
           zip -j dist/etlx-linux-amd64.zip dist/etlx-linux-amd64
           zip -j dist/etlx-macos-amd64.zip dist/etlx-macos-amd64
           zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
-          zip -j dist/etlx-windows-amd64_mingw.zip dist/etlx-windows-amd64_mingw.exe
           zip -j dist/etlx-windows-linking-amd64.zip dist/etlx-windows-linking-amd64.exe
           zip -j dist/etlx-macos-arm64.zip dist/etlx-macos-arm64
           zip -j dist/etlx-windows-arm64.zip dist/etlx-windows-arm64.exe
-          zip -j dist/etlx-windows-arm64_mingw.zip dist/etlx-windows-arm64_mingw.exe
           zip -j dist/etlx-windows-linking-arm64.zip dist/etlx-windows-linking-arm64.exe
       #zip -j dist/etlx-linux-arm64.zip dist/etlx-linux-arm64
       - name: Create Release
@@ -269,8 +222,6 @@ jobs:
             dist/etlx-windows-arm64.zip
             dist/etlx-windows-linking-amd64.zip
             dist/etlx-macos-arm64.zip
-            dist/etlx-windows-amd64_mingw.zip
-            dist/etlx-windows-arm64_mingw.zip
             dist/etlx-windows-linking-arm64.zip
       #      dist/etlx-linux-arm64.zip
         env:
