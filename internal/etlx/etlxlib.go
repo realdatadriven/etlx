@@ -56,67 +56,6 @@ func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 	return etlx.ParseMarkdownToConfig(reader)
 }
 
-// ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig_(reader text.Reader) error {
-	parser := goldmark.DefaultParser()
-	root := parser.Parse(reader)
-
-	// Initialize the result map
-	config := make(map[string]any)
-	current := config // Reference to the current level of the map
-
-	// Walk through the AST
-	ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
-		if entering {
-			switch n := node.(type) {
-			case *ast.Heading:
-				// Extract the heading text
-				var headingText strings.Builder
-				for child := n.FirstChild(); child != nil; child = child.NextSibling() {
-					if textNode, ok := child.(*ast.Text); ok {
-						headingText.WriteString(string(textNode.Value(reader.Source())))
-					}
-				}
-				heading := headingText.String()
-
-				// Create a new section under the current map reference
-				if _, exists := current[heading]; !exists {
-					current[heading] = make(map[string]any)
-				}
-
-				// Update the current map reference to the new section
-				current = current[heading].(map[string]any)
-
-			case *ast.FencedCodeBlock:
-				// Extract info and content from the code block
-				info := string(n.Info.Segment.Value(reader.Source()))
-				content := string(n.Text(reader.Source()))
-
-				// Process YAML blocks
-				if strings.HasPrefix(info, "yaml") {
-					key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
-					yamlContent := make(map[string]any)
-					if err := yaml.Unmarshal([]byte(content), &yamlContent); err != nil {
-						log.Printf("Error parsing YAML block %s: %v, %s", key, err, yamlContent)
-					} else {
-						current[key] = yamlContent
-					}
-				} else if strings.HasPrefix(info, "sql") {
-					// Process SQL blocks
-					key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
-					current[key] = content
-				}
-			}
-		} else if node.Kind() == ast.KindHeading {
-			// Move up one level for closing a heading node
-			current = config // Reset to the root on heading exit
-		}
-		return ast.WalkContinue, nil
-	})
-	etlx.Config = config
-	return nil
-}
-
 // TracebackHeaders traces headers from the current node up to the top-level header.
 func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 	var headers []string
