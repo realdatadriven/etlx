@@ -142,6 +142,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader) // Initialize the result map and a levels map
 	config := make(map[string]any)
+	config["__order"] = []string{}
 	levels := make(map[int]map[string]any) // Track the current section for each heading level
 	//order := make(map[string][]string)          // Track the order of keys for each top-level section
 	// Walk through the AST
@@ -159,6 +160,8 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 				heading := headingText.String()
 				// Handle level 1 headings
 				if n.Level == 1 {
+					// Level 1 Heading order
+					config["__order"] = append(config["__order"].([]string), heading)
 					// Reset the context for a new level 1 heading
 					if _, exists := config[heading]; !exists {
 						config[heading] = make(map[string]any)

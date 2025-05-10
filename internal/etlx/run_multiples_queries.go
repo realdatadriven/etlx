@@ -75,13 +75,13 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		}
 		if only, okOnly := extraConf["only"]; okOnly {
 			if len(only.([]string)) == 0 {
-			} else if !etlx.contains(only.([]string), itemKey) {
+			} else if !etlx.Contains(only.([]string), itemKey) {
 				continue
 			}
 		}
 		if skip, okSkip := extraConf["skip"]; okSkip {
 			if len(skip.([]string)) == 0 {
-			} else if etlx.contains(skip.([]string), itemKey) {
+			} else if etlx.Contains(skip.([]string), itemKey) {
 				continue
 			}
 		}

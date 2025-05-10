@@ -181,7 +181,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		if only, okOnly := extraConf["only"]; okOnly {
 			//fmt.Println("ONLY", only, len(only.([]string)))
 			if len(only.([]string)) == 0 {
-			} else if !etlx.contains(only.([]string), itemKey) {
+			} else if !etlx.Contains(only.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -196,7 +196,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		if skip, okSkip := extraConf["skip"]; okSkip {
 			//fmt.Println("SKIP", skip, len(skip.([]string)))
 			if len(skip.([]string)) == 0 {
-			} else if etlx.contains(skip.([]string), itemKey) {
+			} else if etlx.Contains(skip.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),

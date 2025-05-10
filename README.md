@@ -2176,6 +2176,59 @@ SELECT COUNT(*) > 0 as chk FROM logs WHERE success = false;
 
 ---
 
+### **Advanced Workflow Execution: `runs_as` Override**
+
+By default, the ETLX engine processes each Level 1 section (like `ETL`, `DATA_QUALITY`, `EXPORTS`, `ACTIONS`, `LOGS`, `NOTIFY` etc.) in the order that order. However, in more advanced workflows, it is often necessary to:
+
+- Execute a second ETL process **after** quality validations (`DATA_QUALITY`).
+- Reuse intermediate outputs **within the same config**, without having to create and chain multiple `.md` config files.
+
+To enable this behavior, ETLX introduces the `runs_as` field in the **metadata block** of any Level 1 key. This tells ETLX to treat that section **as if it were a specific built-in block** like `ETL`, `EXPORTS`, etc., even if it has a different name.
+
+---
+
+````markdown
+
+# ETL_AFTER_SOME_KEY
+
+```yaml metadata
+runs_as: ETL
+description: "Post-validation data transformation"
+active: true
+```
+
+## ETL_OVER_SOME_MAIN_STEP
+
+...
+
+````
+
+In this example:
+
+- ETLX will run the original `ETL` block.
+- Then execute `DATA_QUALITY`, an so on.
+- Then treat `ETL_AFTER_SOME_KEY` as another `ETL` block (since it contains `runs_as: ETL`) and execute it as such.
+
+This allows chaining of processes within the same configuration file.
+
+---
+
+### **⚠️ Order Matters**
+
+The custom section (e.g. `# ETL_AFTER_SOME_KEY`) is executed **in the order it appears** in the Markdown file after the main keys. That means the flow becomes:
+
+1. `# ETL`
+2. `# DATA_QUALITY`
+3. `# ETL2` (runs as `ETL`)
+
+This enables advanced chaining like:
+
+- Exporting logs after validation.
+- Reapplying transformations based on data quality feedback.
+- Generating post-validation reports.
+
+---
+
 ## **6. Embedding in Go**
 
 To embed the ETL framework in a Go application:

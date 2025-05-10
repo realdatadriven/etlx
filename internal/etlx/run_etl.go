@@ -476,7 +476,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	}
 }
 
-func (app *ETLX) contains(slice []string, element interface{}) bool {
+func (app *ETLX) Contains(slice []string, element interface{}) bool {
 	for _, v := range slice {
 		if v == element {
 			return true
@@ -560,7 +560,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		if only, okOnly := extraConf["only"]; okOnly {
 			//fmt.Println("ONLY", only, len(only.([]string)))
 			if len(only.([]string)) == 0 {
-			} else if !etlx.contains(only.([]string), itemKey) {
+			} else if !etlx.Contains(only.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -575,7 +575,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		if skip, okSkip := extraConf["skip"]; okSkip {
 			//fmt.Println("SKIP", skip, len(skip.([]string)))
 			if len(skip.([]string)) == 0 {
-			} else if etlx.contains(skip.([]string), itemKey) {
+			} else if etlx.Contains(skip.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -626,7 +626,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {
-				} else if !etlx.contains(steps.([]string), step) {
+				} else if !etlx.Contains(steps.([]string), step) {
 					processLogs = append(processLogs, map[string]any{
 						"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
 						"description": itemMetadata["description"].(string),

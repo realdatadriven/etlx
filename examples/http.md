@@ -609,3 +609,30 @@ SELECT *
 FROM "DB"."etlx_logs"
 WHERE "ref" = '{YYYY-MM-DD}'
 ```
+
+# ETL_LAST
+
+<https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page>
+
+```yaml metadata
+name: HTTP_EXTRACT
+description: "Example extrating from web to a local sqlite3 file"
+connection: "duckdb:"
+database: HTTP_EXTRACT.db
+runs_as: ETL
+active: true
+```
+
+## VERSION2
+
+```yaml metadata
+name: VERSION2
+description: "DDB Version"
+table: VERSION2
+load_conn: "duckdb:"
+load_before_sql: "ATTACH 'database/HTTP_EXTRACT.db' AS DB (TYPE SQLITE)"
+load_sql: 'CREATE OR REPLACE TABLE DB."<table>" AS SELECT version() AS "VERSION";'
+load_after_sql: "DETACH DB;"
+rows_sql: 'SELECT COUNT(*) AS "nrows" FROM DB."<table>"'
+active: true
+```
