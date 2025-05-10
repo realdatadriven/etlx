@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"regexp"
 	"time"
 )
 
@@ -88,6 +89,8 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		scriptSQL, okScript := itemMetadata["script_sql"]
 		afterSQL, okAfter := itemMetadata["after_sql"]
+		errPatt, okErrPatt := itemMetadata["on_err_patt"]
+		errSQL, okErrSQL := itemMetadata["on_err_sql"]
 		conn, okCon := itemMetadata["connection"]
 		if !okCon {
 			conn = mainConn
@@ -187,13 +190,41 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			err = etlx.ExecuteQuery(dbConn, scriptSQL, item, fname, "", dateRef)
 			if err != nil {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_err_by_pass := false
+				if okErrPatt && errPatt != nil && okErrSQL && errSQL != nil {
+					//fmt.Println(onErrPatt.(string), onErrSQL.(string))
+					re, regex_err := regexp.Compile(errPatt.(string))
+					if regex_err != nil {
+						_log2["success"] = false
+						_log2["msg"] = fmt.Errorf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3)
+					} else if re.MatchString(string(err.Error())) {
+						err = etlx.ExecuteQuery(dbConn, errSQL, item, fname, "", dateRef)
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Errorf("%s ERR: main: %s", key, err)
+							_log2["end_at"] = time.Now()
+							_log2["duration"] = time.Since(start3)
+						} else {
+							_err_by_pass = true
+						}
+					}
+				}
+				if !_err_by_pass {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s error: %s", key, itemKey, err)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s -> %s Success", key, itemKey)
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3)
+				}
 			} else {
 				_log2["success"] = true
-				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
+				_log2["msg"] = fmt.Sprintf("%s -> %s Success", key, itemKey)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			}

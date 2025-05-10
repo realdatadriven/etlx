@@ -16,7 +16,7 @@ jobs:
           go-version: '1.24'
 
       - name: Setup MSBuild (for Visual Studio environment)
-        uses: microsoft/setup-msbuild@v1.3.1
+        uses: microsoft/setup-msbuild@v2
 
       - name: Set Environment Variables for CGO
         run: |
@@ -27,8 +27,8 @@ jobs:
         run: |
           mkdir dist
           go build -o dist/etlx-windows-amd64.exe ./cmd/main.go
-          echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
+#          echo "GOARCH=arm64" >> $env:GITHUB_ENV
+#          go build -o dist/etlx-windows-arm64.exe ./cmd/main.go
 
       - name: Upload MSVC Artifacts
         uses: actions/upload-artifact@v4

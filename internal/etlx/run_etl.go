@@ -62,6 +62,9 @@ func (etlx *ETLX) Query(conn db.DBInterface, query string, item map[string]any, 
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
 		table, _ = metadata["table"].(string)
+		if table == "" {
+			table, _ = metadata["name"].(string)
+		}
 	}
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
@@ -86,6 +89,9 @@ func (etlx *ETLX) ExecuteCondition(conn db.DBInterface, query string, item map[s
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
 		table, _ = metadata["table"].(string)
+		if table == "" {
+			table, _ = metadata["name"].(string)
+		}
 	}
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
@@ -292,6 +298,9 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	metadata, ok := item["metadata"].(map[string]any)
 	if ok {
 		table, _ = metadata["table"].(string)
+		if table == "" {
+			table, _ = metadata["name"].(string)
+		}
 	}
 	odbc2Csv := false
 	if _, ok := metadata["odbc_to_csv"]; ok {
