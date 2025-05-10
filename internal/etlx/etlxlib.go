@@ -36,7 +36,7 @@ before_sql:
   - "ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE)"
   - "USE etlx_logs"
   - "LOAD json"
-  - "get_dyn_queries[create_missing_columns]"
+  - "get_dyn_queries[create_missing_columns](ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE),DETACH etlx_logs)"
 save_log_sql: |
   INSERT INTO "etlx_logs"."<table>" BY NAME
   SELECT *
@@ -273,7 +273,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
 	// due to toml resulting parsed map been more deeply
 	// (going as far as []map[string]any instead of just []any relativally to json and yaml)
 	// it was decided to put all to json string an back to go map to guarantee  consistency
-	// otherwise schema defenition would be needed and that would
+	// otherwise schema definition would be needed and that would
 	jsonData, err := json.MarshalIndent(config, "", "  ")
 	if err != nil {
 		return fmt.Errorf("err converting to json: %s", err)

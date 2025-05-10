@@ -102,7 +102,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					"success": true,
 					"msg":     "Deactivated",
 				})
-				return fmt.Errorf("dectivated %s", "")
+				return fmt.Errorf("deactivated %s", "")
 			}
 		}
 		// MAIN PATH
@@ -192,7 +192,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		}
 		defer dbConn.Close()
 		_log2["success"] = true
-		_log2["msg"] = fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn)
+		_log2["msg"] = fmt.Sprintf("%s -> %s CONN: connection to %s successfull", key, itemKey, conn)
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3)
 		processLogs = append(processLogs, _log2)
@@ -217,7 +217,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		} else if okMainPath && mainPath != "" && !isEmpty(mainPath) {
 			fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, mainPath, table)
 		}
-		// QUERIES TO RUN AT BEGINING
+		// QUERIES TO RUN AT beginning
 		if okBefore {
 			start3 := time.Now()
 			_log2 := map[string]any{
@@ -653,7 +653,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					if err != nil {
 						data[_map] = map[string]any{
 							"success": false,
-							"msg":     fmt.Sprintf("Eailed to execute map query %s %s", _map, err),
+							"msg":     fmt.Sprintf("failed to execute map query %s %s", _map, err),
 							"data":    []map[string]any{},
 						}
 					} else {
@@ -673,7 +673,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						if err != nil {
 							data[_sql.(string)] = map[string]any{
 								"success": false,
-								"msg":     fmt.Sprintf("Eailed to execute map query %s %s", _map, err),
+								"msg":     fmt.Sprintf("failed to execute map query %s %s", _map, err),
 								"data":    []map[string]any{},
 							}
 						} else {

@@ -45,7 +45,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				"success":     true,
 				"msg":         "Deactivated",
 			})
-			return nil, nil, fmt.Errorf("%s dectivated", key)
+			return nil, nil, fmt.Errorf("%s deactivated", key)
 		}
 	}
 	beforeSQL, okBefore := metadata["before_sql"]
@@ -135,11 +135,11 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	defer dbConn.Close()
 	_log2["success"] = true
-	_log2["msg"] = fmt.Sprintf("%s CONN: Connectinon to %s successfull", key, conn)
+	_log2["msg"] = fmt.Sprintf("%s CONN: connection to %s successfull", key, conn)
 	_log2["end_at"] = time.Now()
 	_log2["duration"] = time.Since(start3)
 	processLogs = append(processLogs, _log2)
-	//  QUERIES TO RUN AT BEGINING
+	//  QUERIES TO RUN AT beginning
 	if okBefore {
 		start3 := time.Now()
 		_log2 = map[string]any{

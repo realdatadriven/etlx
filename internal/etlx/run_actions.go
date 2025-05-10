@@ -44,7 +44,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 					"success": true,
 					"msg":     "Deactivated",
 				})
-				return fmt.Errorf("dectivated %s", "")
+				return fmt.Errorf("deactivated %s", "")
 			}
 		}
 		//name, _ := metadata["name"].(string)

@@ -367,7 +367,7 @@ load_after_sql: detaches
   - `array|list`: Execute all queries in sequence.
   - In case is not null it can be the query itself or just the name of a sql code block under the same key, where `sql [query_name]` or first line `-- [query_name]`
 - Use `_conn` for connection settings. If `null`, fall back to the main connection.
-- Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applyed for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
+- Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applied for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
    You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.
 
 #### 4. **Output Logs**
@@ -1369,6 +1369,64 @@ FROM READ_JSON('<fname>');
 ✔ **Supports preprocessing (`before_sql`) and cleanup (`after_sql`)**  
 ✔ **Highly customizable to different logging needs**  
 
+### Default logs
+
+By default is generated a sqlite db `etlx_logs.db` in temp folder, that'll depende on the OS, it adds to your config this peace os md:
+
+````markdown
+# AUTO_LOGS
+
+```yaml metadata
+name: LOGS
+description: "Logging"
+table: logs
+connection: "duckdb:"
+before_sql:
+  - "LOAD Sqlite"
+  - "ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE)"
+  - "USE etlx_logs"
+  - "LOAD json"
+  - "get_dyn_queries[create_missing_columns](ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE),DETACH etlx_logs)"
+save_log_sql: |
+  INSERT INTO "etlx_logs"."<table>" BY NAME
+  SELECT *
+  FROM READ_JSON('<fname>');
+save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+save_on_err_sql: |
+  CREATE TABLE "etlx_logs"."<table>" AS
+  SELECT *
+  FROM READ_JSON('<fname>');
+after_sql:
+  - 'USE memory'
+  - 'DETACH "etlx_logs"'
+active: true
+```
+
+```sql
+-- create_missing_columns
+WITH source_columns AS (
+    SELECT "column_name", "column_type"
+    FROM (DESCRIBE SELECT * FROM READ_JSON('<fname>'))
+),
+destination_columns AS (
+    SELECT "column_name", "data_type" as "column_type"
+    FROM "duckdb_columns"
+    WHERE "table_name" = '<table>'
+),
+missing_columns AS (
+    SELECT "s"."column_name", "s"."column_type"
+    FROM source_columns "s"
+    LEFT JOIN destination_columns "d" ON "s"."column_name" = "d"."column_name"
+    WHERE "d"."column_name" IS NULL
+)
+SELECT 'ALTER TABLE "etlx_logs"."<table>" ADD COLUMN "' || "column_name" || '" ' || "column_type" || ';' AS "query"
+FROM missing_columns
+WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
+```
+````
+
+But it can be overiden to be saved on your own database of choice by changing `ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE)`
+
 ---
 
 ### **Loading Config Dependencies**
@@ -1982,9 +2040,9 @@ In some **advanced ETL workflows**, you may need to **dynamically generate SQL q
 ✅ **Self-Evolving Workflows** – ETL jobs can generate and execute additional SQL queries as needed.  
 ✅ **Automation** – Reduces the need for manual intervention when new columns appear.  
 
-#### **🔹 How `get_dyn_queries[query_name]` Works**
+#### **🔹 How `get_dyn_queries[query_name](runs_before,runs_after)` Works**
 
-- Dynamic queries are executed using the **`get_dyn_queries[query_name]`** pattern.
+- Dynamic queries are executed using the **`get_dyn_queries[query_name](runs_before,runs_after)`** pattern.
 - During execution, **ETLX runs the query** `query_name` and **retrieves dynamically generated queries**.
 - The **resulting queries are then executed automatically**.
 
@@ -1992,7 +2050,9 @@ In some **advanced ETL workflows**, you may need to **dynamically generate SQL q
 
 This example **checks for new columns in a JSON file** and **adds them to the destination table**.
 
-##### **📄 Markdown Configuration for `get_dyn_queries[query_name]`**
+##### **📄 Markdown Configuration for `get_dyn_queries[query_name](runs_before,runs_after)`**
+
+>If the `query_name` depends on attaching and detaching the main db where it will run, those should be passed as dependencies, because the dynamic queries are generate before any other query and put in the list for the list where it is to be executed, to be a simpler flow, but they are optional otherwise.
 
 ````markdown
 ....
@@ -2002,14 +2062,14 @@ This example **checks for new columns in a JSON file** and **adds them to the de
 connection: "duckdb:"
 before_sql:
   - ...
-  - get_dyn_queries[create_columns_missing]  # Generates queries defined in `create_columns_missing` and  Executes them
+  - get_dyn_queries[create_missing_columns]  # Generates queries defined in `create_missing_columns` and  Executes them
 ..
 ```
 
 **📜 SQL Query (Generating Missing Columns)**
 
 ```sql
--- create_columns_missing
+-- create_missing_columns
 WITH source_columns AS (
     SELECT column_name, column_type 
     FROM (DESCRIBE SELECT * FROM read_json('<fname>'))
@@ -2025,7 +2085,7 @@ missing_columns AS (
     LEFT JOIN destination_columns d ON s.column_name = d.column_name
     WHERE d.column_name IS NULL
 )
-SELECT 'ALTER TABLE "DB"."<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
+SELECT 'ALTER TABLE "<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
 FROM missing_columns
 WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 ```
@@ -2037,7 +2097,7 @@ WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 
 1️⃣ **Extract column metadata from the input (in this case a json file, but it could be a table or any other valid query).**  
 2️⃣ **Check which columns are missing in the destination table (`<table>`).**  
-3️⃣ **Generate `ALTER TABLE` statements for adding missing columns, and replaces the `- get_dyn_queries[create_columns_missing]` with the the generated queries**  
+3️⃣ **Generate `ALTER TABLE` statements for adding missing columns, and replaces the `- get_dyn_queries[create_missing_columns]` with the the generated queries**  
 4️⃣ **Runs the workflow with dynamically generated queries against the destination connection.**  
 
 #### **🔹 Key Features**

@@ -220,10 +220,33 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				}
 				fmt.Println(_file)
 			}
+			// CHECK IF DYN QUERY HAS DEPENDENCIES (before, after)
+			re := regexp.MustCompile(`\(([^,]+),([^)]+)\)`)
+			matches := re.FindStringSubmatch(queries)
+			// fmt.Println(matches)
+			before := ""
+			after := ""
+			if len(matches) == 3 {
+				before = matches[1]
+				after = matches[2]
+				//fmt.Println("Before:", before)
+				//fmt.Println("After:", after)
+			}
+			if before != "" {
+				err = etlx.ExecuteQuery(conn, before, item, fname, "", dateRef)
+				if err != nil {
+					fmt.Printf("getDynamicQueriesIfAny Before error: %s", err)
+				}
+			}
 			rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
+			if after != "" {
+				err_ := etlx.ExecuteQuery(conn, after, item, fname, "", dateRef)
+				if err_ != nil {
+					fmt.Printf("getDynamicQueriesIfAny After error: %s", err)
+				}
+			}
 			if err != nil {
 				fmt.Printf("Err getting dyn_queries: %s %v", name, err)
-				return sqlData, nil
 			} else if len(*rows) > 0 {
 				_queries := []any{}
 				for _, value := range *rows {
@@ -278,6 +301,25 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 					}
 					fmt.Println(_file)
 				}
+				// CHECK IF DYN QUERY HAS DEPENDENCIES (before, after)
+				re := regexp.MustCompile(`\(([^,]+),([^)]+)\)`)
+				matches := re.FindStringSubmatch(queryKey)
+				// fmt.Println(matches)
+				before := ""
+				after := ""
+				if len(matches) == 3 {
+					before = matches[1]
+					after = matches[2]
+					//fmt.Println("Before:", before)
+					//fmt.Println("After:", after)
+				}
+				if before != "" {
+					err = etlx.ExecuteQuery(conn, before, item, fname, "", dateRef)
+					if err != nil {
+						fmt.Printf("getDynamicQueriesIfAny Before error: %s", err)
+					}
+				}
+				//rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 				rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 				if err != nil {
 					fmt.Println("getDynamicQueriesIfAny:", name, err)
@@ -288,7 +330,13 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 						_queries = append(_queries, value["query"])
 					}
 				} else {
-					fmt.Printf("DYN Q did not return any rows: %v %T, %s, %s", *rows, os.Getenv("ETLX_DEBUG_QUERY"), os.Getenv("ETLX_DEBUG_QUERY"), query)
+					//fmt.Printf("DYN Q did not return any rows: %v, %v %T, %s, %s", *rows, cols, os.Getenv("ETLX_DEBUG_QUERY"), os.Getenv("ETLX_DEBUG_QUERY"), query)
+				}
+				if after != "" {
+					err = etlx.ExecuteQuery(conn, after, item, fname, "", dateRef)
+					if err != nil {
+						fmt.Printf("getDynamicQueriesIfAny After error: %s", err)
+					}
 				}
 			} else {
 				_queries = append(_queries, q)
@@ -473,7 +521,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"success": true,
 					"msg":     "Deactivated",
 				})
-				return fmt.Errorf("dectivated %s", "")
+				return fmt.Errorf("deactivated %s", "")
 			}
 		}
 		//fmt.Println(metadata, itemKey, item)
@@ -664,7 +712,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			defer dbConn.Close()
 			_log3["success"] = true
-			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: Connectinon to %s successfull", key, step, itemKey, conn)
+			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: connection to %s successfull", key, step, itemKey, conn)
 			_log3["end_at"] = time.Now()
 			_log3["duration"] = time.Since(start4)
 			processLogs = append(processLogs, _log3)

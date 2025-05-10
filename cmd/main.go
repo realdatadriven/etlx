@@ -24,7 +24,7 @@ func main() {
 	// to steps
 	steps := flag.String("steps", "", "The steps to run")
 	// extrat from a file
-	file := flag.String("file", "", "The file to extract data from, the flag shoud be used in combination with the only apointing to the ETL key the data is meant to")
+	file := flag.String("file", "", "The file to extract data from, the flag shoud be used in combination with the only appointing to the ETL key the data is meant to")
 	// To clean / delete data (execute clean_sql on every item)
 	clean := flag.Bool("clean", false, "To clean data (execute clean_sql on every item, conditioned by only and skip)")
 	// To drop the table (execute drop_sql on every item condition by only and skip)

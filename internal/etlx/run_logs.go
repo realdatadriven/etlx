@@ -29,7 +29,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	}
 	if active, okActive := metadata["active"]; okActive {
 		if !active.(bool) {
-			return nil, fmt.Errorf("dectivated %s", key)
+			return nil, fmt.Errorf("deactivated %s", key)
 		}
 	}
 	beforeSQL, okBefore := metadata["before_sql"]
@@ -59,7 +59,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	if err != nil {
 		return nil, fmt.Errorf("error saving logs to JSON: %v", err)
 	}
-	//  QUERIES TO RUN AT BEGINING
+	//  QUERIES TO RUN AT beginning
 	if okBefore {
 		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, fname, "", dateRef)
 		if err != nil {
