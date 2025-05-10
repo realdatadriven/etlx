@@ -208,11 +208,11 @@ func main() {
 		}
 	}
 
-	/*_keys := []any{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL"}
+	/*_keys := []any{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ACTIONS"}
 	for key := range etlxlib.Config {
-		if !etlxlib.containsAny(_keys, key) {
+		if !app.contains(_keys, key) {
 			if runs_as, ok := etlxlib.Config["runs_as"]; ok {
-				if etlxlib.containsAny(_keys, runs_as) {
+				if app.contains(_keys, runs_as) {
 
 				}
 			}
