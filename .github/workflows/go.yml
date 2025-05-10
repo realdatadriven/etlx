@@ -177,7 +177,7 @@ jobs:
       - name: Download MacOS Binary
         uses: actions/download-artifact@v4
         with:
-          name: macos-binarys
+          name: macos-binary
           path: dist
       - name: Download Linux Binary
         uses: actions/download-artifact@v4
