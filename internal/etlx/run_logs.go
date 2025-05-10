@@ -12,7 +12,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
-	//fmt.Println(key, dateRef)
+	// fmt.Println(key, dateRef)
 	var processData []map[string]any
 	// Check if the input conf is nil or empty
 	if conf == nil {
@@ -55,6 +55,7 @@ func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[s
 		return nil, fmt.Errorf("error converting logs to JSON: %v", err)
 	}
 	fname, err := etlx.TempFIle(tmpDir, string(jsonData), "logs.*.json")
+	// println(fname, string(jsonData))
 	if err != nil {
 		return nil, fmt.Errorf("error saving logs to JSON: %v", err)
 	}

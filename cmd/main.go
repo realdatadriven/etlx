@@ -86,67 +86,125 @@ func main() {
 		_logs, err := etlxlib.RunETL(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("ETL ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		logs = append(logs, _logs...)
 	}
 	// DATA_QUALITY
 	if _, ok := etlxlib.Config["DATA_QUALITY"]; ok {
 		_logs, err := etlxlib.RunDATA_QUALITY(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("DATA_QUALITY ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		logs = append(logs, _logs...)
 	}
 	// EXPORTS
 	if _, ok := etlxlib.Config["EXPORTS"]; ok {
 		_logs, err := etlxlib.RunEXPORTS(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("EXPORTS ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		logs = append(logs, _logs...)
 	}
 	// SCRIPTS
 	if _, ok := etlxlib.Config["SCRIPTS"]; ok {
 		_logs, err := etlxlib.RunSCRIPTS(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("SCRIPTS ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		logs = append(logs, _logs...)
 	}
 	// MULTI_QUERIES
 	if _, ok := etlxlib.Config["MULTI_QUERIES"]; ok {
-		_logs, _data, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
+		_logs, _, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("MULTI_QUERIES ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		for _, r := range _data {
-			fmt.Println(r)
-		}
-		logs = append(logs, _logs...)
 	}
 	// ACTIONS
 	if _, ok := etlxlib.Config["ACTIONS"]; ok {
 		_logs, err := etlxlib.RunACTIONS(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("ACTIONS ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
+			logs = append(logs, _logs...)
 		}
-		/*for _, r := range _logs {
-			fmt.Println(r["name"], r["msg"])
-		}*/
-		logs = append(logs, _logs...)
 	}
 	// LOGS
 	if _, ok := etlxlib.Config["LOGS"]; ok {
-		_, err := etlxlib.RunLOGS(dateRef, nil, logs)
+		_logs, err := etlxlib.RunLOGS(dateRef, nil, logs)
 		if err != nil {
 			fmt.Printf("LOGS ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
 		}
 	}
 	// NOTIFY
 	if _, ok := etlxlib.Config["NOTIFY"]; ok {
-		_, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf)
+		_logs, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf)
 		if err != nil {
 			fmt.Printf("LOGS ERR: %v\n", err)
+		} else {
+			// LOGS
+			if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+				_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+				if err != nil {
+					fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+				}
+			}
 		}
 	}
 

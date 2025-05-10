@@ -21,6 +21,65 @@ type ETLX struct {
 	Config map[string]any
 }
 
+func addAutoLoggs(md string) string {
+	if !strings.Contains(md, "# AUTO_LOGS") {
+		_auto_logs := fmt.Sprintf(`
+# AUTO_LOGS
+
+%syaml metadata
+name: LOGS
+description: "Logging"
+table: logs
+connection: "duckdb:"
+before_sql:
+  - "LOAD Sqlite"
+  - "ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE)"
+  - "USE etlx_logs"
+  - "LOAD json"
+  - "get_dyn_queries[create_missing_columns]"
+save_log_sql: |
+  INSERT INTO "etlx_logs"."<table>" BY NAME
+  SELECT *
+  FROM READ_JSON('<fname>');
+save_on_err_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+save_on_err_sql: |
+  CREATE TABLE "etlx_logs"."<table>" AS
+  SELECT *
+  FROM READ_JSON('<fname>');
+after_sql:
+  - 'USE memory'
+  - 'DETACH "etlx_logs"'
+active: true
+%s
+
+%ssql
+-- create_missing_columns
+WITH source_columns AS (
+    SELECT "column_name", "column_type"
+    FROM (DESCRIBE SELECT * FROM READ_JSON('<fname>'))
+),
+destination_columns AS (
+    SELECT "column_name", "data_type" as "column_type"
+    FROM "duckdb_columns"
+    WHERE "table_name" = '<table>'
+),
+missing_columns AS (
+    SELECT "s"."column_name", "s"."column_type"
+    FROM source_columns "s"
+    LEFT JOIN destination_columns "d" ON "s"."column_name" = "d"."column_name"
+    WHERE "d"."column_name" IS NULL
+)
+SELECT 'ALTER TABLE "etlx_logs"."<table>" ADD COLUMN "' || "column_name" || '" ' || "column_type" || ';' AS "query"
+FROM missing_columns
+WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
+%s
+`, "```", "```", "```", "```")
+		//fmt.Println(_auto_logs)
+		return md + _auto_logs
+	}
+	return md
+}
+
 func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	// Read the file content
 	data, err := os.ReadFile(filePath)
@@ -33,10 +92,10 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 			return fmt.Errorf("failed convert the Notebook to MDText: %w", err)
 		}
 		// fmt.Println(mdText)
-		data = []byte(mdText)
+		data = []byte(addAutoLoggs(mdText))
 	}
 	// Parse the Markdown content into an AST
-	reader := text.NewReader(data)
+	reader := text.NewReader([]byte(addAutoLoggs(string(data))))
 	return etlx.ParseMarkdownToConfig(reader)
 }
 
@@ -46,7 +105,7 @@ func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
 	if err != nil {
 		return fmt.Errorf("failed convert the Notebook JSON content to MDText: %w", err)
 	}
-	reader := text.NewReader([]byte(mdText))
+	reader := text.NewReader([]byte(addAutoLoggs(mdText)))
 	return etlx.ParseMarkdownToConfig(reader)
 }
 

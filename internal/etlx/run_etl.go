@@ -53,6 +53,11 @@ func (etlx *ETLX) SetQueryPlaceholders(query string, table string, path string, 
 	if path != "" {
 		_query = etlx.ReplaceFileTablePlaceholder("file", _query, path)
 	}
+	_tmp_path := os.Getenv("ETL_TMPDIR")
+	if _tmp_path == "" {
+		_tmp_path = os.TempDir()
+	}
+	_query = etlx.ReplaceFileTablePlaceholder("tmp", _query, _tmp_path)
 	_query = etlx.ReplaceQueryStringDate(_query, dateRef)
 	return _query
 }
@@ -217,6 +222,7 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 			}
 			rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 			if err != nil {
+				fmt.Printf("Err getting dyn_queries: %s %v", name, err)
 				return sqlData, nil
 			} else if len(*rows) > 0 {
 				_queries := []any{}
@@ -245,7 +251,7 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				name := match[1]
 				//fmt.Println(queryKey)
 				query, ok := item[name].(string)
-				// fmt.Println("getDynamicQueriesIfAny:", queryKey, name, query)
+				//fmt.Println("getDynamicQueriesIfAny:", queryKey, name, query)
 				_, queryDoc := etlx.Config[name]
 				if !ok && queryDoc {
 					query = name
@@ -281,6 +287,8 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 						fmt.Println(name, value["query"].(string))
 						_queries = append(_queries, value["query"])
 					}
+				} else {
+					fmt.Printf("DYN Q did not return any rows: %v %T, %s, %s", *rows, os.Getenv("ETLX_DEBUG_QUERY"), os.Getenv("ETLX_DEBUG_QUERY"), query)
 				}
 			} else {
 				_queries = append(_queries, q)
