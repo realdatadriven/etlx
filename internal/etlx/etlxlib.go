@@ -474,6 +474,11 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 	if len(matches) > 0 {
 		for _, m := range matches {
 			frmtFinal := etlx.GetGODateFormat(m)
+			fmt.Println(frmtFinal, format)
+			if frmtFinal == format && len(frmtFinal) > 30 {
+				fmt.Println("NOT A DATE FORMAT", format)
+				continue
+			}
 			frmtFinal = strings.ReplaceAll(frmtFinal, "{", "")
 			frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
 			var procc string
