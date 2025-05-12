@@ -475,7 +475,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 		for _, m := range matches {
 			frmtFinal := etlx.GetGODateFormat(m)
 			fmt.Println(2, frmtFinal, m)
-			if frmtFinal == m /*&& len(frmtFinal) > 30*/ {
+			if frmtFinal == m  || strings.Contains(strings.ToLower(m), "driver") {
 				fmt.Println("NOT A DATE FORMAT", m)
 				continue
 			}
