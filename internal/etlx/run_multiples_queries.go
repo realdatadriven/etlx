@@ -146,6 +146,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,
+		"ref": dtRef,
 		}
 		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, "", "", dateRef)
 		if err != nil {
@@ -173,6 +174,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		"name":        key,
 		"description": metadata["description"].(string),
 		"key":         key, "start_at": start3,
+		"ref": dtRef,
 	}
 	// CHECK CONDITION
 	condition, okCondition := metadata["condition"].(string)
@@ -212,14 +214,14 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				re, regex_err := regexp.Compile(errPatt.(string))
 				if regex_err != nil {
 					_log2["success"] = false
-					_log2["msg"] = fmt.Errorf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
+					_log2["msg"] = fmt.Sprintf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3)
 				} else if re.MatchString(string(err.Error())) {
 					err = etlx.ExecuteQuery(dbConn, errSQL, data, "", "", dateRef)
 					if err != nil {
 						_log2["success"] = false
-						_log2["msg"] = fmt.Errorf("%s ERR: main: %s", key, err)
+						_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3)
 					} else {
@@ -230,7 +232,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			if !_err_by_pass {
 				//return nil, fmt.Errorf("%s ERR: main: %s", key, err)
 				_log2["success"] = false
-				_log2["msg"] = fmt.Errorf("%s ERR: main: %s", key, err)
+				_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3)
 			} else {
@@ -269,6 +271,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,
+		"ref": dtRef,
 		}
 		err = etlx.ExecuteQuery(dbConn, afterSQL, data, "", "", dateRef)
 		if err != nil {
