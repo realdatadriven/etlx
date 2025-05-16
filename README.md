@@ -1561,6 +1561,7 @@ Each action under the `ACTIONS` section has the following:
 - `type`: The kind of action to perform. Options:
   - `copy_file`
   - `compress`
+  - `decompress`
   - `ftp_download`
   - `ftp_upload`
   - `sftp_download`
@@ -1613,6 +1614,19 @@ params:
     - "reports/report_1.csv"
     - "reports/report_2.csv"
   output: "archives/reports_YYYYMM.zip"
+active: true
+```
+
+## UNZIP
+
+```yaml metadata
+name: CompressReports
+description: "Compress report files into a .zip archive"
+type: decompress
+params:
+  compression: zip
+  input: "archives/reports_YYYYMM.zip"
+  output: "tmp"
 active: true
 ```
 
