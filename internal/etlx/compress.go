@@ -51,3 +51,66 @@ func (etlx *ETLX) CompressToGZ(input string, output string) error {
 	_, err = io.Copy(gzWriter, inFile)
 	return err
 }
+
+// Unzip a .zip archive to a specified directory
+func (etlx *ETLX) Unzip(zipPath string, destDir string) error {
+	r, err := zip.OpenReader(zipPath)
+	if err != nil {
+		return err
+	}
+	defer r.Close()
+
+	for _, f := range r.File {
+		outPath := filepath.Join(destDir, f.Name)
+		if f.FileInfo().IsDir() {
+			os.MkdirAll(outPath, os.ModePerm)
+			continue
+		}
+
+		rc, err := f.Open()
+		if err != nil {
+			return err
+		}
+		defer rc.Close()
+
+		if err := os.MkdirAll(filepath.Dir(outPath), os.ModePerm); err != nil {
+			return err
+		}
+
+		outFile, err := os.Create(outPath)
+		if err != nil {
+			return err
+		}
+		defer outFile.Close()
+
+		if _, err = io.Copy(outFile, rc); err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
+// Decompress a GZ file into the original file
+func (etlx *ETLX) DecompressGZ(gzPath string, outputPath string) error {
+	inFile, err := os.Open(gzPath)
+	if err != nil {
+		return err
+	}
+	defer inFile.Close()
+
+	gzReader, err := gzip.NewReader(inFile)
+	if err != nil {
+		return err
+	}
+	defer gzReader.Close()
+
+	outFile, err := os.Create(outputPath)
+	if err != nil {
+		return err
+	}
+	defer outFile.Close()
+
+	_, err = io.Copy(outFile, gzReader)
+	return err
+}
+
