@@ -198,6 +198,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: decompress missing required params: compression, files, or output", key, itemKey, _type)
 				break
 			}
+			input = addMainPath(etlx.SetQueryPlaceholders(input, "", "", dateRef), mainPath)			
 			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", dateRef), mainPath)
 			switch compression {
 			case "zip":
