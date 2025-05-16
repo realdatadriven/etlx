@@ -189,6 +189,44 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported compression type %s", key, itemKey, _type, compression)
 			}
+		case "decompress":
+			compression, hasType := params["compression"].(string)
+			input, hasInput := params["input"].(string) // slice of interface{}
+			output, hasOutput := params["output"].(string)
+			if !hasType || !hasInput || !hasOutput {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: decompress missing required params: compression, files, or output", key, itemKey, _type)
+				break
+			}
+			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", dateRef), mainPath)
+			switch compression {
+			case "zip":
+				err := etlx.Unzip(input, output)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Error decompressing to zip: %v", key, itemKey, _type, err)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: ZIP decompression successful.", key, itemKey, _type)
+				}
+			case "gz":
+				if len(input) != 1 {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: GZ decompression only supports one input file", key, itemKey, _type)
+					break
+				}
+				err := etlx.DecompressGZ(input, output)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Error decompressing to gz: %v", key, itemKey, _type, err)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: GZ decompression successful.", key, itemKey, _type)
+				}
+			default:
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported compression type %s", key, itemKey, _type, compression)
+			}
 		case "ftp_upload":
 			host, _ := params["host"].(string)
 			port, _ := params["port"].(string) // if not int, use string + strconv.Atoi
