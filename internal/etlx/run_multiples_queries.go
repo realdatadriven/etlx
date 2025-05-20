@@ -65,10 +65,22 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		}
 	}
 	queries := []string{}
-	for itemKey, item := range data {
+	order := []string{}
+	__order, okOrder := data["__order"].([]any)
+	if !okOrder {
+		for key, _ := range data {
+			order = append(order, key)
+		}
+	} else {
+		for _, itemKey := range __order {
+			order = append(order, itemKey.(string))
+		}
+	}
+	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
 		}
+		item := data[itemKey]
 		if _, isMap := item.(map[string]any); !isMap {
 			//fmt.Println(itemKey, "NOT A MAP:", item)
 			continue
@@ -146,7 +158,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,
-		"ref": dtRef,
+			"ref": dtRef,
 		}
 		err = etlx.ExecuteQuery(dbConn, beforeSQL, data, "", "", dateRef)
 		if err != nil {
@@ -271,7 +283,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,
-		"ref": dtRef,
+			"ref": dtRef,
 		}
 		err = etlx.ExecuteQuery(dbConn, afterSQL, data, "", "", dateRef)
 		if err != nil {
