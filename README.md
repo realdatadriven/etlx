@@ -94,7 +94,7 @@ chmod +x etlx
 
 ```bash
 # Install ETLX
-go install github.com/yourusername/etlx
+go install github.com/realdatadriven/etlx
 ```
 
 #### **Option 3: Clone Repo**
