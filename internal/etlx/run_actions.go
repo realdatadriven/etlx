@@ -240,6 +240,13 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
 				break
 			}
+			
+			if port == "" {
+				_port, portIsSet := params["port"].(int)
+				if portIsSet {
+					port = strconv.Itoa(_port)
+				}
+			}
 			host = etlx.ReplaceEnvVariable(host)
 			port = etlx.ReplaceEnvVariable(port)
 			user = etlx.ReplaceEnvVariable(user)
@@ -265,6 +272,13 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
 				break
+			}
+			
+			if port == "" {
+				_port, portIsSet := params["port"].(int)
+				if portIsSet {
+					port = strconv.Itoa(_port)
+				}
 			}
 			host = etlx.ReplaceEnvVariable(host)
 			port = etlx.ReplaceEnvVariable(port)
