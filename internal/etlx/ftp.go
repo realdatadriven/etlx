@@ -11,7 +11,7 @@ import (
 
 func (etlx *ETLX) FTPUpload(host string, port string, user, pass, localPath, remotePath string) error {
 	if port == "" {
-		port = "25"
+		port = "21"
 	}
 	address := host + ":" + port
 	conn, err := ftp.Dial(address, ftp.DialWithTimeout(5*time.Second))
@@ -37,7 +37,7 @@ func (etlx *ETLX) FTPUpload(host string, port string, user, pass, localPath, rem
 
 func (etlx *ETLX) FTPDownload(host string, port string, user, pass, remotePath, localPath string) error {
 	if port == "" {
-		port = "25"
+		port = "21"
 	}
 	address := host + ":" + port
 	conn, err := ftp.Dial(address, ftp.DialWithTimeout(5*time.Second))
