@@ -1698,7 +1698,8 @@ description: "Download data file from external FTP"
 type: ftp_download
 params:
   host: "ftp.example.com"
-  username: "myuser"
+  port: "21"
+  user: "myuser"
   password: "@FTP_PASSWORD"
   source: "/data/daily_report.csv"
   target: "downloads/daily_report.csv"
@@ -1713,7 +1714,7 @@ description: "Download data file from external SFTP"
 type: stp_download
 params:
   host: "sftp.example.com"
-  username: "myuser"
+  user: "myuser"
   password: "@SFTP_PASSWORD"
   host_key: ~/.ssh/known_hosts # or a specific file
   port: 22
