@@ -393,6 +393,10 @@ func getDtFmrt(format string) string {
 }
 
 // setQueryDate formats the query string by inserting the given date reference in place of placeholders
+func hasPlaceholders(s string) bool {
+    pattern := regexp.MustCompile(`YY|AA|MM|DD`)
+    return pattern.MatchString(s)
+}
 func (q *QueryDoc) setQueryDate(query string, dateRef interface{}) string {
 	patt := regexp.MustCompile(`(["]?\w+["]?\.\w+\s?=\s?'\{.*?\}'|["]?\w+["]?\s?=\s?'\{.*?\}')`)
 	matches := patt.FindAllString(query, -1)
@@ -403,6 +407,10 @@ func (q *QueryDoc) setQueryDate(query string, dateRef interface{}) string {
 	if len(matches) > 0 {
 		patt2 := regexp.MustCompile(`'\{.*?\}'`)
 		for _, m := range matches {
+			if !hasPlaceholders(m) {
+				fmt.Printf(m, "Not a date format, so skip")
+				continue
+			}
 			format := patt2.FindString(m)
 			if format != "" {
 				frmtFinal := getDtFmrt(format)
@@ -430,6 +438,10 @@ func (q *QueryDoc) setQueryDate(query string, dateRef interface{}) string {
 	matches = patt.FindAllString(query, -1)
 	if len(matches) > 0 {
 		for _, m := range matches {
+			if !hasPlaceholders(m) {
+				fmt.Printf(m, "Not a date format, so skip")
+				continue
+			}
 			frmtFinal := getDtFmrt(m)
 			frmtFinal = strings.ReplaceAll(frmtFinal, "{", "")
 			frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
