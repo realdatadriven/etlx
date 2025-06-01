@@ -48,7 +48,7 @@ jobs:
       # Step 3: Download DuckDB Precompiled Library
       - name: Download DuckDB Library
         run: |
-          $version = "v1.2.0"
+          $version = "v1.3.0"
           $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/libduckdb-windows-amd64.zip"
           $destinationPath = "$(Get-Location)\duckdb"
           Invoke-WebRequest -Uri $duckdb_url -OutFile "duckdb.zip"
