@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"os"
 	"path/filepath"
+	"strconv"
 	"time"
 )
 
@@ -198,7 +199,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: decompress missing required params: compression, files, or output", key, itemKey, _type)
 				break
 			}
-			input = addMainPath(etlx.SetQueryPlaceholders(input, "", "", dateRef), mainPath)			
+			input = addMainPath(etlx.SetQueryPlaceholders(input, "", "", dateRef), mainPath)
 			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", dateRef), mainPath)
 			switch compression {
 			case "zip":
@@ -240,7 +241,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
 				break
 			}
-			
+
 			if port == "" {
 				_port, portIsSet := params["port"].(int)
 				if portIsSet {
@@ -273,7 +274,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
 				break
 			}
-			
+
 			if port == "" {
 				_port, portIsSet := params["port"].(int)
 				if portIsSet {
