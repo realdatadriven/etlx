@@ -107,7 +107,7 @@ cd etlx
 And then:
 
 ```bash
-go run main.go --config etl_config.md --date 2023-10-31
+go run cmd/main.go --config etl_config.md --date 2023-10-31
 ```
 
 the same can be said for build
