@@ -69,6 +69,26 @@ func (etlx *ETLX) FTPDownload(host string, port string, user, pass, remotePath, 
 	return nil
 }
 
+func globToRegex(glob string) string {
+	var sb strings.Builder
+	sb.WriteString("^")
+	for i := 0; i < len(glob); i++ {
+		switch glob[i] {
+		case '*':
+			sb.WriteString(".*")
+		case '?':
+			sb.WriteString(".")
+		case '.', '(', ')', '+', '|', '^', '$', '[', ']', '{', '}', '\\':
+			sb.WriteString(`\`)
+			sb.WriteByte(glob[i])
+		default:
+			sb.WriteByte(glob[i])
+		}
+	}
+	sb.WriteString("$")
+	return sb.String()
+}
+
 func (etlx *ETLX) FTPDownloadBatch(host, port, user, pass, remoteDir, pattern, localDir string) error {
 	if port == "" {
 		port = "21"
@@ -104,7 +124,7 @@ func (etlx *ETLX) FTPDownloadBatch(host, port, user, pass, remoteDir, pattern, l
 			continue // skip non-files
 		}
 
-		matched, err := filepath.Match(pattern, entry.Name)
+		matched, err := filepath.Match(globToRegex(pattern), entry.Name)
 		if err != nil {
 			return fmt.Errorf("invalid pattern: %w", err)
 		}
