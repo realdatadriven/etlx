@@ -3,10 +3,24 @@ package etlxlib
 import (
 	"fmt"
 	"os"
+	"path"
 	"path/filepath"
 	"strconv"
+	"strings"
 	"time"
 )
+
+// Determines if source is a glob or single file, and splits directory and pattern.
+func parseSource(source string) (isGlob bool, sourceDir string, pattern string) {
+	dir := path.Dir(source)
+	base := path.Base(source)
+	// Check if the pattern is a glob: contains * or ?
+	if strings.ContainsAny(base, "*") || strings.ContainsAny(base, "?") {
+		return true, dir, base
+	}
+	// Not a glob, just a file
+	return false, dir, base
+}
 
 func addMainPath(fname string, mainPath string) string {
 	if filepath.IsAbs(fname) {
@@ -274,7 +288,6 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP missing required params", key, itemKey, _type)
 				break
 			}
-
 			if port == "" {
 				_port, portIsSet := params["port"].(int)
 				if portIsSet {
@@ -291,7 +304,13 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				fmt.Println("ftp_download missing required params")
 				break
 			}
-			err := etlx.FTPDownload(host, port, user, password, source, target)
+			isGlob, remoteDir, pattern := parseSource(source)
+			var err error
+			if isGlob {
+				err = etlx.FTPDownloadBatch(host, port, user, password, remoteDir, pattern, target)
+			} else {
+				err = etlx.FTPDownload(host, port, user, password, source, target)
+			}
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: FTP download failed: %v", key, itemKey, _type, err)

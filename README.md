@@ -1706,6 +1706,22 @@ params:
 active: true
 ```
 
+## FTP DOWNLOAD GLOB
+
+```yaml metadata
+name: FetchRemoteReport2024
+description: "Download data file from external FTP"
+type: ftp_download
+params:
+  host: "ftp.example.com"
+  port: "21"
+  user: "myuser"
+  password: "@FTP_PASSWORD"
+  source: "/data/daily_report_2024*.csv"
+  target: "downloads/"
+active: true
+```
+
 ## SFTP DOWNLOAD
 
 ```yaml metadata
