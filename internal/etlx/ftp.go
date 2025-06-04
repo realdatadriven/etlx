@@ -5,6 +5,8 @@ import (
 	"io"
 	"os"
 	"time"
+	"path"
+	"path/filepath"
 
 	"github.com/jlaffaye/ftp"
 )
