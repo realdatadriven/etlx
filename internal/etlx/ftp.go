@@ -66,3 +66,59 @@ func (etlx *ETLX) FTPDownload(host string, port string, user, pass, remotePath, 
 	}
 	return nil
 }
+
+func (etlx *ETLX) FTPDownloadBatch(host, port, user, pass, remoteDir, pattern, localDir string) error {
+	if port == "" {
+		port = "21"
+	}
+	address := host + ":" + port
+
+	conn, err := ftp.Dial(address, ftp.DialWithTimeout(5*time.Second))
+	if err != nil {
+		return fmt.Errorf("failed to dial: %w", err)
+	}
+	defer conn.Quit()
+
+	if user != "" && pass != "" {
+		if err := conn.Login(user, pass); err != nil {
+			return fmt.Errorf("failed to login: %w", err)
+		}
+	}
+
+	// List all files in the remote directory
+	entries, err := conn.List(remoteDir)
+	if err != nil {
+		return fmt.Errorf("failed to list remote directory: %w", err)
+	}
+
+	// Ensure local directory exists
+	if err := os.MkdirAll(localDir, 0755); err != nil {
+		return fmt.Errorf("failed to create local directory: %w", err)
+	}
+
+	// Loop over files and download matching ones
+	for _, entry := range entries {
+		if entry.Type != ftp.EntryTypeFile {
+			continue // skip non-files
+		}
+
+		matched, err := filepath.Match(pattern, entry.Name)
+		if err != nil {
+			return fmt.Errorf("invalid pattern: %w", err)
+		}
+		if matched {
+			remotePath := path.Join(remoteDir, entry.Name)
+			localPath := filepath.Join(localDir, entry.Name)
+
+			fmt.Printf("Downloading: %s → %s\n", remotePath, localPath)
+
+			// Download each matching file using the single-file method
+			err := etlx.FTPDownload(host, port, user, pass, remotePath, localPath)
+			if err != nil {
+				return fmt.Errorf("failed to download %s: %w", remotePath, err)
+			}
+		}
+	}
+
+	return nil
+}
