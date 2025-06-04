@@ -307,6 +307,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			isGlob, remoteDir, pattern := parseSource(source)
 			var err error
 			if isGlob {
+				fmt.Printf("isGlob: %v, remoteDir: %s, pattern: %s", isGlob, remoteDir, pattern)
 				err = etlx.FTPDownloadBatch(host, port, user, password, remoteDir, pattern, target)
 			} else {
 				err = etlx.FTPDownload(host, port, user, password, source, target)
