@@ -4,6 +4,7 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
+	"os"
 	"regexp"
 	"strconv"
 	"strings"
@@ -126,7 +127,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		// send to target
 		if i >= chunk_size {
 			i = 0
-			_, err = updateTarget(dbTargetConn, sql_target, result)
+			_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 			if err != nil {
 				// fmt.Printf("failed update the target: %s", err)
 				return fmt.Errorf("main target query faild: %w", err)
@@ -135,7 +136,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		}
 	}
 	if len(result) > 0 {
-		_, err = updateTarget(dbTargetConn, sql_target, result)
+		_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 		if err != nil {
 			return fmt.Errorf("main target query faild: %w", err)
 		}
@@ -158,7 +159,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 	return nil
 }
 
-func BuildInsertSQL(sql_header string, data []map[string]any) (string, error) {
+func (etlx *ETLX) BuildInsertSQL(sql_header string, data []map[string]any) (string, error) {
 	if len(data) == 0 {
 		return "", fmt.Errorf("no data to insert")
 	}
@@ -191,6 +192,13 @@ func BuildInsertSQL(sql_header string, data []map[string]any) (string, error) {
 		re := regexp.MustCompile(`:columns\b`)
 		sql_header = re.ReplaceAllString(sql_header, colList)
 		sql = fmt.Sprintf("%s %s;", sql_header, strings.Join(valueRows, ",\n"))
+	}
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		_file, err := etlx.TempFIle("", sql, fmt.Sprintf("query.%s.*.sql", "db2db"))
+		if err != nil {
+			fmt.Println(err)
+		}
+		fmt.Println(_file)
 	}
 	return sql, nil
 }
@@ -256,8 +264,8 @@ func formatValue(v any) string {
 	}
 }
 
-func updateTarget(dbTargetConn db.DBInterface, sql_target string, data []map[string]any) (int, error) {
-	sql, err := BuildInsertSQL(sql_target, data)
+func (etlx *ETLX) UpdateTarget(dbTargetConn db.DBInterface, sql_target string, data []map[string]any) (int, error) {
+	sql, err := etlx.BuildInsertSQL(sql_target, data)
 	if err != nil {
 		return 0, err
 	}
