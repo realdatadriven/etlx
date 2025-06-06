@@ -246,8 +246,10 @@ func formatValue(v any) string {
 	switch val := v.(type) {
 	case nil:
 		return "NULL"
-	case int, int32, int64, float32, float64:
-		return fmt.Sprintf("%v", val)
+	case int, int32, int64:
+		return fmt.Sprintf("%d", val)
+	case float32, float64:
+		return fmt.Sprintf("%f", val)
 	case bool:
 		if val {
 			return "1"
