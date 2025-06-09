@@ -1,7 +1,7 @@
 # ============================================
 # 🛠️ Stage 1: Build ETLX from Source
 # ============================================
-FROM golang:1.23 as builder
+FROM golang:1.24 as builder
 
 # Set working directory inside the container
 WORKDIR /app
@@ -22,7 +22,7 @@ ENV CGO_ENABLED=1
 RUN git clone --depth=1 https://github.com/realdatadriven/etlx.git .
 
 # Build the ETLX binary
-RUN go build -o etlx ./cmd/main.go
+RUN CGO_ENABLED=1 go build -o etlx ./cmd/main.go
 
 # ============================================
 # 🚀 Stage 2: Create Minimal Runtime Image

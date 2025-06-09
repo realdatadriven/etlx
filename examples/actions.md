@@ -7,6 +7,22 @@ path: examples
 active: true
 ```
 
+## FTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: "Download data file from external FTP"
+type: ftp_download
+params:
+  host: "ftp.example.com"
+  port: "21"
+  user: "myuser"
+  password: "@FTP_PASSWORD"
+  source: "/data/daily_report.csv"
+  target: "downloads/daily_report.csv"
+active: true
+```
+
 ---
 
 ## COPY LOCAL FILE
