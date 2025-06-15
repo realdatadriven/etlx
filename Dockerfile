@@ -22,7 +22,10 @@ ENV CGO_ENABLED=1
 RUN git clone --depth=1 https://github.com/realdatadriven/etlx.git .
 
 # Build the ETLX binary
-RUN CGO_ENABLED=1 go build -o etlx ./cmd/main.go
+#RUN CGO_ENABLED=1 go build -o etlx ./cmd/main.go
+RUN CGO_ENABLED=1 \
+    CGO_LDFLAGS="-lstdc++ -lm -ldl" \
+    go build -o etlx ./cmd/main.go
 
 # ============================================
 # 🚀 Stage 2: Create Minimal Runtime Image
