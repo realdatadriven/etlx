@@ -117,6 +117,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 	}
 	i := 0
 	j := 0
+	h := 0
 	var result []map[string]any
 	for rows.Next() {
 		i += 1
@@ -128,6 +129,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		result = append(result, row)
 		// send to target
 		if i >= chunk_size {
+			h += i
 			i = 0
 			_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 			if err != nil {
@@ -137,13 +139,18 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 			result = []map[string]any{} //result[:0]
 		}
 	}
+	if err := rows.Err(); err != nil {
+		fmt.Printf("row iteration error: %s", err)
+		return fmt.Errorf("row iteration error: %w", err)
+	}
 	if len(result) > 0 {
+		h += len(result)
 		_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 		if err != nil {
 			return fmt.Errorf("main target query faild: %w", err)
 		}
 	}
-	fmt.Println("Query Num Rows:", j)
+	fmt.Println("Query Num Rows:", j, "Incrementacao:", h)
 	// END / CLOSING QUERIES
 	after_source, ok := source["after"]
 	if ok {
