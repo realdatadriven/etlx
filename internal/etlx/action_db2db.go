@@ -116,9 +116,11 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		}
 	}
 	i := 0
+	j := 0
 	var result []map[string]any
 	for rows.Next() {
 		i += 1
+		j += 1
 		row, err := ScanRowToMap(rows)
 		if err != nil {
 			return fmt.Errorf("failed to scan row to map: %w", err)
@@ -132,7 +134,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 				// fmt.Printf("failed update the target: %s", err)
 				return fmt.Errorf("main target query faild: %w", err)
 			}
-			result = result[:0]
+			result = []map[string]any{} //result[:0]
 		}
 	}
 	if len(result) > 0 {
@@ -141,6 +143,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 			return fmt.Errorf("main target query faild: %w", err)
 		}
 	}
+	fmt.Println("Query Num Rows:", j)
 	// END / CLOSING QUERIES
 	after_source, ok := source["after"]
 	if ok {
