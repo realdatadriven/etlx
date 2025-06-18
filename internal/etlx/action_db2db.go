@@ -88,7 +88,7 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		}
 	}
 	//fmt.Printf("%T->%d", chunk_size, chunk_size)
-	timeout := 500
+	timeout := 1200
 	if _, ok := source["timeout"]; ok {
 		j, err := strconv.Atoi(fmt.Sprintf("%v", source["timeout"]))
 		if err == nil {
@@ -116,12 +116,9 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		}
 	}
 	i := 0
-	j := 0
-	h := 0
 	var result []map[string]any
 	for rows.Next() {
 		i += 1
-		j += 1
 		row, err := ScanRowToMap(rows)
 		if err != nil {
 			return fmt.Errorf("failed to scan row to map: %w", err)
@@ -129,7 +126,6 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		result = append(result, row)
 		// send to target
 		if i >= chunk_size {
-			h += i
 			i = 0
 			_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 			if err != nil {
@@ -144,13 +140,11 @@ func (etlx *ETLX) DB2DB(params map[string]any, item map[string]any, dateRef []ti
 		return fmt.Errorf("row iteration error: %w", err)
 	}
 	if len(result) > 0 {
-		h += len(result)
 		_, err = etlx.UpdateTarget(dbTargetConn, sql_target, result)
 		if err != nil {
 			return fmt.Errorf("main target query faild: %w", err)
 		}
 	}
-	fmt.Println("Query Num Rows:", j, "Incrementacao:", h)
 	// END / CLOSING QUERIES
 	after_source, ok := source["after"]
 	if ok {
