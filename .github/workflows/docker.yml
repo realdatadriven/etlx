@@ -24,6 +24,18 @@ jobs:
           echo "Version Tag: ${{ steps.version_step.outputs.version_tag }}"
           echo "Latest Tag: ${{ steps.version_step.outputs.latest_tag }}"
 
+      - name: Extract Version
+        run: |
+            if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
+            VERSION="${GITHUB_REF#refs/tags/v}"
+            else
+            VERSION="${GITHUB_REF##*/}"  # fallback to branch name like "main"
+            fi
+            echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+            echo "version_tag=${{ github.repository }}:$VERSION" >> "$GITHUB_OUTPUT"
+            echo "latest_tag=${{ github.repository }}:latest" >> "$GITHUB_OUTPUT"
+
+
       - name: Set up QEMU
         uses: docker/setup-qemu-action@v3
 
@@ -36,10 +48,10 @@ jobs:
           username: ${{ secrets.DOCKERHUB_USERNAME }}
           password: ${{ secrets.DOCKERHUB_TOKEN }}
 
-      - name: Prepare registry tags
-        run: |
-          echo "VERSION_TAG=$(echo ${{ steps.version_step.outputs.version_tag }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
-          echo "LATEST_TAG=$(echo ${{ steps.version_step.outputs.latest_tag }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+#      - name: Prepare registry tags
+#        run: |
+#          echo "VERSION_TAG=$(echo ${{ steps.version_step.outputs.version_tag }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
+#          echo "LATEST_TAG=$(echo ${{ steps.version_step.outputs.latest_tag }} | tr '[:upper:]' '[:lower:]')" >> $GITHUB_ENV
 
       - name: Build and push Docker image
         uses: docker/build-push-action@v5
