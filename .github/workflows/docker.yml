@@ -14,18 +14,6 @@ jobs:
       - name: Extract Version
         id: version_step
         run: |
-          VERSION="${GITHUB_REF#refs/tags/v}"
-          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
-          echo "version_tag=${{ github.repository }}:$VERSION" >> "$GITHUB_OUTPUT"
-          echo "latest_tag=${{ github.repository }}:latest" >> "$GITHUB_OUTPUT"
-
-      - name: Print Version
-        run: |
-          echo "Version Tag: ${{ steps.version_step.outputs.version_tag }}"
-          echo "Latest Tag: ${{ steps.version_step.outputs.latest_tag }}"
-
-      - name: Extract Version
-        run: |
             if [[ "${GITHUB_REF}" == refs/tags/v* ]]; then
             VERSION="${GITHUB_REF#refs/tags/v}"
             else
