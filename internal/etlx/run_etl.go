@@ -40,6 +40,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s Conn: %s", driver, err)
 		}
+		driver = "duckdb"
 	case "odbc":
 		dbConn, err = db.NewODBC(_dsn)
 		if err != nil {
