@@ -31,6 +31,15 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s Conn: %s", driver, err)
 		}
+	case "ducklake":
+		dbConn, err = db.NewDuckDB("")
+		if err != nil {
+			return nil, fmt.Errorf("%s Conn: %s", driver, err)
+		}
+		_, err = dbConn.ExecuteQuery(fmt.Sprintf("ATTACH %s", conn), []any{}...)
+		if err != nil {
+			return nil, fmt.Errorf("%s Conn: %s", driver, err)
+		}
 	case "odbc":
 		dbConn, err = db.NewODBC(_dsn)
 		if err != nil {

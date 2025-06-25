@@ -201,8 +201,8 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 	//var newDB DBInterface
 	//fmt.Println(_database)
 	_not_embed_dbs := []interface{}{"postgres", "postgresql", "pg", "pgql", "mysql"}
-	_embed_dbs := []interface{}{"sqlite", "sqlite3", "duckdb"}
-	_embed_dbs_ext := []interface{}{".db", ".duckdb", ".ddb", ".sqlite"}
+	_embed_dbs := []interface{}{"sqlite", "sqlite3", "duckdb", "ducklake"}
+	_embed_dbs_ext := []interface{}{".db", ".duckdb", ".ddb", ".sqlite", ".ducklake"}
 	switch _database.(type) {
 	case nil:
 		//return true
@@ -222,7 +222,7 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 			if filepath.Base(_dsn) == fileName || dirName == "" {
 				_dsn = fmt.Sprintf("database/%s", fileName)
 			}
-			_embed_dbs_ext := []interface{}{".duckdb", ".ddb"}
+			_embed_dbs_ext := []interface{}{".duckdb", ".ddb", ".ducklake"}
 			if fileExt == "" {
 				_embed_dbs := []interface{}{"sqlite", "sqlite3"}
 				if _driver == "duckdb" {
