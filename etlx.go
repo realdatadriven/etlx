@@ -31,6 +31,14 @@ func NewODBC(dsn string) (*db.ODBC, error) {
 	return db.NewODBC(dsn)
 }
 
+type DuckLakeParseResult = etlxlib.DuckLakeParseResult
+type DuckLakeOccurrence = etlxlib.DuckLakeOccurrence
+type DuckLakeParser = etlxlib.DuckLakeParser
+
+func NewDuckLakeParser() *etlxlib.DuckLakeParser {
+	return etlxlib.NewDuckLakeParser()
+}
+
 func LoadDotEnv() {
 	_err := godotenv.Load()
 	if _err != nil {
