@@ -40,6 +40,14 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s Conn: %s", driver, err)
 		}
+		_, err = dbConn.ExecuteQuery("INSTALL ducklake", []any{}...)
+		if err != nil {
+			return nil, fmt.Errorf("%s INSTALL ducklake: %s", driver, err)
+		}
+		_, err = dbConn.ExecuteQuery("LOAD ducklake", []any{}...)
+		if err != nil {
+			return nil, fmt.Errorf("%s LOAD ducklake: %s", driver, err)
+		}
 		_dl_att := fmt.Sprintf("ATTACH IF NOT EXISTS %s", conn)
 		if dl.HasAttach {
 			_dl_att = conn
@@ -51,7 +59,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		if dl.DuckLakeName != "" {
 			_, err = dbConn.ExecuteQuery(fmt.Sprintf("USE %s", dl.DuckLakeName), []any{}...)
 			if err != nil {
-				return nil, fmt.Errorf("%s Conn: %s", driver, err)
+				return nil, fmt.Errorf("%s USE %s: %s", driver, dl.DuckLakeName, err)
 			}
 		}
 		driver = "duckdb"
