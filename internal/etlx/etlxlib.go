@@ -86,8 +86,9 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	if err != nil {
 		return fmt.Errorf("failed to read file: %w", err)
 	}
+	mdText := ""
 	if strings.HasSuffix(filePath, ".ipynb") {
-		mdText, err := etlx.ConvertIPYNBToMarkdown(data)
+		mdText, err = etlx.ConvertIPYNBToMarkdown(data)
 		if err != nil {
 			return fmt.Errorf("failed convert the Notebook to MDText: %w", err)
 		}
@@ -96,7 +97,7 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	}
 	// Parse the Markdown content into an AST
 	reader := text.NewReader([]byte(addAutoLoggs(string(data))))
-	return etlx.ParseMarkdownToConfig(reader)
+	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 
 func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
@@ -106,13 +107,13 @@ func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
 		return fmt.Errorf("failed convert the Notebook JSON content to MDText: %w", err)
 	}
 	reader := text.NewReader([]byte(addAutoLoggs(mdText)))
-	return etlx.ParseMarkdownToConfig(reader)
+	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 
 func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 	// Parse the Markdown content into an AST
 	reader := text.NewReader([]byte(mdText))
-	return etlx.ParseMarkdownToConfig(reader)
+	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 
 // TracebackHeaders traces headers from the current node up to the top-level header.
@@ -137,12 +138,21 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 }
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
-func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader) error {
+func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) error {
 	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader) // Initialize the result map and a levels map
 	config := make(map[string]any)
 	config["__order"] = []string{}
+	_aux := NewDuckLakeParser().FindDuckLakeStrings(string(content))
+	if len(_aux) > 0 {
+		config["__lakes"] = []string{}
+		for _, s := range _aux {
+			if !etlx.Contains(config["__lakes"].([]string), s) {
+				config["__lakes"] = append(config["__lakes"].([]string), s)
+			}
+		}
+	}
 	levels := make(map[int]map[string]any) // Track the current section for each heading level
 	//order := make(map[string][]string)          // Track the order of keys for each top-level section
 	// Walk through the AST
@@ -633,6 +643,10 @@ func (etlx *ETLX) ParseConnection(conn string) (string, string, error) {
 	parts := strings.SplitN(conn, ":", 2)
 	if len(parts) != 2 {
 		return "", "", fmt.Errorf("invalid connection string format")
+	}
+	dl := NewDuckLakeParser().Parse(conn)
+	if dl.IsDuckLake {
+		return "ducklake", conn, nil
 	}
 	return parts[0], parts[1], nil
 }
