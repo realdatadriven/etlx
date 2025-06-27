@@ -39,6 +39,11 @@ func NewDuckLakeParser() *etlxlib.DuckLakeParser {
 	return etlxlib.NewDuckLakeParser()
 }
 
+func GetDB(conn string) (DBInterface, error) {
+	/**retuns DBInterface and chooses the driver base on the etlx connection style driver:<dns|conn_str> */
+	return etlxlib.GetDB(conn)
+}
+
 func LoadDotEnv() {
 	_err := godotenv.Load()
 	if _err != nil {
