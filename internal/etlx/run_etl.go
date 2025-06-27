@@ -13,6 +13,10 @@ import (
 
 func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 	driver, dsn, err := etlx.ParseConnection(conn)
+	dl := NewDuckLakeParser().Parse(conn)
+	if dl.IsDuckLake {
+		driver = "ducklake"
+	}
 	if err != nil {
 		return nil, err
 	}
@@ -36,9 +40,19 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		if err != nil {
 			return nil, fmt.Errorf("%s Conn: %s", driver, err)
 		}
-		_, err = dbConn.ExecuteQuery(fmt.Sprintf("ATTACH %s", conn), []any{}...)
+		_dl_att := fmt.Sprintf("ATTACH IF NOT EXISTS %s", conn)
+		if dl.HasAttach {
+			_dl_att = conn
+		}
+		_, err = dbConn.ExecuteQuery(_dl_att, []any{}...)
 		if err != nil {
 			return nil, fmt.Errorf("%s Conn: %s", driver, err)
+		}
+		if dl.DuckLakeName != "" {
+			_, err = dbConn.ExecuteQuery(fmt.Sprintf("USE %s", dl.DuckLakeName), []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s Conn: %s", driver, err)
+			}
 		}
 		driver = "duckdb"
 	case "odbc":
