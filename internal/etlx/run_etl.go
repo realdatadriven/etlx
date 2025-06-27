@@ -18,12 +18,19 @@ func GetDB(conn string) (db.DBInterface, error) {
 
 func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 	driver, dsn, err := etlx.ParseConnection(conn)
+	if err != nil {
+		return nil, err
+	}
 	dl := NewDuckLakeParser().Parse(conn)
 	if dl.IsDuckLake {
 		driver = "ducklake"
 	}
-	if err != nil {
-		return nil, err
+	if driver == "" && os.Getenv("DB_DRIVER_NAME") != "" {
+		driver = os.Getenv("DB_DRIVER_NAME")
+	}
+	if driver == "" && os.Getenv("DB_DSN") != "" {
+		driver2, _, _ := etlx.ParseConnection(os.Getenv("DB_DSN"))
+		driver = driver2
 	}
 	_dsn := etlx.ReplaceEnvVariable(dsn)
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
