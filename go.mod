@@ -15,7 +15,7 @@ require (
 	github.com/lib/pq v1.10.9
 	github.com/marcboeker/go-duckdb/v2 v2.3.2
 	github.com/mattn/go-sqlite3 v1.14.28
-	github.com/microsoft/go-mssqldb v1.8.2
+	github.com/microsoft/go-mssqldb v1.9.1
 	github.com/pkg/sftp v1.13.9
 	github.com/xuri/excelize/v2 v2.9.1
 	github.com/yuin/goldmark v1.7.12
@@ -28,7 +28,7 @@ require (
 	dario.cat/mergo v1.0.2 // indirect
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.3.1 // indirect
-	github.com/apache/arrow-go/v18 v18.3.0 // indirect
+	github.com/apache/arrow-go/v18 v18.3.1 // indirect
 	github.com/duckdb/duckdb-go-bindings v0.1.16 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-amd64 v0.1.11 // indirect
 	github.com/duckdb/duckdb-go-bindings/darwin-arm64 v0.1.11 // indirect
@@ -46,7 +46,7 @@ require (
 	github.com/huandu/xstrings v1.5.0 // indirect
 	github.com/jmespath/go-jmespath v0.4.0 // indirect
 	github.com/klauspost/compress v1.18.0 // indirect
-	github.com/klauspost/cpuid/v2 v2.2.10 // indirect
+	github.com/klauspost/cpuid/v2 v2.2.11 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	github.com/marcboeker/go-duckdb/arrowmapping v0.0.9 // indirect
 	github.com/marcboeker/go-duckdb/mapping v0.0.10 // indirect
