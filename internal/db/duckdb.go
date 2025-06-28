@@ -92,6 +92,7 @@ func (db *DuckDB) ExecuteQueryRowsAffected(query string, data ...interface{}) (i
 
 func (db *DuckDB) AllTables(params map[string]interface{}, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
 	_query := `SELECT table_name as name FROM information_schema.tables`
+	_query = `SHOW TABLES`
 	// fmt.Println(_query)
 	return db.QueryMultiRows(_query, []interface{}{}...)
 }

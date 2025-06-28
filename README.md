@@ -1067,7 +1067,7 @@ The **SCRIPTS** section allows you to **execute SQL queries** that **don’t fit
 ✅ **Running SQL commands that don’t need to return results**  
 ✅ **Executing SQL scripts for database optimizations**  
 
-#### **🛠 Example: Running Cleanup Scripts**
+#### **🛠 Example: Running Cleanup Scripts**    
 
 This example **removes temporary data** after an ETL process.
 
