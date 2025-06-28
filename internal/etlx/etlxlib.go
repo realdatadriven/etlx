@@ -642,7 +642,8 @@ func (etlx *ETLX) ProcessETLSteps(key string, item map[string]any, mainConn stri
 func (etlx *ETLX) ParseConnection(conn string) (string, string, error) {
 	parts := strings.SplitN(conn, ":", 2)
 	if len(parts) != 2 {
-		return "", "", fmt.Errorf("invalid connection string format")
+		return "", conn, nil
+		//return "", "", fmt.Errorf("invalid connection string format")
 	}
 	dl := NewDuckLakeParser().Parse(conn)
 	if dl.IsDuckLake {

@@ -31,6 +31,10 @@ func NewODBC(dsn string) (*db.ODBC, error) {
 	return db.NewODBC(dsn)
 }
 
+func ReplaceDBName(dsn, dbname string) (string, error) {
+	return db.ReplaceDBName(dsn, dbname)
+}
+
 type DuckLakeParseResult = etlxlib.DuckLakeParseResult
 type DuckLakeOccurrence = etlxlib.DuckLakeOccurrence
 type DuckLakeParser = etlxlib.DuckLakeParser

@@ -103,23 +103,6 @@ func setStrEnv(input string) string {
 	return input
 }
 
-// isDSN checks if the passed string is a full DSN (contains key-value pairs or URL format).
-func isDSN(input string) bool {
-	// Check if the input contains typical DSN components like "user=", "host=", or "dbname="
-	kvIdentifiers := []string{"user=", "host=", "dbname=", "password=", "sslmode="}
-	for _, id := range kvIdentifiers {
-		if strings.Contains(input, id) {
-			return true
-		}
-	}
-	// Check if it looks like a URL (starts with a scheme like "postgres://")
-	u, err := url.Parse(input)
-	if err == nil && u.Scheme != "" {
-		return true
-	}
-	return false
-}
-
 // Adjust the query based on the database driver
 func adjustQuery(driver, query string) string {
 	if driver == "postgres" {
@@ -147,8 +130,25 @@ func adjustQuery(driver, query string) string {
 	return query
 }
 
-// replaceDBName takes a Postgres connection string (dsn) and replaces the dbname with the newDBName.
-func replaceDBName(dsn string, newDBName string) (string, error) {
+// isDSN checks if the passed string is a full DSN (contains key-value pairs or URL format).
+func isDSN(input string) bool {
+	// Check if the input contains typical DSN components like "user=", "host=", or "dbname="
+	kvIdentifiers := []string{"user=", "host=", "dbname=", "password=", "sslmode="}
+	for _, id := range kvIdentifiers {
+		if strings.Contains(input, id) {
+			return true
+		}
+	}
+	// Check if it looks like a URL (starts with a scheme like "postgres://")
+	u, err := url.Parse(input)
+	if err == nil && u.Scheme != "" {
+		return true
+	}
+	return false
+}
+
+// ReplaceDBName takes a Postgres connection string (dsn) and replaces the dbname with the newDBName.
+func ReplaceDBName(dsn string, newDBName string) (string, error) {
 	// Parse the DSN as a URL for easy manipulation
 	if isDSN(newDBName) {
 		return newDBName, nil
@@ -171,12 +171,10 @@ func replaceDBName(dsn string, newDBName string) (string, error) {
 		// Join the parts back into a DSN string
 		return strings.Join(parts, " "), nil
 	}
-
 	// If the DSN is a URL, use query parameters to replace the dbname
 	q := u.Query()
 	q.Set("dbname", newDBName)
 	u.RawQuery = q.Encode()
-
 	// Return the updated DSN as a string
 	return u.String(), nil
 }
@@ -234,7 +232,7 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 				_driver = "duckdb"
 			}
 		} else if contains(_not_embed_dbs, _driver) {
-			new_dsn, err := replaceDBName(extra_conf["dsn"].(string), _dsn)
+			new_dsn, err := ReplaceDBName(extra_conf["dsn"].(string), _dsn)
 			if err != nil {
 				fmt.Println("Errr getting the DSN for ", _dsn)
 			}
@@ -298,7 +296,7 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 				_driver = "duckdb"
 			}
 		} else if contains(_not_embed_dbs, _driver) {
-			new_dsn, err := replaceDBName(extra_conf["dsn"].(string), _dsn)
+			new_dsn, err := ReplaceDBName(extra_conf["dsn"].(string), _dsn)
 			if err != nil {
 				fmt.Println("Errr getting the DSN for ", _dsn)
 			}
