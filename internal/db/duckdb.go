@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+	"github.com/realdatadriven/etlx/internal/env"
 
 	_ "github.com/marcboeker/go-duckdb/v2"
 )
@@ -40,10 +41,11 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	if err != nil {
 		return nil, err
 	}
+	defaultTimeoutDuckDB = env.GetInt("DUCKDB_DFLT_TIMEOUT", 15) * time.Minutes
 	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
-	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetConnMaxIdleTime(defaultTimeoutDuckDB)
 	db.SetConnMaxLifetime(2 * time.Hour)
 	return &DuckDB{db}, nil
 }
