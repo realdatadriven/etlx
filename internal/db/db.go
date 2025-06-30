@@ -21,9 +21,9 @@ import (
 )
 
 // const defaultTimeout = 3 * time.Second
-const defaultTimeout = 3 * time.Minute
-const defaultTimeoutODBC = 15 * time.Minute
-const defaultTimeoutDuckDB = 15 * time.Minute
+var defaultTimeout = 3 * time.Minute
+var defaultTimeoutODBC = 15 * time.Minute
+var defaultTimeoutDuckDB = 15 * time.Minute
 
 type DB struct {
 	//*sqlx.DB
