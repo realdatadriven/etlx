@@ -29,7 +29,7 @@ func NewODBC(dsn string) (*ODBC, error) {
 		return nil, err
 	}
 	
-	defaultTimeoutODBC = env.GetInt("ODBC_DFLT_TIMEOUT", 15) * time.Minute
+	defaultTimeoutODBC = time.Duration(env.GetInt("ODBC_DFLT_TIMEOUT", 15)) * time.Minute
 	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
