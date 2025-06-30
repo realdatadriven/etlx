@@ -28,10 +28,12 @@ func NewODBC(dsn string) (*ODBC, error) {
 	if err != nil {
 		return nil, err
 	}
+	
+	defaultTimeoutODBC = env.GetInt("ODBC_DFLT_TIMEOUT", 15) * time.Minutes
 	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
-	db.SetConnMaxIdleTime(5 * time.Minute)
+	db.SetConnMaxIdleTime(defaultTimeoutODBC)
 	db.SetConnMaxLifetime(2 * time.Hour)
 	return &ODBC{db}, nil
 }
@@ -65,7 +67,7 @@ func (db *ODBC) ExecuteQuery(query string, data ...interface{}) (int, error) {
 }
 
 func (db *ODBC) ExecuteQueryRowsAffected(query string, data ...interface{}) (int64, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	result, err := db.ExecContext(ctx, query, data...)
 	if err != nil {
@@ -102,7 +104,7 @@ func (db *ODBC) QueryRows(ctx context.Context, query string, params ...interface
 }
 
 func (db *ODBC) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]interface{}, []string, bool, error) {
-	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	var result []map[string]interface{}
 	rows, err := db.QueryContext(ctx, query, params...)
