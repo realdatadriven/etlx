@@ -22,8 +22,8 @@ import (
 
 // const defaultTimeout = 3 * time.Second
 const defaultTimeout = 3 * time.Minute
-const defaultTimeoutODBC = 5 * time.Minute
-const defaultTimeoutDuckDB = 5 * time.Minute
+const defaultTimeoutODBC = 15 * time.Minute
+const defaultTimeoutDuckDB = 15 * time.Minute
 
 type DB struct {
 	//*sqlx.DB
@@ -53,7 +53,7 @@ func New(driverName string, dsn string) (*DB, error) {
 		db.ExecContext(ctx, "PRAGMA synchronous  = 0")
 		db.ExecContext(ctx, "PRAGMA TEMP_STORE  = 2")
 		db.ExecContext(ctx, "PRAGMA auto_vacuum = FULL")
-		busy_timeout := 60 * 000 // 60s
+		busy_timeout := 60 * 1000 * 3 // 60s
 		db.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d", busy_timeout))
 	}
 	return &DB{db}, nil
