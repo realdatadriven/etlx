@@ -57,7 +57,7 @@ func (db *DuckDB) New(dsn string) (*DuckDB, error) {
 	//fmt.Println(driverName, dsn)
 	_db.SetMaxOpenConns(25)
 	_db.SetMaxIdleConns(25)
-	_db.SetConnMaxIdleTime(5 * time.Minute)
+	_db.SetConnMaxIdleTime(defaultTimeoutDuckDB)
 	_db.SetConnMaxLifetime(2 * time.Hour)
 	return &DuckDB{_db}, nil
 }
