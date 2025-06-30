@@ -41,7 +41,7 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	if err != nil {
 		return nil, err
 	}
-	defaultTimeoutDuckDB = env.GetInt("DUCKDB_DFLT_TIMEOUT", 15) * time.Minutes
+	defaultTimeoutDuckDB = env.GetInt("DUCKDB_DFLT_TIMEOUT", 15) * time.Minute
 	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
