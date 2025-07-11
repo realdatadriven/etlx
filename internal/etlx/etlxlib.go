@@ -526,7 +526,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 }
 
 func (etlx *ETLX) ReplaceEnvVariable(input string) string {
-	// Replaces @ENV.VARIABLE_NAME to the actual value
+	// Replaces @ENV.VARIABLE_NAME or @VARIABLE_NAME to the actual value
 	re := regexp.MustCompile(`@ENV\.\w+`)
 	matches := re.FindAllString(input, -1)
 	if len(matches) > 0 {
@@ -536,7 +536,13 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 			// fmt.Println(match, envVar, envValue)
 			if envValue != "" {
 				input = strings.ReplaceAll(input, match, envValue)
+			} else {
+				input = strings.ReplaceAll(input, match, envVar)
 			}
+		}		
+		matches = re.FindAllString(input, -1)
+		if len(matches) > 0 {
+			input = etlx.ReplaceEnvVariable(input)
 		}
 	} else {
 		re = regexp.MustCompile(`@\.\w+`)
@@ -548,7 +554,13 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 				// fmt.Println(match, envVar, envValue)
 				if envValue != "" {
 					input = strings.ReplaceAll(input, match, envValue)
+				} else {
+					input = strings.ReplaceAll(input, match, envVar)
 				}
+			}
+			matches = re.FindAllString(input, -1)
+			if len(matches) > 0 {
+				input = etlx.ReplaceEnvVariable(input)
 			}
 		} else {
 			re = regexp.MustCompile(`@\w+`)
@@ -560,8 +572,14 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 					// fmt.Println(match, envVar, envValue)
 					if envValue != "" {
 						input = strings.ReplaceAll(input, match, envValue)
+					} else {
+						input = strings.ReplaceAll(input, match, envVar)
 					}
 				}
+			}
+			matches = re.FindAllString(input, -1)
+			if len(matches) > 0 {
+				input = etlx.ReplaceEnvVariable(input)
 			}
 		}
 	}
