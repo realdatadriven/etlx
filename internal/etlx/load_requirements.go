@@ -1,4 +1,4 @@
-package etlxlib
+ package etlxlib
 
 import (
 	"fmt"
@@ -210,6 +210,8 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			}
 			if _, ok := etlx.Config[newConfKey]; !ok {
 				etlx.Config[newConfKey] = value
+			}  else {
+				fmt.Println(newConfKey, "Already exists!")
 			}
 		}
 		_log2["success"] = true
