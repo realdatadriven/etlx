@@ -25,8 +25,8 @@ type Field struct {
 }
 
 // GetMap returns the field in the map format
-func (f *Field) GetMap() map[string]string {
-	fieldMap := map[string]string{
+func (f *Field) GetMap() map[string]any {
+	fieldMap := map[string]any{
 		"name":     f.Name,
 		"desc":     f.Desc,
 		"cte":      f.CTE,
@@ -38,6 +38,7 @@ func (f *Field) GetMap() map[string]string {
 		"order_by": f.OrderBy,
 		"having":   f.Having,
 		"window":   f.Window,
+		"active":   f.Active,
 	}
 	for k, v := range f.Extras {
 		fieldMap[k] = v
@@ -97,6 +98,7 @@ func (q *QueryDoc) GetQueryPartsAsMap() map[string]map[string]interface{} {
 			"order_by": f.OrderBy,
 			"having":   f.Having,
 			"window":   f.Window,
+		        "active":   f.Active,
 		}
 	}
 	return result
