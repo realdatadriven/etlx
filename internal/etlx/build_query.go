@@ -68,7 +68,7 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 			"order_by": _field["order_by"],
 			"having":   _field["having"],
 			"window":   _field["window"],
-			"active":   _field["active"],
+			"active":   field_metadata["active"],
 			"key":      key,
 			"metadata": field_metadata,
 		}
