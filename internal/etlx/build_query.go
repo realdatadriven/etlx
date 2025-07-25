@@ -56,6 +56,10 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 			}
 		}
 		_fields_order = append(_fields_order, field_metadata["name"].(string))
+		active, ok := field_metadata["active"].(bool)
+		if !ok {
+			active = true
+		}
 		query_parts[field_metadata["name"].(string)] = map[string]any{
 			"name":     field_metadata["name"],
 			"desc":     field_metadata["description"],
@@ -68,7 +72,7 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 			"order_by": _field["order_by"],
 			"having":   _field["having"],
 			"window":   _field["window"],
-			"active":   field_metadata["active"],
+			"active":   active,
 			"key":      key,
 			"metadata": field_metadata,
 		}
@@ -97,7 +101,7 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 				}
 			}
 		}
-		fmt.Println("QD ORDER:", _fields_order)
+		//fmt.Println("QD ORDER:", _fields_order)
 	}
 	qd := QueryDoc{
 		QueryParts:  make(map[string]Field),
