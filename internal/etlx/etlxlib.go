@@ -274,6 +274,20 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						} else {
 							current[key] = content
 						}
+					} else if strings.HasPrefix(info, "python") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "python"))
+						if key == "" {
+							fmt.Printf("missing query name for python block: %s", content)
+						} else {
+							current[key] = content
+						}
+					} else if strings.HasPrefix(info, "py") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "py"))
+						if key == "" {
+							fmt.Printf("missing query name for python block: %s", content)
+						} else {
+							current[key] = content
+						}
 					}
 				}
 			}
