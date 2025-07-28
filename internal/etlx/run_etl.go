@@ -463,6 +463,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queries))
 			if err != nil {
 				fmt.Println(err)
+				etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", ""))
 			}
 			fmt.Println(_file)
 		}
