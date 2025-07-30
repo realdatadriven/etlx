@@ -143,7 +143,8 @@ func (q *QueryDoc) replaceFieldPlaceholders(sqlClause string, queryParts map[str
 			_select := cleanSelectPart(field.Select, fieldName)
 			_select = fmt.Sprintf(`(%s)`, _select)
 			//re := regexp.MustCompile(fmt.Sprintf(`\b@%s\b`, fieldName))
-			re := regexp.MustCompile(fmt.Sprintf(`[@]%s(\b|::\w+|\(\))?`, fieldName))
+			//re := regexp.MustCompile(fmt.Sprintf(`[@]%s(\b|::\w+|\(\))?`, fieldName))
+			re := regexp.MustCompile(fmt.Sprintf(`(?:^|[^\w])@%s(?:[^\w]|$)`, fieldName))
 			sqlClause = re.ReplaceAllString(sqlClause, _select)
 			// field.Select = sqlClause
 			queryParts[fieldName] = field // Ensure to update the map with the modified field
@@ -170,7 +171,8 @@ func (q *QueryDoc) replaceFieldPlaceholdersMap(sqlClause string, queryParts *map
 			_select := cleanSelectPart(field["select"].(string), fieldName)
 			_select = fmt.Sprintf(`(%s)`, _select)
 			//re := regexp.MustCompile(fmt.Sprintf(`\b@%s\b`, fieldName))
-			re := regexp.MustCompile(fmt.Sprintf(`[@]%s(\b|::\w+|\(\))?`, fieldName))
+			//re := regexp.MustCompile(fmt.Sprintf(`[@]%s(\b|::\w+|\(\))?`, fieldName))
+			re := regexp.MustCompile(fmt.Sprintf(`(?:^|[^\w])@%s(?:[^\w]|$)`, fieldName))
 			sqlClause = re.ReplaceAllString(sqlClause, _select)
 		}
 	}
