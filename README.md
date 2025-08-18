@@ -1,6 +1,6 @@
-# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL Workflows
+# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL / ELT Workflows
 
-ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL (Extract, Transform, Load) workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
+ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL / ELT workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
 
 This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
 
@@ -12,7 +12,7 @@ Supports a variety of data sources, including:
 
 - File Formats: **CSV**, **Parquet**, **Spreadsheets**.
 
-By leveraging DuckDB's powerful in-memory processing capabilities, this framework enables seamless ETL operations, validation, and data integration, template fill ...
+By leveraging DuckDB's powerful processing capabilities, this framework enables seamless ETL / ELT operations.
 
 ---
 
