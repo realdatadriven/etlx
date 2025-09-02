@@ -597,6 +597,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				}
 				outputFile = etlx.ReplaceQueryStringDate(outputFile, dateRef)
 				//fmt.Println(outputFile)
+				err = file.UpdateLinkedValue()
+				if err != nil {
+				    fmt.Println("UpdateLinkedValue() Error:", err)
+				}
 				err = file.SaveAs(outputFile)
 				if err != nil {
 					_log2["success"] = false
