@@ -553,7 +553,7 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 			} else {
 				input = strings.ReplaceAll(input, match, envVar)
 			}
-		}		
+		}
 		matches = re.FindAllString(input, -1)
 		if len(matches) > 0 {
 			input = etlx.ReplaceEnvVariable(input)
@@ -634,7 +634,7 @@ func (etlx *ETLX) ProcessETL(config map[string]any, runner RunnerFunc) error {
 			continue
 		}
 	}
-	fmt.Printf("ETL process completed: %s (Duration: %v)\n", description, time.Since(start))
+	fmt.Printf("ETL process completed: %s (Duration: %v)\n", description, time.Since(start).Seconds())
 	return nil
 }
 
@@ -763,7 +763,7 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 			}
 		}
 	}
-	// fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start))
+	// fmt.Printf("%s process completed: %s (Duration: %v)\n", key, description, time.Since(start).Seconds())
 	return nil
 }
 

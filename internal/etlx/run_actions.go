@@ -447,7 +447,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)
 		}
 		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3)
+		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil
 	}
@@ -465,7 +465,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
 		"end_at":   time.Now(),
-		"duration": time.Since(start),
+		"duration": time.Since(start).Seconds(),
 	}
 	return processLogs, nil
 }

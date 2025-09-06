@@ -141,7 +141,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		_log2["success"] = false
 		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
 		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3)
+		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil, nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
@@ -149,7 +149,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	_log2["success"] = true
 	_log2["msg"] = fmt.Sprintf("%s CONN: connection to %s successfull", key, conn)
 	_log2["end_at"] = time.Now()
-	_log2["duration"] = time.Since(start3)
+	_log2["duration"] = time.Since(start3).Seconds()
 	processLogs = append(processLogs, _log2)
 	//  QUERIES TO RUN AT beginning
 	if okBefore {
@@ -165,12 +165,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s Before error: %s", key, err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s Before ", key)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		processLogs = append(processLogs, _log2)
 	}
@@ -198,7 +198,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			//return fmt.Errorf("%s", _log2["msg"])
 			failedCondition = true
@@ -206,7 +206,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, "", condition)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			if okCondMsg && condMsg != "" {
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
 			}
@@ -228,14 +228,14 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				} else if re.MatchString(string(err.Error())) {
 					err = etlx.ExecuteQuery(dbConn, errSQL, data, "", "", dateRef)
 					if err != nil {
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
 						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3)
+						_log2["duration"] = time.Since(start3).Seconds()
 					} else {
 						_err_by_pass = true
 					}
@@ -246,18 +246,18 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s main ", key)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s main ", key)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		processLogs = append(processLogs, _log2)
 	} else if !failedCondition {
@@ -266,13 +266,13 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s After error: %s", key, err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			processData = *rows
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s After ", key)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		processLogs = append(processLogs, _log2)
 	}
@@ -290,12 +290,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s After error: %s", key, err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s After ", key)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		processLogs = append(processLogs, _log2)
 	}

@@ -186,7 +186,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			return nil
 		}
@@ -194,7 +194,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["success"] = true
 		_log2["msg"] = fmt.Sprintf("%s -> %s CONN: connection to %s successfull", key, itemKey, conn)
 		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3)
+		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		// FILE
 		table := itemMetadata["name"].(string)
@@ -230,12 +230,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
 		}
@@ -249,7 +249,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
@@ -257,7 +257,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, itemKey, condition)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				if okCondMsg && condMsg != "" {
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 				}
@@ -279,7 +279,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 				// fmt.Println(1, fname)
@@ -294,7 +294,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				_log2["fname"] = fname
 			}
 			processLogs = append(processLogs, _log2)
@@ -320,14 +320,14 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s givem as template does not exists", key, itemKey, template)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				ext := filepath.Ext(template.(string))
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("unsupported template file extension: %s", ext)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -340,7 +340,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("failed to open template file: %s", err)
 						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3)
+						_log2["duration"] = time.Since(start3).Seconds()
 						processLogs = append(processLogs, _log2)
 						return nil
 					}
@@ -353,7 +353,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("template doesn't exists: %s", template)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -363,7 +363,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s error mapping empty", key, itemKey)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
 				case string:
@@ -380,7 +380,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute map query: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3)
+						_log2["duration"] = time.Since(start3).Seconds()
 						processLogs = append(processLogs, _log2)
 						return nil
 					}
@@ -393,7 +393,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping data type: %T", key, itemKey, _map)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -401,7 +401,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping length Zero: ", key, itemKey)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -455,7 +455,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s -> %s -> %s -> failed to execute query: %s", key, itemKey, sheet, err)
 							_log2["end_at"] = time.Now()
-							_log2["duration"] = time.Since(start3)
+							_log2["duration"] = time.Since(start3).Seconds()
 							processLogs = append(processLogs, _log2)
 							continue
 						}
@@ -599,19 +599,19 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				//fmt.Println(outputFile)
 				err = file.UpdateLinkedValue()
 				if err != nil {
-				    fmt.Println("UpdateLinkedValue() Error:", err)
+					fmt.Println("UpdateLinkedValue() Error:", err)
 				}
 				err = file.SaveAs(outputFile)
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to save file: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
 					// fmt.Println(path, filepath.IsAbs(path))
 					if !filepath.IsAbs(path) {
@@ -637,7 +637,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: 'data_sql' found!", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				data := map[string]any{}
 				start3 := time.Now()
@@ -691,7 +691,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid queries data type: %T", key, itemKey, _map)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 				}
 				if _, ok := itemMetadata["data"].(map[string]any); ok {
@@ -710,7 +710,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					fmt.Println(0, _log2["msg"])
 				} else {
 					fname = etlx.ReplaceQueryStringDate(fname, dateRef)
@@ -720,7 +720,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s -> %s -> Error creating file: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3)
+						_log2["duration"] = time.Since(start3).Seconds()
 						//fmt.Println(1, _log2["msg"])
 					} else {
 						defer file.Close() // Close the file after the function completes
@@ -730,13 +730,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s -> %s -> Error writing to file: %s", key, itemKey, err)
 							_log2["end_at"] = time.Now()
-							_log2["duration"] = time.Since(start3)
+							_log2["duration"] = time.Since(start3).Seconds()
 							//fmt.Println(2, _log2["msg"])
 						} else {
 							_log2["success"] = true
 							_log2["msg"] = fmt.Sprintf("%s -> %s: TXT TMPL Generate!", key, itemKey)
 							_log2["end_at"] = time.Now()
-							_log2["duration"] = time.Since(start3)
+							_log2["duration"] = time.Since(start3).Seconds()
 							if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
 								_log2["content"] = parsedTmpl
 							}
@@ -758,7 +758,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s: Missconfiguration, it was unable to identify export type", key, itemKey)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			//fmt.Println(4, _log2["msg"])
 		}
@@ -775,12 +775,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
 		}
@@ -800,7 +800,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
 		"end_at":   time.Now(),
-		"duration": time.Since(start),
+		"duration": time.Since(start).Seconds(),
 	}
 	return processLogs, nil
 }

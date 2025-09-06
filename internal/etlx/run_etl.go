@@ -762,7 +762,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3["success"] = false
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
 				_log3["end_at"] = time.Now()
-				_log3["duration"] = time.Since(start4)
+				_log3["duration"] = time.Since(start4).Seconds()
 				processLogs = append(processLogs, _log3)
 				//return fmt.Errorf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
 				continue
@@ -771,7 +771,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log3["success"] = true
 			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: connection to %s successfull", key, step, itemKey, conn)
 			_log3["end_at"] = time.Now()
-			_log3["duration"] = time.Since(start4)
+			_log3["duration"] = time.Since(start4).Seconds()
 			processLogs = append(processLogs, _log3)
 			// FILE
 			table := itemMetadata["table"].(string)
@@ -816,14 +816,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR Before: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
 							_log3["end_at"] = time.Now()
-							_log3["duration"] = time.Since(start4)
+							_log3["duration"] = time.Since(start4).Seconds()
 						} else if re.MatchString(string(err.Error())) {
 							err = etlx.ExecuteQuery(dbConn, onBefErrSQL.(string), item, fname, step, dateRef)
 							if err != nil {
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
 								_log3["end_at"] = time.Now()
-								_log3["duration"] = time.Since(start4)
+								_log3["duration"] = time.Since(start4).Seconds()
 							} else {
 								_err_by_pass = true
 								err = etlx.ExecuteQuery(dbConn, beforeSQL, item, fname, step, dateRef)
@@ -837,7 +837,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						_log3["success"] = false
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
 						_log3["end_at"] = time.Now()
-						_log3["duration"] = time.Since(start4)
+						_log3["duration"] = time.Since(start4).Seconds()
 						processLogs = append(processLogs, _log3)
 						//return fmt.Errorf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
 						continue
@@ -846,7 +846,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Before", key, step, itemKey)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 				}
 				processLogs = append(processLogs, _log3)
 			}
@@ -860,7 +860,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, err)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					processLogs = append(processLogs, _log3)
 					// return fmt.Errorf("%s", _log3["msg"])
 					failedCondition = true
@@ -868,7 +868,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed the condition %s was not met!", key, step, itemKey, condition)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					if okCondMsg && condMsg != "" {
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 					}
@@ -924,7 +924,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
 									_log3["end_at"] = time.Now()
-									_log3["duration"] = time.Since(start4)
+									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
 									processLogs = append(processLogs, _log3)
 									break
@@ -932,7 +932,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
 									_log3["end_at"] = time.Now()
-									_log3["duration"] = time.Since(start4)
+									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
 									processLogs = append(processLogs, _log3)
 									break
@@ -940,7 +940,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									_log3["success"] = true
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Validation Succefully", key, step, itemKey)
 									_log3["end_at"] = time.Now()
-									_log3["duration"] = time.Since(start4)
+									_log3["duration"] = time.Since(start4).Seconds()
 								}
 							}
 							processLogs = append(processLogs, _log3)
@@ -977,14 +977,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
 								_log3["end_at"] = time.Now()
-								_log3["duration"] = time.Since(start4)
+								_log3["duration"] = time.Since(start4).Seconds()
 							} else if re.MatchString(string(err.Error())) {
 								err = etlx.ExecuteQuery(dbConn, onErrSQL.(string), item, fname, step, dateRef)
 								if err != nil {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 									_log3["end_at"] = time.Now()
-									_log3["duration"] = time.Since(start4)
+									_log3["duration"] = time.Since(start4).Seconds()
 								} else {
 									_err_by_pass = true
 								}
@@ -994,20 +994,20 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 							_log3["end_at"] = time.Now()
-							_log3["duration"] = time.Since(start4)
+							_log3["duration"] = time.Since(start4).Seconds()
 						}
 						//return fmt.Errorf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
 					} else {
 						_log3["success"] = true
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s main", key, step, itemKey)
 						_log3["end_at"] = time.Now()
-						_log3["duration"] = time.Since(start4)
+						_log3["duration"] = time.Since(start4).Seconds()
 					}
 				} else {
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s MAIN: Skiped do to validation error: %s", key, step, itemKey, validErr)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 				}
 				processLogs = append(processLogs, _log3)
 			}
@@ -1025,13 +1025,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: CLEAN: %s", key, step, itemKey, err)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					//return fmt.Errorf("%s -> %s -> %s ERR: CELAN: %s", key, step, itemKey, err)
 				} else {
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CLEAN", key, step, itemKey)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 				}
 				processLogs = append(processLogs, _log3)
 			}
@@ -1049,13 +1049,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					//return fmt.Errorf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
 				} else {
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s DROP", key, step, itemKey)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 				}
 				processLogs = append(processLogs, _log3)
 			}
@@ -1078,7 +1078,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: ROWS: %s", key, step, itemKey, err)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					//return fmt.Errorf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
 				} else {
 					_nrows := any(nil)
@@ -1094,7 +1094,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ROWS", key, step, itemKey)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["rows"] = _nrows
 				}
 				processLogs = append(processLogs, _log3)
@@ -1119,14 +1119,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR After: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
 							_log3["end_at"] = time.Now()
-							_log3["duration"] = time.Since(start4)
+							_log3["duration"] = time.Since(start4).Seconds()
 						} else if re.MatchString(string(err.Error())) {
 							err = etlx.ExecuteQuery(dbConn, onAfterErrSQL.(string), item, fname, step, dateRef)
 							if err != nil {
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
 								_log3["end_at"] = time.Now()
-								_log3["duration"] = time.Since(start4)
+								_log3["duration"] = time.Since(start4).Seconds()
 							} else {
 								_err_by_pass = true
 								err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, step, dateRef)
@@ -1140,22 +1140,22 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						_log3["success"] = false
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
 						_log3["end_at"] = time.Now()
-						_log3["duration"] = time.Since(start4)
+						_log3["duration"] = time.Since(start4).Seconds()
 					}
 				} else {
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s After", key, step, itemKey)
 					_log3["end_at"] = time.Now()
-					_log3["duration"] = time.Since(start4)
+					_log3["duration"] = time.Since(start4).Seconds()
 				}
 				processLogs = append(processLogs, _log3)
 			}
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log3)
 		}
 		_log1["end_at"] = time.Now()
-		_log1["duration"] = time.Since(start2)
+		_log1["duration"] = time.Since(start2).Seconds()
 		processLogs = append(processLogs, _log1)
 		return nil
 	}
@@ -1174,7 +1174,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		"key":         key,
 		"start_at":    processLogs[0]["start_at"],
 		"end_at":      time.Now(),
-		"duration":    time.Since(start),
+		"duration":    time.Since(start).Seconds(),
 	}
 	return processLogs, nil
 }

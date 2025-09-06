@@ -97,7 +97,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			return nil
 		}
@@ -105,7 +105,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		_log2["success"] = true
 		_log2["msg"] = fmt.Sprintf("%s -> %s CONN: connection to %s successfull", key, itemKey, conn)
 		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3)
+		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		// FILE
 		table := itemMetadata["name"].(string)
@@ -141,12 +141,12 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
 		}
@@ -160,7 +160,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
@@ -168,7 +168,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, itemKey, condition)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				if okCondMsg && condMsg != "" {
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 				}
@@ -231,7 +231,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s invalid queries data type: %T", key, itemKey, _map)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			if _, ok := itemMetadata["data"].(map[string]any); ok {
 				for key, d := range data {
@@ -262,12 +262,12 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s err sending email: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s Notefication sent!", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			//fmt.Println(key, _log2["msg"])
 			processLogs = append(processLogs, _log2)
@@ -285,12 +285,12 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
 		}
@@ -311,7 +311,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
 		"end_at":   time.Now(),
-		"duration": time.Since(start),
+		"duration": time.Since(start).Seconds(),
 	}
 	return processLogs, nil
 }

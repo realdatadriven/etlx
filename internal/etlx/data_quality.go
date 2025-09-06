@@ -250,7 +250,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
 				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3)
+				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				return nil
 			}
@@ -258,7 +258,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn)
 			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3)
+			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
@@ -273,12 +273,12 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
 			}
@@ -292,14 +292,14 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					failedCondition = true
 				} else if !cond {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, itemKey, condition)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 					if okCondMsg && condMsg != "" {
 						_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
 					}
@@ -316,13 +316,13 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				} else {
 					_log2["success"] = res["success"]
 					_log2["msg"] = fmt.Sprintf("%s -> %s CHECK: successfull", key, itemKey)
 					_log2["nrows"] = res["nrows"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
 			} else if okFixOnly && fixOnly && okFix && !checkOnly && !failedCondition {
@@ -332,13 +332,13 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg_fix"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				} else {
 					_log2["success"] = res["success"]
 					_log2["msg"] = fmt.Sprintf("%s -> %s FIX: successfull", key, itemKey)
 					_log2["nrows_fixed"] = res["nrows_fixed"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
 			} else if !failedCondition {
@@ -348,13 +348,13 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				} else {
 					_log2["success"] = res["success"]
 					_log2["msg"] = fmt.Sprintf("%s -> %s successfull", key, itemKey)
 					_log2["nrows"] = res["nrows"]
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 					_nrows, okNrows := res["nrows"].(int64)
 					//fmt.Println("RES NROWS:", res["nrows"], "PROC NROWS:", _nrows)
 					if okNrows && _nrows > 0 && okFix {
@@ -363,13 +363,13 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 							_log2["success_fix"] = res["success"]
 							_log2["msg_fix"] = res["msg_fix"]
 							_log2["end_at"] = time.Now()
-							_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+							_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 						} else {
 							_log2["success_fix"] = res["success"]
 							_log2["msg_fix"] = res["msg_fix"]
 							_log2["nrows_fixed"] = res["nrows_fixed"]
 							_log2["end_at"] = time.Now()
-							_log2["duration"] = time.Since(_log2["start_at"].(time.Time))
+							_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 						}
 					}
 				}
@@ -389,12 +389,12 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
 					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3)
+					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
 			}
@@ -415,7 +415,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
 		"end_at":   time.Now(),
-		"duration": time.Since(start),
+		"duration": time.Since(start).Seconds(),
 	}
 	return processLogs, nil
 }
