@@ -590,7 +590,7 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 					if envValue != "" {
 						input = strings.ReplaceAll(input, match, envValue)
 					} else {
-						input = strings.ReplaceAll(input, match, envVar)
+						//input = strings.ReplaceAll(input, match, envVar)
 					}
 				}
 			}
