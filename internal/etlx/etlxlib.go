@@ -543,6 +543,7 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 	// Replaces @ENV.VARIABLE_NAME or @VARIABLE_NAME to the actual value
 	re := regexp.MustCompile(`@ENV\.\w+`)
 	matches := re.FindAllString(input, -1)
+	i := 0
 	if len(matches) > 0 {
 		for _, match := range matches {
 			envVar := strings.TrimPrefix(match, "@ENV.")
@@ -555,7 +556,8 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 			}
 		}
 		matches = re.FindAllString(input, -1)
-		if len(matches) > 0 {
+		if len(matches) > 0 && i < 3 {
+			i += 1
 			input = etlx.ReplaceEnvVariable(input)
 		}
 	} else {
@@ -573,7 +575,8 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 				}
 			}
 			matches = re.FindAllString(input, -1)
-			if len(matches) > 0 {
+			if len(matches) > 0 && i < 3 {
+				i += 1
 				input = etlx.ReplaceEnvVariable(input)
 			}
 		} else {
@@ -592,7 +595,8 @@ func (etlx *ETLX) ReplaceEnvVariable(input string) string {
 				}
 			}
 			matches = re.FindAllString(input, -1)
-			if len(matches) > 0 {
+			if len(matches) > 0 && i < 3 {
+				i += 1
 				input = etlx.ReplaceEnvVariable(input)
 			}
 		}
