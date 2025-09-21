@@ -62,6 +62,7 @@ name: ETLX_LOGS
 runs_as: LOGS
 description: Logging
 table: logs
+database: 'sqlite3:database/dl_etlx_logs.db'
 connection: "duckdb:"
 before_sql:
   - "LOAD Sqlite"
