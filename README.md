@@ -939,6 +939,10 @@ WHERE "sale_date" = '{YYYY-MM-DD}';
      - **`type`**: Indicates whether the data fills a range (`range`) or single value (`value`).
      - **`table_style`**: The table style applied to the range.
      - **`if_exists`**: Specifies how to handle existing data (e.g., delete or append).
+     - **`header`**: Whether to include headers in the exported table.
+     - **`clear_range`**: If true, clears the specified range before populating new data. 
+     - **`clear_sheet`**: If true, clears all content from the specified sheet before populating new data. 
+     - **`active`**: If false, skips this mapping.
 the maping can also be a string representing a query and all the mapping can be loaded from a table in the database to simplify the config, and also in a real world it can be extensive, would be easier to be done in a spreadsheet and loaded as a table.
 
 ---

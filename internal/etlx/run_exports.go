@@ -75,6 +75,140 @@ func isEmpty(s string) bool {
 	return len(s) == 0
 }
 
+// clearEntireSheetContent clears all content from a sheet
+func clearEntireSheetContent(f *excelize.File, sheetName string) {
+	// Get all rows to determine the range
+	rows, err := f.GetRows(sheetName)
+	if err != nil {
+		fmt.Printf("Error getting rows: %v\n", err)
+		return
+	}
+
+	// Clear all cells
+	for rowIndex, row := range rows {
+		for colIndex := range row {
+			cell, _ := excelize.CoordinatesToCellName(colIndex+1, rowIndex+1)
+			f.SetCellValue(sheetName, cell, "")
+		}
+	}
+}
+
+// parseCellReference parses a cell reference like "A2" and returns column and row
+func parseCellReference(cellRef string) (col string, row int, err error) {
+	// Use regex to separate column letters from row numbers
+	// Pattern: one or more letters followed by one or more digits
+	re := regexp.MustCompile(`^([A-Z]+)(\d+)$`)
+	matches := re.FindStringSubmatch(cellRef)
+
+	if matches == nil {
+		return "", 0, fmt.Errorf("invalid cell reference format (expected format: A1, B2, etc.)")
+	}
+
+	col = matches[1]
+	rowStr := matches[2]
+
+	// Convert row string to integer
+	row, err = strconv.Atoi(rowStr)
+	if err != nil {
+		return "", 0, fmt.Errorf("invalid row number '%s'", rowStr)
+	}
+
+	// Validate row number (Excel rows are 1-based and max is 1,048,576)
+	if row < 1 || row > 1048576 {
+		return "", 0, fmt.Errorf("row number %d is out of valid range (1-1048576)", row)
+	}
+
+	return col, row, nil
+}
+
+func parseRange(cellRange string) (startCol string, startRow int, endCol string, endRow int, err error) {
+	// Validate basic format
+	if !strings.Contains(cellRange, ":") {
+		return "", 0, "", 0, fmt.Errorf("range must contain ':' (e.g., 'A2:F10')")
+	}
+
+	parts := strings.Split(cellRange, ":")
+	if len(parts) != 2 {
+		return "", 0, "", 0, fmt.Errorf("range must have exactly one ':' separator")
+	}
+
+	startPart := strings.TrimSpace(strings.ToUpper(parts[0]))
+	endPart := strings.TrimSpace(strings.ToUpper(parts[1]))
+
+	if startPart == "" || endPart == "" {
+		return "", 0, "", 0, fmt.Errorf("both start and end positions must be specified")
+	}
+
+	// Parse start position
+	startCol, startRow, err = parseCellReference(startPart)
+	if err != nil {
+		return "", 0, "", 0, fmt.Errorf("invalid start position '%s': %v", startPart, err)
+	}
+
+	// Parse end position
+	endCol, endRow, err = parseCellReference(endPart)
+	if err != nil {
+		return "", 0, "", 0, fmt.Errorf("invalid end position '%s': %v", endPart, err)
+	}
+
+	return startCol, startRow, endCol, endRow, nil
+}
+
+// clearSpecificRange clears a specific range of cells by parsing the range string
+// Supports formats like: "A2:C5", "A2:F10", "B3:D3", etc.
+// Returns error if the range format is invalid or if clearing fails
+func clearSpecificRange(f *excelize.File, sheetName, cellRange string) error {
+	startCol, startRow, endCol, endRow, err := parseRange(cellRange)
+	if err != nil {
+		return fmt.Errorf("invalid range '%s': %v", cellRange, err)
+	}
+
+	// Convert column letters to numbers
+	startColNum, err := excelize.ColumnNameToNumber(startCol)
+	if err != nil {
+		return fmt.Errorf("invalid start column '%s': %v", startCol, err)
+	}
+
+	endColNum, err := excelize.ColumnNameToNumber(endCol)
+	if err != nil {
+		return fmt.Errorf("invalid end column '%s': %v", endCol, err)
+	}
+
+	// Validate range
+	if startRow > endRow {
+		return fmt.Errorf("start row (%d) cannot be greater than end row (%d)", startRow, endRow)
+	}
+	if startColNum > endColNum {
+		return fmt.Errorf("start column (%s) cannot be greater than end column (%s)", startCol, endCol)
+	}
+
+	// Clear each cell in the range
+	for row := startRow; row <= endRow; row++ {
+		for col := startColNum; col <= endColNum; col++ {
+			cell, err := excelize.CoordinatesToCellName(col, row)
+			if err != nil {
+				return fmt.Errorf("error creating cell name for column %d, row %d: %v", col, row, err)
+			}
+			f.SetCellValue(sheetName, cell, "")
+		}
+	}
+
+	return nil
+}
+
+func TableExistsInSheet(f *excelize.File, sheet, tableName string) (bool, *excelize.Table, error) {
+	tables, err := f.GetTables(sheet)
+	if err != nil {
+		return false, nil, err
+	}
+	for _, tbl := range tables {
+		if tbl.Name == tableName {
+			return true, &tbl, nil
+		}
+	}
+	return false, nil, nil
+}
+
 func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "EXPORTS"
 	if len(keys) > 0 && keys[0] != "" {
@@ -420,6 +554,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					sql, _ := detail["sql"].(string)
 					header, _ := detail["header"].(bool)
 					if_exists, _ := detail["if_exists"].(string)
+					clear_range, _ := detail["clear_range"].(string)
+					clear_sheet, _ := detail["clear_sheet"].(bool)
 					table_style, _ := detail["table_style"].(string)
 					formulas, okFormulas := detail["formulas"].([]any)
 					formula, okFormula := detail["formula"].(string)
@@ -438,6 +574,15 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							}
 							file.DeleteSheet(sheet)
 							file.NewSheet(sheet)
+						} else if clear_sheet {
+							// Clear especific range in the sheet
+							clearEntireSheetContent(file, sheet)
+						} else if clear_range != "" {
+							// Clear especific range in the sheet
+							err := clearSpecificRange(file, sheet, clear_range)
+							if err != nil {
+								fmt.Printf("failed to clear range %s in sheet %s: %s\n", clear_range, sheet, err)
+							}
 						}
 					}
 					rows := &[]map[string]any{}
@@ -535,18 +680,23 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							if table_style != "" {
 								StyleName = table_style
 							}
-							//fmt.Println("StyleName:", StyleName)
-							err = file.AddTable(sheet, &excelize.Table{
-								Name:            table,
-								Range:           tableRange,
-								StyleName:       StyleName, // "TableStyleMedium9",
-								ShowFirstColumn: false,
-								ShowLastColumn:  false,
-								//ShowRowStripes:    &(true),
-								ShowColumnStripes: false,
-							})
-							if err != nil {
-								fmt.Printf("failed to create table %s on sheet %s range %s: %s\n", table, sheet, tableRange, err)
+							tableExists, tbl, _ := TableExistsInSheet(file, sheet, table)
+							if tableExists {
+								tbl.Range = tableRange
+							} else {
+								//fmt.Println("StyleName:", StyleName)
+								err = file.AddTable(sheet, &excelize.Table{
+									Name:            table,
+									Range:           tableRange,
+									StyleName:       StyleName, // "TableStyleMedium9",
+									ShowFirstColumn: false,
+									ShowLastColumn:  false,
+									//ShowRowStripes:    &(true),
+									ShowColumnStripes: false,
+								})
+								if err != nil {
+									fmt.Printf("failed to create table %s on sheet %s range %s: %s\n", table, sheet, tableRange, err)
+								}
 							}
 						}
 						// FORMULAS
