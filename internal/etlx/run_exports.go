@@ -281,6 +281,36 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				return nil
 			}
 		}
+		if only, okOnly := extraConf["only"]; okOnly {
+			//fmt.Println("ONLY", only, len(only.([]string)))
+			if len(only.([]string)) == 0 {
+			} else if !etlx.Contains(only.([]string), itemKey) {
+				processLogs = append(processLogs, map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
+				})
+				return nil
+			}
+		}
+		if skip, okSkip := extraConf["skip"]; okSkip {
+			//fmt.Println("SKIP", skip, len(skip.([]string)))
+			if len(skip.([]string)) == 0 {
+			} else if etlx.Contains(skip.([]string), itemKey) {
+				processLogs = append(processLogs, map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"key":         key, "item_key": itemKey, "start_at": time.Now(),
+					"end_at":  time.Now(),
+					"success": true,
+					"msg":     "Excluded from the process",
+				})
+				return nil
+			}
+		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		exportSQL, okExport := itemMetadata["export_sql"]
 		dataSQL, okData := itemMetadata["data_sql"]
