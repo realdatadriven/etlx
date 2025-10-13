@@ -200,6 +200,10 @@ func (etlx *ETLX) ReplacePlaceholders(sql string, item map[string]any) (string, 
 				_sql, _, _, err := etlx.QueryBuilder(nil, queryName)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryName, err)
+					_q, _e := etlx.Config[queryName].(string)
+					if !_e {
+						return _q
+					}
 				} else {
 					return _sql
 				}
@@ -256,6 +260,10 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				_sql, _, _, err := etlx.QueryBuilder(nil, name)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
+					_q, _e := etlx.Config[name].(string)
+					if !_e {
+						query = _q
+					}
 				} else {
 					query = _sql
 				}
@@ -337,6 +345,10 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 					_sql, _, _, err := etlx.QueryBuilder(nil, name)
 					if err != nil {
 						fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
+						_q, _e := etlx.Config[name].(string)
+						if !_e {
+							query = _q
+						}
 					} else {
 						query = _sql
 					}
@@ -446,6 +458,10 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			_sql, _, _, err := etlx.QueryBuilder(nil, queries)
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
+				_q, _e := etlx.Config[queries].(string)
+				if !_e {
+					query = _q
+				}
 			} else {
 				query = _sql
 			}
@@ -494,6 +510,10 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				_sql, _, _, err := etlx.QueryBuilder(nil, queryKey)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
+					_q, _e := etlx.Config[queryKey].(string)
+					if !_e {
+						query = _q
+					}
 				} else {
 					query = _sql
 				}

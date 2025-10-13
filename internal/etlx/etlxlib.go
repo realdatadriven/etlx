@@ -18,7 +18,8 @@ import (
 )
 
 type ETLX struct {
-	Config map[string]any
+	Config           map[string]any
+	autoLogsDisabled bool
 }
 
 func addAutoLoggs(md string) string {
@@ -93,10 +94,15 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 			return fmt.Errorf("failed convert the Notebook to MDText: %w", err)
 		}
 		// fmt.Println(mdText)
-		data = []byte(addAutoLoggs(mdText))
+		data = []byte(mdText)
+	}
+	if etlx.autoLogsDisabled {
+		//
+	} else {
+		data = []byte(addAutoLoggs(string(data)))
 	}
 	// Parse the Markdown content into an AST
-	reader := text.NewReader([]byte(addAutoLoggs(string(data))))
+	reader := text.NewReader(data)
 	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 

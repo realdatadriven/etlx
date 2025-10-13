@@ -2,6 +2,7 @@ package etlxlib
 
 import (
 	"fmt"
+	"os"
 	"time"
 )
 
@@ -75,7 +76,8 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		column, okColumn := itemMetadata["column"]
 		afterSQL, okAfter := itemMetadata["after_sql"]
 		config := make(map[string]any)
-		etl := &ETLX{Config: config}
+		etl := &ETLX{Config: config, autoLogsDisabled: true}
+		var mdConf any
 		if okQuery && query != "" {
 			conn, okCon := itemMetadata["connection"]
 			if !okCon {
@@ -130,7 +132,6 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				return nil
 			}
 			if len(*rows) > 0 {
-				var mdConf any
 				okConf := false
 				if column != nil && okColumn {
 					mdConf, okConf = (*rows)[0][column.(string)]
@@ -204,14 +205,30 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				return nil
 			}
 		}
-		for newConfKey, value := range etl.Config {
-			if newConfKey == "metadata" || newConfKey == "__order" || newConfKey == "order" {
-				continue
+		//fmt.Println("LOADED ETLX CONF:", etl.Config)
+		if len(etl.Config) == 1 && etl.Config["__order"] != nil {
+			etlx.Config[itemKey] = map[string]any{}
+			if okQuery && query != "" && mdConf != nil {
+				//etlx.Config[itemKey].(map[string]any)[itemKey] = mdConf.(string)
+				etlx.Config[itemKey] = mdConf.(string)
+			} else if path != nil && okPath {
+				data, err := os.ReadFile(path.(string))
+				if err != nil {
+					fmt.Printf("LOAD RAW FILE: failed to read file: %s", err)
+				} else {
+					etlx.Config[itemKey] = string(data)
+				}
 			}
-			if _, ok := etlx.Config[newConfKey]; !ok {
-				etlx.Config[newConfKey] = value
-			} else {
-				fmt.Println(newConfKey, "Already exists!")
+		} else {
+			for newConfKey, value := range etl.Config {
+				if newConfKey == "metadata" || newConfKey == "__order" || newConfKey == "order" {
+					continue
+				}
+				if _, ok := etlx.Config[newConfKey]; !ok {
+					etlx.Config[newConfKey] = value
+				} else {
+					fmt.Println(newConfKey, "Already exists!")
+				}
 			}
 		}
 		_log2["success"] = true
