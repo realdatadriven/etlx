@@ -209,9 +209,15 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 					levels[level] = nil
 				}
 			case *ast.FencedCodeBlock:
-				// Extract info and content from the code block
+				// Extract info and content from the code block nedd to check if is a valid codblcock first
 				info := string(n.Info.Segment.Value(reader.Source()))
 				content := string(n.Text(reader.Source()))
+				/*var content bytes.Buffer
+				lines := n.Lines()
+				for i := 0; i < lines.Len(); i++ {
+				    line := lines.At(i)
+				    content.Write(line.Value(reader.Source()))
+				}*/
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
