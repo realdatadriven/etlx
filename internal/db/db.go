@@ -411,25 +411,25 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 	} else if contains(_pg_drivers, _driver) {
 		user_id := int(params["user"].(map[string]interface{})["user_id"].(float64))
 		_query := fmt.Sprintf(`SELECT 
-    c.ordinal_position - 1 AS cid,
-    c.column_name AS name,
-    c.data_type AS type,
-    (c.is_nullable = 'NO') AS notnull,
-    c.column_default AS dflt_value,
-    CASE WHEN kcu.column_name IS NOT NULL THEN 1 ELSE 0 END AS pk
-FROM information_schema.columns c
-LEFT JOIN information_schema.key_column_usage kcu
-    ON c.table_name = kcu.table_name
-    AND c.column_name = kcu.column_name
-    AND kcu.constraint_name IN (
-        SELECT constraint_name
-        FROM information_schema.table_constraints
-        WHERE table_name = '%s'
-          AND constraint_type = 'PRIMARY KEY'
-    )
-WHERE c.table_name = '%s'
-ORDER BY c.ordinal_position;
-`, table, table)
+			c.ordinal_position - 1 AS cid,
+			c.column_name AS name,
+			c.data_type AS type,
+			(c.is_nullable = 'NO') AS notnull,
+			c.column_default AS dflt_value,
+			CASE WHEN kcu.column_name IS NOT NULL THEN 1 ELSE 0 END AS pk
+		FROM information_schema.columns c
+		LEFT JOIN information_schema.key_column_usage kcu
+			ON c.table_name = kcu.table_name
+			AND c.column_name = kcu.column_name
+			AND kcu.constraint_name IN (
+				SELECT constraint_name
+				FROM information_schema.table_constraints
+				WHERE table_name = '%s'
+				AND constraint_type = 'PRIMARY KEY'
+			)
+		WHERE c.table_name = '%s'
+		ORDER BY c.ordinal_position;
+		`, table, table)
 		//fmt.Println(table, _query)
 		_aux_data := []map[string]interface{}{}
 		_aux_data_fk := map[string]interface{}{}
@@ -438,37 +438,37 @@ ORDER BY c.ordinal_position;
 			return nil, false, err
 		}
 		_query = fmt.Sprintf(`WITH foreign_keys AS (
-    SELECT
-        rc.constraint_name AS fk_name,
-        tc.table_name AS table_name,
-        kcu.column_name AS "from",
-        ccu.table_name AS "to",
-        ccu.column_name AS to_column,
-        rc.update_rule AS on_update,
-        rc.delete_rule AS on_delete,
-        kcu.ordinal_position AS seq
-    FROM information_schema.referential_constraints rc
-    JOIN information_schema.table_constraints tc
-        ON rc.constraint_name = tc.constraint_name
-        AND rc.constraint_schema = tc.constraint_schema
-    JOIN information_schema.key_column_usage kcu
-        ON kcu.constraint_name = rc.constraint_name
-        AND kcu.constraint_schema = rc.constraint_schema
-    JOIN information_schema.constraint_column_usage ccu
-        ON ccu.constraint_name = rc.constraint_name
-        AND ccu.constraint_schema = rc.constraint_schema
-    WHERE tc.table_name = '%s'
-)
-SELECT 
-    ROW_NUMBER() OVER () - 1 AS id,
-    seq,
-    table_name AS parent_table,
-    "from",
-    "to",
-    on_update,
-    on_delete,
-    'NONE' AS match
-FROM foreign_keys;`, table)
+			SELECT
+				rc.constraint_name AS fk_name,
+				tc.table_name AS table_name,
+				kcu.column_name AS "from",
+				ccu.table_name AS "to",
+				ccu.column_name AS to_column,
+				rc.update_rule AS on_update,
+				rc.delete_rule AS on_delete,
+				kcu.ordinal_position AS seq
+			FROM information_schema.referential_constraints rc
+			JOIN information_schema.table_constraints tc
+				ON rc.constraint_name = tc.constraint_name
+				AND rc.constraint_schema = tc.constraint_schema
+			JOIN information_schema.key_column_usage kcu
+				ON kcu.constraint_name = rc.constraint_name
+				AND kcu.constraint_schema = rc.constraint_schema
+			JOIN information_schema.constraint_column_usage ccu
+				ON ccu.constraint_name = rc.constraint_name
+				AND ccu.constraint_schema = rc.constraint_schema
+			WHERE tc.table_name = '%s'
+		)
+		SELECT 
+			ROW_NUMBER() OVER () - 1 AS id,
+			seq,
+			table_name AS parent_table,
+			"from",
+			"to",
+			on_update,
+			on_delete,
+			'NONE' AS match
+		FROM foreign_keys;`, table)
 		res_fk, _, err := db.QueryMultiRows(_query, []interface{}{}...)
 		if err != nil {
 			return nil, false, err
@@ -481,7 +481,7 @@ FROM foreign_keys;`, table)
 			}
 		}
 		for _, row := range *res {
-			fmt.Println("NAME:", row["name"])
+			//fmt.Println("NAME:", row["name"])
 			fk := false
 			var referred_table string
 			var referred_column string
@@ -730,7 +730,7 @@ func (db *DB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	user := map[string]any{}
 
 	query := `SELECT * FROM users WHERE email = $1 OR username = $1`
-	fmt.Println(email)
+	//fmt.Println(email)
 	//err := db.GetContext(ctx, &user2, query, email)
 	rows, err := db.QueryxContext(ctx, query, email)
 	if err != nil {
@@ -857,7 +857,7 @@ func (db *DB) Query2CSV(query string, csv_path string, params ...interface{}) (b
 				// Format large numbers without scientific notation
 				hasDec, err := hasDecimalPlace(v)
 				if err != nil {
-					fmt.Println(err)
+					//fmt.Println(err)
 					rowData = append(rowData, fmt.Sprintf("%v", value))
 				} else if hasDec {
 					rowData = append(rowData, fmt.Sprintf("%f", v))
