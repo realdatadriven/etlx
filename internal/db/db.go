@@ -41,7 +41,8 @@ func New(driverName string, dsn string) (*DB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 	db.SetConnMaxLifetime(2 * time.Hour)
-	if driverName == "sqlite3" {
+	switch driverName {
+	case "sqlite3", "sqlite":
 		db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
 		db.ExecContext(ctx, "PRAGMA foreign_keys = ON")
 		db.ExecContext(ctx, "PRAGMA secure_delete = ON")
@@ -55,6 +56,13 @@ func New(driverName string, dsn string) (*DB, error) {
 		db.ExecContext(ctx, "PRAGMA auto_vacuum = FULL")
 		busy_timeout := 60 * 1000 * 3 // 60s
 		db.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d", busy_timeout))
+	case "postgres", "pg", "postgresql":
+		searchPath := "public"
+		value, exists := os.LookupEnv("PG_SEARCH_PATH")
+		if !exists {
+			searchPath = value
+		}
+		db.ExecContext(ctx, "SET search_path TO "+searchPath)
 	}
 	return &DB{db}, nil
 }
@@ -80,7 +88,8 @@ func setStrEnv(input string) string {
 
 // Adjust the query based on the database driver
 func adjustQuery(driver, query string) string {
-	if driver == "postgres" {
+	switch driver {
+	case "postgres":
 		// Replace ? with $1, $2, $3, etc. for PostgreSQL
 		count := 1
 		var result strings.Builder
@@ -95,10 +104,10 @@ func adjustQuery(driver, query string) string {
 			}
 		}
 		return result.String()
-	} else if driver == "mysql" {
+	case "mysql":
 		// Replace double quotes " with backticks ` for MySQL
 		return strings.ReplaceAll(query, `"`, "`")
-	} else if driver == "mssql" {
+	case "mssql":
 		return strings.ReplaceAll(query, `"`, "")
 	}
 	// SQLite uses ? placeholders, so no changes needed
@@ -583,10 +592,15 @@ func (db *DB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	//user2 := map[string]any{}
 	user := map[string]any{}
 
-	query := `SELECT * FROM user WHERE email = $1 OR username = $1`
+	//query := `SELECT * FROM user WHERE email = $1 OR username = $1`
+
+	query := `SELECT * FROM users WHERE email = $1 OR username = $1`
 
 	//err := db.GetContext(ctx, &user2, query, email)
 	rows, err := db.QueryxContext(ctx, query, email)
+	if err != nil {
+		return nil, false, err
+	}
 	//err := db.Select(&user2, query, email)
 	if rows.Next() {
 		errr := rows.MapScan(user)
