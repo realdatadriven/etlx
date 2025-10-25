@@ -41,6 +41,7 @@ func New(driverName string, dsn string) (*DB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 	db.SetConnMaxLifetime(2 * time.Hour)
+	fmt.Println(driverName)
 	switch driverName {
 	case "sqlite3", "sqlite":
 		db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
@@ -88,8 +89,7 @@ func setStrEnv(input string) string {
 
 // Adjust the query based on the database driver
 func adjustQuery(driver, query string) string {
-	switch driver {
-	case "postgres":
+	if driver == "postgres" {
 		// Replace ? with $1, $2, $3, etc. for PostgreSQL
 		count := 1
 		var result strings.Builder
@@ -104,10 +104,10 @@ func adjustQuery(driver, query string) string {
 			}
 		}
 		return result.String()
-	case "mysql":
+	} else if driver == "mysql" {
 		// Replace double quotes " with backticks ` for MySQL
 		return strings.ReplaceAll(query, `"`, "`")
-	case "mssql":
+	} else if driver == "mssql" {
 		return strings.ReplaceAll(query, `"`, "")
 	}
 	// SQLite uses ? placeholders, so no changes needed
@@ -409,8 +409,126 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 		}
 		return &_aux_data, true, nil
 	} else if contains(_pg_drivers, _driver) {
-		_query := `SELECT table_name as name FROM information_schema.tables WHERE table_schema = 'public';`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		user_id := int(params["user"].(map[string]interface{})["user_id"].(float64))
+		_query := fmt.Sprintf(`SELECT 
+    c.ordinal_position - 1 AS cid,
+    c.column_name AS name,
+    c.data_type AS type,
+    (c.is_nullable = 'NO') AS notnull,
+    c.column_default AS dflt_value,
+    CASE WHEN kcu.column_name IS NOT NULL THEN 1 ELSE 0 END AS pk
+FROM information_schema.columns c
+LEFT JOIN information_schema.key_column_usage kcu
+    ON c.table_name = kcu.table_name
+    AND c.column_name = kcu.column_name
+    AND kcu.constraint_name IN (
+        SELECT constraint_name
+        FROM information_schema.table_constraints
+        WHERE table_name = '%s'
+          AND constraint_type = 'PRIMARY KEY'
+    )
+WHERE c.table_name = '%s'
+ORDER BY c.ordinal_position;
+`, table, table)
+		//fmt.Println(table, _query)
+		_aux_data := []map[string]interface{}{}
+		_aux_data_fk := map[string]interface{}{}
+		res, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		if err != nil {
+			return nil, false, err
+		}
+		_query = fmt.Sprintf(`WITH foreign_keys AS (
+    SELECT
+        rc.constraint_name AS fk_name,
+        tc.table_name AS table_name,
+        kcu.column_name AS "from",
+        ccu.table_name AS "to",
+        ccu.column_name AS to_column,
+        rc.update_rule AS on_update,
+        rc.delete_rule AS on_delete,
+        kcu.ordinal_position AS seq
+    FROM information_schema.referential_constraints rc
+    JOIN information_schema.table_constraints tc
+        ON rc.constraint_name = tc.constraint_name
+        AND rc.constraint_schema = tc.constraint_schema
+    JOIN information_schema.key_column_usage kcu
+        ON kcu.constraint_name = rc.constraint_name
+        AND kcu.constraint_schema = rc.constraint_schema
+    JOIN information_schema.constraint_column_usage ccu
+        ON ccu.constraint_name = rc.constraint_name
+        AND ccu.constraint_schema = rc.constraint_schema
+    WHERE tc.table_name = '%s'
+)
+SELECT 
+    ROW_NUMBER() OVER () - 1 AS id,
+    seq,
+    table_name AS parent_table,
+    "from",
+    "to",
+    on_update,
+    on_delete,
+    'NONE' AS match
+FROM foreign_keys;`, table)
+		res_fk, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		if err != nil {
+			return nil, false, err
+		}
+		for _, row := range *res_fk {
+			// fmt.Println(row)
+			_aux_data_fk[row["from"].(string)] = map[string]interface{}{
+				"referred_table":  row["table"].(string),
+				"referred_column": row["to"].(string),
+			}
+		}
+		for _, row := range *res {
+			fmt.Println("NAME:", row["name"])
+			fk := false
+			var referred_table string
+			var referred_column string
+			if _, exists := _aux_data_fk[row["name"].(string)]; exists {
+				fk = true
+				referred_table = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_table"].(string)
+				referred_column = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_column"].(string)
+			}
+			pk := false
+			if _pk, ok := row["pk"].(bool); ok {
+				pk = _pk
+			} else if _pk, ok := row["pk"].(int); ok {
+				if _pk == 1 {
+					pk = true
+				}
+			}
+			nullable := false
+			if notnull, ok := row["notnull"].(bool); ok {
+				nullable = notnull
+			} else if notnull, ok := row["notnull"].(int); ok {
+				if notnull == 0 {
+					nullable = true
+				}
+			}
+			_aux_row := map[string]interface{}{
+				"db":              dbName,
+				"table":           table,
+				"field":           row["name"].(string),
+				"type":            row["type"].(string),
+				"comment":         nil,
+				"pk":              pk,
+				"autoincrement":   nil,
+				"nullable":        nullable,
+				"computed":        nil,
+				"default":         nil,
+				"fk":              fk,
+				"referred_table":  referred_table,
+				"referred_column": referred_column,
+				"user_id":         user_id,
+				"created_at":      time.Now(),
+				"updated_at":      time.Now(),
+				"excluded":        false,
+			}
+			// fmt.Println(1, row["name"].(string), _aux_row)
+			_aux_data = append(_aux_data, _aux_row)
+		}
+		return &_aux_data, true, nil
 	} else if contains(_ddb_drivers, _driver) {
 		_query := `SELECT table_name as name FROM information_schema.tables`
 		return db.QueryMultiRows(_query, []interface{}{}...)
@@ -515,6 +633,12 @@ func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string
 			//fmt.Println(3, err)
 			return nil, false, err
 		}
+		for key, val := range row {
+			switch v := val.(type) {
+			case []byte:
+				row[key] = string(v)
+			}
+		}
 		//fmt.Println(2, row)
 		result = append(result, row)
 	}
@@ -545,6 +669,12 @@ func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]ma
 		if err := rows.MapScan(row); err != nil {
 			return nil, nil, false, err
 		}
+		for key, val := range row {
+			switch v := val.(type) {
+			case []byte:
+				row[key] = string(v)
+			}
+		}
 		result = append(result, row)
 	}
 	return &result, columns, true, nil
@@ -563,6 +693,13 @@ func (db *DB) QuerySingleRow(query string, params ...interface{}) (*map[string]a
 	if rows.Next() {
 		if err := rows.MapScan(result); err != nil {
 			return nil, false, err
+		}
+
+		for key, val := range result {
+			switch v := val.(type) {
+			case []byte:
+				result[key] = string(v)
+			}
 		}
 	}
 	//fmt.Println(result)
@@ -592,10 +729,8 @@ func (db *DB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	//user2 := map[string]any{}
 	user := map[string]any{}
 
-	//query := `SELECT * FROM user WHERE email = $1 OR username = $1`
-
 	query := `SELECT * FROM users WHERE email = $1 OR username = $1`
-
+	fmt.Println(email)
 	//err := db.GetContext(ctx, &user2, query, email)
 	rows, err := db.QueryxContext(ctx, query, email)
 	if err != nil {
@@ -606,6 +741,12 @@ func (db *DB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 		errr := rows.MapScan(user)
 		if errr != nil {
 			fmt.Print(errr)
+		}
+		for key, val := range user {
+			switch v := val.(type) {
+			case []byte:
+				user[key] = string(v)
+			}
 		}
 		//fmt.Print(user["username"])
 	}
