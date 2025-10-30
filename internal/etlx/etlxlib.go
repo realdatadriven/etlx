@@ -517,6 +517,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 			}
 			frmtFinal = strings.ReplaceAll(frmtFinal, "{", "")
 			frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
+			frmtFinal = etlx.GetGODateFormat(frmtFinal)
 			var procc string
 			if dates, ok := dateRef.([]time.Time); ok {
 				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, dates[0].Format(frmtFinal))
