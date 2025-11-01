@@ -211,13 +211,13 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 			case *ast.FencedCodeBlock:
 				// Extract info and content from the code block nedd to check if is a valid codblcock first
 				info := string(n.Info.Segment.Value(reader.Source()))
-				content := string(n.Text(reader.Source()))
-				/*var content bytes.Buffer
+				//content := string(n.Text(reader.Source()))
+				var content bytes.Buffer
 				lines := n.Lines()
 				for i := 0; i < lines.Len(); i++ {
-				    line := lines.At(i)
-				    content.Write(line.Value(reader.Source()))
-				}*/
+					line := lines.At(i)
+					content.Write(line.Value(reader.Source()))
+				}
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
@@ -230,10 +230,10 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						if strings.HasPrefix(info, "json") {
 							key = strings.TrimSpace(strings.TrimPrefix(info, "json"))
 						}
-						contentFinal := content
+						contentFinal := content.String()
 						if key == "" {
 							// If no key in the info, try to extract from the first comment line
-							key, contentFinal = extracNameFromYamlToml(content)
+							key, contentFinal = extracNameFromYamlToml(content.String())
 							// fmt.Println("NOT A NAMED QUERY, FIND # name instead", key, contentFinal)
 						}
 						if key == "" {
@@ -263,14 +263,14 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 					} else if strings.HasPrefix(info, "sql") {
 						// Process SQL blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "sql"))
-						contentFinal := content
+						contentFinal := content.String()
 						if key == "" {
 							// If no key in the info, try to extract from the first comment line
-							key, contentFinal = extractQueryNameFromSQL(content)
+							key, contentFinal = extractQueryNameFromSQL(content.String())
 							// fmt.Println("NOT A NAMED QUERY, FIND -- name instead", key, contentFinal)
 						}
 						if key == "" {
-							fmt.Printf("missing query name for SQL block: %s", content)
+							fmt.Printf("missing query name for SQL block: %s", content.String())
 						} else {
 							current[key] = contentFinal
 							/*/ Add to the current section's __order
@@ -282,21 +282,21 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 					} else if strings.HasPrefix(info, "html") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "html"))
 						if key == "" {
-							fmt.Printf("missing query name for SQL block: %s", content)
+							fmt.Printf("missing query name for SQL block: %s", content.String())
 						} else {
 							current[key] = content
 						}
 					} else if strings.HasPrefix(info, "python") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "python"))
 						if key == "" {
-							fmt.Printf("missing query name for python block: %s", content)
+							fmt.Printf("missing query name for python block: %s", content.String())
 						} else {
 							current[key] = content
 						}
 					} else if strings.HasPrefix(info, "py") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "py"))
 						if key == "" {
-							fmt.Printf("missing query name for python block: %s", content)
+							fmt.Printf("missing query name for python block: %s", content.String())
 						} else {
 							current[key] = content
 						}
