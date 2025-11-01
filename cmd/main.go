@@ -208,7 +208,7 @@ func main() {
 		}
 	}
 
-	_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ACTIONS", "AUTO_LOGS"}
+	_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ACTIONS", "AUTO_LOGS", "REQUIRES"}
 	__order, ok := etlxlib.Config["__order"].([]string)
 	hasOrderedKeys := false
 	if !ok {
@@ -334,6 +334,19 @@ func main() {
 							}
 						case "LOGS":
 							_logs, err := etlxlib.RunLOGS(dateRef, nil, logs, key)
+							if err != nil {
+								fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+							} else {
+								if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+									_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+									if err != nil {
+										fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+									}
+								}
+								logs = append(logs, _logs...)
+							}
+						case "REQUIRES":
+							_logs, err := etlxlib.LoadREQUIRES(nil, key)
 							if err != nil {
 								fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 							} else {
