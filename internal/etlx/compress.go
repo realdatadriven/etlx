@@ -113,4 +113,3 @@ func (etlx *ETLX) DecompressGZ(gzPath string, outputPath string) error {
 	_, err = io.Copy(outFile, gzReader)
 	return err
 }
-

@@ -98,7 +98,7 @@ func (q *QueryDoc) GetQueryPartsAsMap() map[string]map[string]interface{} {
 			"order_by": f.OrderBy,
 			"having":   f.Having,
 			"window":   f.Window,
-		        "active":   f.Active,
+			"active":   f.Active,
 		}
 	}
 	return result
@@ -398,8 +398,8 @@ func getDtFmrt(format string) string {
 
 // setQueryDate formats the query string by inserting the given date reference in place of placeholders
 func hasPlaceholders(s string) bool {
-    pattern := regexp.MustCompile(`YY|AA|MM|DD`)
-    return pattern.MatchString(s)
+	pattern := regexp.MustCompile(`YY|AA|MM|DD`)
+	return pattern.MatchString(s)
 }
 func (q *QueryDoc) setQueryDate(query string, dateRef interface{}) string {
 	patt := regexp.MustCompile(`(["]?\w+["]?\.\w+\s?=\s?'\{.*?\}'|["]?\w+["]?\s?=\s?'\{.*?\}')`)

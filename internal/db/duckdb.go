@@ -5,9 +5,10 @@ import (
 	"database/sql"
 	"fmt"
 	"time"
+
 	"github.com/realdatadriven/etlx/internal/env"
 
-	_ "github.com/marcboeker/go-duckdb/v2"
+	_ "github.com/duckdb/duckdb-go/v2"
 )
 
 type DuckDB struct {

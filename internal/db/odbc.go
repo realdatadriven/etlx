@@ -12,9 +12,9 @@ import (
 	"time"
 	"unicode/utf8"
 
+	"github.com/realdatadriven/etlx/internal/env"
 	"golang.org/x/text/encoding/charmap"
 	"golang.org/x/text/transform"
-	"github.com/realdatadriven/etlx/internal/env"
 
 	_ "github.com/alexbrainman/odbc"
 )
@@ -29,7 +29,7 @@ func NewODBC(dsn string) (*ODBC, error) {
 	if err != nil {
 		return nil, err
 	}
-	
+
 	defaultTimeoutODBC = time.Duration(env.GetInt("ODBC_DFLT_TIMEOUT", 15)) * time.Minute
 	//fmt.Println(driverName, dsn)
 	db.SetMaxOpenConns(25)
