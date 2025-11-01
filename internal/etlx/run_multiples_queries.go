@@ -117,6 +117,11 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				_sql, _, _, err := etlx.QueryBuilder(nil, sql)
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
+					_q, _e := etlx.Config[sql].(string)
+					//fmt.Println(sql, "IS A LOADED SQL STR QUERY?", _q, _e)
+					if _e {
+						query = _q
+					}
 				} else {
 					query = _sql
 				}

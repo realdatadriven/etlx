@@ -31,6 +31,11 @@ func (etlx *ETLX) ExecuteQueryWithRowsAffected(conn db.DBInterface, sqlData any,
 			_sql, _, _, err := etlx.QueryBuilder(nil, queries)
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
+				_q, _e := etlx.Config[queries].(string)
+				//fmt.Println(queries, "IS A LOADED SQL STR QUERY?", _q, _e)
+				if _e {
+					query = _q
+				}
 			} else {
 				query = _sql
 			}

@@ -201,7 +201,9 @@ func (etlx *ETLX) ReplacePlaceholders(sql string, item map[string]any) (string, 
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryName, err)
 					_q, _e := etlx.Config[queryName].(string)
-					if !_e {
+					//fmt.Println(1, queryName, "[[]] IS A LOADED SQL STR QUERY?", _q, _e)
+					if _e {
+						//fmt.Println(2, queryName, "[[]] IS A LOADED SQL STR QUERY?", _q, _e)
 						return _q
 					}
 				} else {
@@ -261,7 +263,8 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
 					_q, _e := etlx.Config[name].(string)
-					if !_e {
+					//fmt.Println(name, "IS A LOADED SQL STR QUERY?", _q, _e)
+					if _e {
 						query = _q
 					}
 				} else {
@@ -346,7 +349,8 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 					if err != nil {
 						fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", name, err)
 						_q, _e := etlx.Config[name].(string)
-						if !_e {
+						//fmt.Println(name, "IS A LOADED SQL STR QUERY?", _q, _e)
+						if _e {
 							query = _q
 						}
 					} else {
@@ -459,7 +463,8 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			if err != nil {
 				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
 				_q, _e := etlx.Config[queries].(string)
-				if !_e {
+				//fmt.Println(queries, "IS A LOADED SQL STR QUERY?", _q, _e)
+				if _e {
 					query = _q
 				}
 			} else {
@@ -511,7 +516,8 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				if err != nil {
 					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
 					_q, _e := etlx.Config[queryKey].(string)
-					if !_e {
+					//fmt.Println(queryKey, "IS A LOADED SQL STR QUERY?", _q, _e)
+					if _e {
 						query = _q
 					}
 				} else {
