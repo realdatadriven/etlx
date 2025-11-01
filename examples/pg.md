@@ -74,23 +74,25 @@ CREATE OR REPLACE TABLE "DB"."<table>" AS
 ```yaml metadata
 name: DailyRevenueTripVolume
 description: Daily Revenue and Trip Volume
+has_placeholders: true
 schema: TRF
+database: "postgres:user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable search_path=<schema>"
 table: DailyRevenueTripVolume
 transform_conn: "duckdb:"
 transform_before_sql: "ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES)"
 transform_sql:
-  - CREATE SCHEMA IF NOT EXISTS DB.<schema>
+  - CREATE SCHEMA IF NOT EXISTS "DB"."<schema>"
   - DailyRevenueTripVolume
 transform_after_sql: DETACH "DB"
-drop_sql: DROP TABLE IF EXISTS "DB"."<table>"
-clean_sql: DELETE FROM "DB"."<table>"
-rows_sql: SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
+drop_sql: DROP TABLE IF EXISTS "DB"."<schema>"."<table>"
+clean_sql: DELETE FROM "DB"."<schema>"."<table>"
+rows_sql: SELECT COUNT(*) AS "nrows" FROM "DB"."<schema>"."<table>"
 active: true
 ```
 
 ```sql
 -- DailyRevenueTripVolume
-CREATE OR REPLACE TABLE "DB"."<table>" AS
+CREATE OR REPLACE TABLE "DB"."<schema>"."<table>" AS
 SELECT CAST(tpep_pickup_datetime AS DATE) AS trip_date,
     COUNT(*) AS total_trips,
     ROUND(SUM(total_amount), 2) AS total_revenue,

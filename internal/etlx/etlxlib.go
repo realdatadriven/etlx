@@ -254,6 +254,27 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						if err != nil {
 							return ast.WalkContinue, fmt.Errorf("error parsing %s block %s: %v, %s", info, key, err, contentFinal)
 						}
+						if _, ok := metaData["has_placeholders"].(bool); ok {
+							for k, v := range metaData {
+								if strVal, ok := v.(string); ok {
+									metaData[k] = replacePlaceholdersRegex(strVal, metaData)
+								} else if arrVal, ok := v.([]any); ok {
+									for i, item := range arrVal {
+										if itemStr, ok := item.(string); ok {
+											arrVal[i] = replacePlaceholdersRegex(itemStr, metaData)
+										}
+									}
+									metaData[k] = arrVal
+								} else if mapVal, ok := v.(map[string]any); ok {
+									for mk, mv := range mapVal {
+										if mvStr, ok := mv.(string); ok {
+											mapVal[mk] = replacePlaceholdersRegex(mvStr, metaData)
+										}
+									}
+									metaData[k] = mapVal
+								}
+							}
+						}
 						current[key] = metaData
 						/*/ Add to the current section's __order
 						if _, ok := current["__order"]; ok {
@@ -323,6 +344,25 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 	}
 	etlx.Config = config
 	return nil
+}
+
+func replacePlaceholdersRegex(text string, metadata map[string]any) string {
+	re := regexp.MustCompile(`<([^>]+)>`)
+
+	result := re.ReplaceAllStringFunc(text, func(match string) string {
+		// Extract key name (remove < and >)
+		key := match[1 : len(match)-1]
+
+		// Look up value in metadata
+		if value, exists := metadata[key]; exists {
+			return fmt.Sprint(value)
+		}
+
+		// If key doesn't exist, keep the placeholder
+		return match
+	})
+
+	return result
 }
 
 // PrintConfigAsJSON prints the configuration map in JSON format
