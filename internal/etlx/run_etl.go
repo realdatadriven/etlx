@@ -680,32 +680,32 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		for _, step := range _steps {
 			// CHECK CLEAN
 			clean, ok := extraConf["clean"]
-			if ok {
+			/*if ok {
 				if clean.(bool) && step != "load" {
 					continue
 				}
-			}
+			}*/
 			// CHECK DROP
 			drop, ok := extraConf["drop"]
-			if ok {
+			/*if ok {
 				if drop.(bool) && step != "load" {
 					continue
 				}
-			}
+			}*/
 			// CHECK ROWS
 			rows, ok := extraConf["rows"]
-			if ok {
+			/*if ok {
 				if rows.(bool) && step != "load" {
 					continue
 				}
-			}
+			}*/
 			// CHECK FILE
 			file, ok := extraConf["file"].(string)
-			if ok {
+			/*if ok {
 				if file != "" && step != "load" {
 					continue
 				}
-			}
+			}*/
 			// STEPS
 			if steps, ok := extraConf["steps"]; ok {
 				if len(steps.([]string)) == 0 {

@@ -92,14 +92,14 @@ active: true
 
 ```sql
 -- DailyRevenueTripVolume
-CREATE OR REPLACE TABLE "DB"."<schema>"."<table>" AS
+CREATE OR REPLACE TABLE "DB"."TRF"."<table>" AS
 SELECT CAST(tpep_pickup_datetime AS DATE) AS trip_date,
     COUNT(*) AS total_trips,
     ROUND(SUM(total_amount), 2) AS total_revenue,
     ROUND(AVG(total_amount), 2) AS avg_revenue_per_trip,
     ROUND(SUM(trip_distance), 2) AS total_miles,
     ROUND(AVG(trip_distance), 2) AS avg_trip_distance
-FROM yellow_tripdata
+FROM DB.NYC_TAXI
 GROUP BY trip_date
 ORDER BY trip_date
 ```
