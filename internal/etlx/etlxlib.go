@@ -497,7 +497,7 @@ func (etlx *ETLX) GetGODateFormat(format string) string {
 		{`HH`, "15"},
 		{`mm`, "04"},
 		{`SS`, "05"},
-		{`TSTAMP|STAMP`, "20060102150405"},
+		{`TSTAMP|STAMP|TS`, "20060102150405"},
 	}
 	for _, f := range formats {
 		re := regexp.MustCompile(f.frmt)
@@ -559,13 +559,42 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) stri
 			frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
 			frmtFinal = etlx.GetGODateFormat(frmtFinal)
 			var procc string
-			if dates, ok := dateRef.([]time.Time); ok {
-				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, dates[0].Format(frmtFinal))
-			} else if dt, ok := dateRef.(time.Time); ok {
-				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, dt.Format(frmtFinal))
+			if regexp.MustCompile(`\b(?:STAMP|TSTAMP|TS)\b`).MatchString(m) {
+				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, time.Now().Format(frmtFinal))
+				//fmt.Println("TIMESTAMP FORMAT", m, frmtFinal, procc)
+			} else {
+				if dates, ok := dateRef.([]time.Time); ok {
+					procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, dates[0].Format(frmtFinal))
+				} else if dt, ok := dateRef.(time.Time); ok {
+					procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, dt.Format(frmtFinal))
+				}
 			}
 			patt = regexp.MustCompile(regexp.QuoteMeta(m))
 			query = patt.ReplaceAllString(query, procc)
+		}
+	}
+
+	// Replace timestamp date placeholders
+	patt = regexp.MustCompile(`(\{STAMP|TSTAMP|TS\})`)
+	patt = regexp.MustCompile(`\{.*?\}`)
+	matches = patt.FindAllString(query, -1)
+	if len(matches) > 0 {
+		for _, m := range matches {
+			if regexp.MustCompile(`\b(?:STAMP|TSTAMP|TS)\b`).MatchString(m) {
+				frmtFinal := etlx.GetGODateFormat(m)
+				if frmtFinal == m || strings.Contains(strings.ToLower(m), "driver") {
+					continue
+				}
+				frmtFinal = strings.ReplaceAll(frmtFinal, "{", "")
+				frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
+				frmtFinal = etlx.GetGODateFormat(frmtFinal)
+				//fmt.Println(m, frmtFinal)
+				now := time.Now()
+				var procc string
+				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, now.Format(frmtFinal))
+				patt = regexp.MustCompile(regexp.QuoteMeta(m))
+				query = patt.ReplaceAllString(query, procc)
+			}
 		}
 	}
 	// Handle cases for temporary tables with date extensions

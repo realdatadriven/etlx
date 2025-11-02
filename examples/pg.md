@@ -1,3 +1,6 @@
+
+<!-- markdownlint-disable MD025 -->
+
 # ETL
 
 <https://www.nyc.gov/site/tlc/about/tlc-trip-record-data.page>
@@ -104,7 +107,68 @@ GROUP BY trip_date
 ORDER BY trip_date
 ```
 
-<!-- markdownlint-disable MD025 -->
+# EXPORTS
+
+Exports data to files.
+
+```yaml metadata
+name: EXPORTS
+description: Exports Examples
+connection: "duckdb:"
+path: "static/uploads/tmp"
+active: true
+```
+
+## ExportDailyRevenueTripVolume
+
+```yaml metadata
+name: ExportDailyRevenueTripVolume
+description: "Export data to CSV"
+connection: "duckdb:"
+before_sql: "ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES)"
+export_sql: export
+after_sql: "DETACH DB"
+path: 'ExportDailyRevenueTripVolume_{YYYYMMDD}.{TSTAMP}.parquet'
+tmp_prefix: 'tmp'
+active: true
+```
+
+```sql
+-- export
+COPY (
+    SELECT CAST(tpep_pickup_datetime AS DATE) AS trip_date,
+        COUNT(*) AS total_trips,
+        ROUND(SUM(total_amount), 2) AS total_revenue,
+        ROUND(AVG(total_amount), 2) AS avg_revenue_per_trip,
+        ROUND(SUM(trip_distance), 2) AS total_miles,
+        ROUND(AVG(trip_distance), 2) AS avg_trip_distance
+    FROM DB.NYC_TAXI
+    GROUP BY trip_date
+    ORDER BY trip_date
+) TO '<fname>'
+```
+
+## hist_logs
+
+```yaml metadata
+name: hist_logs
+description: "Export data to CSV"
+connection: "duckdb:"
+before_sql: "ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES)"
+export_sql: export
+after_sql: "DETACH DB"
+path: 'hist_logs_{YYYYMMDD}.{TSTAMP}.parquet'
+tmp_prefix: 'tmp'
+active: true
+```
+
+```sql
+-- export
+COPY (
+    SELECT *
+    FROM DB.etlx_logs
+) TO '<fname>'
+```
 
 # LOGS
 
@@ -117,7 +181,7 @@ before_sql:
   - "ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES)"
   - 'USE DB;'
   - LOAD json
-  - 'get_dyn_queries[create_columns_missing]'
+  - "get_dyn_queries[create_columns_missing](ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES), DETACH DB)"
 save_log_sql: load_logs
 save_on_err_patt: '(?i)table.+does.+not.+exist'
 save_on_err_sql: create_logs

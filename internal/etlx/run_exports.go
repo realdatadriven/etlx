@@ -381,6 +381,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		} else if okMainPath && mainPath != "" && !isEmpty(mainPath) {
 			fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, mainPath, table)
 		}
+		//fmt.Println(1, path, fname)
+		fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+		//fmt.Println(2, path, fname)
 		// QUERIES TO RUN AT beginning
 		if okBefore {
 			start3 := time.Now()
