@@ -9,7 +9,7 @@
 name: HTTP_EXTRACT
 description: "Example extrating from web to a local postgres file"
 connection: "postgres:user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable"
-database: ETLX_DATA
+database: "postgres:user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable"
 active: true
 ```
 
@@ -79,7 +79,7 @@ name: DailyRevenueTripVolume
 description: Daily Revenue and Trip Volume
 has_placeholders: true
 schema: TRF
-database: "postgres:user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable search_path=<schema>"
+database: "postgres:user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable search_path=TRF"
 table: DailyRevenueTripVolume
 transform_conn: "duckdb:"
 transform_before_sql: "ATTACH 'user=postgres password=1234 dbname=ETLX_DATA host=localhost port=5432 sslmode=disable' AS DB (TYPE POSTGRES)"
