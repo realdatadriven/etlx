@@ -10,8 +10,8 @@ name: EXTRACT_LOAD
 runs_as: ETL
 description: |
   Extracts and Loads the data sets to the local analitical database
-connection: "sqlite3:DB_EX_DGOV.db"
-database: "sqlite3:DB_EX_DGOV.db"
+connection: "sqlite3:database/DB_EX_DGOV.db"
+database: "sqlite3:database/DB_EX_DGOV.db"
 active: true
 ```
 
@@ -22,19 +22,25 @@ name: TRIP_DATA
 description: "Example extrating trip data from web to a local database"
 table: TRIP_DATA
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
-load_sql: extract_load_query
+load_before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+load_sql: extract_load_trip_data
 load_after_sql: DETACH "DB"
 drop_sql: DROP TABLE IF EXISTS "DB"."<table>"
 clean_sql: DELETE FROM "DB"."<table>"
 rows_sql: SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
-active: true
+active: false
 ```
 
 ```sql
--- extract_load_query
+-- extract_load_trip_data
 CREATE OR REPLACE TABLE "DB"."<table>" AS
 [[QUERY_EXTRACT_TRIP_DATA]]
+```
+
+```sql
+-- extract_load_trip_data_with_out_doc_field_metadata
+CREATE OR REPLACE TABLE "DB"."<table>" AS
+FROM read_parquet('https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet')
 ```
 
 ## ZONES
@@ -44,8 +50,8 @@ name: ZONES
 description: "Taxi Zone Lookup Table"
 table: ZONES
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
-load_sql: extract_load_query
+load_before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+load_sql: extract_load_zones
 load_after_sql: DETACH "DB"
 drop_sql: DROP TABLE IF EXISTS "DB"."<table>"
 clean_sql: DELETE FROM "DB"."<table>"
@@ -54,8 +60,8 @@ active: true
 ```
 
 ```sql
--- extract_load_query
-CREATE OR REPLACE TABLE zones AS
+-- extract_load_zones
+CREATE OR REPLACE TABLE "DB"."<table>" AS
 SELECT *
 FROM 'https://d37ci6vzurychx.cloudfront.net/misc/taxi_zone_lookup.csv';
 ```
@@ -67,7 +73,8 @@ This QueryDoc extracts selected fields from the NYC Yellow Taxi Trip Record data
 ```yaml metadata
 name: QUERY_EXTRACT_TRIP_DATA
 description: "Extracts essential NYC Yellow Taxi trip fields (with governance metadata)."
-owner: taxi-analytics-team@yourorg.com
+owner: taxi-analytics-team
+details: "https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf"
 source:
   uri: "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet"
   format: parquet
@@ -355,6 +362,7 @@ name: cbd_congestion_fee
 description: "MTA Congestion Relief Zone fee (in effect after Jan 5, 2025)."
 type: numeric
 owner: finance
+active: false
 ```
 
 ```sql
@@ -363,3 +371,187 @@ owner: finance
 ```
 
 # TRANSFORM
+
+## MostPopularRoutes
+
+```yaml metadata
+name: MostPopularRoutes
+description: |
+    Most Popular Routes - Identify the most common pickup-dropoff route combinations to understand travel patterns.
+table: MostPopularRoutes
+transform_conn: "duckdb:"
+transform_before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+transform_sql: trf_most_popular_routes
+transform_after_sql: DETACH "DB"
+drop_sql: DROP TABLE IF EXISTS "DB"."<table>"
+clean_sql: DELETE FROM "DB"."<table>"
+rows_sql: SELECT COUNT(*) AS "nrows" FROM "DB"."<table>"
+active: true
+```
+
+```sql
+-- trf_most_popular_routes
+CREATE OR REPLACE TABLE "DB"."<table>" AS
+[[QUERY_TOP_ZONES]]
+LIMIT 15
+```
+
+# QUERY_TOP_ZONES
+
+```yaml metadata
+name: QUERY_TOP_ZONES
+description: "Most common pickup/dropoff zone combinations with aggregated metrics."
+owner: taxi-analytics-team
+source:
+  - TRIP_DATA
+  - ZONES
+```
+
+## pickup_borough
+
+```yaml metadata
+name: pickup_borough
+description: "Borough of the pickup location (from ZONES lookup)."
+type: string
+derived_from:
+  - TRIP_DATA.PULocationID
+  - ZONES.Borough
+```
+
+```sql
+-- select
+SELECT zpu.Borough AS pickup_borough
+```
+
+```sql
+-- from
+FROM DB.TRIP_DATA AS t
+```
+
+```sql
+-- join
+JOIN DB.ZONES AS zpu ON t.PULocationID = zpu.LocationID
+```
+
+```sql
+-- group_by
+GROUP BY pickup_borough
+```
+
+## pickup_zone
+
+```yaml metadata
+name: pickup_zone
+description: "Zone name of the pickup location (from ZONES lookup)."
+type: string
+derived_from:
+  - TRIP_DATA.PULocationID
+  - ZONES.Zone
+```
+
+```sql
+-- select
+    , zpu.Zone AS pickup_zone
+```
+
+```sql
+-- group_by
+    , pickup_zone
+```
+
+## dropoff_borough
+
+```yaml metadata
+name: dropoff_borough
+description: "Borough of the dropoff location (from ZONES lookup)."
+type: string
+derived_from:
+  - TRIP_DATA.DOLocationID
+  - ZONES.Borough
+```
+
+```sql
+-- select
+    , zdo.Borough AS dropoff_borough
+```
+
+```sql
+-- join
+JOIN DB.ZONES AS zdo ON t.DOLocationID = zdo.LocationID
+```
+
+```sql
+-- group_by
+    , dropoff_borough
+```
+
+## dropoff_zone
+
+```yaml metadata
+name: dropoff_zone
+description: "Zone name of the dropoff location (from ZONES lookup)."
+type: string
+derived_from:
+  - TRIP_DATA.DOLocationID
+  - ZONES.Zone
+```
+
+```sql
+-- select
+    , zdo.Zone AS dropoff_zone
+```
+
+```sql
+-- group_by
+    , dropoff_zone
+```
+
+## total_trips
+
+```yaml metadata
+name: total_trips
+description: "Total number of trips between each pickup/dropoff zone pair."
+type: integer
+derived_from:
+  - TRIP_DATA.*
+```
+
+```sql
+-- select
+    , COUNT(*) AS total_trips
+```
+
+```sql
+-- order_by
+ORDER BY total_trips DESC
+```
+
+## avg_fare
+
+```yaml metadata
+name: avg_fare
+description: "Average total fare for trips between the selected pickup and dropoff zones."
+type: numeric
+derived_from:
+  - TRIP_DATA.total_amount
+```
+
+```sql
+-- select
+    , ROUND(AVG(t.total_amount), 2) AS avg_fare
+```
+
+## avg_distance
+
+```yaml metadata
+name: avg_distance
+description: "Average trip distance (miles)."
+type: numeric
+derived_from:
+  - TRIP_DATA.trip_distance
+```
+
+```sql
+-- select
+    , ROUND(AVG(t.trip_distance), 2) AS avg_distance
+```
