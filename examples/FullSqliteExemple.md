@@ -372,6 +372,15 @@ active: false
 
 # TRANSFORM
 
+```yaml metadata
+name: TRANSFORM
+runs_as: ETL
+description: Transforms the inputs into to desrable outputs
+connection: "sqlite3:database/DB_EX_DGOV.db"
+database: "sqlite3:database/DB_EX_DGOV.db"
+active: true
+```
+
 ## MostPopularRoutes
 
 ```yaml metadata
