@@ -220,6 +220,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	processLogs = append(processLogs, map[string]any{
 		"name": key,
 		"key":  key, "start_at": start,
+		"ref": nil,
 	})
 	mainDescription := ""
 	// Define the runner as a simple function
@@ -335,7 +336,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				dtRef = dateRef[0].Format("2006-01-02")
 			}
 		}
-		processLogs[0]["ref"] = dtRef
+
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = dtRef
+		}
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{

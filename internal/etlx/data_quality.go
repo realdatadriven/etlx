@@ -132,9 +132,15 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now()
+	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"name": key,
 		"key":  key, "start_at": start,
+		"ref":                   nil,
+		"mem_alloc_start":       mem_alloc,
+		"mem_total_alloc_start": mem_total_alloc,
+		"mem_sys_start":         mem_sys,
+		"num_gc_start":          num_gc,
 	})
 	mainDescription := ""
 	// Define the runner as a simple function
@@ -236,14 +242,22 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				dtRef = dateRef[0].Format("2006-01-02")
 			}
 		}
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = dtRef
+		}
 		start3 := time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
-			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": itemMetadata["description"].(string),
-			"key":         key,
-			"item_key":    itemKey,
-			"start_at":    start3,
-			"ref":         dtRef,
+			"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+			"description":           itemMetadata["description"].(string),
+			"key":                   key,
+			"item_key":              itemKey,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
 		}
 		if okQuery && query != "" {
 			conn, okCon := itemMetadata["connection"]
@@ -251,11 +265,16 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				conn = mainConn
 			}
 			dbConn, err := etlx.GetDB(conn.(string))
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 				return nil
 			}
@@ -264,16 +283,27 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			_log2["msg"] = fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn)
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
 				start3 := time.Now()
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
+					"ref":                   dtRef,
+					"mem_alloc_start":       mem_alloc,
+					"mem_total_alloc_start": mem_total_alloc,
+					"mem_sys_start":         mem_sys,
+					"num_gc_start":          num_gc,
 				}
 				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, "", "", dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
@@ -285,6 +315,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 			}
 			// CHECK CONDITION
@@ -293,11 +327,16 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			failedCondition := false
 			if okCondition && condition != "" {
 				cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, "", "", dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					failedCondition = true
 				} else if !cond {
@@ -305,6 +344,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, itemKey, condition)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					if okCondMsg && condMsg != "" {
 						_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
 					}
@@ -313,10 +356,16 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				}
 			}
 			// MAIN QUERY
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["start_at"] = time.Now()
+			_log2["mem_alloc_start"] = mem_alloc
+			_log2["mem_total_alloc_start"] = mem_total_alloc
+			_log2["mem_sys_start"] = mem_sys
+			_log2["num_gc_start"] = num_gc
 			if okCheckOnly && checkOnly && !fixOnly && !failedCondition {
 				//fmt.Println("CHECK ROWS ONLY!")
 				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg"]
@@ -329,10 +378,15 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 			} else if okFixOnly && fixOnly && okFix && !checkOnly && !failedCondition {
 				//fmt.Println("FIXES ONLY!")
 				res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg_fix"]
@@ -345,10 +399,15 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(_log2["start_at"].(time.Time)).Seconds()
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 			} else if !failedCondition {
 				//fmt.Println("BOTH CHECK AND FIXES!")
 				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if !res["success"].(bool) {
 					_log2["success"] = res["success"]
 					_log2["msg"] = res["msg"]
@@ -364,6 +423,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					//fmt.Println("RES NROWS:", res["nrows"], "PROC NROWS:", _nrows)
 					if okNrows && _nrows > 0 && okFix {
 						res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						if !res["success"].(bool) {
 							_log2["success_fix"] = res["success"]
 							_log2["msg_fix"] = res["msg_fix"]
@@ -378,18 +438,29 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 						}
 					}
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 			}
 			//fmt.Println(_log2)
 			// QUERIES TO RUN AT THE END
 			if okAfter {
 				start3 := time.Now()
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
+					"ref":                   dtRef,
+					"mem_alloc_start":       mem_alloc,
+					"mem_total_alloc_start": mem_total_alloc,
+					"mem_sys_start":         mem_sys,
+					"num_gc_start":          num_gc,
 				}
 				err = etlx.ExecuteQuery(dbConn, afterSQL, item, "", "", dateRef)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
@@ -401,6 +472,10 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 			}
 		}
@@ -412,6 +487,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 	}
 	// Process the MD KEY
 	err := etlx.ProcessMDKey(key, conf, DATA_QUALITYRunner)
+	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	if err != nil {
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
@@ -419,8 +495,17 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
-		"end_at":   time.Now(),
-		"duration": time.Since(start).Seconds(),
+		"ref":                   processLogs[0]["ref"],
+		"mem_alloc_start":       processLogs[0]["mem_alloc_start"],
+		"mem_total_alloc_start": processLogs[0]["mem_total_alloc_start"],
+		"mem_sys_start":         processLogs[0]["mem_sys_start"],
+		"num_gc_start":          processLogs[0]["num_gc_start"],
+		"end_at":                time.Now(),
+		"duration":              time.Since(start).Seconds(),
+		"mem_alloc_end":         mem_alloc,
+		"mem_total_alloc_end":   mem_total_alloc,
+		"mem_sys_end":           mem_sys,
+		"num_gc_end":            num_gc,
 	}
 	return processLogs, nil
 }

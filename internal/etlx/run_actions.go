@@ -40,9 +40,15 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now()
+	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"name": key,
 		"key":  key, "start_at": start,
+		"ref":                   nil,
+		"mem_alloc_start":       mem_alloc,
+		"mem_total_alloc_start": mem_total_alloc,
+		"mem_sys_start":         mem_sys,
+		"num_gc_start":          num_gc,
 	})
 	mainDescription := ""
 	// Define the runner as a simple function
@@ -127,12 +133,20 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				dtRef = dateRef[0].Format("2006-01-02")
 			}
 		}
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = dtRef
+		}
 		start3 := time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
 			"key":         key, "item_key": itemKey, "start_at": start3,
-			"ref": dtRef,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
 		}
 		switch _type {
 		case "copy_file":
@@ -448,6 +462,11 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		}
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3).Seconds()
+		mem_alloc_end, mem_total_alloc_end, mem_sys_end, num_gc_end := etlx.RuntimeMemStats()
+		_log2["mem_alloc_end"] = mem_alloc_end
+		_log2["mem_total_alloc_end"] = mem_total_alloc_end
+		_log2["mem_sys_end"] = mem_sys_end
+		_log2["num_gc_end"] = num_gc_end
 		processLogs = append(processLogs, _log2)
 		return nil
 	}
@@ -457,6 +476,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	// Process the MD KEY
 	err := etlx.ProcessMDKey(key, conf, ACTIONSRunner)
+	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	if err != nil {
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
@@ -464,8 +484,17 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
-		"end_at":   time.Now(),
-		"duration": time.Since(start).Seconds(),
+		"end_at":                time.Now(),
+		"duration":              time.Since(start).Seconds(),
+		"ref":                   processLogs[0]["ref"],
+		"mem_alloc_start":       processLogs[0]["mem_alloc_start"],
+		"mem_total_alloc_start": processLogs[0]["mem_total_alloc_start"],
+		"mem_sys_start":         processLogs[0]["mem_sys_start"],
+		"num_gc_start":          processLogs[0]["num_gc_start"],
+		"mem_alloc_end":         mem_alloc,
+		"mem_total_alloc_end":   mem_total_alloc,
+		"mem_sys_end":           mem_sys,
+		"num_gc_end":            num_gc,
 	}
 	return processLogs, nil
 }
