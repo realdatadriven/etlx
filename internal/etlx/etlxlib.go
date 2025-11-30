@@ -7,6 +7,7 @@ import (
 	"log"
 	"os"
 	"regexp"
+	"runtime"
 	"strings"
 	"time"
 
@@ -504,6 +505,18 @@ func (etlx *ETLX) GetGODateFormat(format string) string {
 		goFmrt = re.ReplaceAllString(goFmrt, f.goFmrt)
 	}
 	return goFmrt
+}
+
+func bytesToMB(b uint64) float64 {
+	return float64(b) / 1024.0 / 1024.0
+}
+func (etlx *ETLX) RuntimeMemStats() (float64, float64, float64, uint32) {
+	if os.Getenv("ETLX_DISABLE_MEM_STATS") == "true" {
+		return 0, 0, 0, 0
+	}
+	var m runtime.MemStats
+	runtime.ReadMemStats(&m)
+	return bytesToMB(m.Alloc), bytesToMB(m.TotalAlloc), bytesToMB(m.Sys), m.NumGC
 }
 
 // setQueryDate formats the query string by inserting the given date reference in place of placeholders

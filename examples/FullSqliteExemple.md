@@ -564,3 +564,47 @@ derived_from:
 -- select
     , ROUND(AVG(t.trip_distance), 2) AS avg_distance
 ```
+
+# SAVE_LOGS
+
+```yaml metadata
+name: SAVE_LOGS
+runs_as: LOGS
+description: Saving the logs in the same DB instead of the deafult temp style
+table: etlx_logs
+connection: "duckdb:"
+before_sql:
+  - "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+  - 'USE DB;'
+  - LOAD json
+  - "get_dyn_queries[create_columns_missing](ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE), DETACH DB)"
+save_log_sql: INSERT INTO "DB"."<table>" BY NAME FROM read_json('<fname>')
+save_on_err_patt: '(?i)table.+does.+not.+exist'
+save_on_err_sql: CREATE TABLE IF NOT EXISTS "DB"."<table>" AS FROM read_json('<fname>');
+after_sql:
+  - 'USE memory;'
+  - DETACH "DB"
+active: true
+```
+
+```sql
+-- create_columns_missing
+WITH source_columns AS (
+    SELECT column_name, column_type 
+    FROM (DESCRIBE SELECT * FROM read_json('<fname>'))
+),
+destination_columns AS (
+    SELECT column_name, data_type as column_type
+    FROM duckdb_columns 
+    WHERE table_name = '<table>'
+),
+missing_columns AS (
+    SELECT s.column_name, s.column_type
+    FROM source_columns s
+    LEFT JOIN destination_columns d ON s.column_name = d.column_name
+    WHERE d.column_name IS NULL
+)
+SELECT 'ALTER TABLE "DB"."<table>" ADD COLUMN "' || column_name || '" ' || column_type || ';' AS query
+FROM missing_columns
+WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
+```

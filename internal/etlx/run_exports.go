@@ -335,22 +335,30 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				dtRef = dateRef[0].Format("2006-01-02")
 			}
 		}
+		processLogs[0]["ref"] = dtRef
 		start3 := time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
 			"key":         key, "item_key": itemKey, "start_at": start3,
-			"ref": dtRef,
+			"ref":             dtRef,
+			"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 		}
 		if !okCon {
 			conn = mainConn
 		}
 		dbConn, err := etlx.GetDB(conn.(string))
 		if err != nil {
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 			return nil
 		}
@@ -387,22 +395,28 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		// QUERIES TO RUN AT beginning
 		if okBefore {
 			start3 := time.Now()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":             dtRef,
+				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			err = etlx.ExecuteQuery(dbConn, beforeSQL, item, fname, "", dateRef)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
 		}
@@ -411,7 +425,17 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		condMsg, okCondMsg := itemMetadata["condition_msg"].(string)
 		failedCondition := false
 		if okCondition && condition != "" {
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["mem_alloc_start"] = mem_alloc
+			_log2["mem_total_alloc_start"] = mem_total_alloc
+			_log2["mem_sys_start"] = mem_sys
+			_log2["num_gc_start"] = num_gc
 			cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, fname, "", dateRef)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
@@ -436,18 +460,27 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		// MAIN QUERIES
 		if okExport && !(okTemplate && okMapping) && !failedCondition {
 			start3 := time.Now()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":             dtRef,
+				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			err = etlx.ExecuteQuery(dbConn, exportSQL, item, fname, "", dateRef)
 			if err != nil {
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s", key, itemKey, err)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 			} else {
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
 				// fmt.Println(1, fname)
 				if !filepath.IsAbs(path) {
@@ -463,14 +496,21 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
 				_log2["fname"] = fname
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 			}
 			processLogs = append(processLogs, _log2)
 		} else if okTemplate && okMapping && !failedCondition {
 			start3 := time.Now()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":             dtRef,
+				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			// Check for supported spreadsheet extensions
 			tmpl := template.(string)
@@ -484,17 +524,29 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			//fmt.Println(template)
 			//fmt.Println(template, mapping)
 			if ok, _ := fileExists(template.(string)); !ok {
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s givem as template does not exists", key, itemKey, template)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
+				processLogs = append(processLogs, _log2)
+				return nil
 			} else {
 				ext := filepath.Ext(template.(string))
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("unsupported template file extension: %s", ext)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -504,10 +556,15 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				if ok, _ := fileExists(template.(string)); ok {
 					file, err = excelize.OpenFile(template.(string))
 					if err != nil {
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("failed to open template file: %s", err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
 						return nil
 					}
@@ -517,20 +574,30 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						}
 					}()
 				} else {
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("template doesn't exists: %s", template)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
 				_mapp := []map[string]any{}
 				switch _map := mapping.(type) {
 				case nil:
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s error mapping empty", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					return nil
 				case string:
@@ -544,10 +611,15 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
 					// Fetch data from the database using the provided SQL query
 					if err != nil {
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute map query: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
 						return nil
 					}
@@ -557,18 +629,28 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_mapp = append(_mapp, item.(map[string]any))
 					}
 				default:
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping data type: %T", key, itemKey, _map)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
 				if len(_mapp) == 0 {
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping length Zero: ", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					return nil
 				}
@@ -629,11 +711,16 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						rows, columns, err = etlx.Query(dbConn, sql, item, fname, "", dateRef)
 						// Fetch data from the database using the provided SQL query
 						if err != nil {
+							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							//fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s -> %s -> %s -> failed to execute query: %s", key, itemKey, sheet, err)
 							_log2["end_at"] = time.Now()
 							_log2["duration"] = time.Since(start3).Seconds()
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
 							processLogs = append(processLogs, _log2)
 							continue
 						}
@@ -785,6 +872,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					fmt.Println("UpdateLinkedValue() Error:", err)
 				}
 				err = file.SaveAs(outputFile)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to save file: %s", key, itemKey, err)
@@ -806,28 +894,43 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					}
 					_log2["fname"] = fname
 				}
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 			}
 			processLogs = append(processLogs, _log2)
 
 		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
 			start3 := time.Now()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":             dtRef,
+				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			if !okData {
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s error: 'data_sql' found!", key, itemKey)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
 			} else {
 				data := map[string]any{}
 				start3 := time.Now()
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
+					"ref":             dtRef,
+					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 				}
 				switch _map := dataSQL.(type) {
 				case string:
@@ -871,10 +974,15 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						}
 					}
 				default:
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s invalid queries data type: %T", key, itemKey, _map)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 				}
 				if _, ok := itemMetadata["data"].(map[string]any); ok {
@@ -890,25 +998,36 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				parsedTmpl, err := etlx.RenderTemplate(tmpl, data)
 				//fmt.Println(parsedTmpl)
 				if err != nil {
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
 					fmt.Println(0, _log2["msg"])
 				} else {
 					fname = etlx.ReplaceQueryStringDate(fname, dateRef)
 					// Create the file (or truncate if it exists)
 					file, err := os.Create(fname)
 					if err != nil {
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s -> %s -> Error creating file: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
 						//fmt.Println(1, _log2["msg"])
 					} else {
 						defer file.Close() // Close the file after the function completes
 						// Write the text to the file
 						_, err = io.WriteString(file, parsedTmpl)
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						if err != nil {
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s -> %s -> Error writing to file: %s", key, itemKey, err)
@@ -933,27 +1052,40 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							}
 							_log2["fname"] = fname
 						}
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
 					}
 				}
 				processLogs = append(processLogs, _log2)
 			}
 		} else {
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s: Missconfiguration, it was unable to identify export type", key, itemKey)
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 			//fmt.Println(4, _log2["msg"])
 		}
 		// QUERIES TO RUN AT THE END
 		if okAfter {
 			start3 := time.Now()
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":             dtRef,
+				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, "", dateRef)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
@@ -965,6 +1097,10 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
 			}
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 		}
 		return nil
@@ -978,12 +1114,22 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	if err != nil {
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
+	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
-		"end_at":   time.Now(),
-		"duration": time.Since(start).Seconds(),
+		"end_at":                time.Now(),
+		"duration":              time.Since(start).Seconds(),
+		"ref":                   processLogs[0]["ref"],
+		"mem_alloc_start":       processLogs[0]["mem_alloc_start"],
+		"mem_total_alloc_start": processLogs[0]["mem_total_alloc_start"],
+		"mem_sys_start":         processLogs[0]["mem_sys_start"],
+		"num_gc_start":          processLogs[0]["num_gc_start"],
+		"mem_alloc_end":         mem_alloc,
+		"mem_total_alloc_end":   mem_total_alloc,
+		"mem_sys_end":           mem_sys,
+		"num_gc_end":            num_gc,
 	}
 	return processLogs, nil
 }
