@@ -1,6 +1,7 @@
 # etlx config: EXTRACT_LOAD example (NYC Yellow Taxi — Jan 2024)
 
 This document shows a practical example of extending the `etlx` config model with **metadata keys** useful for data governance, using the NYC Yellow Taxi January 2024 Parquet file hosted at `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet`.
+
 <!-- markdownlint-disable MD025 -->
 
 # EXTRACT_LOAD
@@ -386,7 +387,7 @@ active: true
 ```yaml metadata
 name: MostPopularRoutes
 description: |
-    Most Popular Routes - Identify the most common pickup-dropoff route combinations to understand travel patterns.
+  Most Popular Routes - Identify the most common pickup-dropoff route combinations to understand travel patterns.
 table: MostPopularRoutes
 transform_conn: "duckdb:"
 transform_before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
@@ -425,6 +426,8 @@ type: string
 derived_from:
   - TRIP_DATA.PULocationID
   - ZONES.Borough
+formula: |
+  This field is a direct lookup of the pickup borough using the pickup location ID.
 ```
 
 ```sql
@@ -456,6 +459,8 @@ type: string
 derived_from:
   - TRIP_DATA.PULocationID
   - ZONES.Zone
+formula: |
+  This field is a direct lookup of the pickup zone using the pickup location ID.
 ```
 
 ```sql
@@ -477,6 +482,8 @@ type: string
 derived_from:
   - TRIP_DATA.DOLocationID
   - ZONES.Borough
+formula: |
+  This field is a direct lookup of the dropoff borough using the dropoff location ID.
 ```
 
 ```sql
@@ -503,6 +510,8 @@ type: string
 derived_from:
   - TRIP_DATA.DOLocationID
   - ZONES.Zone
+formula: |
+  This field is a direct lookup of the dropoff zone using the dropoff location ID.
 ```
 
 ```sql
@@ -515,6 +524,8 @@ derived_from:
     , dropoff_zone
 ```
 
+# Aggregated Fields (with formulas)
+
 ## total_trips
 
 ```yaml metadata
@@ -523,6 +534,15 @@ description: "Total number of trips between each pickup/dropoff zone pair."
 type: integer
 derived_from:
   - TRIP_DATA.*
+formula: | 
+    "
+    Count the number of trips in each pickup/dropoff combination.
+
+    **Formula (LaTeX):**
+
+    ```latex
+    \text{total\_trips} = \sum_{i=1}^{N} 1
+    ```"
 ```
 
 ```sql
@@ -543,6 +563,15 @@ description: "Average total fare for trips between the selected pickup and dropo
 type: numeric
 derived_from:
   - TRIP_DATA.total_amount
+formula: | 
+    "
+    Compute the arithmetic mean of total fares for the group, rounded to 2 decimals.
+
+    **Formula (LaTeX):**
+
+    ```latex
+    \text{avg\_fare} = \text{round}\!\left(\frac{1}{N}\sum_{i=1}^{N} \text{total\_amount}_i,\ 2\right)
+    ```"
 ```
 
 ```sql
@@ -558,6 +587,16 @@ description: "Average trip distance (miles)."
 type: numeric
 derived_from:
   - TRIP_DATA.trip_distance
+formula: | 
+    "
+    Compute the arithmetic mean of trip distances for the group, rounded to 2 decimals.
+
+    **Formula (LaTeX):**
+
+    ```latex
+    \text{avg\_distance} = \text{round}\!\left(\frac{1}{N}\sum_{i=1}^{N} \text{trip\_distance}_i,\ 2\right)
+    ```"
+
 ```
 
 ```sql
@@ -575,14 +614,14 @@ table: etlx_logs
 connection: "duckdb:"
 before_sql:
   - "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
-  - 'USE DB;'
+  - "USE DB;"
   - LOAD json
   - "get_dyn_queries[create_columns_missing](ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE), DETACH DB)"
 save_log_sql: INSERT INTO "DB"."<table>" BY NAME FROM read_json('<fname>')
-save_on_err_patt: '(?i)table.+does.+not.+exist'
+save_on_err_patt: "(?i)table.+does.+not.+exist"
 save_on_err_sql: CREATE TABLE IF NOT EXISTS "DB"."<table>" AS FROM read_json('<fname>');
 after_sql:
-  - 'USE memory;'
+  - "USE memory;"
   - DETACH "DB"
 active: true
 ```
@@ -590,12 +629,12 @@ active: true
 ```sql
 -- create_columns_missing
 WITH source_columns AS (
-    SELECT column_name, column_type 
+    SELECT column_name, column_type
     FROM (DESCRIBE SELECT * FROM read_json('<fname>'))
 ),
 destination_columns AS (
     SELECT column_name, data_type as column_type
-    FROM duckdb_columns 
+    FROM duckdb_columns
     WHERE table_name = '<table>'
 ),
 missing_columns AS (

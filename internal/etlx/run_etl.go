@@ -780,7 +780,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					dtRef = dateRef[0].Format("2006-01-02")
 				}
 			}
-			if processLogs[0]["ref"] == nil {
+			if processLogs[0]["ref"] == nil && dtRef != nil {
 				processLogs[0]["ref"] = dtRef
 			}
 			// CONNECTION
