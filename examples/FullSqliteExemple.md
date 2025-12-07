@@ -524,8 +524,6 @@ formula: |
     , dropoff_zone
 ```
 
-# Aggregated Fields (with formulas)
-
 ## total_trips
 
 ```yaml metadata
