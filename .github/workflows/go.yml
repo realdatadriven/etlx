@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: '1.25'
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Setup MSBuild (for Visual Studio environment)
         uses: microsoft/setup-msbuild@v2
@@ -48,7 +48,7 @@ jobs:
       # Step 3: Download DuckDB Precompiled Library
       - name: Download DuckDB Library
         run: |
-          $version = "v1.4.2"
+          $version = "v1.4.3"
           $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/libduckdb-windows-amd64.zip"
           $destinationPath = "$(Get-Location)\duckdb"
           Invoke-WebRequest -Uri $duckdb_url -OutFile "duckdb.zip"
@@ -102,7 +102,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       - name: Setup MSBuild (for Visual Studio environment)
         uses: microsoft/setup-msbuild@v2
@@ -135,7 +135,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.24'
+          go-version: '1.25'
 
       # Step 3: Install UnixODBC
       - name: Install UnixODBC
