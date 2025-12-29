@@ -23,16 +23,26 @@ jobs:
       - name: Setup Hugo
         uses: peaceiris/actions-hugo@v2
         with:
-          hugo-version: 'latest' # pin a specific version if you prefer
+          hugo-version: 'latest'
 
-      - name: Install Node (for some Hugo themes that use asset pipelines)
+      - name: Install Node (optional, for asset pipelines)
         uses: actions/setup-node@v4
         with:
           node-version: '18'
 
-      - name: Build site (source = docs)
+      - name: Fetch Hugo modules and vendor theme
+        # run from repo root; this will fetch modules declared in docs/config.toml
         run: |
-          hugo -s docs -d docs/public --minify
+          cd docs
+          # fetch modules referenced in the site config
+          hugo mod get -u ./...
+          # vendor modules into docs/themes so Hugo can find the theme reliably
+          hugo mod vendor
+        env:
+          HUGO_ENV: production
+
+      - name: Build site (source = docs)
+        run: hugo -s docs -d docs/public --minify
 
       - name: Deploy to gh-pages
         uses: peaceiris/actions-gh-pages@v3
