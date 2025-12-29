@@ -1,0 +1,58 @@
+baseURL = "https://realdatadriven.github.io/etlx/"
+languageCode = "en-us"
+title = "ETLX — Documentation"
+theme = "docsy"
+enableRobotsTXT = true
+
+[params]
+  repo_url = "https://github.com/realdatadriven/etlx"
+  repo_name = "ETLX"
+  editURL = "https://github.com/realdatadriven/etlx/blob/docs-site/docs"
+
+[outputs]
+  home = ["HTML", "RSS", "JSON"]
+
+[module]
+  [[module.imports]]
+    path = "github.com/google/docsy"
+    disable = false
+
+[menu]
+  [[menu.main]]
+    identifier = "quick-start"
+    name = "Quick Start"
+    url = "/quick-start/"
+    weight = 10
+  [[menu.main]]
+    identifier = "reference"
+    name = "Reference"
+    url = "/reference/"
+    weight = 20
+  [[menu.main]]
+    identifier = "examples"
+    name = "Examples"
+    url = "/examples/"
+    weight = 30
+  [[menu.main]]
+    identifier = "exports"
+    name = "Exports"
+    url = "/exports/"
+    weight = 40
+  [[menu.main]]
+    identifier = "data-quality"
+    name = "Data Quality"
+    url = "/data-quality/"
+    weight = 50
+  [[menu.main]]
+    identifier = "cli"
+    name = "CLI"
+    url = "/cli/"
+    weight = 60
+  [[menu.main]]
+    identifier = "docker"
+    name = "Docker"
+    url = "/docker/"
+    weight = 70
+
+[build]
+  writeStats = false

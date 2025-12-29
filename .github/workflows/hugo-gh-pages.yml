@@ -1,0 +1,43 @@
+name: Build and deploy docs to GitHub Pages
+
+on:
+  push:
+    branches:
+      - main
+      - docs-site
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+      pages: write
+      id-token: write
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+        with:
+          submodules: true
+          fetch-depth: 0
+
+      - name: Setup Hugo
+        uses: peaceiris/actions-hugo@v2
+        with:
+          hugo-version: 'latest' # pin a specific version if you prefer
+
+      - name: Install Node (for some Hugo themes that use asset pipelines)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+
+      - name: Build site (source = docs)
+        run: |
+          hugo -s docs -d docs/public --minify
+
+      - name: Deploy to gh-pages
+        uses: peaceiris/actions-gh-pages@v3
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./docs/public
+          publish_branch: gh-pages
+          commit_message: "Deploy docs: ${{ github.sha }}"
