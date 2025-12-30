@@ -4,7 +4,7 @@ weight = 42
 draft = false
 +++
 
-### Validation Rules
+# Validation Rules
 
 - Validate data quality during the ETL process by using the key `[step]_validation` in the metadata section.
 - Example:
@@ -24,11 +24,11 @@ load_validation:
 
 For every object in the `[step]_validation` the `sql` is executed in the `[step]_con` connection, and it can either throw error message defined in `msg` or not if the condition (`type:throw_if_empty | type:throw_if_not_empty` or) is met or not.
 
-#### **Extracting Data from Unsupported Databases**
+## **Extracting Data from Unsupported Databases**
 
 If the database you are using does not have a direct DuckDB scanner, but it is supported by **sqlx** or it has `odbc` support, you must set the `to_csv` option to `true` in the `extract` configuration. This ensures that data is first exported to a CSV file and then on step `load` the file can be processed by DuckDB.
 
-##### **Example Configuration:**
+### **Example Configuration:**
 
 ````markdown
 ...
@@ -60,7 +60,7 @@ SELECT * FROM READ_CSV('<fname>', HEADER TRUE);
 ```
 ````
 
-##### **Why Use `to_csv: true`?**
+### **Why Use `to_csv: true`?**
 
 - **Workaround for unsupported databases**: If DuckDB does not have a direct scanner, exporting data to CSV allows and then the CSV can be loaded by the DuckDB.
 - **Ensures compatibility**: ETLX will handle the conversion, making the data accessible for further transformation and loading.
