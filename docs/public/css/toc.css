@@ -1,0 +1,107 @@
+.toc {
+  background: var(--color-background);
+  border-inline-start: 1px solid var(--color-toc-border);
+  grid-area: toc;
+  overflow-y: auto;
+  padding: var(--spacing-md);
+  scrollbar-gutter: stable;
+}
+
+.toc__header {
+  margin-block-end: var(--spacing-md);
+}
+
+.toc__title {
+  font-size: 1rem;
+  font-weight: 500;
+  letter-spacing: 0.05em;
+  margin: 0;
+  text-transform: uppercase;
+}
+
+.toc__toggle {
+  background: none;
+  border: none;
+  color: var(--color-foreground);
+  display: none;
+  padding: var(--spacing-xs);
+}
+
+.toc__toggle:not([disabled]):hover,
+.toc__toggle:not([disabled]):active {
+  background: none;
+  border: 0;
+  cursor: pointer;
+}
+
+.toc ul {
+  list-style: none;
+  padding: 0;
+}
+
+.toc a {
+  color: var(--color-foreground);
+  display: block;
+  font-size: 0.875rem;
+  padding: var(--spacing-xs) 0;
+  text-decoration: none;
+}
+
+.toc ul ul {
+  border-inline-start: 1px solid
+    color-mix(in srgb, var(--color-toc-border) 75%, transparent);
+  padding-inline-start: var(--spacing-md);
+}
+
+@media (max-width: 48rem) {
+  .toc {
+    border: 0;
+    border-block-end: 1px solid var(--color-toc-border);
+    overflow: visible;
+    padding-block-end: 0;
+  }
+
+  .toc__header {
+    align-items: center;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    margin-block-end: 0;
+    padding-block-end: var(--spacing-md);
+  }
+
+  .toc__toggle {
+    display: block;
+  }
+
+  .toc__toggle::after {
+    background-color: var(--color-primary);
+    content: "";
+    display: block;
+    height: var(--spacing-lg);
+    mask: url("/icons/caret-down.svg") no-repeat center;
+    transition: transform 0.2s ease-in-out;
+    width: var(--spacing-lg);
+  }
+
+  .toc__content {
+    height: 0;
+    overflow: hidden;
+    transition:
+      height 0.2s ease,
+      padding 0.2s ease;
+  }
+
+  .toc.open > .toc__header {
+    border-block-end: 1px solid var(--color-toc-border);
+  }
+
+  .toc.open > .toc__header > .toc__toggle::after {
+    transform: rotate(180deg);
+  }
+
+  .toc.open > .toc__content {
+    height: auto;
+    padding: var(--spacing-md) 0;
+  }
+}

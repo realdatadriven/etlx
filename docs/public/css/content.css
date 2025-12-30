@@ -1,0 +1,74 @@
+p,
+ol,
+ul {
+  margin-block-end: var(--spacing-sm);
+}
+
+a {
+  color: var(--color-link);
+}
+
+a:visited {
+  color: var(--color-link-visited);
+}
+
+ol,
+ul {
+  padding-inline-start: var(--spacing-lg);
+}
+
+ol > li::marker,
+ul > li::marker {
+  color: var(--color-primary);
+  font-weight: 500;
+}
+
+hr {
+  border: 1px solid var(--color-hr);
+  margin-block-start: var(--spacing-xl);
+}
+
+math {
+  text-align: start;
+  margin-block-end: var(--spacing-md);
+}
+
+dl {
+  display: flex;
+  flex-direction: column;
+  gap: var(--spacing-sm);
+}
+
+dl > dt {
+  color: var(--color-primary);
+  font-weight: 600;
+}
+
+dl > dd {
+  margin-inline-start: var(--spacing-lg);
+}
+
+mark {
+  background-color: var(--color-mark-background);
+  border-radius: var(--border-radius-xs);
+  color: var(--color-mark-foreground);
+  padding: var(--spacing-xs) var(--spacing-sm);
+}
+
+pre,
+code {
+  font-size: 0.9rem;
+}
+
+.footnote-ref {
+  text-decoration: none;
+}
+
+.footnotes > hr {
+  margin-block-start: var(--spacing-lg);
+  margin-block-end: var(--spacing-lg);
+}
+
+.footnote-backref {
+  text-decoration: none;
+}

@@ -1,0 +1,66 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Quick Start on Plume</title><link>https://example.org/quick-start/</link><description>Recent content in Quick Start on Plume</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://example.org/quick-start/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://example.org/quick-start/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/quick-start/installation/</guid><description>&lt;h3 id="installation"&gt;Installation&lt;/h3&gt;
+&lt;h4 id="option-1-precompiled-binaries"&gt;Option 1: Precompiled Binaries&lt;/h4&gt;
+&lt;p&gt;Precompiled binaries for Linux, macOS, and Windows are available on the &lt;a
+ href="https://github.com/realdatadriven/etlx/releases" rel="external"&gt;releases page&lt;/a&gt;. Download the appropriate binary for your system and make it executable:&lt;/p&gt;
+&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;span class="lnt"&gt;3
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Example for Linux or macOS&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;chmod +x etlx
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;./etlx --help&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;h4 id="option-2-install-via-go-as-a-library"&gt;Option 2: Install via Go (as a library)&lt;/h4&gt;
+&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="c1"&gt;# Install ETLX&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/realdatadriven/etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;h4 id="option-3-clone-repo"&gt;Option 3: Clone Repo&lt;/h4&gt;
+&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;span class="lnt"&gt;2
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;git clone https://github.com/realdatadriven/etlx.git
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;p&gt;And then:&lt;/p&gt;</description></item><item><title>Running ETLX</title><link>https://example.org/quick-start/running/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/quick-start/running/</guid><description>&lt;h3 id="running-etlx"&gt;Running ETLX&lt;/h3&gt;
+&lt;p&gt;The binary supports the following flags:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;--config&lt;/code&gt;: Path to the Markdown configuration file. &lt;em&gt;(Default: &lt;code&gt;config.md&lt;/code&gt;)&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--date&lt;/code&gt;: Reference date for the ETL process in &lt;code&gt;YYYY-MM-DD&lt;/code&gt; format. &lt;em&gt;(Default: yesterday&amp;rsquo;s date)&lt;/em&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--only&lt;/code&gt;: Comma-separated list of keys to run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--skip&lt;/code&gt;: Comma-separated list of keys to skip.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--steps&lt;/code&gt;: Steps to run within the ETL process (&lt;code&gt;extract&lt;/code&gt;, &lt;code&gt;transform&lt;/code&gt;, &lt;code&gt;load&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--file&lt;/code&gt;: Path to a specific file to extract data from. Typically used with the &lt;code&gt;--only&lt;/code&gt; flag.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--clean&lt;/code&gt;: Execute &lt;code&gt;clean_sql&lt;/code&gt; on items (conditional based on &lt;code&gt;--only&lt;/code&gt; and &lt;code&gt;--skip&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--drop&lt;/code&gt;: Execute &lt;code&gt;drop_sql&lt;/code&gt; on items (conditional based on &lt;code&gt;--only&lt;/code&gt; and &lt;code&gt;--skip&lt;/code&gt;).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;--rows&lt;/code&gt;: Retrieve the number of rows in the target table(s).&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;hr&gt;
+&lt;h3 id="-running-etlx-with-docker"&gt;🐳 Running ETLX with Docker&lt;/h3&gt;
+&lt;p&gt;You can run &lt;strong&gt;etlx&lt;/strong&gt; directly from Docker without installing Go or building locally.&lt;/p&gt;</description></item></channel></rss>

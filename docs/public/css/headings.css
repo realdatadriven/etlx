@@ -1,0 +1,44 @@
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  color: var(--color-primary);
+  margin: var(--spacing-md) 0;
+}
+
+h1 {
+  font-size: 2rem;
+  font-weight: 400;
+  margin: 0 0 var(--spacing-md) 0;
+}
+
+h2 {
+  font-size: 1.5rem;
+  font-weight: 400;
+}
+
+h3 {
+  font-size: 1.25rem;
+  font-weight: 400;
+}
+
+h4 {
+  font-size: 1rem;
+  font-weight: 400;
+}
+
+h5 {
+  font-size: 0.875rem;
+  font-weight: 400;
+}
+
+h6 {
+  font-size: 0.75rem;
+  font-weight: 400;
+}
+
+:is(h1, h2, h3, h4, h5, h6) + :is(h1, h2, h3, h4, h5, h6) {
+  margin-block-start: 0;
+}

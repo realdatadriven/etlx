@@ -1,0 +1,184 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Configuration on Plume</title><link>https://example.org/configuration/</link><description>Recent content in Configuration on Plume</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://example.org/configuration/index.xml" rel="self" type="application/rss+xml"/><item><title>ETL</title><link>https://example.org/configuration/etl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/etl/</guid><description>&lt;h3 id="etl"&gt;ETL&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Defines the overall ETL process.&lt;/li&gt;
+&lt;li&gt;Example:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;span class="lnt"&gt;11
+&lt;/span&gt;&lt;span class="lnt"&gt;12
+&lt;/span&gt;&lt;span class="lnt"&gt;13
+&lt;/span&gt;&lt;span class="lnt"&gt;14
+&lt;/span&gt;&lt;span class="lnt"&gt;15
+&lt;/span&gt;&lt;span class="lnt"&gt;16
+&lt;/span&gt;&lt;span class="lnt"&gt;17
+&lt;/span&gt;&lt;span class="lnt"&gt;18
+&lt;/span&gt;&lt;span class="lnt"&gt;19
+&lt;/span&gt;&lt;span class="lnt"&gt;20
+&lt;/span&gt;&lt;span class="lnt"&gt;21
+&lt;/span&gt;&lt;span class="lnt"&gt;22
+&lt;/span&gt;&lt;span class="lnt"&gt;23
+&lt;/span&gt;&lt;span class="lnt"&gt;24
+&lt;/span&gt;&lt;span class="lnt"&gt;25
+&lt;/span&gt;&lt;span class="lnt"&gt;26
+&lt;/span&gt;&lt;span class="lnt"&gt;27
+&lt;/span&gt;&lt;span class="lnt"&gt;28
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ETL
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;&lt;/span&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;``&lt;span class="sb"&gt;`yaml metadata
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;name: Daily_ETL
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;description: &amp;#39;Daily extraction at 5 AM&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;database: analytics_db
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;connection: &amp;#39;postgres:user=@PGUSER password=@PGPASSWORD dbname=analytics_db host=localhost port=5432 sslmode=disable&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;`&lt;span class="sb"&gt;`
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;## sales_data
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;`&lt;span class="sb"&gt;`yaml metadata
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;name: SalesData
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;description: &amp;#39;Daily Sales Data&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;load_conn: &amp;#39;duckdb:&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;load_before_sql:
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; - load_extentions
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; - conn
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;load_validation: # Validation is performed during the load phase using YAML
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; - type: throw_if_empty
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; sql: validate_data_not_empty
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; msg: &amp;#39;No data extracted for the given date!&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; - type: throw_if_not_empty
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; sql: validate_data_duplicates
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt; msg: &amp;#39;Duplicate data detected!&amp;#39;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;load_sql: load_sales
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;load_after_sql: detaches
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;``&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;h4 id="1-etl-process-starts"&gt;1. &lt;strong&gt;ETL Process Starts&lt;/strong&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Begin with the &amp;ldquo;ETL&amp;rdquo; key;&lt;/li&gt;
+&lt;li&gt;Extract metadata, specifically:
+&lt;ul&gt;
+&lt;li&gt;&amp;ldquo;connection&amp;rdquo;: Main connection to the destination database.&lt;/li&gt;
+&lt;li&gt;&amp;ldquo;description&amp;rdquo;: For logging the start and end time of the ETL process.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="2-loop-through-level-2-key-in-under"&gt;2. &lt;strong&gt;Loop through Level 2 key in under &amp;ldquo;ETL&amp;rdquo; key&lt;/strong&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Iterate over each key (e.g., &amp;ldquo;sales_data&amp;rdquo;)&lt;/li&gt;
+&lt;li&gt;For each key, access its &amp;ldquo;metadata&amp;rdquo; to process the ETL steps.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="3-etl-steps"&gt;3. &lt;strong&gt;ETL Steps&lt;/strong&gt;&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Each ETL step (&lt;code&gt;extract&lt;/code&gt;, &lt;code&gt;transform&lt;/code&gt;, &lt;code&gt;load&lt;/code&gt;) has:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;_before_sql&lt;/code&gt;: Queries to run first (setup).&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;_sql&lt;/code&gt;: The main query or queries to run.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;_after_sql&lt;/code&gt;: Cleanup queries to run afterward.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Queries can be:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;null&lt;/code&gt;: Do nothing.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;string&lt;/code&gt;: Reference a single query key in the same map or the query itself.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;array|list&lt;/code&gt;: Execute all queries in sequence.&lt;/li&gt;
+&lt;li&gt;In case is not null it can be the query itself or just the name of a sql code block under the same key, where &lt;code&gt;sql [query_name]&lt;/code&gt; or first line &lt;code&gt;-- [query_name]&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;Use &lt;code&gt;_conn&lt;/code&gt; for connection settings. If &lt;code&gt;null&lt;/code&gt;, fall back to the main connection.&lt;/li&gt;
+&lt;li&gt;Additionally, error handling can be defined using &lt;code&gt;[step]_on_err_match_patt&lt;/code&gt; and &lt;code&gt;[step]_on_err_match_sql&lt;/code&gt; to handle specific database errors dynamically, where &lt;code&gt;[step]_on_err_match_patt&lt;/code&gt; is the &lt;code&gt;regexp&lt;/code&gt; patthern to match error,and if maches the &lt;code&gt;[step]_on_err_match_sql&lt;/code&gt; is executed, the same can be applied for &lt;code&gt;[step]_before_on_err_match_patt&lt;/code&gt; and &lt;code&gt;[step]_before_on_err_match_sql&lt;/code&gt;.
+You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h4 id="4-output-logsn"&gt;4. &lt;strong&gt;Output Logs&lt;/strong&gt;n&lt;/h4&gt;
+&lt;ul&gt;
+&lt;li&gt;Log progress (e.g., connection usage, start/end times, descriptions).&lt;/li&gt;
+&lt;li&gt;Gracefully handle missing or &lt;code&gt;null&lt;/code&gt; keys.&lt;/li&gt;
+&lt;/ul&gt;</description></item><item><title>Validation Rules</title><link>https://example.org/configuration/validation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/validation/</guid><description>&lt;h3 id="validation-rules"&gt;Validation Rules&lt;/h3&gt;
+&lt;ul&gt;
+&lt;li&gt;Validate data quality during the ETL process by using the key &lt;code&gt;[step]_validation&lt;/code&gt; in the metadata section.&lt;/li&gt;
+&lt;li&gt;Example:&lt;/li&gt;
+&lt;/ul&gt;
+&lt;figure class="code-block" role="figure" aria-label="yaml code snippet"&gt;
+ &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
+&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
+&lt;/span&gt;&lt;span class="lnt"&gt; 2
+&lt;/span&gt;&lt;span class="lnt"&gt; 3
+&lt;/span&gt;&lt;span class="lnt"&gt; 4
+&lt;/span&gt;&lt;span class="lnt"&gt; 5
+&lt;/span&gt;&lt;span class="lnt"&gt; 6
+&lt;/span&gt;&lt;span class="lnt"&gt; 7
+&lt;/span&gt;&lt;span class="lnt"&gt; 8
+&lt;/span&gt;&lt;span class="lnt"&gt; 9
+&lt;/span&gt;&lt;span class="lnt"&gt;10
+&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
+&lt;td class="lntd"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-yaml" data-lang="yaml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nn"&gt;...&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;span class="nt"&gt;load_validation&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;throw_if_empty&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;sql&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;validate_data_not_empty&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;No data extracted for the given date!&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;active&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="kc"&gt;false&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;- &lt;span class="nt"&gt;type&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;throw_if_not_empty&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;sql&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="l"&gt;validate_data_duplicates&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="nt"&gt;msg&lt;/span&gt;&lt;span class="p"&gt;:&lt;/span&gt;&lt;span class="w"&gt; &lt;/span&gt;&lt;span class="s1"&gt;&amp;#39;Duplicate data detected!&amp;#39;&lt;/span&gt;&lt;span class="w"&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="w"&gt;&lt;/span&gt;&lt;span class="nn"&gt;...&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/div&gt;
+&lt;/div&gt;&lt;/figure&gt;
+&lt;p&gt;For every object in the &lt;code&gt;[step]_validation&lt;/code&gt; the &lt;code&gt;sql&lt;/code&gt; is executed in the &lt;code&gt;[step]_con&lt;/code&gt; connection, and it can either throw error message defined in &lt;code&gt;msg&lt;/code&gt; or not if the condition (&lt;code&gt;type:throw_if_empty | type:throw_if_not_empty&lt;/code&gt; or) is met or not.&lt;/p&gt;</description></item><item><title>Query Documentation</title><link>https://example.org/configuration/query-doc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/query-doc/</guid><description>&lt;h3 id="query-documentation"&gt;Query Documentation&lt;/h3&gt;
+&lt;p&gt;In some ETL processes, particularly during the &lt;strong&gt;Transform&lt;/strong&gt; step, queries may become too complex to manage as a single string. To address this, the configuration supports a structured approach where you can break down a query into individual fields and their respective SQL components. This approach improves modularity, readability, and maintainability.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id="structure"&gt;&lt;strong&gt;Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;A complex query is defined as a top-level heading (e.g., &lt;code&gt;# My Complex Query&lt;/code&gt;) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., &lt;code&gt;## Field Name&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>Data Quality</title><link>https://example.org/configuration/data-quality/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/data-quality/</guid><description>&lt;h3 id="data-quality"&gt;Data Quality&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;DATA_QUALITY&lt;/code&gt; section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h4 id="data-quality-structure"&gt;&lt;strong&gt;Data Quality Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;DATA_QUALITY&lt;/code&gt; section contains metadata describing its purpose and activation status.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Validation Rules&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Each validation rule is defined as a Level 2 heading under the &lt;code&gt;DATA_QUALITY&lt;/code&gt; block.&lt;/li&gt;
+&lt;li&gt;Rules include a query to check for violations and, optionally, a query to fix issues.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Execution&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Exports</title><link>https://example.org/configuration/exports/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/exports/</guid><description>&lt;h3 id="exports"&gt;Exports&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;EXPORTS&lt;/code&gt; section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB&amp;rsquo;s ability to export data in various formats, this section supports file generation with flexibility and precision.&lt;/p&gt;
+&lt;hr&gt;
+&lt;p&gt;(See README for full examples including CSV, Excel, and template-based exports.)&lt;/p&gt;</description></item><item><title>Scripts</title><link>https://example.org/configuration/scripts/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/scripts/</guid><description>&lt;h3 id="scripts"&gt;Scripts&lt;/h3&gt;
+&lt;p&gt;The &lt;strong&gt;SCRIPTS&lt;/strong&gt; section allows you to &lt;strong&gt;execute SQL queries&lt;/strong&gt; that &lt;strong&gt;don’t fit into other predefined sections&lt;/strong&gt; (ETL, EXPORTS, etc.).&lt;/p&gt;
+&lt;h4 id="-when-to-use-scripts"&gt;&lt;strong&gt;🔹 When to Use SCRIPTS?&lt;/strong&gt;&lt;/h4&gt;
+&lt;p&gt;✅ &lt;strong&gt;Running cleanup queries after an ETL job&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Executing ad-hoc maintenance tasks&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Running SQL commands that don’t need to return results&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Executing SQL scripts for database optimizations&lt;/strong&gt;&lt;/p&gt;
+&lt;p&gt;(See README for full markdown examples and behavior.)&lt;/p&gt;</description></item><item><title>Multi-Queries</title><link>https://example.org/configuration/multi-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/multi-queries/</guid><description>&lt;h3 id="multi-queries"&gt;Multi-Queries&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;MULTI_QUERIES&lt;/code&gt; section allows you to define multiple queries with similar structures and aggregate their results using a SQL &lt;code&gt;UNION&lt;/code&gt;. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.&lt;/p&gt;
+&lt;p&gt;(See README for full examples and execution flow.)&lt;/p&gt;</description></item><item><title>Logs</title><link>https://example.org/configuration/logs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/logs/</guid><description>&lt;h3 id="logs-handling--logs"&gt;Logs Handling (&lt;code&gt;# LOGS&lt;/code&gt;)&lt;/h3&gt;
+&lt;p&gt;ETLX provides a &lt;strong&gt;logging mechanism&lt;/strong&gt; that allows &lt;strong&gt;saving logs&lt;/strong&gt; into a database. This is useful for tracking &lt;strong&gt;executions, debugging, and auditing ETL processes&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;(See README for example configurations like &lt;code&gt;AUTO_LOGS&lt;/code&gt; and &lt;code&gt;create_missing_columns&lt;/code&gt; dynamic helper.)&lt;/p&gt;</description></item><item><title>Loading Config Dependencies</title><link>https://example.org/configuration/requires/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/requires/</guid><description>&lt;h3 id="requires"&gt;REQUIRES&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.&lt;/p&gt;
+&lt;p&gt;(See README for full examples showing loading from queries and files.)&lt;/p&gt;</description></item><item><title>Actions</title><link>https://example.org/configuration/actions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/actions/</guid><description>&lt;h3 id="actions"&gt;ACTIONS&lt;/h3&gt;
+&lt;p&gt;There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The &lt;code&gt;ACTIONS&lt;/code&gt; section allows you to define steps for copying or transferring files using the file system or external protocols.&lt;/p&gt;
+&lt;p&gt;(See README for the full list of supported action types and examples.)&lt;/p&gt;</description></item><item><title>Notify</title><link>https://example.org/configuration/notify/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/configuration/notify/</guid><description>&lt;h3 id="notify"&gt;NOTIFY&lt;/h3&gt;
+&lt;p&gt;The &lt;code&gt;NOTIFY&lt;/code&gt; section enables sending notifications (e.g., email via SMTP) with dynamic templates populated from SQL query results. This is useful for monitoring ETL processes and sending status reports.&lt;/p&gt;
+&lt;p&gt;(See README for full markdown example including template and data_sql examples.)&lt;/p&gt;</description></item></channel></rss>

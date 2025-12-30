@@ -1,0 +1,19 @@
+.footer {
+  background: var(--color-footer-background);
+  border-block-start: 1px solid var(--color-footer-border);
+  box-shadow: var(--drop-shadow-up-md);
+  color: var(--color-footer-foreground);
+  padding: var(--spacing-md);
+  text-align: center;
+}
+
+.footer__social-links {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-md);
+  justify-content: center;
+}
+
+.footer__social-links a {
+  color: var(--color-footer-link);
+}

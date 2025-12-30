@@ -1,0 +1,18 @@
+.skip-link,
+.skip-link:visited {
+  background: var(--color-background);
+  border-end-end-radius: var(--border-radius-sm);
+  box-shadow: var(--shadow-lg);
+  color: var(--color-foreground);
+  opacity: 0;
+  padding: var(--spacing-sm);
+  position: absolute;
+  text-decoration: none;
+  transform: translateY(calc(-100% - 1rem));
+  z-index: 9999;
+}
+
+.skip-link:focus-visible {
+  opacity: 1;
+  transform: translateY(0);
+}

@@ -45,6 +45,41 @@ disableKinds = ['taxonomy', 'term']
     pageRef = '/docs/'
     weight = 20
 
+  [[menus.main]]
+    name = 'Introduction'
+    url = '/introduction/'
+    weight = 30
+
+  [[menus.main]]
+    name = 'Quick Start'
+    url = '/quick-start/'
+    weight = 40
+
+  [[menus.main]]
+    name = 'Configuration'
+    url = '/configuration/'
+    weight = 50
+
+  [[menus.main]]
+    name = 'Advanced'
+    url = '/advanced/'
+    weight = 60
+
+  [[menus.main]]
+    name = 'Embedding'
+    url = '/embedding/'
+    weight = 70
+
+  [[menus.main]]
+    name = 'Future'
+    url = '/future/'
+    weight = 80
+
+  [[menus.main]]
+    name = 'License'
+    url = '/license/'
+    weight = 90
+
 [outputs]
   home = ['html', 'rss', 'webappmanifest', 'json']
 

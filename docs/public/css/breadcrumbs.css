@@ -1,0 +1,54 @@
+.breadcrumbs {
+  border-block-end: 1px solid var(--color-breadcrumbs-border);
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--spacing-xs);
+  grid-area: breadcrumbs;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+.breadcrumbs > .crumb.home {
+  padding: var(--spacing-xs);
+}
+
+.breadcrumbs > .crumb.home::before,
+.breadcrumbs > a.crumb::after {
+  content: "";
+  display: inline-block;
+  height: var(--spacing-md);
+  mask-size: contain;
+  vertical-align: bottom;
+  width: var(--spacing-md);
+}
+
+.breadcrumbs > .crumb.home::before {
+  background-color: var(--color-link);
+  mask-image: url("/icons/home.svg");
+  margin-inline-end: var(--spacing-xs);
+}
+
+.breadcrumbs > .crumb {
+  align-self: center;
+  line-height: 1.1;
+  text-decoration: none;
+}
+
+.breadcrumbs > a.crumb::after {
+  background-color: var(--color-breadcrumbs-foreground);
+  mask-image: url("/icons/caret-right.svg");
+  margin-inline-start: var(--spacing-xs);
+  padding: var(--spacing-xs);
+  vertical-align: bottom;
+}
+
+[dir="rtl"] .breadcrumbs > a.crumb::after {
+  transform: rotateZ(180deg);
+}
+
+.breadcrumbs > .crumb.current {
+  color: var(--color-breadcrumbs-foreground);
+}
+
+.breadcrumbs > .crumb.home > span {
+  display: none;
+}
