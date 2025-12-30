@@ -1,29 +1,18 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Getting Started on Plume</title><link>https://example.org/docs/getting-started/</link><description>Recent content in Getting Started on Plume</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://example.org/docs/getting-started/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://example.org/docs/getting-started/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://example.org/docs/getting-started/installation/</guid><description>&lt;h2 id="installation-new-site"&gt;Installation (new site)&lt;/h2&gt;
-&lt;p&gt;Create a new Hugo site with Plume:&lt;/p&gt;
-&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
- &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo new site mysite
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; mysite
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod init github.com/&amp;lt;username&amp;gt;/&amp;lt;site&amp;gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod tidy
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod get github.com/Dobefu/hugo-theme-plume&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;Add to your &lt;code&gt;hugo.toml&lt;/code&gt;:&lt;/p&gt;
-&lt;figure class="code-block" role="figure" aria-label="toml code snippet"&gt;
- &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
-&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt;1
-&lt;/span&gt;&lt;span class="lnt"&gt;2
-&lt;/span&gt;&lt;span class="lnt"&gt;3
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-toml" data-lang="toml"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="p"&gt;[&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;]&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="p"&gt;[[&lt;/span&gt;&lt;span class="nx"&gt;module&lt;/span&gt;&lt;span class="p"&gt;.&lt;/span&gt;&lt;span class="nx"&gt;imports&lt;/span&gt;&lt;span class="p"&gt;]]&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt; &lt;span class="nx"&gt;path&lt;/span&gt; &lt;span class="p"&gt;=&lt;/span&gt; &lt;span class="s2"&gt;&amp;#34;github.com/Dobefu/hugo-theme-plume&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;&lt;/figure&gt;
-&lt;h2 id="installation-existing-site"&gt;Installation (existing site)&lt;/h2&gt;
-&lt;h3 id="as-a-hugo-module"&gt;As a Hugo Module&lt;/h3&gt;
-&lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
- &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-bash" data-lang="bash"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod init github.com/&amp;lt;username&amp;gt;/&amp;lt;site&amp;gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod tidy
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;hugo mod get github.com/Dobefu/hugo-theme-plume&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;Add to your &lt;code&gt;hugo.toml&lt;/code&gt;:&lt;/p&gt;</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Getting Started on Plume</title>
+    <link>http://localhost:1313/etlx/docs/getting-started/</link>
+    <description>Recent content in Getting Started on Plume</description>
+    <generator>Hugo</generator>
+    <language>en-US</language>
+    <atom:link href="http://localhost:1313/etlx/docs/getting-started/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Installation</title>
+      <link>http://localhost:1313/etlx/docs/getting-started/installation/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/etlx/docs/getting-started/installation/</guid>
+      <description>&lt;h2 id=&#34;installation-new-site&#34;&gt;Installation (new site)&lt;/h2&gt;&#xA;&lt;p&gt;Create a new Hugo site with Plume:&lt;/p&gt;&#xA;&lt;figure class=&#34;code-block&#34; role=&#34;figure&#34; aria-label=&#34;bash code snippet&#34;&gt;&#xA;  &lt;button class=&#34;highlight__copy&#34; title=&#34;Copy to clipboard&#34;&gt;&lt;/button&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo new site mysite&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;nb&#34;&gt;cd&lt;/span&gt; mysite&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod init github.com/&amp;lt;username&amp;gt;/&amp;lt;site&amp;gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod tidy&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod get github.com/Dobefu/hugo-theme-plume&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/figure&gt;&#xA;&lt;p&gt;Add to your &lt;code&gt;hugo.toml&lt;/code&gt;:&lt;/p&gt;&#xA;&lt;figure class=&#34;code-block&#34; role=&#34;figure&#34; aria-label=&#34;toml code snippet&#34;&gt;&#xA;  &lt;button class=&#34;highlight__copy&#34; title=&#34;Copy to clipboard&#34;&gt;&lt;/button&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;&#xA;&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt;1&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;2&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;3&#xA;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&#xA;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-toml&#34; data-lang=&#34;toml&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;p&#34;&gt;[&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;module&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]&lt;/span&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;  &lt;span class=&#34;p&#34;&gt;[[&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;module&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;.&lt;/span&gt;&lt;span class=&#34;nx&#34;&gt;imports&lt;/span&gt;&lt;span class=&#34;p&#34;&gt;]]&lt;/span&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;    &lt;span class=&#34;nx&#34;&gt;path&lt;/span&gt; &lt;span class=&#34;p&#34;&gt;=&lt;/span&gt; &lt;span class=&#34;s2&#34;&gt;&amp;#34;github.com/Dobefu/hugo-theme-plume&amp;#34;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&#xA;&lt;/div&gt;&#xA;&lt;/div&gt;&lt;/figure&gt;&#xA;&lt;h2 id=&#34;installation-existing-site&#34;&gt;Installation (existing site)&lt;/h2&gt;&#xA;&lt;h3 id=&#34;as-a-hugo-module&#34;&gt;As a Hugo Module&lt;/h3&gt;&#xA;&lt;figure class=&#34;code-block&#34; role=&#34;figure&#34; aria-label=&#34;bash code snippet&#34;&gt;&#xA;  &lt;button class=&#34;highlight__copy&#34; title=&#34;Copy to clipboard&#34;&gt;&lt;/button&gt;&lt;div class=&#34;highlight&#34;&gt;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-bash&#34; data-lang=&#34;bash&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod init github.com/&amp;lt;username&amp;gt;/&amp;lt;site&amp;gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod tidy&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;hugo mod get github.com/Dobefu/hugo-theme-plume&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/div&gt;&lt;/figure&gt;&#xA;&lt;p&gt;Add to your &lt;code&gt;hugo.toml&lt;/code&gt;:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

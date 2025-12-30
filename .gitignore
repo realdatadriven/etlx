@@ -38,3 +38,4 @@ logs.*.json
 *.zip
 *.gz
 *nyc*
+public/
