@@ -1,22 +1,22 @@
 baseURL = 'https://realdatadriven.github.io/etlx/'
 languageCode = 'en-US'
-title = 'Plume'
+title = 'ETLX'
 theme = 'plume'
 
 disableKinds = ['taxonomy', 'term']
 
 [params]
-  shortName = 'Plume'
+  shortName = 'ETLX'
   description = 'The Plume Hugo documentation theme'
   keywords = 'Plume, Hugo, documentation, theme'
-  author = 'Dobefu'
+  author = 'Real Data-Driven'
   backgroundColor = '#ffffff'
   themeColor = '#000000'
-  repositoryContentDir = 'https://github.com/Dobefu/hugo-theme-plume/tree/main/exampleSite/content'
+  repositoryContentDir = 'https://github.com/realdatadriven/etlx/tree/main/docs/public'
   showEditLink = true
 
   [params.socialLinks]
-    github = 'https://github.com/Dobefu/hugo-theme-plume'
+    github = 'https://github.com/realdatadriven/etlx'
 
     # Enable social links by uncommenting any of the following lines.
     #
