@@ -1,0 +1,76 @@
+baseURL = 'https://example.org/'
+languageCode = 'en-US'
+title = 'Plume'
+theme = 'plume'
+
+disableKinds = ['taxonomy', 'term']
+
+[params]
+  shortName = 'Plume'
+  description = 'The Plume Hugo documentation theme'
+  keywords = 'Plume, Hugo, documentation, theme'
+  author = 'Dobefu'
+  backgroundColor = '#ffffff'
+  themeColor = '#000000'
+  repositoryContentDir = 'https://github.com/Dobefu/hugo-theme-plume/tree/main/exampleSite/content'
+  showEditLink = true
+
+  [params.socialLinks]
+    github = 'https://github.com/Dobefu/hugo-theme-plume'
+
+    # Enable social links by uncommenting any of the following lines.
+    #
+    # bluesky = 'https://bsky.app/profile/<your-bluesky-username>'
+    # discord = 'https://discord.gg/<your-discord-server-invite-link>'
+    # facebook = 'https://www.facebook.com/<your-facebook-username>'
+    # github = 'https://github.com/<your-github-username>/<your-repository-name>'
+    # instagram = 'https://www.instagram.com/<your-instagram-username>'
+    # linkedin = 'https://www.linkedin.com/company/<your-linkedin-company-name>'
+    # pinterest = 'https://www.pinterest.com/<your-pinterest-username>'
+    # reddit = 'https://www.reddit.com/r/<your-reddit-subreddit-name>'
+    # telegram = 'https://t.me/<your-telegram-username>'
+    # tiktok = 'https://www.tiktok.com/@<your-tiktok-username>'
+    # twitter = 'https://twitter.com/<your-twitter-username>'
+    # whatsapp = 'https://wa.me/<your-whatsapp-number>'
+    # youtube = 'https://www.youtube.com/@<your-youtube-username>'
+
+[menus]
+  [[menus.main]]
+    name = 'Home'
+    pageRef = '/'
+    weight = 10
+
+  [[menus.main]]
+    name = 'Documentation'
+    pageRef = '/docs/'
+    weight = 20
+
+[outputs]
+  home = ['html', 'rss', 'webappmanifest', 'json']
+
+[markup]
+  [markup.tableOfContents]
+    startLevel = 2
+    endLevel = 4
+
+  [markup.highlight]
+    lineNos = true
+    noClasses = false
+
+  [markup.goldmark]
+    [markup.goldmark.extensions]
+      strikethrough = false
+
+      [markup.goldmark.extensions.extras]
+        delete.enable = true
+        mark.enable = true
+        insert.enable = true
+        subscript.enable = true
+        superscript.enable = true
+
+      [markup.goldmark.extensions.passthrough]
+        enable = true
+
+        [markup.goldmark.extensions.passthrough.delimiters]
+          block = [['\[', '\]']]
+          inline = [['\(', '\)']]
