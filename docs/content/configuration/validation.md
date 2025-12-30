@@ -58,6 +58,7 @@ Once extracted, the CSV file can be loaded by DuckDB using:
 CREATE OR REPLACE TABLE DB.target_table AS  
 SELECT * FROM READ_CSV('<fname>', HEADER TRUE);  
 ```
+````
 
 ##### **Why Use `to_csv: true`?**
 
