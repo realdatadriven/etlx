@@ -1,4 +1,4 @@
-baseURL = 'https://realdatadriven.github.io/etlx/'
+baseURL = 'https://realdatadriven.github.io/etlx'
 languageCode = 'en-US'
 title = 'ETLX'
 theme = 'plume'
@@ -12,7 +12,7 @@ disableKinds = ['taxonomy', 'term']
   author = 'Real Data-Driven'
   #backgroundColor = '#ffffff'
   #themeColor = '#000000'
-  repositoryContentDir = 'https://github.com/realdatadriven/etlx/tree/main/docs/'
+  repositoryContentDir = 'https://github.com/realdatadriven/etlx/tree/main/docs/content'
   showEditLink = true
 
   [params.socialLinks]
