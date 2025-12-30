@@ -4,13 +4,13 @@ weight = 44
 draft = false
 +++
 
-### Data Quality
+# Data Quality
 
 The `DATA_QUALITY` section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.
 
 ---
 
-#### **Data Quality Structure**
+## **Data Quality Structure**
 
 1. **Metadata**:
    - The `DATA_QUALITY` section contains metadata describing its purpose and activation status.
@@ -27,7 +27,7 @@ The `DATA_QUALITY` section allows you to define and execute validation rules to 
 
 ---
 
-#### **Data Quality Markdown Example**
+## **Data Quality Markdown Example**
 
 ````markdown
 # DATA_QUALITY
@@ -91,7 +91,7 @@ WHERE "option2" NOT IN ('x', 'z');
 
 ---
 
-#### **How Data Quality Works**
+## **How Data Quality Works**
 
 1. **Defining Rules**:
    - Each rule specifies:
@@ -110,7 +110,7 @@ WHERE "option2" NOT IN ('x', 'z');
 
 ---
 
-#### **Data Quality Example Use Case**
+## **Data Quality Example Use Case**
 
 For the example above:
 
@@ -124,7 +124,7 @@ For the example above:
 
 ---
 
-#### **Data Quality Benefits**
+## **Data Quality Benefits**
 
 - **Automated Quality Assurance**:
   - Identify and fix data issues programmatically.

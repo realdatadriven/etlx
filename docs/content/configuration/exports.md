@@ -4,7 +4,7 @@ weight = 45
 draft = false
 +++
 
-### Exports
+# Exports
 
 The `EXPORTS` section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB's ability to export data in various formats, this section supports file generation with flexibility and precision.
 
@@ -99,7 +99,7 @@ WHERE "sale_date" = '{YYYY-MM-DD}';
 
 ---
 
-#### **How Exporting It Works**
+## **How Exporting It Works**
 
 1. **Parsing the Configuration**:
    - Each export is parsed as a separate section with its metadata stored under the `metadata` key.
@@ -126,7 +126,7 @@ the maping can also be a string representing a query and all the mapping can be 
 
 ---
 
-#### **Resulting Outputs**
+## **Resulting Outputs**
 
 1. **CSV File**:
    - Exports sales data to a CSV file located at `/path/to/Reports/YYYYMMDD/sales_YYYYMMDD.csv`.
@@ -139,7 +139,7 @@ the maping can also be a string representing a query and all the mapping can be 
 
 ---
 
-#### **Benefits of this functionality**
+## **Benefits of this functionality**
 
 - **Flexibility**:
   - Export data in multiple formats (e.g., CSV, Excel) using DuckDB's powerful `COPY` command.
@@ -150,7 +150,7 @@ the maping can also be a string representing a query and all the mapping can be 
 
 By leveraging the `EXPORTS` section, you can automate data export processes, making them efficient and repeatable.
 
-#### 📝 Exporting as Text-Based Template
+## 📝 Exporting as Text-Based Template
 
 In addition to exporting structured data formats like CSV or Excel, ETLX also supports exporting reports using plain-text templates such as **HTML**, **XML**, **Markdown**, etc.
 
@@ -158,7 +158,7 @@ These templates are rendered using Go’s `text/template` engine and can use dyn
 
 This is especially useful for **reporting**, **integration**, or **publishing documents** with dynamic content.
 
-##### 📦 Example
+### 📦 Example
 
 ````markdown
 ...

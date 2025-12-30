@@ -4,11 +4,11 @@ weight = 46
 draft = false
 +++
 
-### Scripts
+# Scripts
 
 The **SCRIPTS** section allows you to **execute SQL queries** that **don’t fit into other predefined sections** (ETL, EXPORTS, etc.).
 
-#### **🔹 When to Use SCRIPTS?**
+## **🔹 When to Use SCRIPTS?**
 
 ✅ **Running cleanup queries after an ETL job**  
 ✅ **Executing ad-hoc maintenance tasks**  
@@ -17,11 +17,11 @@ The **SCRIPTS** section allows you to **execute SQL queries** that **don’t fit
 
 ---
 
-#### **🛠 Example: Running Cleanup Scripts**    
+## **🛠 Example: Running Cleanup Scripts**    
 
 This example **removes temporary data** after an ETL process.
 
-#### **📄 Markdown Configuration**
+## **📄 Markdown Configuration**
 
 ````markdown
 # SCRIPTS
@@ -59,7 +59,7 @@ DROP TEMP_TABLE1;
 
 ---
 
-#### **🔹 How Scripts It Works**
+## **🔹 How Scripts It Works**
 
 1️⃣ **Loads necessary extensions and connects to the database.**  
 2️⃣ **Executes predefined SQL queries (`script_sql`).**  

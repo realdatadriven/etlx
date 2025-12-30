@@ -4,13 +4,13 @@ weight = 43
 draft = false
 +++
 
-### Query Documentation
+# Query Documentation
 
 In some ETL processes, particularly during the **Transform** step, queries may become too complex to manage as a single string. To address this, the configuration supports a structured approach where you can break down a query into individual fields and their respective SQL components. This approach improves modularity, readability, and maintainability.
 
 ---
 
-#### **Structure**
+## **Structure**
 
 A complex query is defined as a top-level heading (e.g., `# My Complex Query`) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., `## Field Name`).
 
@@ -21,7 +21,7 @@ For each field:
 
 ---
 
-#### **Markdown Example**
+## **Markdown Example**
 
 ````markdown
 # My Complex Query
@@ -82,7 +82,7 @@ WHERE S.total_sales > 1000
 
 ---
 
-#### **How Query Doc. Works**
+## **How Query Doc. Works**
 
 1. **Parsing the Configuration**:
    - Each query is parsed as a separate section with its metadata stored under the `metadata` key.
@@ -95,7 +95,7 @@ WHERE S.total_sales > 1000
 
 ---
 
-#### **Why This Approach Matters**
+## **Why This Approach Matters**
 
 Handling complex queries with hundreds of columns and numerous joins can quickly become overwhelming. By breaking down the query into smaller, manageable sections, you gain the ability to focus on individual components independently.
 
@@ -109,7 +109,7 @@ This method simplifies the process of building and maintaining large queries whi
 
 ---
 
-#### **Example Use Case for this type o query documentation**
+## **Example Use Case for this type o query documentation**
 
 Consider a scenario where you need to create a large report combining data from multiple sources. Instead of writing a single, monolithic SQL query, you can use this modular approach to:
 
@@ -121,7 +121,7 @@ The result is a well-organized, maintainable, and self-documented query configur
 
 ---
 
-#### **Resulting Query**
+## **Resulting Query**
 
 For the example above, the generated query will look like this:
 
@@ -140,7 +140,7 @@ WHERE S.total_sales > 1000
 
 ---
 
-#### **Metadata Options**
+## **Metadata Options**
 
 - **Query Metadata**:
   - `name`: A unique identifier for the query.
@@ -153,7 +153,7 @@ But if you only using the parser for you to document your queries you may want t
 
 ---
 
-#### **Benefits**
+## **Benefits**
 
 - **Modularity**: Each field is defined separately, making the query easier to understand and modify.
 - **Reusability**: SQL components like `cte` or `join` can be reused across different queries.

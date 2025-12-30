@@ -4,24 +4,24 @@ weight = 51
 draft = false
 +++
 
-### NOTIFY
+# NOTIFY
 
 The `NOTIFY` section enables sending notifications (e.g., email via SMTP) with dynamic templates populated from SQL query results. This is useful for monitoring ETL processes and sending status reports.
 
 ---
 
-#### **Why Use NOTIFY?**
+## **Why Use NOTIFY?**
 
 ✅ **Real-time updates on ETL status**  
 ✅ **Customizable email templates with dynamic content**  
 ✅ **Supports attachments for automated reporting**  
 ✅ **Ensures visibility into ETL success or failure**  
 
-#### **Example: Sending ETL Status via Email**
+## **Example: Sending ETL Status via Email**
 
 This example sends an email **after an ETL process completes**, using **log data from the database**.
 
-#### **NOTIFY Markdown Configuration**
+## **NOTIFY Markdown Configuration**
 
 ````markdown
 
@@ -135,7 +135,7 @@ WHERE "ref" = '{YYYY-MM-DD}'
 
 ---
 
-#### **How NOTIFY Works**
+## **How NOTIFY Works**
 
 1️⃣ **Loads required extensions and connects to the database** (`before_sql`).  
 2️⃣ **Executes `data_sql` queries** to retrieve data to be embeded in the body of the email.  
@@ -143,7 +143,7 @@ WHERE "ref" = '{YYYY-MM-DD}'
 4️⃣ **Sends an email with the formatted content and attachments.**  
 5️⃣ **Executes cleanup queries (`after_sql`).**  
 
-#### **Key NOTIFY Features**
+## **Key NOTIFY Features**
 
 ✔ **Dynamic email content populated from SQL queries**  
 ✔ **Supports `to`, `cc`, `bcc`, `attachments`, and templated bodies**  

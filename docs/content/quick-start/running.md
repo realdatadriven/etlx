@@ -4,7 +4,7 @@ weight = 22
 draft = false
 +++
 
-### Running ETLX
+# Running ETLX
 
 The binary supports the following flags:
 
@@ -24,11 +24,11 @@ etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 
 ---
 
-### 🐳 Running ETLX with Docker
+# 🐳 Running ETLX with Docker
 
 You can run **etlx** directly from Docker without installing Go or building locally.
 
-#### Build the Image
+## Build the Image
 
 Clone the repo and build:
 
@@ -42,7 +42,7 @@ Or pull the prebuilt image (when published):
 docker pull docker.io/realdatadriven/etlx:latest
 ```
 
-#### Running Commands
+## Running Commands
 
 The image behaves exactly like the CLI binary. For example:
 
@@ -52,7 +52,7 @@ docker run --rm etlx:latest version
 docker run --rm etlx:latest run --config /app/config.md
 ```
 
-#### Using a `.env` File
+## Using a `.env` File
 
 If you have a `.env` file with environment variables, mount it into `/app/.env`:
 
@@ -62,7 +62,7 @@ docker run --rm \
   etlx:latest run --config /app/config.md
 ```
 
-#### Mounting Config Files
+## Mounting Config Files
 
 Mount your config file into the container and reference it by path:
 
@@ -72,7 +72,7 @@ docker run --rm \
   etlx:latest run --config /app/config.md
 ```
 
-#### Database Directory
+## Database Directory
 
 `etlx` can attach a database directory. Mount your local `./database` directory into `/app/database`:
 
@@ -82,7 +82,7 @@ docker run --rm \
   etlx:latest run --config /app/config.md
 ```
 
-#### Combine All Together
+## Combine All Together
 
 Mount `.env`, config, and database directory:
 
@@ -94,7 +94,7 @@ docker run --rm \
   etlx:latest run --config /app/config.md
 ```
 
-#### Interactive Mode
+## Interactive Mode
 
 For interactive subcommands (like `repl`):
 
@@ -102,7 +102,7 @@ For interactive subcommands (like `repl`):
 docker run -it --rm etlx:latest repl
 ```
 
-#### 💡 Pro Tip: Local Alias
+## 💡 Pro Tip: Local Alias
 
 You can add an alias so Docker feels like the native binary:
 
@@ -119,6 +119,6 @@ etlx run --config /app/config.md
 
 ---
 
-### How It Works
+# How It Works
 
 Create a Markdown file with the ETL process configuration. For example, see the example use case in the examples section.

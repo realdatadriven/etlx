@@ -4,13 +4,13 @@ weight = 49
 draft = false
 +++
 
-### REQUIRES
+# REQUIRES
 
 The `REQUIRES` section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.
 
 ---
 
-#### **Loading Structure**
+## **Loading Structure**
 
 1. **Metadata**:
    - The `REQUIRES` section includes metadata describing its purpose and activation status.
@@ -28,7 +28,7 @@ The `REQUIRES` section in the ETL configuration allows you to load dependencies 
 
 ---
 
-#### **Loading Markdown Example**
+## **Loading Markdown Example**
 
 ````markdown
 # REQUIRES
@@ -70,7 +70,7 @@ active: true
 
 ---
 
-#### **How Loading Works**
+## **How Loading Works**
 
 1. **Defining Dependencies**:
    - Dependencies are listed as child sections under the `# REQUIRES` heading.
@@ -89,7 +89,7 @@ active: true
 
 ---
 
-#### **Loading - Example Use Case**
+## **Loading - Example Use Case**
 
 For the example above, the following happens:
 
@@ -102,7 +102,7 @@ For the example above, the following happens:
 
 ---
 
-#### **Loading - Benefits**
+## **Loading - Benefits**
 
 - **Modularity**:
   - Break large configurations into smaller, reusable parts.

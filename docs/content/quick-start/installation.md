@@ -4,9 +4,9 @@ weight = 21
 draft = false
 +++
 
-### Installation
+# Installation
 
-#### Option 1: Precompiled Binaries
+## Option 1: Precompiled Binaries
 
 Precompiled binaries for Linux, macOS, and Windows are available on the [releases page](https://github.com/realdatadriven/etlx/releases). Download the appropriate binary for your system and make it executable:
 
@@ -16,14 +16,14 @@ chmod +x etlx
 ./etlx --help
 ```
 
-#### Option 2: Install via Go (as a library)
+## Option 2: Install via Go (as a library)
 
 ```bash
 # Install ETLX
 go get github.com/realdatadriven/etlx
 ```
 
-#### Option 3: Clone Repo
+## Option 3: Clone Repo
 
 ```bash
 git clone https://github.com/realdatadriven/etlx.git

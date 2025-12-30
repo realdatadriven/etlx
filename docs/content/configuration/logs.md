@@ -4,13 +4,13 @@ weight = 48
 draft = false
 +++
 
-### Logs Handling (`# LOGS`)
+# Logs Handling (`# LOGS`)
 
 ETLX provides a **logging mechanism** that allows **saving logs** into a database. This is useful for tracking **executions, debugging, and auditing ETL processes**.
 
 ---
 
-### **🔹 How It Works**
+# **🔹 How It Works**
 
 - The `LOGS` section defines where and how logs should be saved.
 - The process consists of **three main steps**:
@@ -18,11 +18,11 @@ ETLX provides a **logging mechanism** that allows **saving logs** into a databas
   2. **Execute `save_log_sql`** to store logs in the database.
   3. **Run `after_sql`** for cleanup (e.g., detaching the database).
 
-### **🛠 Example LOGS Configuration**
+# **🛠 Example LOGS Configuration**
 
 Below is an example that **saves logs** into a **database**:
 
-#### **📄 LOGS Markdown Configuration**
+## **📄 LOGS Markdown Configuration**
 
 ````md
 # LOGS
@@ -76,20 +76,20 @@ FROM READ_JSON('<fname>');
 
 ---
 
-### **🔹 How to Use**
+# **🔹 How to Use**
 
 - This example saves logs into a **SQLite database attached to DuckDB**.
 - The **log table (`logs`) is created or replaced** on each run.
 - The `<table>` and `<fname>` placeholders are dynamically replaced.
 
-### **🎯 Summary**
+# **🎯 Summary**
 
 ✔ **Keeps a persistent log of ETL executions**  
 ✔ **Uses DuckDB for efficient log storage**  
 ✔ **Supports preprocessing (`before_sql`) and cleanup (`after_sql`)**  
 ✔ **Highly customizable to different logging needs**
 
-### Default logs
+# Default logs
 
 By default is generated a sqlite db `etlx_logs.db` in temp folder, that'll depende on the OS, it adds to your config this peace os md:
 

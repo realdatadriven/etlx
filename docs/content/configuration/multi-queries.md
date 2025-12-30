@@ -4,13 +4,13 @@ weight = 47
 draft = false
 +++
 
-### Multi-Queries
+# Multi-Queries
 
 The `MULTI_QUERIES` section allows you to define multiple queries with similar structures and aggregate their results using a SQL `UNION`. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.
 
 ---
 
-#### **Multi-Queries Structure**
+## **Multi-Queries Structure**
 
 1. **Metadata**:
    - The `MULTI_QUERIES` section includes metadata for connection details, pre/post-SQL commands, and activation status.
@@ -27,7 +27,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 
 ---
 
-#### **Multi-Queries Markdown Example**
+## **Multi-Queries Markdown Example**
 
 ````markdown
 # MULTI_QUERIES
@@ -102,7 +102,7 @@ GROUP BY "region"
 
 ---
 
-#### **Multi-Queries How It Works**
+## **Multi-Queries How It Works**
 
 1. **Defining Queries**:
    - Queries are defined as Level 2 headings.
@@ -120,7 +120,7 @@ GROUP BY "region"
 
 ---
 
-#### **Multi-Queries Example Use Case**
+## **Multi-Queries Example Use Case**
 
 For the example above:
 
@@ -152,4 +152,4 @@ DETACH DB;
 
 ---
 
-#### **Multi-Queries Benefits**
+## **Multi-Queries Benefits**

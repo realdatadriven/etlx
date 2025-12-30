@@ -4,13 +4,13 @@ weight = 50
 draft = false
 +++
 
-### ACTIONS
+# ACTIONS
 
 There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The `ACTIONS` section allows you to define steps for copying or transferring files using the file system or external protocols.
 
 ---
 
-#### **ACTIONS Structure**
+## **ACTIONS Structure**
 
 Each action under the `ACTIONS` section has the following:
 
@@ -241,13 +241,13 @@ active: true
 
 ---
 
-##### 📥 ACTIONS – `db_2_db` (Cross-Database Write)
+### 📥 ACTIONS – `db_2_db` (Cross-Database Write)
 
 > As of this moment, **DuckDB does not support direct integration** with certain databases like **MSSQL**, **DB2**, or **Oracle**, the same way it does with **SQLite**, **Postgres**, or **MySQL**.
 
 To bridge this gap, the `db_2_db` action type allows you to **query data from one database** (source) and **write the results into another** (target), using ETLX’s internal execution engine (powered by `sqlx` or ODBC).
 
-###### ✅ Use Case
+## ✅ Use Case
 
 Use `db_2_db` when:
 
@@ -256,7 +256,7 @@ Use `db_2_db` when:
 
 ---
 
-###### 🧩 Example
+## 🧩 Example
 
 ````markdown
 ...
@@ -312,4 +312,4 @@ INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES
 
 ---
 
-### 🛠️ Notes
+# 🛠️ Notes
