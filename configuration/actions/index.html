@@ -1,4 +1,4 @@
-<!doctype html><html lang=en-US dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=theme-color content><link rel=icon href=/favicon.ico sizes=any><link rel=apple-touch-icon href=/favicon.ico><link rel=preload href=/icons/clipboard.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-down.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-right.svg as=image type=image/svg+xml><link rel=preload href=/icons/home.svg as=image type=image/svg+xml><title>Actions | ETLX</title><meta name=description content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta name=keywords content="ETL,ELT,Data Integration,DuckDB,Markdown,SQL,Data Processing,Framework,Data Engineering,Data Pipelines,Data Transformation,Data Science,Data Analytics,Open Source,Data Governance,Data Documentation,Data Workflows,Data Workflow Documentation,Report Automation"><meta name=author content="Real Data-Driven"><meta name=language content="en-US"><link rel=canonical href=https://realdatadriven.github.io/etlx/configuration/actions/><link rel=manifest href=https://realdatadriven.github.io/etlx/manifest.webmanifest><meta property="og:title" content="Actions | ETLX"><meta property="og:description" content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta property="og:type" content="article"><meta property="og:url" content="https://realdatadriven.github.io/etlx/configuration/actions/"><meta property="og:locale" content="en-US"><meta property="og:site_name" content="ETLX"><meta property="og:image" content="https://realdatadriven.github.io/favicon.ico"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="ETLX logo"><meta property="article:author" content="Real Data-Driven"><meta property="article:section" content="configuration"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Actions | ETLX"><meta name=twitter:description content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta name=twitter:image content="https://realdatadriven.github.io/favicon.ico"><meta name=twitter:image:alt content="ETLX logo"><script type=application/ld+json>{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#article","headline":"Actions","description":"ETL \/ ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic.","url":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","wordCount":990,"timeRequired":"PT5M","author":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"publisher":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"isPartOf":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#website"}},{"@type":"BreadcrumbList","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Plume Documentation Theme","item":"https:\/\/realdatadriven.github.io\/etlx\/"},{"@type":"ListItem","position":2,"name":"Configuration","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/"},{"@type":"ListItem","position":3,"name":"Actions","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/"}]},{"@type":"WebSite","@id":"https:\/\/realdatadriven.github.io\/etlx\/#website","url":"https:\/\/realdatadriven.github.io\/etlx\/","name":"ETLX","publisher":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"}}]}</script><link rel=stylesheet href=/etlx/css/style.min.c8b8d34bfceb040e8957f73bca811dcf496446066a07c4298993517af10bc79e.css integrity="sha256-yLjTS/zrBA6JV/c7yoEdz0lkRgZqB8QpiZNRevELx54=" crossorigin=anonymous></head><body class="has-toc has-sidebar"><a class=skip-link href=#main-content>Skip to main content</a><header class=header><button class=header__sidebar--toggle data-action=toggle-sidebar title="Toggle sidebar"></button><a class=header__title href=/>ETLX</a><nav class=menu><ul><li><a href=/etlx/>Home</a></li><li><a href=/etlx/introduction/>Introduction</a></li><li><a href=/etlx/quick-start/>Quick Start</a></li><li><a href=/etlx/configuration/>Configuration</a></li><li><a href=/etlx/advanced/>Advanced</a></li><li><a href=/etlx/embedding/>Embedding</a></li><li><a href=/etlx/future/>Future</a></li><li><a href=/etlx/license/>License</a></li></ul></nav><button class=header__menu--toggle data-action=toggle-menu title="Toggle menu"></button></header><div class=breadcrumbs itemscope itemtype=https://schema.org/BreadcrumbList><a class="crumb home" href=https://realdatadriven.github.io/etlx/ title="Plume Documentation Theme" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/"><span itemprop=name>Plume Documentation Theme</span><meta itemprop=position content="1"></a><a class=crumb href=https://realdatadriven.github.io/etlx/configuration/ itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/"><span itemprop=name>Configuration</span><meta itemprop=position content="2"></a><span class="crumb current" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/actions/"><span itemprop=name>Actions</span><meta itemprop=position content="3"></span></div><aside class=sidebar><div class=sidebar__content><button class=sidebar__close data-action=toggle-sidebar title="Close sidebar"></button><div class=sidebar__section--search><input name=q placeholder=Search... type=search><ul class=sidebar__section--search-results></ul></div><nav class=sidebar__nav><ul class=sidebar__section--pages><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/etl/>ETL</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/validation/>Validation Rules</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/query-doc/>Query Documentation</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/data-quality/>Data Quality</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/exports/>Exports</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/scripts/>Scripts</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/multi-queries/>Multi-Queries</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/logs/>Logs</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/requires/>Loading Config Dependencies</a></li><li><a class="sidebar__link is-active" href=https://realdatadriven.github.io/etlx/configuration/actions/>Actions</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/notify/>Notify</a></li></ul></nav></div><footer class=footer><div class=footer__social-links><a href=https://github.com/realdatadriven/etlx target=_blank rel="noopener noreferrer"><div title=GitHub><div aria-hidden=true><svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5.315 2.1c.791-.113 1.9.145 3.333.966l.272.161.16.1.397-.083a13.3 13.3.0 014.59-.08l.456.08.396.083.161-.1c1.385-.84 2.487-1.17 3.322-1.148l.164.008.147.017.076.014.05.011.144.047a1 1 0 01.53.514 5.2 5.2.0 01.397 2.91l-.047.267-.046.196.123.163c.574.795.93 1.728 1.03 2.707l.023.295L21 9.5c0 3.855-1.659 5.883-4.644 6.68l-.245.061-.132.029.014.161.008.157.004.365-.002.213L16 21a1 1 0 01-.883.993L15 22H9a1 1 0 01-.993-.883L8 21v-.734c-1.818.26-3.03-.424-4.11-1.878l-.535-.766c-.28-.396-.455-.579-.589-.644l-.048-.019a1 1 0 01.564-1.918c.642.188 1.074.568 1.57 1.239l.538.769c.76 1.079 1.36 1.459 2.609 1.191L8 17.562l-.018-.168a5 5 0 01-.021-.824l.017-.185.019-.12-.108-.024c-2.976-.71-4.703-2.573-4.875-6.139l-.01-.31L3 9.5a5.6 5.6.0 01.908-3.051l.152-.222.122-.163-.045-.196a5.2 5.2.0 01.145-2.642l.1-.282.106-.253a1 1 0 01.529-.514l.144-.047z"/></svg></div></div></a></div></footer></aside><div class=sidebar__backdrop data-action=toggle-sidebar></div><main id=main-content><h1>Actions</h1><h1 id=actions>ACTIONS</h1><p>There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The <code>ACTIONS</code> section allows you to define steps for copying or transferring files using the file system or external protocols.</p><hr><h2 id=actions-structure><strong>ACTIONS Structure</strong></h2><p>Each action under the <code>ACTIONS</code> section has the following:</p><ul><li><code>name</code>: Unique name for the action.</li><li><code>description</code>: Human-readable explanation.</li><li><code>type</code>: The kind of action to perform. Options:<ul><li><code>copy_file</code></li><li><code>compress</code></li><li><code>decompress</code></li><li><code>ftp_download</code></li><li><code>ftp_upload</code></li><li><code>sftp_download</code></li><li><code>sftp_upload</code></li><li><code>http_download</code></li><li><code>http_upload</code></li><li><code>s3_download</code></li><li><code>s3_upload</code></li><li><code>db_2_db</code></li></ul></li><li><code>params</code>: A map of input parameters required by the action type.</li></ul><hr><figure class=code-block role=figure aria-label="markdown code snippet"><button class=highlight__copy title="Copy to clipboard"></button><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+<!doctype html><html lang=en-US dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=theme-color content><link rel=icon href=/favicon.ico sizes=any><link rel=apple-touch-icon href=/favicon.ico><link rel=preload href=/icons/clipboard.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-down.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-right.svg as=image type=image/svg+xml><link rel=preload href=/icons/home.svg as=image type=image/svg+xml><title>Actions | ETLX</title><meta name=description content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta name=keywords content="ETL,ELT,Data Integration,DuckDB,Markdown,SQL,Data Processing,Framework,Data Engineering,Data Pipelines,Data Transformation,Data Science,Data Analytics,Open Source,Data Governance,Data Documentation,Data Workflows,Data Workflow Documentation,Report Automation"><meta name=author content="Real Data-Driven"><meta name=language content="en-US"><link rel=canonical href=https://realdatadriven.github.io/etlx/configuration/actions/><link rel=manifest href=https://realdatadriven.github.io/etlx/manifest.webmanifest><meta property="og:title" content="Actions | ETLX"><meta property="og:description" content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta property="og:type" content="article"><meta property="og:url" content="https://realdatadriven.github.io/etlx/configuration/actions/"><meta property="og:locale" content="en-US"><meta property="og:site_name" content="ETLX"><meta property="og:image" content="https://realdatadriven.github.io/favicon.ico"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="ETLX logo"><meta property="article:author" content="Real Data-Driven"><meta property="article:section" content="configuration"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Actions | ETLX"><meta name=twitter:description content="ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic."><meta name=twitter:image content="https://realdatadriven.github.io/favicon.ico"><meta name=twitter:image:alt content="ETLX logo"><script type=application/ld+json>{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#article","headline":"Actions","description":"ETL \/ ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic.","url":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","wordCount":951,"timeRequired":"PT5M","author":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"publisher":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"isPartOf":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#website"}},{"@type":"BreadcrumbList","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Plume Documentation Theme","item":"https:\/\/realdatadriven.github.io\/etlx\/"},{"@type":"ListItem","position":2,"name":"Configuration","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/"},{"@type":"ListItem","position":3,"name":"Actions","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/"}]},{"@type":"WebSite","@id":"https:\/\/realdatadriven.github.io\/etlx\/#website","url":"https:\/\/realdatadriven.github.io\/etlx\/","name":"ETLX","publisher":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"}}]}</script><link rel=stylesheet href=/etlx/css/style.min.c8b8d34bfceb040e8957f73bca811dcf496446066a07c4298993517af10bc79e.css integrity="sha256-yLjTS/zrBA6JV/c7yoEdz0lkRgZqB8QpiZNRevELx54=" crossorigin=anonymous></head><body class="has-toc has-sidebar"><a class=skip-link href=#main-content>Skip to main content</a><header class=header><button class=header__sidebar--toggle data-action=toggle-sidebar title="Toggle sidebar"></button><a class=header__title href=/>ETLX</a><nav class=menu><ul><li><a href=/etlx/>Home</a></li><li><a href=/etlx/introduction/>Introduction</a></li><li><a href=/etlx/quick-start/>Quick Start</a></li><li><a href=/etlx/configuration/>Configuration</a></li><li><a href=/etlx/advanced/>Advanced</a></li><li><a href=/etlx/embedding/>Embedding</a></li><li><a href=/etlx/future/>Future</a></li><li><a href=/etlx/license/>License</a></li></ul></nav><button class=header__menu--toggle data-action=toggle-menu title="Toggle menu"></button></header><div class=breadcrumbs itemscope itemtype=https://schema.org/BreadcrumbList><a class="crumb home" href=https://realdatadriven.github.io/etlx/ title="Plume Documentation Theme" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/"><span itemprop=name>Plume Documentation Theme</span><meta itemprop=position content="1"></a><a class=crumb href=https://realdatadriven.github.io/etlx/configuration/ itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/"><span itemprop=name>Configuration</span><meta itemprop=position content="2"></a><span class="crumb current" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/actions/"><span itemprop=name>Actions</span><meta itemprop=position content="3"></span></div><aside class=sidebar><div class=sidebar__content><button class=sidebar__close data-action=toggle-sidebar title="Close sidebar"></button><div class=sidebar__section--search><input name=q placeholder=Search... type=search><ul class=sidebar__section--search-results></ul></div><nav class=sidebar__nav><ul class=sidebar__section--pages><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/etl/>ETL</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/validation/>Validation Rules</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/query-doc/>Query Documentation</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/data-quality/>Data Quality</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/exports/>Exports</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/scripts/>Scripts</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/multi-queries/>Multi-Queries</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/logs/>Logs</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/requires/>Loading Config Dependencies</a></li><li><a class="sidebar__link is-active" href=https://realdatadriven.github.io/etlx/configuration/actions/>Actions</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/notify/>Notify</a></li></ul></nav></div><footer class=footer><div class=footer__social-links><a href=https://github.com/realdatadriven/etlx target=_blank rel="noopener noreferrer"><div title=GitHub><div aria-hidden=true><svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5.315 2.1c.791-.113 1.9.145 3.333.966l.272.161.16.1.397-.083a13.3 13.3.0 014.59-.08l.456.08.396.083.161-.1c1.385-.84 2.487-1.17 3.322-1.148l.164.008.147.017.076.014.05.011.144.047a1 1 0 01.53.514 5.2 5.2.0 01.397 2.91l-.047.267-.046.196.123.163c.574.795.93 1.728 1.03 2.707l.023.295L21 9.5c0 3.855-1.659 5.883-4.644 6.68l-.245.061-.132.029.014.161.008.157.004.365-.002.213L16 21a1 1 0 01-.883.993L15 22H9a1 1 0 01-.993-.883L8 21v-.734c-1.818.26-3.03-.424-4.11-1.878l-.535-.766c-.28-.396-.455-.579-.589-.644l-.048-.019a1 1 0 01.564-1.918c.642.188 1.074.568 1.57 1.239l.538.769c.76 1.079 1.36 1.459 2.609 1.191L8 17.562l-.018-.168a5 5 0 01-.021-.824l.017-.185.019-.12-.108-.024c-2.976-.71-4.703-2.573-4.875-6.139l-.01-.31L3 9.5a5.6 5.6.0 01.908-3.051l.152-.222.122-.163-.045-.196a5.2 5.2.0 01.145-2.642l.1-.282.106-.253a1 1 0 01.529-.514l.144-.047z"/></svg></div></div></a></div></footer></aside><div class=sidebar__backdrop data-action=toggle-sidebar></div><main id=main-content><h1>Actions</h1><h1 id=actions>ACTIONS</h1><p>There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The <code>ACTIONS</code> section allows you to define steps for copying or transferring files using the file system or external protocols.</p><hr><h2 id=actions-structure><strong>ACTIONS Structure</strong></h2><p>Each action under the <code>ACTIONS</code> section has the following:</p><ul><li><code>name</code>: Unique name for the action.</li><li><code>description</code>: Human-readable explanation.</li><li><code>type</code>: The kind of action to perform. Options:<ul><li><code>copy_file</code></li><li><code>compress</code></li><li><code>decompress</code></li><li><code>ftp_download</code></li><li><code>ftp_upload</code></li><li><code>sftp_download</code></li><li><code>sftp_upload</code></li><li><code>http_download</code></li><li><code>http_upload</code></li><li><code>s3_download</code></li><li><code>s3_upload</code></li><li><code>db_2_db</code></li></ul></li><li><code>params</code>: A map of input parameters required by the action type.</li></ul><hr><figure class=code-block role=figure aria-label="markdown code snippet"><button class=highlight__copy title="Copy to clipboard"></button><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
 </span><span class=lnt>  2
 </span><span class=lnt>  3
 </span><span class=lnt>  4
@@ -202,81 +202,6 @@
 </span><span class=lnt>202
 </span><span class=lnt>203
 </span><span class=lnt>204
-</span><span class=lnt>205
-</span><span class=lnt>206
-</span><span class=lnt>207
-</span><span class=lnt>208
-</span><span class=lnt>209
-</span><span class=lnt>210
-</span><span class=lnt>211
-</span><span class=lnt>212
-</span><span class=lnt>213
-</span><span class=lnt>214
-</span><span class=lnt>215
-</span><span class=lnt>216
-</span><span class=lnt>217
-</span><span class=lnt>218
-</span><span class=lnt>219
-</span><span class=lnt>220
-</span><span class=lnt>221
-</span><span class=lnt>222
-</span><span class=lnt>223
-</span><span class=lnt>224
-</span><span class=lnt>225
-</span><span class=lnt>226
-</span><span class=lnt>227
-</span><span class=lnt>228
-</span><span class=lnt>229
-</span><span class=lnt>230
-</span><span class=lnt>231
-</span><span class=lnt>232
-</span><span class=lnt>233
-</span><span class=lnt>234
-</span><span class=lnt>235
-</span><span class=lnt>236
-</span><span class=lnt>237
-</span><span class=lnt>238
-</span><span class=lnt>239
-</span><span class=lnt>240
-</span><span class=lnt>241
-</span><span class=lnt>242
-</span><span class=lnt>243
-</span><span class=lnt>244
-</span><span class=lnt>245
-</span><span class=lnt>246
-</span><span class=lnt>247
-</span><span class=lnt>248
-</span><span class=lnt>249
-</span><span class=lnt>250
-</span><span class=lnt>251
-</span><span class=lnt>252
-</span><span class=lnt>253
-</span><span class=lnt>254
-</span><span class=lnt>255
-</span><span class=lnt>256
-</span><span class=lnt>257
-</span><span class=lnt>258
-</span><span class=lnt>259
-</span><span class=lnt>260
-</span><span class=lnt>261
-</span><span class=lnt>262
-</span><span class=lnt>263
-</span><span class=lnt>264
-</span><span class=lnt>265
-</span><span class=lnt>266
-</span><span class=lnt>267
-</span><span class=lnt>268
-</span><span class=lnt>269
-</span><span class=lnt>270
-</span><span class=lnt>271
-</span><span class=lnt>272
-</span><span class=lnt>273
-</span><span class=lnt>274
-</span><span class=lnt>275
-</span><span class=lnt>276
-</span><span class=lnt>277
-</span><span class=lnt>278
-</span><span class=lnt>279
 </span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-markdown data-lang=markdown><span class=line><span class=cl>
 </span></span><span class=line><span class=cl><span class=gh># ACTIONS
 </span></span></span><span class=line><span class=cl>
@@ -480,33 +405,59 @@
 </span></span></span><span class=line><span class=cl><span class=sb>  key: &#34;exports/summary_YYYYMMDD.xlsx&#34;
 </span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;reports/summary.xlsx&#34;
 </span></span></span><span class=line><span class=cl><span class=sb>active: true
-</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>---
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>### 📥 ACTIONS – `</span>db_2_db<span class=sb>` (Cross-Database Write)
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>&gt; As of this moment, **DuckDB does not support direct integration** with certain databases like **MSSQL**, **DB2**, or **Oracle**, the same way it does with **SQLite**, **Postgres**, or **MySQL**.
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>To bridge this gap, the `</span>db_2_db<span class=sb>` action type allows you to **query data from one database** (source) and **write the results into another** (target), using ETLX’s internal execution engine (powered by `</span>sqlx<span class=sb>` or ODBC).
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>## ✅ Use Case
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>Use `</span>db_2_db<span class=sb>` when:
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>- Your database is not accessible with DuckDB.
-</span></span></span><span class=line><span class=cl><span class=sb>- You want to move data from one place to another using **pure SQL**, chunked if necessary.
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>---
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>## 🧩 Example
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>`</span>``<span class=sb>`markdown
-</span></span></span><span class=line><span class=cl><span class=sb>...
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>## WRITE_RESULTS_MSSQL
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>``</span></span></code></pre></td></tr></table></div></div></figure><hr><h3 id=-actions--db_2_db-cross-database-write>📥 ACTIONS – <code>db_2_db</code> (Cross-Database Write)</h3><blockquote><p>As of this moment, <strong>DuckDB does not support direct integration</strong> with certain databases like <strong>MSSQL</strong>, <strong>DB2</strong>, or <strong>Oracle</strong>, the same way it does with <strong>SQLite</strong>, <strong>Postgres</strong>, or <strong>MySQL</strong>.</p></blockquote><p>To bridge this gap, the <code>db_2_db</code> action type allows you to <strong>query data from one database</strong> (source) and <strong>write the results into another</strong> (target), using ETLX’s internal execution engine (powered by <code>sqlx</code> or ODBC).</p><h2 id=-use-case>✅ Use Case</h2><p>Use <code>db_2_db</code> when:</p><ul><li>Your database is not accessible with DuckDB.</li><li>You want to move data from one place to another using <strong>pure SQL</strong>, chunked if necessary.</li></ul><hr><h2 id=-example>🧩 Example</h2><figure class=code-block role=figure aria-label="markdown code snippet"><button class=highlight__copy title="Copy to clipboard"></button><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt> 1
+</span><span class=lnt> 2
+</span><span class=lnt> 3
+</span><span class=lnt> 4
+</span><span class=lnt> 5
+</span><span class=lnt> 6
+</span><span class=lnt> 7
+</span><span class=lnt> 8
+</span><span class=lnt> 9
+</span><span class=lnt>10
+</span><span class=lnt>11
+</span><span class=lnt>12
+</span><span class=lnt>13
+</span><span class=lnt>14
+</span><span class=lnt>15
+</span><span class=lnt>16
+</span><span class=lnt>17
+</span><span class=lnt>18
+</span><span class=lnt>19
+</span><span class=lnt>20
+</span><span class=lnt>21
+</span><span class=lnt>22
+</span><span class=lnt>23
+</span><span class=lnt>24
+</span><span class=lnt>25
+</span><span class=lnt>26
+</span><span class=lnt>27
+</span><span class=lnt>28
+</span><span class=lnt>29
+</span><span class=lnt>30
+</span><span class=lnt>31
+</span><span class=lnt>32
+</span><span class=lnt>33
+</span><span class=lnt>34
+</span><span class=lnt>35
+</span><span class=lnt>36
+</span><span class=lnt>37
+</span><span class=lnt>38
+</span><span class=lnt>39
+</span><span class=lnt>40
+</span><span class=lnt>41
+</span><span class=lnt>42
+</span><span class=lnt>43
+</span><span class=lnt>44
+</span><span class=lnt>45
+</span><span class=lnt>46
+</span><span class=lnt>47
+</span><span class=lnt>48
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-markdown data-lang=markdown><span class=line><span class=cl>...
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=gu>## WRITE_RESULTS_MSSQL
+</span></span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>``<span class=sb>`yaml metadata
 </span></span></span><span class=line><span class=cl><span class=sb>name: WRITE_RESULTS_MSSQL
 </span></span></span><span class=line><span class=cl><span class=sb>description: &#34;MSSQL example – moving logs into a SQL Server database.&#34;
 </span></span></span><span class=line><span class=cl><span class=sb>type: db_2_db
@@ -549,11 +500,5 @@
 </span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`sql
 </span></span></span><span class=line><span class=cl><span class=sb>-- mssql_sql
 </span></span></span><span class=line><span class=cl><span class=sb>INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES 
-</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
-</span></span></span><span class=line><span class=cl><span class=sb>
-</span></span></span><span class=line><span class=cl><span class=sb>`</span>``
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl>---
-</span></span><span class=line><span class=cl>
-</span></span><span class=line><span class=cl># 🛠️ Notes</span></span></code></pre></td></tr></table></div></div></figure><a class=edit-link href=https://github.com/realdatadriven/etlx/tree/main/docs/content/configuration/actions.md rel="noopener noreferrer" target=_blank><svg width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h4L18.5 9.5a2.828 2.828.0 10-4-4L4 16zm9.5-13.5 4 4"/></svg>
-<span>Improve this page</span></a></main><aside id=toc class=toc><div class=toc__header data-action=toggle-toc><h3 class=toc__title>On this page</h3><button class=toc__toggle aria-label="Toggle table of contents"></button></div><div class=toc__content><nav id=TableOfContents><ul><li><a href=#actions-structure><strong>ACTIONS Structure</strong></a></li></ul></nav></div></aside><script defer crossorigin=anonymous integrity="sha256-KXMijDfasiR2erJ0tgywvcZ1CHvBNdFv6ZTL8PGWBIE=" src=/etlx/js/bundle.2973228c37dab224767ab274b60cb0bdc675087bc135d16fe994cbf0f1960481.js></script></body></html>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>``</span></span></code></pre></td></tr></table></div></div></figure><hr><h1 id=-notes>🛠️ Notes</h1><a class=edit-link href=https://github.com/realdatadriven/etlx/tree/main/docs/content/configuration/actions.md rel="noopener noreferrer" target=_blank><svg width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h4L18.5 9.5a2.828 2.828.0 10-4-4L4 16zm9.5-13.5 4 4"/></svg>
+<span>Improve this page</span></a></main><aside id=toc class=toc><div class=toc__header data-action=toggle-toc><h3 class=toc__title>On this page</h3><button class=toc__toggle aria-label="Toggle table of contents"></button></div><div class=toc__content><nav id=TableOfContents><ul><li><a href=#actions-structure><strong>ACTIONS Structure</strong></a><ul><li><a href=#-actions--db_2_db-cross-database-write>📥 ACTIONS – <code>db_2_db</code> (Cross-Database Write)</a></li></ul></li><li><a href=#-use-case>✅ Use Case</a></li><li><a href=#-example>🧩 Example</a></li></ul></nav></div></aside><script defer crossorigin=anonymous integrity="sha256-KXMijDfasiR2erJ0tgywvcZ1CHvBNdFv6ZTL8PGWBIE=" src=/etlx/js/bundle.2973228c37dab224767ab274b60cb0bdc675087bc135d16fe994cbf0f1960481.js></script></body></html>
