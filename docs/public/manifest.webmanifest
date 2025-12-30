@@ -1,11 +1,1 @@
-{
-  "name": "ETLX",
-  "short_name": "ETLX",
-  "description": "The Plume Hugo documentation theme",
-  "lang": "en-US",
-  "start_url": "/",
-  "display": "standalone",
-  "orientation": "any",
-  "background_color": "#ffffff",
-  "theme_color": "#000000"
-}
+{"name":"ETLX","short_name":"ETLX","description":"The Plume Hugo documentation theme","lang":"en-US","start_url":"/","display":"standalone","orientation":"any","background_color":"#ffffff","theme_color":"#000000"}

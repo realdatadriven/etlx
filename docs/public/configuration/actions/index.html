@@ -1,839 +1,559 @@
-<!DOCTYPE html>
-<html
-  lang="en-US"
-  dir="ltr"
-><head><script src="/etlx/livereload.js?mindelay=10&amp;v=2&amp;port=1313&amp;path=etlx/livereload" data-no-instant defer></script>
-  <meta charset="utf-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <meta name="theme-color" content="#000000">
-  <link rel="icon" href="/favicon.ico" sizes="any">
-  <link rel="apple-touch-icon" href="/favicon.ico"><link rel="preload" href="/icons/clipboard.svg" as="image" type="image/svg+xml" />
-<link rel="preload" href="/icons/caret-down.svg" as="image" type="image/svg+xml" />
-<link rel="preload" href="/icons/caret-right.svg" as="image" type="image/svg+xml" />
-<link rel="preload" href="/icons/home.svg" as="image" type="image/svg+xml" />
-<title>Actions | ETLX</title>
-  <meta name="description" content="The Plume Hugo documentation theme">
-  <meta name="keywords" content="Plume, Hugo, documentation, theme">
-  <meta name="author" content="Real Data-Driven">
-  <meta name="language" content="en-US">
-
-  <link rel="canonical" href="http://localhost:1313/etlx/configuration/actions/">
-  <link rel="manifest" href="http://localhost:1313/etlx/manifest.webmanifest"><meta property="og:title" content="Actions | ETLX">
-  <meta property="og:description" content="The Plume Hugo documentation theme">
-  <meta property="og:type" content="article">
-  <meta property="og:url" content="http://localhost:1313/etlx/configuration/actions/">
-  <meta property="og:locale" content="en-US">
-  <meta property="og:site_name" content="ETLX">
-  <meta property="og:image" content="http://localhost:1313/favicon.ico">
-  <meta property="og:image:width" content="512">
-  <meta property="og:image:height" content="512">
-  <meta property="og:image:alt" content="ETLX logo"><meta property="article:author" content="Real Data-Driven"><meta property="article:section" content="configuration"><meta name="twitter:card" content="summary_large_image">
-  <meta name="twitter:title" content="Actions | ETLX">
-  <meta name="twitter:description" content="The Plume Hugo documentation theme">
-  <meta name="twitter:image" content="http://localhost:1313/favicon.ico">
-  <meta name="twitter:image:alt" content="ETLX logo"><script type="application/ld+json">
-  {
-    "@context": "https://schema.org",
-    "@graph": [
-      {
-        "@type": "TechArticle",
-        "@id": "http:\/\/localhost:1313\/etlx\/configuration\/actions\/#article",
-        "headline": "Actions",
-        "description": "The Plume Hugo documentation theme",
-        "url": "http:\/\/localhost:1313\/etlx\/configuration\/actions\/",
-        "datePublished": "0001-01-01T00:00:00Z",
-        "dateModified": "0001-01-01T00:00:00Z",
-        "wordCount":  990 ,
-        "timeRequired": "PT5M",
-        "author": {
-          "@type": "Organization",
-          "@id": "http:\/\/localhost:1313\/etlx\/#organization"
-        },
-        "publisher": {
-          "@type": "Organization",
-          "@id": "http:\/\/localhost:1313\/etlx\/#organization"
-        },
-        "isPartOf": {
-          "@id": "http:\/\/localhost:1313\/etlx\/#website"
-        }
-      },{
-        "@type": "BreadcrumbList",
-        "@id": "http:\/\/localhost:1313\/etlx\/configuration\/actions\/#breadcrumb",
-        "itemListElement": [{
-              "@type": "ListItem",
-              "position":  1 ,
-              "name": "Plume Documentation Theme",
-              "item": "http:\/\/localhost:1313\/etlx\/"
-            },{
-              "@type": "ListItem",
-              "position":  2 ,
-              "name": "Configuration",
-              "item": "http:\/\/localhost:1313\/etlx\/configuration\/"
-            },{
-              "@type": "ListItem",
-              "position":  3 ,
-              "name": "Actions",
-              "item": "http:\/\/localhost:1313\/etlx\/configuration\/actions\/"
-            }]
-      },{
-        "@type": "WebSite",
-        "@id": "http:\/\/localhost:1313\/etlx\/#website",
-        "url": "http:\/\/localhost:1313\/etlx\/",
-        "name": "ETLX",
-        "publisher": {
-          "@id": "http:\/\/localhost:1313\/etlx\/#organization"
-        }
-      }
-    ]
-  }
-</script>
-<link rel="stylesheet" href="/etlx/css/_reset.css"><link rel="stylesheet" href="/etlx/css/base.css"><link rel="stylesheet" href="/etlx/css/breadcrumbs.css"><link rel="stylesheet" href="/etlx/css/card.css"><link rel="stylesheet" href="/etlx/css/content.css"><link rel="stylesheet" href="/etlx/css/edit-link.css"><link rel="stylesheet" href="/etlx/css/fonts.css"><link rel="stylesheet" href="/etlx/css/footer.css"><link rel="stylesheet" href="/etlx/css/form.css"><link rel="stylesheet" href="/etlx/css/header.css"><link rel="stylesheet" href="/etlx/css/headings.css"><link rel="stylesheet" href="/etlx/css/highlight-copy.css"><link rel="stylesheet" href="/etlx/css/highlight.css"><link rel="stylesheet" href="/etlx/css/page.css"><link rel="stylesheet" href="/etlx/css/search.css"><link rel="stylesheet" href="/etlx/css/sidebar.css"><link rel="stylesheet" href="/etlx/css/skip-link.css"><link rel="stylesheet" href="/etlx/css/table.css"><link rel="stylesheet" href="/etlx/css/toc.css"><link rel="stylesheet" href="/etlx/css/variables.css"></head>
-<body
-    class="has-toc has-sidebar"
-  ><a class="skip-link" href="#main-content">Skip to main content</a>
-<header class="header"><button
-      class="header__sidebar--toggle"
-      data-action="toggle-sidebar"
-      title="Toggle sidebar"
-    ></button><a class="header__title" href="/">ETLX</a><nav class="menu">
-    <ul><li>
-      <a href="/etlx/">Home</a></li><li>
-      <a href="/etlx/docs/">Documentation</a></li><li>
-      <a href="/etlx/introduction/">Introduction</a></li><li>
-      <a href="/etlx/quick-start/">Quick Start</a></li><li>
-      <a href="/etlx/configuration/">Configuration</a></li><li>
-      <a href="/etlx/advanced/">Advanced</a></li><li>
-      <a href="/etlx/embedding/">Embedding</a></li><li>
-      <a href="/etlx/future/">Future</a></li><li>
-      <a href="/etlx/license/">License</a></li></ul>
-  </nav><button
-    class="header__menu--toggle"
-    data-action="toggle-menu"
-    title="Toggle menu"
-  ></button>
-</header>
-<div class="breadcrumbs" itemscope itemtype="https://schema.org/BreadcrumbList"><a
-          class="crumb home"
-          href="http://localhost:1313/etlx/"
-          title="Plume Documentation Theme"
-          itemprop="itemListElement"
-          itemscope
-          itemtype="https://schema.org/ListItem"
-        ><meta itemprop="item" content="http://localhost:1313/etlx/"><span itemprop="name">Plume Documentation Theme</span><meta itemprop="position" content="1"></a><a
-          class="crumb"
-          href="http://localhost:1313/etlx/configuration/"
-          itemprop="itemListElement"
-          itemscope
-          itemtype="https://schema.org/ListItem"
-        ><meta itemprop="item" content="http://localhost:1313/etlx/configuration/"><span itemprop="name">Configuration</span><meta itemprop="position" content="2"></a><span
-          class="crumb current"
-          itemprop="itemListElement"
-          itemscope
-          itemtype="https://schema.org/ListItem"
-        ><meta itemprop="item" content="http://localhost:1313/etlx/configuration/actions/"><span itemprop="name">Actions</span><meta itemprop="position" content="3"></span></div><aside class="sidebar">
-    <div class="sidebar__content">
-      <button
-        class="sidebar__close"
-        data-action="toggle-sidebar"
-        title="Close sidebar"
-      ></button>
-
-      <div class="sidebar__section--search">
-        <input
-          name="q"
-          placeholder="Search..."
-          type="search"
-        />
-        <ul class="sidebar__section--search-results"></ul>
-      </div>
-
-      <nav class="sidebar__nav">
-        <ul class="sidebar__section--pages"><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/etl/"
-      >ETL</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/validation/"
-      >Validation Rules</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/query-doc/"
-      >Query Documentation</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/data-quality/"
-      >Data Quality</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/exports/"
-      >Exports</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/scripts/"
-      >Scripts</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/multi-queries/"
-      >Multi-Queries</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/logs/"
-      >Logs</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/requires/"
-      >Loading Config Dependencies</a>
-    </li><li>
-      <a
-        class="sidebar__link is-active"
-        href="http://localhost:1313/etlx/configuration/actions/"
-      >Actions</a>
-    </li><li>
-      <a
-        class="sidebar__link"
-        href="http://localhost:1313/etlx/configuration/notify/"
-      >Notify</a>
-    </li></ul>
-      </nav>
-    </div><footer class="footer">
-    <div class="footer__social-links"><a href="https://github.com/realdatadriven/etlx" target="_blank" rel="noopener noreferrer"><div title="GitHub">
-              <div aria-hidden="true"><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5.315 2.1c.791-.113 1.9.145 3.333.966l.272.161l.16.1l.397-.083a13.3 13.3 0 0 1 4.59-.08l.456.08l.396.083l.161-.1c1.385-.84 2.487-1.17 3.322-1.148l.164.008l.147.017l.076.014l.05.011l.144.047a1 1 0 0 1 .53.514a5.2 5.2 0 0 1 .397 2.91l-.047.267l-.046.196l.123.163c.574.795.93 1.728 1.03 2.707l.023.295L21 9.5c0 3.855-1.659 5.883-4.644 6.68l-.245.061l-.132.029l.014.161l.008.157l.004.365l-.002.213L16 21a1 1 0 0 1-.883.993L15 22H9a1 1 0 0 1-.993-.883L8 21v-.734c-1.818.26-3.03-.424-4.11-1.878l-.535-.766c-.28-.396-.455-.579-.589-.644l-.048-.019a1 1 0 0 1 .564-1.918c.642.188 1.074.568 1.57 1.239l.538.769c.76 1.079 1.36 1.459 2.609 1.191L8 17.562l-.018-.168a5 5 0 0 1-.021-.824l.017-.185l.019-.12l-.108-.024c-2.976-.71-4.703-2.573-4.875-6.139l-.01-.31L3 9.5a5.6 5.6 0 0 1 .908-3.051l.152-.222l.122-.163l-.045-.196a5.2 5.2 0 0 1 .145-2.642l.1-.282l.106-.253a1 1 0 0 1 .529-.514l.144-.047z"/></svg>
-</div>
-            </div></a></div>
-  </footer></aside>
-
-  <div class="sidebar__backdrop" data-action="toggle-sidebar"></div><main id="main-content"><h1>Actions</h1><h3 id="actions">ACTIONS</h3>
-<p>There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The <code>ACTIONS</code> section allows you to define steps for copying or transferring files using the file system or external protocols.</p>
-<hr>
-<h4 id="actions-structure"><strong>ACTIONS Structure</strong></h4>
-<p>Each action under the <code>ACTIONS</code> section has the following:</p>
-<ul>
-<li><code>name</code>: Unique name for the action.</li>
-<li><code>description</code>: Human-readable explanation.</li>
-<li><code>type</code>: The kind of action to perform. Options:
-<ul>
-<li><code>copy_file</code></li>
-<li><code>compress</code></li>
-<li><code>decompress</code></li>
-<li><code>ftp_download</code></li>
-<li><code>ftp_upload</code></li>
-<li><code>sftp_download</code></li>
-<li><code>sftp_upload</code></li>
-<li><code>http_download</code></li>
-<li><code>http_upload</code></li>
-<li><code>s3_download</code></li>
-<li><code>s3_upload</code></li>
-<li><code>db_2_db</code></li>
-</ul>
-</li>
-<li><code>params</code>: A map of input parameters required by the action type.</li>
-</ul>
-<hr>
-<figure class="code-block" role="figure" aria-label="markdown code snippet">
-  <button class="highlight__copy" title="Copy to clipboard"></button><div class="highlight"><div class="chroma">
-<table class="lntable"><tr><td class="lntd">
-<pre tabindex="0" class="chroma"><code><span class="lnt">  1
-</span><span class="lnt">  2
-</span><span class="lnt">  3
-</span><span class="lnt">  4
-</span><span class="lnt">  5
-</span><span class="lnt">  6
-</span><span class="lnt">  7
-</span><span class="lnt">  8
-</span><span class="lnt">  9
-</span><span class="lnt"> 10
-</span><span class="lnt"> 11
-</span><span class="lnt"> 12
-</span><span class="lnt"> 13
-</span><span class="lnt"> 14
-</span><span class="lnt"> 15
-</span><span class="lnt"> 16
-</span><span class="lnt"> 17
-</span><span class="lnt"> 18
-</span><span class="lnt"> 19
-</span><span class="lnt"> 20
-</span><span class="lnt"> 21
-</span><span class="lnt"> 22
-</span><span class="lnt"> 23
-</span><span class="lnt"> 24
-</span><span class="lnt"> 25
-</span><span class="lnt"> 26
-</span><span class="lnt"> 27
-</span><span class="lnt"> 28
-</span><span class="lnt"> 29
-</span><span class="lnt"> 30
-</span><span class="lnt"> 31
-</span><span class="lnt"> 32
-</span><span class="lnt"> 33
-</span><span class="lnt"> 34
-</span><span class="lnt"> 35
-</span><span class="lnt"> 36
-</span><span class="lnt"> 37
-</span><span class="lnt"> 38
-</span><span class="lnt"> 39
-</span><span class="lnt"> 40
-</span><span class="lnt"> 41
-</span><span class="lnt"> 42
-</span><span class="lnt"> 43
-</span><span class="lnt"> 44
-</span><span class="lnt"> 45
-</span><span class="lnt"> 46
-</span><span class="lnt"> 47
-</span><span class="lnt"> 48
-</span><span class="lnt"> 49
-</span><span class="lnt"> 50
-</span><span class="lnt"> 51
-</span><span class="lnt"> 52
-</span><span class="lnt"> 53
-</span><span class="lnt"> 54
-</span><span class="lnt"> 55
-</span><span class="lnt"> 56
-</span><span class="lnt"> 57
-</span><span class="lnt"> 58
-</span><span class="lnt"> 59
-</span><span class="lnt"> 60
-</span><span class="lnt"> 61
-</span><span class="lnt"> 62
-</span><span class="lnt"> 63
-</span><span class="lnt"> 64
-</span><span class="lnt"> 65
-</span><span class="lnt"> 66
-</span><span class="lnt"> 67
-</span><span class="lnt"> 68
-</span><span class="lnt"> 69
-</span><span class="lnt"> 70
-</span><span class="lnt"> 71
-</span><span class="lnt"> 72
-</span><span class="lnt"> 73
-</span><span class="lnt"> 74
-</span><span class="lnt"> 75
-</span><span class="lnt"> 76
-</span><span class="lnt"> 77
-</span><span class="lnt"> 78
-</span><span class="lnt"> 79
-</span><span class="lnt"> 80
-</span><span class="lnt"> 81
-</span><span class="lnt"> 82
-</span><span class="lnt"> 83
-</span><span class="lnt"> 84
-</span><span class="lnt"> 85
-</span><span class="lnt"> 86
-</span><span class="lnt"> 87
-</span><span class="lnt"> 88
-</span><span class="lnt"> 89
-</span><span class="lnt"> 90
-</span><span class="lnt"> 91
-</span><span class="lnt"> 92
-</span><span class="lnt"> 93
-</span><span class="lnt"> 94
-</span><span class="lnt"> 95
-</span><span class="lnt"> 96
-</span><span class="lnt"> 97
-</span><span class="lnt"> 98
-</span><span class="lnt"> 99
-</span><span class="lnt">100
-</span><span class="lnt">101
-</span><span class="lnt">102
-</span><span class="lnt">103
-</span><span class="lnt">104
-</span><span class="lnt">105
-</span><span class="lnt">106
-</span><span class="lnt">107
-</span><span class="lnt">108
-</span><span class="lnt">109
-</span><span class="lnt">110
-</span><span class="lnt">111
-</span><span class="lnt">112
-</span><span class="lnt">113
-</span><span class="lnt">114
-</span><span class="lnt">115
-</span><span class="lnt">116
-</span><span class="lnt">117
-</span><span class="lnt">118
-</span><span class="lnt">119
-</span><span class="lnt">120
-</span><span class="lnt">121
-</span><span class="lnt">122
-</span><span class="lnt">123
-</span><span class="lnt">124
-</span><span class="lnt">125
-</span><span class="lnt">126
-</span><span class="lnt">127
-</span><span class="lnt">128
-</span><span class="lnt">129
-</span><span class="lnt">130
-</span><span class="lnt">131
-</span><span class="lnt">132
-</span><span class="lnt">133
-</span><span class="lnt">134
-</span><span class="lnt">135
-</span><span class="lnt">136
-</span><span class="lnt">137
-</span><span class="lnt">138
-</span><span class="lnt">139
-</span><span class="lnt">140
-</span><span class="lnt">141
-</span><span class="lnt">142
-</span><span class="lnt">143
-</span><span class="lnt">144
-</span><span class="lnt">145
-</span><span class="lnt">146
-</span><span class="lnt">147
-</span><span class="lnt">148
-</span><span class="lnt">149
-</span><span class="lnt">150
-</span><span class="lnt">151
-</span><span class="lnt">152
-</span><span class="lnt">153
-</span><span class="lnt">154
-</span><span class="lnt">155
-</span><span class="lnt">156
-</span><span class="lnt">157
-</span><span class="lnt">158
-</span><span class="lnt">159
-</span><span class="lnt">160
-</span><span class="lnt">161
-</span><span class="lnt">162
-</span><span class="lnt">163
-</span><span class="lnt">164
-</span><span class="lnt">165
-</span><span class="lnt">166
-</span><span class="lnt">167
-</span><span class="lnt">168
-</span><span class="lnt">169
-</span><span class="lnt">170
-</span><span class="lnt">171
-</span><span class="lnt">172
-</span><span class="lnt">173
-</span><span class="lnt">174
-</span><span class="lnt">175
-</span><span class="lnt">176
-</span><span class="lnt">177
-</span><span class="lnt">178
-</span><span class="lnt">179
-</span><span class="lnt">180
-</span><span class="lnt">181
-</span><span class="lnt">182
-</span><span class="lnt">183
-</span><span class="lnt">184
-</span><span class="lnt">185
-</span><span class="lnt">186
-</span><span class="lnt">187
-</span><span class="lnt">188
-</span><span class="lnt">189
-</span><span class="lnt">190
-</span><span class="lnt">191
-</span><span class="lnt">192
-</span><span class="lnt">193
-</span><span class="lnt">194
-</span><span class="lnt">195
-</span><span class="lnt">196
-</span><span class="lnt">197
-</span><span class="lnt">198
-</span><span class="lnt">199
-</span><span class="lnt">200
-</span><span class="lnt">201
-</span><span class="lnt">202
-</span><span class="lnt">203
-</span><span class="lnt">204
-</span><span class="lnt">205
-</span><span class="lnt">206
-</span><span class="lnt">207
-</span><span class="lnt">208
-</span><span class="lnt">209
-</span><span class="lnt">210
-</span><span class="lnt">211
-</span><span class="lnt">212
-</span><span class="lnt">213
-</span><span class="lnt">214
-</span><span class="lnt">215
-</span><span class="lnt">216
-</span><span class="lnt">217
-</span><span class="lnt">218
-</span><span class="lnt">219
-</span><span class="lnt">220
-</span><span class="lnt">221
-</span><span class="lnt">222
-</span><span class="lnt">223
-</span><span class="lnt">224
-</span><span class="lnt">225
-</span><span class="lnt">226
-</span><span class="lnt">227
-</span><span class="lnt">228
-</span><span class="lnt">229
-</span><span class="lnt">230
-</span><span class="lnt">231
-</span><span class="lnt">232
-</span><span class="lnt">233
-</span><span class="lnt">234
-</span><span class="lnt">235
-</span><span class="lnt">236
-</span><span class="lnt">237
-</span><span class="lnt">238
-</span><span class="lnt">239
-</span><span class="lnt">240
-</span><span class="lnt">241
-</span><span class="lnt">242
-</span><span class="lnt">243
-</span><span class="lnt">244
-</span><span class="lnt">245
-</span><span class="lnt">246
-</span><span class="lnt">247
-</span><span class="lnt">248
-</span><span class="lnt">249
-</span><span class="lnt">250
-</span><span class="lnt">251
-</span><span class="lnt">252
-</span><span class="lnt">253
-</span><span class="lnt">254
-</span><span class="lnt">255
-</span><span class="lnt">256
-</span><span class="lnt">257
-</span><span class="lnt">258
-</span><span class="lnt">259
-</span><span class="lnt">260
-</span><span class="lnt">261
-</span><span class="lnt">262
-</span><span class="lnt">263
-</span><span class="lnt">264
-</span><span class="lnt">265
-</span><span class="lnt">266
-</span><span class="lnt">267
-</span><span class="lnt">268
-</span><span class="lnt">269
-</span><span class="lnt">270
-</span><span class="lnt">271
-</span><span class="lnt">272
-</span><span class="lnt">273
-</span><span class="lnt">274
-</span><span class="lnt">275
-</span><span class="lnt">276
-</span><span class="lnt">277
-</span><span class="lnt">278
-</span><span class="lnt">279
-</span></code></pre></td>
-<td class="lntd">
-<pre tabindex="0" class="chroma"><code class="language-markdown" data-lang="markdown"><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl"><span class="gh"># ACTIONS
-</span></span></span><span class="line"><span class="cl"><span class="gh"></span>
-</span></span><span class="line"><span class="cl">``<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: FileOperations
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Transfer and organize generated reports&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">path: examples
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## COPY LOCAL FILE
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: CopyReportToArchive
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Move final report to archive folder&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: copy_file
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;C:/reports/final_report.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;C:/reports/archive/final_report_YYYYMMDD.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## Compress to ZIP
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: CompressReports
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Compress report files into a .zip archive&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: compress
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  compression: zip
-</span></span></span><span class="line"><span class="cl"><span class="sb">  files:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    - &#34;reports/report_1.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">    - &#34;reports/report_2.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  output: &#34;archives/reports_YYYYMM.zip&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## UNZIP
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: CompressReports
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Compress report files into a .zip archive&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: decompress
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  compression: zip
-</span></span></span><span class="line"><span class="cl"><span class="sb">  input: &#34;archives/reports_YYYYMM.zip&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  output: &#34;tmp&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## Compress to GZ
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: CompressToGZ
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Compress a summary file to .gz&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: compress
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  compression: gz
-</span></span></span><span class="line"><span class="cl"><span class="sb">  files:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    - &#34;reports/summary.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  output: &#34;archives/summary_YYYYMM.csv.gz&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## HTTP DOWNLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: DownloadFromAPI
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Download dataset from HTTP endpoint&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: http_download
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  url: &#34;https://api.example.com/data&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;data/today.json&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  method: GET
-</span></span></span><span class="line"><span class="cl"><span class="sb">  headers:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    Authorization: &#34;Bearer @API_TOKEN&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">    Accept: &#34;application/json&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    date: &#34;YYYYMMDD&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">    limit: &#34;1000&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## HTTP UPLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: PushReportToWebhook
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Upload final report to an HTTP endpoint&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: http_upload
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  url: &#34;https://webhook.example.com/upload&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  method: POST
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;reports/final.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  headers:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    Authorization: &#34;Bearer @WEBHOOK_TOKEN&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">    Content-Type: &#34;multipart/form-data&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    type: &#34;summary&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">    date: &#34;YYYYMMDD&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## FTP DOWNLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: FetchRemoteReport
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Download data file from external FTP&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: ftp_download
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  host: &#34;ftp.example.com&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  port: &#34;21&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  user: &#34;myuser&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  password: &#34;@FTP_PASSWORD&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;/data/daily_report.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;downloads/daily_report.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## FTP DOWNLOAD GLOB
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: FetchRemoteReport2024
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Download data file from external FTP&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: ftp_download
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  host: &#34;ftp.example.com&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  port: &#34;21&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  user: &#34;myuser&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  password: &#34;@FTP_PASSWORD&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;/data/daily_report_2024*.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;downloads/&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## SFTP DOWNLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: FetchRemoteReport
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Download data file from external SFTP&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: stp_download
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  host: &#34;sftp.example.com&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  user: &#34;myuser&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  password: &#34;@SFTP_PASSWORD&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  host_key: ~/.ssh/known_hosts # or a specific file
-</span></span></span><span class="line"><span class="cl"><span class="sb">  port: 22
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;/data/daily_report.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;downloads/daily_report.csv&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## S3 UPLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: ArchiveToS3
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Send latest results to S3 bucket&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: s3_upload
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_ACCESS_KEY_ID: &#39;@AWS_ACCESS_KEY_ID&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_SECRET_ACCESS_KEY: &#39;@AWS_SECRET_ACCESS_KEY&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_REGION: &#39;@AWS_REGION&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_ENDPOINT: 127.0.0.1:3000
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_FORCE_PATH_STYLE: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_DISABLE_SSL: false
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_SKIP_SSL_VERIFY: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">  bucket: &#34;my-etlx-bucket&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  key: &#34;exports/summary_YYYYMMDD.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source: &#34;reports/summary.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## S3 DOWNLOAD
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: DownalodFromS3
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;Download file S3 from bucket&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: s3_download
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_ACCESS_KEY_ID: &#39;@AWS_ACCESS_KEY_ID&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_SECRET_ACCESS_KEY: &#39;@AWS_SECRET_ACCESS_KEY&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_REGION: &#39;@AWS_REGION&#39;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  AWS_ENDPOINT: 127.0.0.1:3000
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_FORCE_PATH_STYLE: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_DISABLE_SSL: false
-</span></span></span><span class="line"><span class="cl"><span class="sb">  S3_SKIP_SSL_VERIFY: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">  bucket: &#34;my-etlx-bucket&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  key: &#34;exports/summary_YYYYMMDD.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target: &#34;reports/summary.xlsx&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">##### 📥 ACTIONS – `</span>db_2_db<span class="sb">` (Cross-Database Write)
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">&gt; As of this moment, **DuckDB does not support direct integration** with certain databases like **MSSQL**, **DB2**, or **Oracle**, the same way it does with **SQLite**, **Postgres**, or **MySQL**.
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">To bridge this gap, the `</span>db_2_db<span class="sb">` action type allows you to **query data from one database** (source) and **write the results into another** (target), using ETLX’s internal execution engine (powered by `</span>sqlx<span class="sb">` or ODBC).
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">###### ✅ Use Case
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">Use `</span>db_2_db<span class="sb">` when:
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">- Your database is not accessible with DuckDB.
-</span></span></span><span class="line"><span class="cl"><span class="sb">- You want to move data from one place to another using **pure SQL**, chunked if necessary.
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">---
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">###### 🧩 Example
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>``<span class="sb">`markdown
-</span></span></span><span class="line"><span class="cl"><span class="sb">...
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">## WRITE_RESULTS_MSSQL
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`yaml metadata
-</span></span></span><span class="line"><span class="cl"><span class="sb">name: WRITE_RESULTS_MSSQL
-</span></span></span><span class="line"><span class="cl"><span class="sb">description: &#34;MSSQL example – moving logs into a SQL Server database.&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">type: db_2_db
-</span></span></span><span class="line"><span class="cl"><span class="sb">params:
-</span></span></span><span class="line"><span class="cl"><span class="sb">  source:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    conn: sqlite3:database/HTTP_EXTRACT.db
-</span></span></span><span class="line"><span class="cl"><span class="sb">    before: null
-</span></span></span><span class="line"><span class="cl"><span class="sb">    chunk_size: 1000
-</span></span></span><span class="line"><span class="cl"><span class="sb">    timeout: 30
-</span></span></span><span class="line"><span class="cl"><span class="sb">    sql: origin_query
-</span></span></span><span class="line"><span class="cl"><span class="sb">    after: null
-</span></span></span><span class="line"><span class="cl"><span class="sb">  target:
-</span></span></span><span class="line"><span class="cl"><span class="sb">    conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&amp;connection+timeout=30
-</span></span></span><span class="line"><span class="cl"><span class="sb">    timeout: 30
-</span></span></span><span class="line"><span class="cl"><span class="sb">    before:
-</span></span></span><span class="line"><span class="cl"><span class="sb">      - create_schema
-</span></span></span><span class="line"><span class="cl"><span class="sb">    sql: mssql_sql
-</span></span></span><span class="line"><span class="cl"><span class="sb">    after: null
-</span></span></span><span class="line"><span class="cl"><span class="sb">active: true
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`sql
-</span></span></span><span class="line"><span class="cl"><span class="sb">-- origin_query
-</span></span></span><span class="line"><span class="cl"><span class="sb">SELECT &#34;description&#34;, &#34;duration&#34;, STRFTIME(&#39;%Y-%m-%d %H:%M:%S&#39;, &#34;start_at&#34;) AS &#34;start_at&#34;, &#34;ref&#34;
-</span></span></span><span class="line"><span class="cl"><span class="sb">FROM &#34;etlx_logs&#34; 
-</span></span></span><span class="line"><span class="cl"><span class="sb">ORDER BY &#34;start_at&#34; DESC
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`sql
-</span></span></span><span class="line"><span class="cl"><span class="sb">-- create_schema
-</span></span></span><span class="line"><span class="cl"><span class="sb">IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = &#39;etlx_logs&#39; AND type = &#39;U&#39;)
-</span></span></span><span class="line"><span class="cl"><span class="sb">CREATE TABLE [dbo].[etlx_logs] (
-</span></span></span><span class="line"><span class="cl"><span class="sb">    [description] NVARCHAR(MAX) NULL,
-</span></span></span><span class="line"><span class="cl"><span class="sb">    [duration] BIGINT NULL,
-</span></span></span><span class="line"><span class="cl"><span class="sb">    [start_at] DATETIME NULL,
-</span></span></span><span class="line"><span class="cl"><span class="sb">    [ref] DATE NULL
-</span></span></span><span class="line"><span class="cl"><span class="sb">);
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`sql
-</span></span></span><span class="line"><span class="cl"><span class="sb">-- mssql_sql
-</span></span></span><span class="line"><span class="cl"><span class="sb">INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES 
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>`<span class="sb">`
-</span></span></span><span class="line"><span class="cl"><span class="sb">
-</span></span></span><span class="line"><span class="cl"><span class="sb">`</span>``
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">---
-</span></span><span class="line"><span class="cl">
-</span></span><span class="line"><span class="cl">### 🛠️ Notes</span></span></code></pre></td></tr></table>
-</div>
-</div></figure>
-<a
-  class="edit-link"
-  href="https://github.com/realdatadriven/etlx/tree/main/docs/public/configuration/actions.md"
-  rel="noopener noreferrer"
-  target="_blank"
-><svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h4L18.5 9.5a2.828 2.828 0 1 0-4-4L4 16zm9.5-13.5l4 4"/></svg>
-<span>Improve this page</span>
-</a>
-</main><aside id="toc" class="toc">
-        <div class="toc__header" data-action="toggle-toc">
-          <h3 class="toc__title">On this page</h3>
-
-          <button
-            class="toc__toggle"
-            aria-label="Toggle table of contents"
-          ></button>
-        </div>
-
-        <div class="toc__content"><nav id="TableOfContents">
-  <ul>
-    <li>
-      <ul>
-        <li><a href="#actions">ACTIONS</a>
-          <ul>
-            <li><a href="#actions-structure"><strong>ACTIONS Structure</strong></a></li>
-          </ul>
-        </li>
-      </ul>
-    </li>
-  </ul>
-</nav></div>
-      </aside><script defer src="/etlx/js/bundle.js"></script></body>
-</html>
+<!doctype html><html lang=en-US dir=ltr><head><meta charset=utf-8><meta name=viewport content="width=device-width,initial-scale=1"><meta name=theme-color content="#000000"><link rel=icon href=/favicon.ico sizes=any><link rel=apple-touch-icon href=/favicon.ico><link rel=preload href=/icons/clipboard.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-down.svg as=image type=image/svg+xml><link rel=preload href=/icons/caret-right.svg as=image type=image/svg+xml><link rel=preload href=/icons/home.svg as=image type=image/svg+xml><title>Actions | ETLX</title><meta name=description content="The Plume Hugo documentation theme"><meta name=keywords content="Plume,Hugo,documentation,theme"><meta name=author content="Real Data-Driven"><meta name=language content="en-US"><link rel=canonical href=https://realdatadriven.github.io/etlx/configuration/actions/><link rel=manifest href=https://realdatadriven.github.io/etlx/manifest.webmanifest><meta property="og:title" content="Actions | ETLX"><meta property="og:description" content="The Plume Hugo documentation theme"><meta property="og:type" content="article"><meta property="og:url" content="https://realdatadriven.github.io/etlx/configuration/actions/"><meta property="og:locale" content="en-US"><meta property="og:site_name" content="ETLX"><meta property="og:image" content="https://realdatadriven.github.io/favicon.ico"><meta property="og:image:width" content="512"><meta property="og:image:height" content="512"><meta property="og:image:alt" content="ETLX logo"><meta property="article:author" content="Real Data-Driven"><meta property="article:section" content="configuration"><meta name=twitter:card content="summary_large_image"><meta name=twitter:title content="Actions | ETLX"><meta name=twitter:description content="The Plume Hugo documentation theme"><meta name=twitter:image content="https://realdatadriven.github.io/favicon.ico"><meta name=twitter:image:alt content="ETLX logo"><script type=application/ld+json>{"@context":"https://schema.org","@graph":[{"@type":"TechArticle","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#article","headline":"Actions","description":"The Plume Hugo documentation theme","url":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/","datePublished":"0001-01-01T00:00:00Z","dateModified":"0001-01-01T00:00:00Z","wordCount":990,"timeRequired":"PT5M","author":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"publisher":{"@type":"Organization","@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"},"isPartOf":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#website"}},{"@type":"BreadcrumbList","@id":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/#breadcrumb","itemListElement":[{"@type":"ListItem","position":1,"name":"Plume Documentation Theme","item":"https:\/\/realdatadriven.github.io\/etlx\/"},{"@type":"ListItem","position":2,"name":"Configuration","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/"},{"@type":"ListItem","position":3,"name":"Actions","item":"https:\/\/realdatadriven.github.io\/etlx\/configuration\/actions\/"}]},{"@type":"WebSite","@id":"https:\/\/realdatadriven.github.io\/etlx\/#website","url":"https:\/\/realdatadriven.github.io\/etlx\/","name":"ETLX","publisher":{"@id":"https:\/\/realdatadriven.github.io\/etlx\/#organization"}}]}</script><link rel=stylesheet href=/etlx/css/style.min.c8b8d34bfceb040e8957f73bca811dcf496446066a07c4298993517af10bc79e.css integrity="sha256-yLjTS/zrBA6JV/c7yoEdz0lkRgZqB8QpiZNRevELx54=" crossorigin=anonymous></head><body class="has-toc has-sidebar"><a class=skip-link href=#main-content>Skip to main content</a><header class=header><button class=header__sidebar--toggle data-action=toggle-sidebar title="Toggle sidebar"></button><a class=header__title href=/>ETLX</a><nav class=menu><ul><li><a href=/etlx/>Home</a></li><li><a href=/etlx/docs/>Documentation</a></li><li><a href=/etlx/introduction/>Introduction</a></li><li><a href=/etlx/quick-start/>Quick Start</a></li><li><a href=/etlx/configuration/>Configuration</a></li><li><a href=/etlx/advanced/>Advanced</a></li><li><a href=/etlx/embedding/>Embedding</a></li><li><a href=/etlx/future/>Future</a></li><li><a href=/etlx/license/>License</a></li></ul></nav><button class=header__menu--toggle data-action=toggle-menu title="Toggle menu"></button></header><div class=breadcrumbs itemscope itemtype=https://schema.org/BreadcrumbList><a class="crumb home" href=https://realdatadriven.github.io/etlx/ title="Plume Documentation Theme" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/"><span itemprop=name>Plume Documentation Theme</span><meta itemprop=position content="1"></a><a class=crumb href=https://realdatadriven.github.io/etlx/configuration/ itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/"><span itemprop=name>Configuration</span><meta itemprop=position content="2"></a><span class="crumb current" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><meta itemprop=item content="https://realdatadriven.github.io/etlx/configuration/actions/"><span itemprop=name>Actions</span><meta itemprop=position content="3"></span></div><aside class=sidebar><div class=sidebar__content><button class=sidebar__close data-action=toggle-sidebar title="Close sidebar"></button><div class=sidebar__section--search><input name=q placeholder=Search... type=search><ul class=sidebar__section--search-results></ul></div><nav class=sidebar__nav><ul class=sidebar__section--pages><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/etl/>ETL</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/validation/>Validation Rules</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/query-doc/>Query Documentation</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/data-quality/>Data Quality</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/exports/>Exports</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/scripts/>Scripts</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/multi-queries/>Multi-Queries</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/logs/>Logs</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/requires/>Loading Config Dependencies</a></li><li><a class="sidebar__link is-active" href=https://realdatadriven.github.io/etlx/configuration/actions/>Actions</a></li><li><a class=sidebar__link href=https://realdatadriven.github.io/etlx/configuration/notify/>Notify</a></li></ul></nav></div><footer class=footer><div class=footer__social-links><a href=https://github.com/realdatadriven/etlx target=_blank rel="noopener noreferrer"><div title=GitHub><div aria-hidden=true><svg width="24" height="24" viewBox="0 0 24 24"><path fill="currentColor" d="M5.315 2.1c.791-.113 1.9.145 3.333.966l.272.161.16.1.397-.083a13.3 13.3.0 014.59-.08l.456.08.396.083.161-.1c1.385-.84 2.487-1.17 3.322-1.148l.164.008.147.017.076.014.05.011.144.047a1 1 0 01.53.514 5.2 5.2.0 01.397 2.91l-.047.267-.046.196.123.163c.574.795.93 1.728 1.03 2.707l.023.295L21 9.5c0 3.855-1.659 5.883-4.644 6.68l-.245.061-.132.029.014.161.008.157.004.365-.002.213L16 21a1 1 0 01-.883.993L15 22H9a1 1 0 01-.993-.883L8 21v-.734c-1.818.26-3.03-.424-4.11-1.878l-.535-.766c-.28-.396-.455-.579-.589-.644l-.048-.019a1 1 0 01.564-1.918c.642.188 1.074.568 1.57 1.239l.538.769c.76 1.079 1.36 1.459 2.609 1.191L8 17.562l-.018-.168a5 5 0 01-.021-.824l.017-.185.019-.12-.108-.024c-2.976-.71-4.703-2.573-4.875-6.139l-.01-.31L3 9.5a5.6 5.6.0 01.908-3.051l.152-.222.122-.163-.045-.196a5.2 5.2.0 01.145-2.642l.1-.282.106-.253a1 1 0 01.529-.514l.144-.047z"/></svg></div></div></a></div></footer></aside><div class=sidebar__backdrop data-action=toggle-sidebar></div><main id=main-content><h1>Actions</h1><h3 id=actions>ACTIONS</h3><p>There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The <code>ACTIONS</code> section allows you to define steps for copying or transferring files using the file system or external protocols.</p><hr><h4 id=actions-structure><strong>ACTIONS Structure</strong></h4><p>Each action under the <code>ACTIONS</code> section has the following:</p><ul><li><code>name</code>: Unique name for the action.</li><li><code>description</code>: Human-readable explanation.</li><li><code>type</code>: The kind of action to perform. Options:<ul><li><code>copy_file</code></li><li><code>compress</code></li><li><code>decompress</code></li><li><code>ftp_download</code></li><li><code>ftp_upload</code></li><li><code>sftp_download</code></li><li><code>sftp_upload</code></li><li><code>http_download</code></li><li><code>http_upload</code></li><li><code>s3_download</code></li><li><code>s3_upload</code></li><li><code>db_2_db</code></li></ul></li><li><code>params</code>: A map of input parameters required by the action type.</li></ul><hr><figure class=code-block role=figure aria-label="markdown code snippet"><button class=highlight__copy title="Copy to clipboard"></button><div class=highlight><div class=chroma><table class=lntable><tr><td class=lntd><pre tabindex=0 class=chroma><code><span class=lnt>  1
+</span><span class=lnt>  2
+</span><span class=lnt>  3
+</span><span class=lnt>  4
+</span><span class=lnt>  5
+</span><span class=lnt>  6
+</span><span class=lnt>  7
+</span><span class=lnt>  8
+</span><span class=lnt>  9
+</span><span class=lnt> 10
+</span><span class=lnt> 11
+</span><span class=lnt> 12
+</span><span class=lnt> 13
+</span><span class=lnt> 14
+</span><span class=lnt> 15
+</span><span class=lnt> 16
+</span><span class=lnt> 17
+</span><span class=lnt> 18
+</span><span class=lnt> 19
+</span><span class=lnt> 20
+</span><span class=lnt> 21
+</span><span class=lnt> 22
+</span><span class=lnt> 23
+</span><span class=lnt> 24
+</span><span class=lnt> 25
+</span><span class=lnt> 26
+</span><span class=lnt> 27
+</span><span class=lnt> 28
+</span><span class=lnt> 29
+</span><span class=lnt> 30
+</span><span class=lnt> 31
+</span><span class=lnt> 32
+</span><span class=lnt> 33
+</span><span class=lnt> 34
+</span><span class=lnt> 35
+</span><span class=lnt> 36
+</span><span class=lnt> 37
+</span><span class=lnt> 38
+</span><span class=lnt> 39
+</span><span class=lnt> 40
+</span><span class=lnt> 41
+</span><span class=lnt> 42
+</span><span class=lnt> 43
+</span><span class=lnt> 44
+</span><span class=lnt> 45
+</span><span class=lnt> 46
+</span><span class=lnt> 47
+</span><span class=lnt> 48
+</span><span class=lnt> 49
+</span><span class=lnt> 50
+</span><span class=lnt> 51
+</span><span class=lnt> 52
+</span><span class=lnt> 53
+</span><span class=lnt> 54
+</span><span class=lnt> 55
+</span><span class=lnt> 56
+</span><span class=lnt> 57
+</span><span class=lnt> 58
+</span><span class=lnt> 59
+</span><span class=lnt> 60
+</span><span class=lnt> 61
+</span><span class=lnt> 62
+</span><span class=lnt> 63
+</span><span class=lnt> 64
+</span><span class=lnt> 65
+</span><span class=lnt> 66
+</span><span class=lnt> 67
+</span><span class=lnt> 68
+</span><span class=lnt> 69
+</span><span class=lnt> 70
+</span><span class=lnt> 71
+</span><span class=lnt> 72
+</span><span class=lnt> 73
+</span><span class=lnt> 74
+</span><span class=lnt> 75
+</span><span class=lnt> 76
+</span><span class=lnt> 77
+</span><span class=lnt> 78
+</span><span class=lnt> 79
+</span><span class=lnt> 80
+</span><span class=lnt> 81
+</span><span class=lnt> 82
+</span><span class=lnt> 83
+</span><span class=lnt> 84
+</span><span class=lnt> 85
+</span><span class=lnt> 86
+</span><span class=lnt> 87
+</span><span class=lnt> 88
+</span><span class=lnt> 89
+</span><span class=lnt> 90
+</span><span class=lnt> 91
+</span><span class=lnt> 92
+</span><span class=lnt> 93
+</span><span class=lnt> 94
+</span><span class=lnt> 95
+</span><span class=lnt> 96
+</span><span class=lnt> 97
+</span><span class=lnt> 98
+</span><span class=lnt> 99
+</span><span class=lnt>100
+</span><span class=lnt>101
+</span><span class=lnt>102
+</span><span class=lnt>103
+</span><span class=lnt>104
+</span><span class=lnt>105
+</span><span class=lnt>106
+</span><span class=lnt>107
+</span><span class=lnt>108
+</span><span class=lnt>109
+</span><span class=lnt>110
+</span><span class=lnt>111
+</span><span class=lnt>112
+</span><span class=lnt>113
+</span><span class=lnt>114
+</span><span class=lnt>115
+</span><span class=lnt>116
+</span><span class=lnt>117
+</span><span class=lnt>118
+</span><span class=lnt>119
+</span><span class=lnt>120
+</span><span class=lnt>121
+</span><span class=lnt>122
+</span><span class=lnt>123
+</span><span class=lnt>124
+</span><span class=lnt>125
+</span><span class=lnt>126
+</span><span class=lnt>127
+</span><span class=lnt>128
+</span><span class=lnt>129
+</span><span class=lnt>130
+</span><span class=lnt>131
+</span><span class=lnt>132
+</span><span class=lnt>133
+</span><span class=lnt>134
+</span><span class=lnt>135
+</span><span class=lnt>136
+</span><span class=lnt>137
+</span><span class=lnt>138
+</span><span class=lnt>139
+</span><span class=lnt>140
+</span><span class=lnt>141
+</span><span class=lnt>142
+</span><span class=lnt>143
+</span><span class=lnt>144
+</span><span class=lnt>145
+</span><span class=lnt>146
+</span><span class=lnt>147
+</span><span class=lnt>148
+</span><span class=lnt>149
+</span><span class=lnt>150
+</span><span class=lnt>151
+</span><span class=lnt>152
+</span><span class=lnt>153
+</span><span class=lnt>154
+</span><span class=lnt>155
+</span><span class=lnt>156
+</span><span class=lnt>157
+</span><span class=lnt>158
+</span><span class=lnt>159
+</span><span class=lnt>160
+</span><span class=lnt>161
+</span><span class=lnt>162
+</span><span class=lnt>163
+</span><span class=lnt>164
+</span><span class=lnt>165
+</span><span class=lnt>166
+</span><span class=lnt>167
+</span><span class=lnt>168
+</span><span class=lnt>169
+</span><span class=lnt>170
+</span><span class=lnt>171
+</span><span class=lnt>172
+</span><span class=lnt>173
+</span><span class=lnt>174
+</span><span class=lnt>175
+</span><span class=lnt>176
+</span><span class=lnt>177
+</span><span class=lnt>178
+</span><span class=lnt>179
+</span><span class=lnt>180
+</span><span class=lnt>181
+</span><span class=lnt>182
+</span><span class=lnt>183
+</span><span class=lnt>184
+</span><span class=lnt>185
+</span><span class=lnt>186
+</span><span class=lnt>187
+</span><span class=lnt>188
+</span><span class=lnt>189
+</span><span class=lnt>190
+</span><span class=lnt>191
+</span><span class=lnt>192
+</span><span class=lnt>193
+</span><span class=lnt>194
+</span><span class=lnt>195
+</span><span class=lnt>196
+</span><span class=lnt>197
+</span><span class=lnt>198
+</span><span class=lnt>199
+</span><span class=lnt>200
+</span><span class=lnt>201
+</span><span class=lnt>202
+</span><span class=lnt>203
+</span><span class=lnt>204
+</span><span class=lnt>205
+</span><span class=lnt>206
+</span><span class=lnt>207
+</span><span class=lnt>208
+</span><span class=lnt>209
+</span><span class=lnt>210
+</span><span class=lnt>211
+</span><span class=lnt>212
+</span><span class=lnt>213
+</span><span class=lnt>214
+</span><span class=lnt>215
+</span><span class=lnt>216
+</span><span class=lnt>217
+</span><span class=lnt>218
+</span><span class=lnt>219
+</span><span class=lnt>220
+</span><span class=lnt>221
+</span><span class=lnt>222
+</span><span class=lnt>223
+</span><span class=lnt>224
+</span><span class=lnt>225
+</span><span class=lnt>226
+</span><span class=lnt>227
+</span><span class=lnt>228
+</span><span class=lnt>229
+</span><span class=lnt>230
+</span><span class=lnt>231
+</span><span class=lnt>232
+</span><span class=lnt>233
+</span><span class=lnt>234
+</span><span class=lnt>235
+</span><span class=lnt>236
+</span><span class=lnt>237
+</span><span class=lnt>238
+</span><span class=lnt>239
+</span><span class=lnt>240
+</span><span class=lnt>241
+</span><span class=lnt>242
+</span><span class=lnt>243
+</span><span class=lnt>244
+</span><span class=lnt>245
+</span><span class=lnt>246
+</span><span class=lnt>247
+</span><span class=lnt>248
+</span><span class=lnt>249
+</span><span class=lnt>250
+</span><span class=lnt>251
+</span><span class=lnt>252
+</span><span class=lnt>253
+</span><span class=lnt>254
+</span><span class=lnt>255
+</span><span class=lnt>256
+</span><span class=lnt>257
+</span><span class=lnt>258
+</span><span class=lnt>259
+</span><span class=lnt>260
+</span><span class=lnt>261
+</span><span class=lnt>262
+</span><span class=lnt>263
+</span><span class=lnt>264
+</span><span class=lnt>265
+</span><span class=lnt>266
+</span><span class=lnt>267
+</span><span class=lnt>268
+</span><span class=lnt>269
+</span><span class=lnt>270
+</span><span class=lnt>271
+</span><span class=lnt>272
+</span><span class=lnt>273
+</span><span class=lnt>274
+</span><span class=lnt>275
+</span><span class=lnt>276
+</span><span class=lnt>277
+</span><span class=lnt>278
+</span><span class=lnt>279
+</span></code></pre></td><td class=lntd><pre tabindex=0 class=chroma><code class=language-markdown data-lang=markdown><span class=line><span class=cl>
+</span></span><span class=line><span class=cl><span class=gh># ACTIONS
+</span></span></span><span class=line><span class=cl><span class=gh></span>
+</span></span><span class=line><span class=cl>``<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: FileOperations
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Transfer and organize generated reports&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>path: examples
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## COPY LOCAL FILE
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: CopyReportToArchive
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Move final report to archive folder&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: copy_file
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;C:/reports/final_report.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;C:/reports/archive/final_report_YYYYMMDD.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## Compress to ZIP
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: CompressReports
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Compress report files into a .zip archive&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: compress
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  compression: zip
+</span></span></span><span class=line><span class=cl><span class=sb>  files:
+</span></span></span><span class=line><span class=cl><span class=sb>    - &#34;reports/report_1.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>    - &#34;reports/report_2.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  output: &#34;archives/reports_YYYYMM.zip&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## UNZIP
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: CompressReports
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Compress report files into a .zip archive&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: decompress
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  compression: zip
+</span></span></span><span class=line><span class=cl><span class=sb>  input: &#34;archives/reports_YYYYMM.zip&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  output: &#34;tmp&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## Compress to GZ
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: CompressToGZ
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Compress a summary file to .gz&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: compress
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  compression: gz
+</span></span></span><span class=line><span class=cl><span class=sb>  files:
+</span></span></span><span class=line><span class=cl><span class=sb>    - &#34;reports/summary.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  output: &#34;archives/summary_YYYYMM.csv.gz&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## HTTP DOWNLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: DownloadFromAPI
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Download dataset from HTTP endpoint&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: http_download
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  url: &#34;https://api.example.com/data&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;data/today.json&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  method: GET
+</span></span></span><span class=line><span class=cl><span class=sb>  headers:
+</span></span></span><span class=line><span class=cl><span class=sb>    Authorization: &#34;Bearer @API_TOKEN&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>    Accept: &#34;application/json&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  params:
+</span></span></span><span class=line><span class=cl><span class=sb>    date: &#34;YYYYMMDD&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>    limit: &#34;1000&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## HTTP UPLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: PushReportToWebhook
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Upload final report to an HTTP endpoint&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: http_upload
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  url: &#34;https://webhook.example.com/upload&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  method: POST
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;reports/final.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  headers:
+</span></span></span><span class=line><span class=cl><span class=sb>    Authorization: &#34;Bearer @WEBHOOK_TOKEN&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>    Content-Type: &#34;multipart/form-data&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  params:
+</span></span></span><span class=line><span class=cl><span class=sb>    type: &#34;summary&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>    date: &#34;YYYYMMDD&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## FTP DOWNLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: FetchRemoteReport
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Download data file from external FTP&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: ftp_download
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  host: &#34;ftp.example.com&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  port: &#34;21&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  user: &#34;myuser&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  password: &#34;@FTP_PASSWORD&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;/data/daily_report.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;downloads/daily_report.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## FTP DOWNLOAD GLOB
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: FetchRemoteReport2024
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Download data file from external FTP&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: ftp_download
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  host: &#34;ftp.example.com&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  port: &#34;21&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  user: &#34;myuser&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  password: &#34;@FTP_PASSWORD&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;/data/daily_report_2024*.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;downloads/&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## SFTP DOWNLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: FetchRemoteReport
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Download data file from external SFTP&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: stp_download
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  host: &#34;sftp.example.com&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  user: &#34;myuser&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  password: &#34;@SFTP_PASSWORD&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  host_key: ~/.ssh/known_hosts # or a specific file
+</span></span></span><span class=line><span class=cl><span class=sb>  port: 22
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;/data/daily_report.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;downloads/daily_report.csv&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## S3 UPLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: ArchiveToS3
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Send latest results to S3 bucket&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: s3_upload
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_ACCESS_KEY_ID: &#39;@AWS_ACCESS_KEY_ID&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_SECRET_ACCESS_KEY: &#39;@AWS_SECRET_ACCESS_KEY&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_REGION: &#39;@AWS_REGION&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_ENDPOINT: 127.0.0.1:3000
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_FORCE_PATH_STYLE: true
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_DISABLE_SSL: false
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_SKIP_SSL_VERIFY: true
+</span></span></span><span class=line><span class=cl><span class=sb>  bucket: &#34;my-etlx-bucket&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  key: &#34;exports/summary_YYYYMMDD.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  source: &#34;reports/summary.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## S3 DOWNLOAD
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: DownalodFromS3
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;Download file S3 from bucket&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: s3_download
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_ACCESS_KEY_ID: &#39;@AWS_ACCESS_KEY_ID&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_SECRET_ACCESS_KEY: &#39;@AWS_SECRET_ACCESS_KEY&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_REGION: &#39;@AWS_REGION&#39;
+</span></span></span><span class=line><span class=cl><span class=sb>  AWS_ENDPOINT: 127.0.0.1:3000
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_FORCE_PATH_STYLE: true
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_DISABLE_SSL: false
+</span></span></span><span class=line><span class=cl><span class=sb>  S3_SKIP_SSL_VERIFY: true
+</span></span></span><span class=line><span class=cl><span class=sb>  bucket: &#34;my-etlx-bucket&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  key: &#34;exports/summary_YYYYMMDD.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>  target: &#34;reports/summary.xlsx&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>##### 📥 ACTIONS – `</span>db_2_db<span class=sb>` (Cross-Database Write)
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>&gt; As of this moment, **DuckDB does not support direct integration** with certain databases like **MSSQL**, **DB2**, or **Oracle**, the same way it does with **SQLite**, **Postgres**, or **MySQL**.
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>To bridge this gap, the `</span>db_2_db<span class=sb>` action type allows you to **query data from one database** (source) and **write the results into another** (target), using ETLX’s internal execution engine (powered by `</span>sqlx<span class=sb>` or ODBC).
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>###### ✅ Use Case
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>Use `</span>db_2_db<span class=sb>` when:
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>- Your database is not accessible with DuckDB.
+</span></span></span><span class=line><span class=cl><span class=sb>- You want to move data from one place to another using **pure SQL**, chunked if necessary.
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>---
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>###### 🧩 Example
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>``<span class=sb>`markdown
+</span></span></span><span class=line><span class=cl><span class=sb>...
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>## WRITE_RESULTS_MSSQL
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`yaml metadata
+</span></span></span><span class=line><span class=cl><span class=sb>name: WRITE_RESULTS_MSSQL
+</span></span></span><span class=line><span class=cl><span class=sb>description: &#34;MSSQL example – moving logs into a SQL Server database.&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>type: db_2_db
+</span></span></span><span class=line><span class=cl><span class=sb>params:
+</span></span></span><span class=line><span class=cl><span class=sb>  source:
+</span></span></span><span class=line><span class=cl><span class=sb>    conn: sqlite3:database/HTTP_EXTRACT.db
+</span></span></span><span class=line><span class=cl><span class=sb>    before: null
+</span></span></span><span class=line><span class=cl><span class=sb>    chunk_size: 1000
+</span></span></span><span class=line><span class=cl><span class=sb>    timeout: 30
+</span></span></span><span class=line><span class=cl><span class=sb>    sql: origin_query
+</span></span></span><span class=line><span class=cl><span class=sb>    after: null
+</span></span></span><span class=line><span class=cl><span class=sb>  target:
+</span></span></span><span class=line><span class=cl><span class=sb>    conn: mssql:sqlserver://sa:@MSSQL_PASSWORD@localhost?database=master&amp;connection+timeout=30
+</span></span></span><span class=line><span class=cl><span class=sb>    timeout: 30
+</span></span></span><span class=line><span class=cl><span class=sb>    before:
+</span></span></span><span class=line><span class=cl><span class=sb>      - create_schema
+</span></span></span><span class=line><span class=cl><span class=sb>    sql: mssql_sql
+</span></span></span><span class=line><span class=cl><span class=sb>    after: null
+</span></span></span><span class=line><span class=cl><span class=sb>active: true
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`sql
+</span></span></span><span class=line><span class=cl><span class=sb>-- origin_query
+</span></span></span><span class=line><span class=cl><span class=sb>SELECT &#34;description&#34;, &#34;duration&#34;, STRFTIME(&#39;%Y-%m-%d %H:%M:%S&#39;, &#34;start_at&#34;) AS &#34;start_at&#34;, &#34;ref&#34;
+</span></span></span><span class=line><span class=cl><span class=sb>FROM &#34;etlx_logs&#34; 
+</span></span></span><span class=line><span class=cl><span class=sb>ORDER BY &#34;start_at&#34; DESC
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`sql
+</span></span></span><span class=line><span class=cl><span class=sb>-- create_schema
+</span></span></span><span class=line><span class=cl><span class=sb>IF NOT EXISTS (SELECT * FROM sys.tables WHERE name = &#39;etlx_logs&#39; AND type = &#39;U&#39;)
+</span></span></span><span class=line><span class=cl><span class=sb>CREATE TABLE [dbo].[etlx_logs] (
+</span></span></span><span class=line><span class=cl><span class=sb>    [description] NVARCHAR(MAX) NULL,
+</span></span></span><span class=line><span class=cl><span class=sb>    [duration] BIGINT NULL,
+</span></span></span><span class=line><span class=cl><span class=sb>    [start_at] DATETIME NULL,
+</span></span></span><span class=line><span class=cl><span class=sb>    [ref] DATE NULL
+</span></span></span><span class=line><span class=cl><span class=sb>);
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`sql
+</span></span></span><span class=line><span class=cl><span class=sb>-- mssql_sql
+</span></span></span><span class=line><span class=cl><span class=sb>INSERT INTO [dbo].[etlx_logs] ([:columns]) VALUES 
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>`<span class=sb>`
+</span></span></span><span class=line><span class=cl><span class=sb>
+</span></span></span><span class=line><span class=cl><span class=sb>`</span>``
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>---
+</span></span><span class=line><span class=cl>
+</span></span><span class=line><span class=cl>### 🛠️ Notes</span></span></code></pre></td></tr></table></div></div></figure><a class=edit-link href=https://github.com/realdatadriven/etlx/tree/main/docs/public/configuration/actions.md rel="noopener noreferrer" target=_blank><svg width="24" height="24" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 20h4L18.5 9.5a2.828 2.828.0 10-4-4L4 16zm9.5-13.5 4 4"/></svg>
+<span>Improve this page</span></a></main><aside id=toc class=toc><div class=toc__header data-action=toggle-toc><h3 class=toc__title>On this page</h3><button class=toc__toggle aria-label="Toggle table of contents"></button></div><div class=toc__content><nav id=TableOfContents><ul><li><ul><li><a href=#actions>ACTIONS</a><ul><li><a href=#actions-structure><strong>ACTIONS Structure</strong></a></li></ul></li></ul></li></ul></nav></div></aside><script defer crossorigin=anonymous integrity="sha256-KXMijDfasiR2erJ0tgywvcZ1CHvBNdFv6ZTL8PGWBIE=" src=/etlx/js/bundle.2973228c37dab224767ab274b60cb0bdc675087bc135d16fe994cbf0f1960481.js></script></body></html>

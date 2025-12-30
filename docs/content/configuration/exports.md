@@ -204,3 +204,4 @@ FROM "DB"."etlx_logs"
   table {
     border-collapse: collapse;
 ... (truncated for space)
+```
