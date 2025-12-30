@@ -56,7 +56,7 @@ active: true
 -- clean_aux_data
 DROP TEMP_TABLE1;
 ```
-
+````
 ---
 
 ## **🔹 How Scripts It Works**

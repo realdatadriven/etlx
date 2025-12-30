@@ -38,6 +38,7 @@ load_validation: # Validation is performed during the load phase using YAML
 load_sql: load_sales
 load_after_sql: detaches
 ```
+...
 ````
 
 ## 1. **ETL Process Starts**

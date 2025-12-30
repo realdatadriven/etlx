@@ -67,7 +67,7 @@ description: "Load inventory transformation config from a file."
 path: "/path/to/Configurations/inventory_transform.md"
 active: true
 ```
-
+````
 ---
 
 ## **How Loading Works**

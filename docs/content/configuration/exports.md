@@ -9,6 +9,8 @@ draft = false
 The `EXPORTS` section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB's ability to export data in various formats, this section supports file generation with flexibility and precision.
 
 ---
+````markdown
+# EXPORTS
 
 ## Sales Data Export
 
@@ -96,7 +98,7 @@ SELECT *
 FROM "DB"."Sales"
 WHERE "sale_date" = '{YYYY-MM-DD}';
 ```
-
+````
 ---
 
 ## **How Exporting It Works**

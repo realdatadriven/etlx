@@ -89,6 +89,8 @@ FROM "sales"
 WHERE "option2" NOT IN ('x', 'z');
 ```
 
+````
+
 ---
 
 ## **How Data Quality Works**

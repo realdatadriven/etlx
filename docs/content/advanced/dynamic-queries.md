@@ -65,6 +65,7 @@ SELECT 'ALTER TABLE "<table>" ADD COLUMN "' || column_name || '" ' || column_typ
 FROM missing_columns
 WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 ```
+
 ````
 
 ---

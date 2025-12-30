@@ -73,6 +73,7 @@ CREATE OR REPLACE TABLE "DB"."<table>" AS
 SELECT * 
 FROM READ_JSON('<fname>');
 ```
+````
 
 ---
 
@@ -143,7 +144,7 @@ SELECT 'ALTER TABLE "etlx_logs"."<table>" ADD COLUMN "' || "column_name" || '" '
 FROM missing_columns
 WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 ```
-
+````
 ---
 
 But it can be overiden to be saved on your own database of choice by changing `ATTACH '<tmp>/etlx_logs.db' (TYPE SQLITE)`

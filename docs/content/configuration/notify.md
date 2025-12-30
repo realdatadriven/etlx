@@ -133,6 +133,8 @@ FROM "DB"."etlx_logs"
 WHERE "ref" = '{YYYY-MM-DD}'
 ```
 
+````
+
 ---
 
 ## **How NOTIFY Works**
