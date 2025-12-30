@@ -1,0 +1,15 @@
+.edit-link {
+  align-items: center;
+  color: var(--color-primary);
+  display: flex;
+  font-size: 1.2rem;
+  gap: var(--spacing-md);
+  text-decoration: none;
+  margin-block-start: auto;
+  padding-block-start: var(--spacing-xl);
+}
+
+.edit-link > svg {
+  height: var(--spacing-lg);
+  width: var(--spacing-lg);
+}

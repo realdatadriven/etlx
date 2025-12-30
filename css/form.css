@@ -1,0 +1,54 @@
+button {
+  background: var(--color-button-background);
+  border: 1px solid var(--color-button-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-button-foreground);
+  cursor: pointer;
+  font-family: inherit;
+  font-weight: 600;
+  padding: var(--spacing-xs) var(--spacing-lg);
+}
+
+button[disabled] {
+  cursor: not-allowed;
+  opacity: 0.5;
+}
+
+button:not([disabled]):hover {
+  background: var(--color-button-background--hover);
+  border: 1px solid var(--color-button-border--hover);
+  color: var(--color-button-foreground--hover);
+}
+
+button:not([disabled]):active {
+  background: var(--color-button-background--active);
+  border: 1px solid var(--color-button-border--active);
+  color: var(--color-button-foreground--active);
+}
+
+input:not([type]),
+input[type="text"],
+input[type="search"],
+input[type="password"],
+textarea {
+  background: var(--color-input-background);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-input-foreground);
+  font-family: inherit;
+  padding: var(--spacing-sm) var(--spacing-md);
+}
+
+textarea {
+  min-height: 8rem;
+  resize: vertical;
+}
+
+select {
+  background: var(--color-input-background);
+  border: 1px solid var(--color-input-border);
+  border-radius: var(--border-radius-sm);
+  color: var(--color-input-foreground);
+  font-family: inherit;
+  padding: var(--spacing-sm) var(--spacing-md);
+}

@@ -1,0 +1,15 @@
+.page {
+  display: grid;
+  flex: 1;
+  gap: var(--spacing-md);
+}
+
+#main-content {
+  background: var(--color-background);
+  color: var(--color-foreground);
+  display: flex;
+  flex-direction: column;
+  padding: var(--spacing-md);
+  grid-area: main;
+  overflow: auto;
+}

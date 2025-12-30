@@ -1,0 +1,57 @@
+button.highlight__copy {
+  padding: var(--spacing-xs);
+  inset-block-start: var(--spacing-sm);
+  inset-inline-end: var(--spacing-sm);
+  position: absolute;
+  transition: border-color 0.2s linear;
+  z-index: 1;
+}
+
+button.highlight__copy,
+button.highlight__copy:hover,
+button.highlight__copy:active {
+  background: var(--color-input-background);
+  border-color: var(--color-input-border);
+}
+
+button.highlight__copy.copied,
+button.highlight__copy.copied:hover,
+button.highlight__copy.copied:active {
+  border-color: var(--color-success);
+}
+
+.highlight__copy::before,
+.highlight__copy::after {
+  background-size: contain;
+  content: "";
+  display: block;
+  height: var(--spacing-lg);
+  mask-size: contain;
+  transition: opacity 0.2s linear;
+  width: var(--spacing-lg);
+}
+
+.highlight__copy::before {
+  background-color: var(--color-foreground);
+  mask: url("/icons/clipboard.svg") no-repeat center;
+}
+
+.highlight__copy.copied::before {
+  opacity: 0;
+}
+
+/*
+ * Make sure to always display the icon with an opacity of 0.
+ * This will preload the icon, to prevent flashing when swapping the icons.
+ */
+.highlight__copy::after {
+  background-color: var(--color-success);
+  inset: var(--spacing-xs);
+  mask: url("/icons/clipboard-success.svg") no-repeat center;
+  opacity: 0;
+  position: absolute;
+}
+
+.highlight__copy.copied::after {
+  opacity: 1;
+}
