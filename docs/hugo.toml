@@ -7,12 +7,12 @@ disableKinds = ['taxonomy', 'term']
 
 [params]
   shortName = 'ETLX'
-  description = 'The Plume Hugo documentation theme'
-  keywords = 'Plume, Hugo, documentation, theme'
+  description = 'ETL / ELT Framework powered by DuckDB, designed to seamlessly integrate and process data from diverse sources. It leverages Markdown as a configuration medium, where YAML blocks define metadata for each data source, and embedded SQL blocks specify the extraction, transformation, and loading logic.'
+  keywords = 'ETL, ELT, Data Integration, DuckDB, Markdown, SQL, Data Processing, Framework, Data Engineering, Data Pipelines, Data Transformation, Data Science, Data Analytics, Open Source, Data Governance, Data Documentation, Data Workflows, Data Workflow Documentation, Report Automation'
   author = 'Real Data-Driven'
-  backgroundColor = '#ffffff'
-  themeColor = '#000000'
-  repositoryContentDir = 'https://github.com/realdatadriven/etlx/tree/main/docs/public'
+  #backgroundColor = '#ffffff'
+  #themeColor = '#000000'
+  repositoryContentDir = 'https://github.com/realdatadriven/etlx/tree/main/docs/'
   showEditLink = true
 
   [params.socialLinks]
@@ -40,10 +40,10 @@ disableKinds = ['taxonomy', 'term']
     pageRef = '/'
     weight = 10
 
-  [[menus.main]]
-    name = 'Documentation'
-    pageRef = '/docs/'
-    weight = 20
+  #[[menus.main]]
+  #  name = 'Documentation'
+  #  pageRef = '/docs/'
+  #  weight = 20
 
   [[menus.main]]
     name = 'Introduction'
