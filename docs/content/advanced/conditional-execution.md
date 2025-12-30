@@ -4,7 +4,7 @@ weight = 62
 draft = false
 +++
 
-### Conditional Execution
+# Conditional Execution
 
 ETLX allows conditional execution of SQL blocks based on the results of a query. This is useful to skip operations dynamically depending on data context (e.g., skip a step if no new data is available, or if a condition in the target is not met.
 
@@ -21,14 +21,14 @@ You can define condition blocks using the following keys:
 
 You can also specify an optional `*condition_msg` to log a custom message when a condition is not met.
 
-#### **Condition Evaluation Logic**
+## **Condition Evaluation Logic**
 
 - The SQL query defined in `*_condition` or `condition` is executed.
 - The result must mast be boolean.
 - If not met, the corresponding main logig will be skipped.
 - If `*_condition_msg` is provided, it will be included in the log entry instead of the default skip message.
 
-#### **Example – Conditional Load Step**
+## **Example – Conditional Load Step**
 
 ```yaml
 load_conn: "duckdb:"
@@ -48,7 +48,7 @@ INSERT INTO target_table
 SELECT * FROM staging_table WHERE processed = false;
 ```
 
-#### **Example – Global Conditional Notification**
+## **Example – Global Conditional Notification**
 
 ```yaml
 type: notify

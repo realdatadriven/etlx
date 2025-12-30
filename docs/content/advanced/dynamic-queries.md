@@ -4,29 +4,29 @@ weight = 61
 draft = false
 +++
 
-### Dynamic Query Generation (`get_dyn_queries[...]`)
+# Dynamic Query Generation (`get_dyn_queries[...]`)
 
 In some advanced ETL workflows, you may need to dynamically generate SQL queries based on metadata or schema differences between the source and destination databases.
 
 ---
 
-#### **🔹 Why Use Dynamic Queries?**
+## **🔹 Why Use Dynamic Queries?**
 
 ✅ **Schema Flexibility** – Automatically adapt to schema changes in the source system.  
 ✅ **Self-Evolving Workflows** – ETL jobs can generate and execute additional SQL queries as needed.  
 ✅ **Automation** – Reduces the need for manual intervention when new columns appear.  
 
-#### **🔹 How `get_dyn_queries[query_name](runs_before,runs_after)` Works**
+## **🔹 How `get_dyn_queries[query_name](runs_before,runs_after)` Works**
 
 - Dynamic queries are executed using the **`get_dyn_queries[query_name](runs_before,runs_after)`** pattern.
 - During execution, **ETLX runs the query** `query_name` and **retrieves dynamically generated queries**.
 - The **resulting queries are then executed automatically**.
 
-#### **🛠 Example: Auto-Adding Missing Columns**
+## **🛠 Example: Auto-Adding Missing Columns**
 
 This example **checks for new columns in a JSON file** and **adds them to the destination table**.
 
-##### **📄 Markdown Configuration for `get_dyn_queries[query_name](runs_before,runs_after)`**
+### **📄 Markdown Configuration for `get_dyn_queries[query_name](runs_before,runs_after)`**
 
 >If the `query_name` depends on attaching and detaching the main db where it will run, those should be passed as dependencies, because the dynamic queries are generate before any other query and put in the list for the list where it is to be executed, to be a simpler flow, but they are optional otherwise.
 
@@ -65,17 +65,18 @@ SELECT 'ALTER TABLE "<table>" ADD COLUMN "' || column_name || '" ' || column_typ
 FROM missing_columns
 WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 ```
+````
 
 ---
 
-#### **🛠 Execution Flow**
+## **🛠 Execution Flow**
 
 1️⃣ **Extract column metadata from the input (in this case a json file, but it could be a table or any other valid query).**  
 2️⃣ **Check which columns are missing in the destination table (`<table>`).**  
 3️⃣ **Generate `ALTER TABLE` statements for adding missing columns, and replaces the `- get_dyn_queries[create_missing_columns]` with the the generated queries**  
 4️⃣ **Runs the workflow with dynamically generated queries against the destination connection.**
 
-#### **🔹 Key Features**
+## **🔹 Key Features**
 
 ✔ **Fully automated schema updates**  
 ✔ **Works with flexible schema data (e.g., JSON, CSV, Parquet, etc.)**  
