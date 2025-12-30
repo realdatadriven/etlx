@@ -1173,13 +1173,13 @@ You can define patterns to match specific errors and provide SQL statements to r
 ✅ &lt;strong&gt;Supports attachments for automated reporting&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Ensures visibility into ETL success or failure&lt;/strong&gt;&lt;/p&gt;
 &lt;h2 id="example-sending-etl-status-via-email"&gt;&lt;strong&gt;Example: Sending ETL Status via Email&lt;/strong&gt;&lt;/h2&gt;
-&lt;p&gt;This example sends an email &lt;strong&gt;after an ETL process completes&lt;/strong&gt;, using &lt;strong&gt;log data from the database&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Dynamic Queries</title><link>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</guid><description>&lt;h3 id="dynamic-query-generation-get_dyn_queries"&gt;Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;)&lt;/h3&gt;
+&lt;p&gt;This example sends an email &lt;strong&gt;after an ETL process completes&lt;/strong&gt;, using &lt;strong&gt;log data from the database&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Dynamic Queries</title><link>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</guid><description>&lt;h1 id="dynamic-query-generation-get_dyn_queries"&gt;Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;)&lt;/h1&gt;
 &lt;p&gt;In some advanced ETL workflows, you may need to dynamically generate SQL queries based on metadata or schema differences between the source and destination databases.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="-why-use-dynamic-queries"&gt;&lt;strong&gt;🔹 Why Use Dynamic Queries?&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="-why-use-dynamic-queries"&gt;&lt;strong&gt;🔹 Why Use Dynamic Queries?&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;✅ &lt;strong&gt;Schema Flexibility&lt;/strong&gt; – Automatically adapt to schema changes in the source system.&lt;br&gt;
 ✅ &lt;strong&gt;Self-Evolving Workflows&lt;/strong&gt; – ETL jobs can generate and execute additional SQL queries as needed.&lt;br&gt;
-✅ &lt;strong&gt;Automation&lt;/strong&gt; – Reduces the need for manual intervention when new columns appear.&lt;/p&gt;</description></item><item><title>Conditional Execution</title><link>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</guid><description>&lt;h3 id="conditional-execution"&gt;Conditional Execution&lt;/h3&gt;
+✅ &lt;strong&gt;Automation&lt;/strong&gt; – Reduces the need for manual intervention when new columns appear.&lt;/p&gt;</description></item><item><title>Conditional Execution</title><link>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</guid><description>&lt;h1 id="conditional-execution"&gt;Conditional Execution&lt;/h1&gt;
 &lt;p&gt;ETLX allows conditional execution of SQL blocks based on the results of a query. This is useful to skip operations dynamically depending on data context (e.g., skip a step if no new data is available, or if a condition in the target is not met.&lt;/p&gt;
 &lt;p&gt;You can define condition blocks using the following keys:&lt;/p&gt;
 &lt;ul&gt;
@@ -1193,7 +1193,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;For &lt;strong&gt;generic sections&lt;/strong&gt; (e.g., DATA_QUALITY, EXPORTS, NOTIFY, etc.):&lt;/p&gt;</description></item><item><title>runs_as override</title><link>https://realdatadriven.github.io/etlx/advanced/runs-as/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/runs-as/</guid><description>&lt;h3 id="advanced-workflow-execution-runs_as-override"&gt;Advanced Workflow Execution: &lt;code&gt;runs_as&lt;/code&gt; Override&lt;/h3&gt;
+&lt;p&gt;For &lt;strong&gt;generic sections&lt;/strong&gt; (e.g., DATA_QUALITY, EXPORTS, NOTIFY, etc.):&lt;/p&gt;</description></item><item><title>runs_as override</title><link>https://realdatadriven.github.io/etlx/advanced/runs-as/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/runs-as/</guid><description>&lt;h1 id="advanced-workflow-execution-runs_as-override"&gt;Advanced Workflow Execution: &lt;code&gt;runs_as&lt;/code&gt; Override&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;runs_as&lt;/code&gt; field in the metadata block of any Level 1 key allows ETLX to treat a custom section as a built-in block (like &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, etc.), enabling advanced chaining of processes within the same configuration.&lt;/p&gt;
 &lt;hr&gt;
 &lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
