@@ -1,5 +1,5 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Quick Start on ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/</link><description>Recent content in Quick Start on ETLX</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://realdatadriven.github.io/etlx/quick-start/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://realdatadriven.github.io/etlx/quick-start/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/installation/</guid><description>&lt;h3 id="installation"&gt;Installation&lt;/h3&gt;
-&lt;h4 id="option-1-precompiled-binaries"&gt;Option 1: Precompiled Binaries&lt;/h4&gt;
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Quick Start on ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/</link><description>Recent content in Quick Start on ETLX</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://realdatadriven.github.io/etlx/quick-start/index.xml" rel="self" type="application/rss+xml"/><item><title>Installation</title><link>https://realdatadriven.github.io/etlx/quick-start/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/installation/</guid><description>&lt;h1 id="installation"&gt;Installation&lt;/h1&gt;
+&lt;h2 id="option-1-precompiled-binaries"&gt;Option 1: Precompiled Binaries&lt;/h2&gt;
 &lt;p&gt;Precompiled binaries for Linux, macOS, and Windows are available on the &lt;a
  href="https://github.com/realdatadriven/etlx/releases" rel="external"&gt;releases page&lt;/a&gt;. Download the appropriate binary for your system and make it executable:&lt;/p&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
@@ -15,7 +15,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;./etlx --help&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;h4 id="option-2-install-via-go-as-a-library"&gt;Option 2: Install via Go (as a library)&lt;/h4&gt;
+&lt;h2 id="option-2-install-via-go-as-a-library"&gt;Option 2: Install via Go (as a library)&lt;/h2&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
@@ -27,7 +27,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/realdatadriven/etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;h4 id="option-3-clone-repo"&gt;Option 3: Clone Repo&lt;/h4&gt;
+&lt;h2 id="option-3-clone-repo"&gt;Option 3: Clone Repo&lt;/h2&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
@@ -39,7 +39,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;And then:&lt;/p&gt;</description></item><item><title>Running ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/running/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/running/</guid><description>&lt;h3 id="running-etlx"&gt;Running ETLX&lt;/h3&gt;
+&lt;p&gt;And then:&lt;/p&gt;</description></item><item><title>Running ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/running/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/running/</guid><description>&lt;h1 id="running-etlx"&gt;Running ETLX&lt;/h1&gt;
 &lt;p&gt;The binary supports the following flags:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--config&lt;/code&gt;: Path to the Markdown configuration file. &lt;em&gt;(Default: &lt;code&gt;config.md&lt;/code&gt;)&lt;/em&gt;&lt;/li&gt;
@@ -62,5 +62,5 @@
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
 &lt;hr&gt;
-&lt;h3 id="-running-etlx-with-docker"&gt;🐳 Running ETLX with Docker&lt;/h3&gt;
+&lt;h1 id="-running-etlx-with-docker"&gt;🐳 Running ETLX with Docker&lt;/h1&gt;
 &lt;p&gt;You can run &lt;strong&gt;etlx&lt;/strong&gt; directly from Docker without installing Go or building locally.&lt;/p&gt;</description></item></channel></rss>

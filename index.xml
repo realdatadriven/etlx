@@ -4,8 +4,8 @@
 &lt;li&gt;&lt;strong&gt;Markdown-driven Configuration&lt;/strong&gt;: Define your workflows in a structured, human-readable format.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;DuckDB Integration&lt;/strong&gt;: Utilize DuckDB’s capabilities to work with diverse data sources, including databases, object storage, and APIs.&lt;/li&gt;
 &lt;li&gt;&lt;strong&gt;Extensibility&lt;/strong&gt;: Easily adapt to new use cases with modular configurations.&lt;/li&gt;
-&lt;/ul&gt;</description></item><item><title>Installation</title><link>https://realdatadriven.github.io/etlx/quick-start/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/installation/</guid><description>&lt;h3 id="installation"&gt;Installation&lt;/h3&gt;
-&lt;h4 id="option-1-precompiled-binaries"&gt;Option 1: Precompiled Binaries&lt;/h4&gt;
+&lt;/ul&gt;</description></item><item><title>Installation</title><link>https://realdatadriven.github.io/etlx/quick-start/installation/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/installation/</guid><description>&lt;h1 id="installation"&gt;Installation&lt;/h1&gt;
+&lt;h2 id="option-1-precompiled-binaries"&gt;Option 1: Precompiled Binaries&lt;/h2&gt;
 &lt;p&gt;Precompiled binaries for Linux, macOS, and Windows are available on the &lt;a
  href="https://github.com/realdatadriven/etlx/releases" rel="external"&gt;releases page&lt;/a&gt;. Download the appropriate binary for your system and make it executable:&lt;/p&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
@@ -21,7 +21,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;./etlx --help&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;h4 id="option-2-install-via-go-as-a-library"&gt;Option 2: Install via Go (as a library)&lt;/h4&gt;
+&lt;h2 id="option-2-install-via-go-as-a-library"&gt;Option 2: Install via Go (as a library)&lt;/h2&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
@@ -33,7 +33,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;go get github.com/realdatadriven/etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;h4 id="option-3-clone-repo"&gt;Option 3: Clone Repo&lt;/h4&gt;
+&lt;h2 id="option-3-clone-repo"&gt;Option 3: Clone Repo&lt;/h2&gt;
 &lt;figure class="code-block" role="figure" aria-label="bash code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
@@ -45,7 +45,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nb"&gt;cd&lt;/span&gt; etlx&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;And then:&lt;/p&gt;</description></item><item><title>Running ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/running/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/running/</guid><description>&lt;h3 id="running-etlx"&gt;Running ETLX&lt;/h3&gt;
+&lt;p&gt;And then:&lt;/p&gt;</description></item><item><title>Running ETLX</title><link>https://realdatadriven.github.io/etlx/quick-start/running/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/quick-start/running/</guid><description>&lt;h1 id="running-etlx"&gt;Running ETLX&lt;/h1&gt;
 &lt;p&gt;The binary supports the following flags:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;--config&lt;/code&gt;: Path to the Markdown configuration file. &lt;em&gt;(Default: &lt;code&gt;config.md&lt;/code&gt;)&lt;/em&gt;&lt;/li&gt;
@@ -68,7 +68,7 @@
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
 &lt;hr&gt;
-&lt;h3 id="-running-etlx-with-docker"&gt;🐳 Running ETLX with Docker&lt;/h3&gt;
+&lt;h1 id="-running-etlx-with-docker"&gt;🐳 Running ETLX with Docker&lt;/h1&gt;
 &lt;p&gt;You can run &lt;strong&gt;etlx&lt;/strong&gt; directly from Docker without installing Go or building locally.&lt;/p&gt;</description></item><item><title>Features</title><link>https://realdatadriven.github.io/etlx/features/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/features/</guid><description>&lt;h2 id="features"&gt;Features&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Markdown-based configurations for easy readability.&lt;/li&gt;
@@ -76,7 +76,7 @@
 &lt;li&gt;Modular design for reusability and clarity.&lt;/li&gt;
 &lt;li&gt;Built-in error handling and validation.&lt;/li&gt;
 &lt;li&gt;Export functionality for reports, templates, and data lakes.&lt;/li&gt;
-&lt;/ul&gt;</description></item><item><title>ETL</title><link>https://realdatadriven.github.io/etlx/configuration/etl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/etl/</guid><description>&lt;h3 id="etl"&gt;ETL&lt;/h3&gt;
+&lt;/ul&gt;</description></item><item><title>ETL</title><link>https://realdatadriven.github.io/etlx/configuration/etl/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/etl/</guid><description>&lt;h1 id="etl"&gt;ETL&lt;/h1&gt;
 &lt;ul&gt;
 &lt;li&gt;Defines the overall ETL process.&lt;/li&gt;
 &lt;li&gt;Example:&lt;/li&gt;
@@ -144,7 +144,7 @@
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;``&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;h4 id="1-etl-process-starts"&gt;1. &lt;strong&gt;ETL Process Starts&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="1-etl-process-starts"&gt;1. &lt;strong&gt;ETL Process Starts&lt;/strong&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Begin with the &amp;ldquo;ETL&amp;rdquo; key;&lt;/li&gt;
 &lt;li&gt;Extract metadata, specifically:
@@ -154,12 +154,12 @@
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id="2-loop-through-level-2-key-in-under"&gt;2. &lt;strong&gt;Loop through Level 2 key in under &amp;ldquo;ETL&amp;rdquo; key&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="2-loop-through-level-2-key-in-under"&gt;2. &lt;strong&gt;Loop through Level 2 key in under &amp;ldquo;ETL&amp;rdquo; key&lt;/strong&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Iterate over each key (e.g., &amp;ldquo;sales_data&amp;rdquo;)&lt;/li&gt;
 &lt;li&gt;For each key, access its &amp;ldquo;metadata&amp;rdquo; to process the ETL steps.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id="3-etl-steps"&gt;3. &lt;strong&gt;ETL Steps&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="3-etl-steps"&gt;3. &lt;strong&gt;ETL Steps&lt;/strong&gt;&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Each ETL step (&lt;code&gt;extract&lt;/code&gt;, &lt;code&gt;transform&lt;/code&gt;, &lt;code&gt;load&lt;/code&gt;) has:
 &lt;ul&gt;
@@ -180,7 +180,7 @@
 &lt;li&gt;Additionally, error handling can be defined using &lt;code&gt;[step]_on_err_match_patt&lt;/code&gt; and &lt;code&gt;[step]_on_err_match_sql&lt;/code&gt; to handle specific database errors dynamically, where &lt;code&gt;[step]_on_err_match_patt&lt;/code&gt; is the &lt;code&gt;regexp&lt;/code&gt; patthern to match error,and if maches the &lt;code&gt;[step]_on_err_match_sql&lt;/code&gt; is executed, the same can be applied for &lt;code&gt;[step]_before_on_err_match_patt&lt;/code&gt; and &lt;code&gt;[step]_before_on_err_match_sql&lt;/code&gt;.
 You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.&lt;/li&gt;
 &lt;/ul&gt;
-&lt;h4 id="4-output-logsn"&gt;4. &lt;strong&gt;Output Logs&lt;/strong&gt;n&lt;/h4&gt;
+&lt;h2 id="4-output-logsn"&gt;4. &lt;strong&gt;Output Logs&lt;/strong&gt;n&lt;/h2&gt;
 &lt;ul&gt;
 &lt;li&gt;Log progress (e.g., connection usage, start/end times, descriptions).&lt;/li&gt;
 &lt;li&gt;Gracefully handle missing or &lt;code&gt;null&lt;/code&gt; keys.&lt;/li&gt;
@@ -216,14 +216,14 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="nn"&gt;...&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;For every object in the &lt;code&gt;[step]_validation&lt;/code&gt; the &lt;code&gt;sql&lt;/code&gt; is executed in the &lt;code&gt;[step]_con&lt;/code&gt; connection, and it can either throw error message defined in &lt;code&gt;msg&lt;/code&gt; or not if the condition (&lt;code&gt;type:throw_if_empty | type:throw_if_not_empty&lt;/code&gt; or) is met or not.&lt;/p&gt;</description></item><item><title>Query Documentation</title><link>https://realdatadriven.github.io/etlx/configuration/query-doc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/query-doc/</guid><description>&lt;h3 id="query-documentation"&gt;Query Documentation&lt;/h3&gt;
+&lt;p&gt;For every object in the &lt;code&gt;[step]_validation&lt;/code&gt; the &lt;code&gt;sql&lt;/code&gt; is executed in the &lt;code&gt;[step]_con&lt;/code&gt; connection, and it can either throw error message defined in &lt;code&gt;msg&lt;/code&gt; or not if the condition (&lt;code&gt;type:throw_if_empty | type:throw_if_not_empty&lt;/code&gt; or) is met or not.&lt;/p&gt;</description></item><item><title>Query Documentation</title><link>https://realdatadriven.github.io/etlx/configuration/query-doc/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/query-doc/</guid><description>&lt;h1 id="query-documentation"&gt;Query Documentation&lt;/h1&gt;
 &lt;p&gt;In some ETL processes, particularly during the &lt;strong&gt;Transform&lt;/strong&gt; step, queries may become too complex to manage as a single string. To address this, the configuration supports a structured approach where you can break down a query into individual fields and their respective SQL components. This approach improves modularity, readability, and maintainability.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="structure"&gt;&lt;strong&gt;Structure&lt;/strong&gt;&lt;/h4&gt;
-&lt;p&gt;A complex query is defined as a top-level heading (e.g., &lt;code&gt;# My Complex Query&lt;/code&gt;) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., &lt;code&gt;## Field Name&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>Data Quality</title><link>https://realdatadriven.github.io/etlx/configuration/data-quality/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/data-quality/</guid><description>&lt;h3 id="data-quality"&gt;Data Quality&lt;/h3&gt;
+&lt;h2 id="structure"&gt;&lt;strong&gt;Structure&lt;/strong&gt;&lt;/h2&gt;
+&lt;p&gt;A complex query is defined as a top-level heading (e.g., &lt;code&gt;# My Complex Query&lt;/code&gt;) in the configuration. Each field included in the query is represented as a Level 2 heading (e.g., &lt;code&gt;## Field Name&lt;/code&gt;).&lt;/p&gt;</description></item><item><title>Data Quality</title><link>https://realdatadriven.github.io/etlx/configuration/data-quality/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/data-quality/</guid><description>&lt;h1 id="data-quality"&gt;Data Quality&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;DATA_QUALITY&lt;/code&gt; section allows you to define and execute validation rules to ensure the quality of your data. Each rule performs a check using a SQL query to identify records that violate a specific condition. Optionally, you can define a query to fix any identified issues automatically if applicable.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="data-quality-structure"&gt;&lt;strong&gt;Data Quality Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="data-quality-structure"&gt;&lt;strong&gt;Data Quality Structure&lt;/strong&gt;&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
@@ -239,7 +239,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;Execution&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Exports</title><link>https://realdatadriven.github.io/etlx/configuration/exports/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/exports/</guid><description>&lt;h3 id="exports"&gt;Exports&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Execution&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Exports</title><link>https://realdatadriven.github.io/etlx/configuration/exports/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/exports/</guid><description>&lt;h1 id="exports"&gt;Exports&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;EXPORTS&lt;/code&gt; section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB&amp;rsquo;s ability to export data in various formats, this section supports file generation with flexibility and precision.&lt;/p&gt;
 &lt;hr&gt;
 &lt;h2 id="sales-data-export"&gt;Sales Data Export&lt;/h2&gt;
@@ -415,20 +415,20 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/div&gt;
 &lt;/div&gt;&lt;/figure&gt;
 &lt;hr&gt;
-&lt;h4 id="how-exporting-it-works"&gt;&lt;strong&gt;How Exporting It Works&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="how-exporting-it-works"&gt;&lt;strong&gt;How Exporting It Works&lt;/strong&gt;&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;Parsing the Configuration&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Scripts</title><link>https://realdatadriven.github.io/etlx/configuration/scripts/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/scripts/</guid><description>&lt;h3 id="scripts"&gt;Scripts&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Parsing the Configuration&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Scripts</title><link>https://realdatadriven.github.io/etlx/configuration/scripts/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/scripts/</guid><description>&lt;h1 id="scripts"&gt;Scripts&lt;/h1&gt;
 &lt;p&gt;The &lt;strong&gt;SCRIPTS&lt;/strong&gt; section allows you to &lt;strong&gt;execute SQL queries&lt;/strong&gt; that &lt;strong&gt;don’t fit into other predefined sections&lt;/strong&gt; (ETL, EXPORTS, etc.).&lt;/p&gt;
-&lt;h4 id="-when-to-use-scripts"&gt;&lt;strong&gt;🔹 When to Use SCRIPTS?&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="-when-to-use-scripts"&gt;&lt;strong&gt;🔹 When to Use SCRIPTS?&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;✅ &lt;strong&gt;Running cleanup queries after an ETL job&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Executing ad-hoc maintenance tasks&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Running SQL commands that don’t need to return results&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Executing SQL scripts for database optimizations&lt;/strong&gt;&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="-example-running-cleanup-scripts"&gt;&lt;strong&gt;🛠 Example: Running Cleanup Scripts&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="-example-running-cleanup-scripts"&gt;&lt;strong&gt;🛠 Example: Running Cleanup Scripts&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;This example &lt;strong&gt;removes temporary data&lt;/strong&gt; after an ETL process.&lt;/p&gt;
-&lt;h4 id="-markdown-configuration"&gt;&lt;strong&gt;📄 Markdown Configuration&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="-markdown-configuration"&gt;&lt;strong&gt;📄 Markdown Configuration&lt;/strong&gt;&lt;/h2&gt;
 &lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
@@ -510,17 +510,17 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;---
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;#### **🔹 How Scripts It Works**
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;## **🔹 How Scripts It Works**
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;1️⃣ **Loads necessary extensions and connects to the database.** 
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;2️⃣ **Executes predefined SQL queries (`&lt;/span&gt;script_sql&lt;span class="sb"&gt;`).** 
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;3️⃣ **Runs `&lt;/span&gt;before_sql&lt;span class="sb"&gt;` commands before execution.** 
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;4️⃣ **Runs `&lt;/span&gt;after_sql` commands after execution.**&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;/figure&gt;</description></item><item><title>Multi-Queries</title><link>https://realdatadriven.github.io/etlx/configuration/multi-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/multi-queries/</guid><description>&lt;h3 id="multi-queries"&gt;Multi-Queries&lt;/h3&gt;
+&lt;/div&gt;&lt;/figure&gt;</description></item><item><title>Multi-Queries</title><link>https://realdatadriven.github.io/etlx/configuration/multi-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/multi-queries/</guid><description>&lt;h1 id="multi-queries"&gt;Multi-Queries&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;MULTI_QUERIES&lt;/code&gt; section allows you to define multiple queries with similar structures and aggregate their results using a SQL &lt;code&gt;UNION&lt;/code&gt;. This is particularly useful when generating summaries or reports that combine data from multiple queries into a single result set.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="multi-queries-structure"&gt;&lt;strong&gt;Multi-Queries Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="multi-queries-structure"&gt;&lt;strong&gt;Multi-Queries Structure&lt;/strong&gt;&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
@@ -530,10 +530,10 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;Query Definitions&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Logs</title><link>https://realdatadriven.github.io/etlx/configuration/logs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/logs/</guid><description>&lt;h3 id="logs-handling--logs"&gt;Logs Handling (&lt;code&gt;# LOGS&lt;/code&gt;)&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Query Definitions&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Logs</title><link>https://realdatadriven.github.io/etlx/configuration/logs/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/logs/</guid><description>&lt;h1 id="logs-handling--logs"&gt;Logs Handling (&lt;code&gt;# LOGS&lt;/code&gt;)&lt;/h1&gt;
 &lt;p&gt;ETLX provides a &lt;strong&gt;logging mechanism&lt;/strong&gt; that allows &lt;strong&gt;saving logs&lt;/strong&gt; into a database. This is useful for tracking &lt;strong&gt;executions, debugging, and auditing ETL processes&lt;/strong&gt;.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h3 id="-how-it-works"&gt;&lt;strong&gt;🔹 How It Works&lt;/strong&gt;&lt;/h3&gt;
+&lt;h1 id="-how-it-works"&gt;&lt;strong&gt;🔹 How It Works&lt;/strong&gt;&lt;/h1&gt;
 &lt;ul&gt;
 &lt;li&gt;The &lt;code&gt;LOGS&lt;/code&gt; section defines where and how logs should be saved.&lt;/li&gt;
 &lt;li&gt;The process consists of &lt;strong&gt;three main steps&lt;/strong&gt;:
@@ -544,11 +544,11 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/ol&gt;
 &lt;/li&gt;
 &lt;/ul&gt;
-&lt;h3 id="-example-logs-configuration"&gt;&lt;strong&gt;🛠 Example LOGS Configuration&lt;/strong&gt;&lt;/h3&gt;
-&lt;p&gt;Below is an example that &lt;strong&gt;saves logs&lt;/strong&gt; into a &lt;strong&gt;database&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Loading Config Dependencies</title><link>https://realdatadriven.github.io/etlx/configuration/requires/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/requires/</guid><description>&lt;h3 id="requires"&gt;REQUIRES&lt;/h3&gt;
+&lt;h1 id="-example-logs-configuration"&gt;&lt;strong&gt;🛠 Example LOGS Configuration&lt;/strong&gt;&lt;/h1&gt;
+&lt;p&gt;Below is an example that &lt;strong&gt;saves logs&lt;/strong&gt; into a &lt;strong&gt;database&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Loading Config Dependencies</title><link>https://realdatadriven.github.io/etlx/configuration/requires/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/requires/</guid><description>&lt;h1 id="requires"&gt;REQUIRES&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="loading-structure"&gt;&lt;strong&gt;Loading Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="loading-structure"&gt;&lt;strong&gt;Loading Structure&lt;/strong&gt;&lt;/h2&gt;
 &lt;ol&gt;
 &lt;li&gt;
 &lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
@@ -573,10 +573,10 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/ul&gt;
 &lt;/li&gt;
 &lt;li&gt;
-&lt;p&gt;&lt;strong&gt;Integration&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Actions</title><link>https://realdatadriven.github.io/etlx/configuration/actions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/actions/</guid><description>&lt;h3 id="actions"&gt;ACTIONS&lt;/h3&gt;
+&lt;p&gt;&lt;strong&gt;Integration&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Actions</title><link>https://realdatadriven.github.io/etlx/configuration/actions/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/actions/</guid><description>&lt;h1 id="actions"&gt;ACTIONS&lt;/h1&gt;
 &lt;p&gt;There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The &lt;code&gt;ACTIONS&lt;/code&gt; section allows you to define steps for copying or transferring files using the file system or external protocols.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="actions-structure"&gt;&lt;strong&gt;ACTIONS Structure&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="actions-structure"&gt;&lt;strong&gt;ACTIONS Structure&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;Each action under the &lt;code&gt;ACTIONS&lt;/code&gt; section has the following:&lt;/p&gt;
 &lt;ul&gt;
 &lt;li&gt;&lt;code&gt;name&lt;/code&gt;: Unique name for the action.&lt;/li&gt;
@@ -1091,13 +1091,13 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;---
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;##### 📥 ACTIONS – `&lt;/span&gt;db_2_db&lt;span class="sb"&gt;` (Cross-Database Write)
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;### 📥 ACTIONS – `&lt;/span&gt;db_2_db&lt;span class="sb"&gt;` (Cross-Database Write)
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;&amp;gt; As of this moment, **DuckDB does not support direct integration** with certain databases like **MSSQL**, **DB2**, or **Oracle**, the same way it does with **SQLite**, **Postgres**, or **MySQL**.
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;To bridge this gap, the `&lt;/span&gt;db_2_db&lt;span class="sb"&gt;` action type allows you to **query data from one database** (source) and **write the results into another** (target), using ETLX’s internal execution engine (powered by `&lt;/span&gt;sqlx&lt;span class="sb"&gt;` or ODBC).
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;###### ✅ Use Case
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;## ✅ Use Case
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;Use `&lt;/span&gt;db_2_db&lt;span class="sb"&gt;` when:
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
@@ -1106,7 +1106,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;---
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;###### 🧩 Example
+&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;## 🧩 Example
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;``&lt;span class="sb"&gt;`markdown
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;...
@@ -1162,17 +1162,17 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;---
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;### 🛠️ Notes&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
+&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;# 🛠️ Notes&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
 &lt;/div&gt;
-&lt;/div&gt;&lt;/figure&gt;</description></item><item><title>Notify</title><link>https://realdatadriven.github.io/etlx/configuration/notify/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/notify/</guid><description>&lt;h3 id="notify"&gt;NOTIFY&lt;/h3&gt;
+&lt;/div&gt;&lt;/figure&gt;</description></item><item><title>Notify</title><link>https://realdatadriven.github.io/etlx/configuration/notify/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/notify/</guid><description>&lt;h1 id="notify"&gt;NOTIFY&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;NOTIFY&lt;/code&gt; section enables sending notifications (e.g., email via SMTP) with dynamic templates populated from SQL query results. This is useful for monitoring ETL processes and sending status reports.&lt;/p&gt;
 &lt;hr&gt;
-&lt;h4 id="why-use-notify"&gt;&lt;strong&gt;Why Use NOTIFY?&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="why-use-notify"&gt;&lt;strong&gt;Why Use NOTIFY?&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;✅ &lt;strong&gt;Real-time updates on ETL status&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Customizable email templates with dynamic content&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Supports attachments for automated reporting&lt;/strong&gt;&lt;br&gt;
 ✅ &lt;strong&gt;Ensures visibility into ETL success or failure&lt;/strong&gt;&lt;/p&gt;
-&lt;h4 id="example-sending-etl-status-via-email"&gt;&lt;strong&gt;Example: Sending ETL Status via Email&lt;/strong&gt;&lt;/h4&gt;
+&lt;h2 id="example-sending-etl-status-via-email"&gt;&lt;strong&gt;Example: Sending ETL Status via Email&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;This example sends an email &lt;strong&gt;after an ETL process completes&lt;/strong&gt;, using &lt;strong&gt;log data from the database&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Dynamic Queries</title><link>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</guid><description>&lt;h3 id="dynamic-query-generation-get_dyn_queries"&gt;Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;)&lt;/h3&gt;
 &lt;p&gt;In some advanced ETL workflows, you may need to dynamically generate SQL queries based on metadata or schema differences between the source and destination databases.&lt;/p&gt;
 &lt;hr&gt;
