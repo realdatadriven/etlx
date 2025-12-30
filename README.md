@@ -1,18 +1,20 @@
-# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL / ELT Workflows
+# ETLX
 
-ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL / ELT workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
+ETLX is a DuckDB-powered, Markdown-driven ETL / ELT framework. The complete, authoritative documentation has been moved to the Hugo site under `docs/`.
 
-This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
+- View docs locally: `hugo server --source docs --themesDir docs/themes -D`
+- Build docs: `hugo --source docs --themesDir docs/themes --minify`
+- The docs site is published automatically to GitHub Pages by CI (see `.github/workflows/gh-pages.yml`).
 
-Supports a variety of data sources, including:
+Quick start summary:
 
-- Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
+- Run binary: `./etlx --help` (see full usage in the docs)
+- Use Go: `go get github.com/realdatadriven/etlx`
+- Use the Docker image: `docker run --rm etlx:latest run --config /app/config.md`
 
-- Cloud Storage: **S3**, **and other S3 compatible Object Storage**.
+For full usage, configuration examples, and reference material, please see the documentation site in the `docs/` folder or visit the published site once CI finishes.
 
-- File Formats: **CSV**, **Parquet**, **Spreadsheets**.
-
-By leveraging DuckDB's powerful processing capabilities, this framework enables seamless ETL / ELT operations.
+License: MIT — see `LICENSE` for details.
 
 ---
 

@@ -1,4 +1,4 @@
-baseURL = 'https://example.org/'
+baseURL = 'https://realdatadriven.github.io/etlx/'
 languageCode = 'en-US'
 title = 'Plume'
 theme = 'plume'
