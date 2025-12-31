@@ -1,8 +1,7 @@
 +++
 title = 'ETLX'
 linkTitle = 'A modern, composable ETL framework built for data engineers'
-description = 'ETLX is an open-source, developer-first ETL framework designed to make data pipelines **simpler, faster, and more maintainable**.
-It focuses on **clarity, portability, and performance**, allowing you to build reliable data workflows without heavy orchestration platforms or vendor lock-in.'
+description = 'ETLX is an open-source, developer-first ETL framework designed to make data pipelines **simpler, faster, and more maintainable**. It focuses on **clarity, portability, and performance**, allowing you to build reliable data workflows without heavy orchestration platforms or vendor lock-in.'
 weight = 0
 draft = false
 +++
