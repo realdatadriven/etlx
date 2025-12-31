@@ -333,16 +333,104 @@ All without introducing external orchestration complexity.
 
 ---
 
+---
+
+## 📄 Beyond ETL: Reporting, Document & Template Generation
+
+ETLX is not limited to traditional extract–transform–load workflows.
+
+Because it operates on structured data and metadata, ETLX can also be used as a **general-purpose data-driven document generator**.
+
+This makes it suitable for producing:
+
+* 📊 Analytical reports
+* 📑 Regulatory and compliance documents
+* 📈 Periodic exports and structured files
+* 🧾 Human-readable and machine-readable outputs
+
+All from the same pipeline definitions.
+
+---
+
+## 🧩 Structured Outputs from Structured Data
+
+ETLX can generate and populate:
+
+* **Spreadsheets** (Excel, CSV)
+* **Formatted reports** (HTML, Markdown, PDF)
+* **Machine-readable formats** (JSON, XML, YAML)
+* **Templated documents** (e.g. regulatory submissions, internal reports)
+
+Templates can be defined once and reused across executions, while the data, metadata, and transformations remain fully traceable.
+
+---
+
+## 📊 Reporting & Regulatory Use Cases
+
+ETLX is well suited for:
+
+* Regulatory submissions
+* Financial and operational reporting
+* Periodic disclosures
+* Standardized data exchanges
+* Audit and compliance documentation
+
+By combining structured metadata with deterministic execution, ETLX ensures that generated outputs are:
+
+* Consistent
+* Reproducible
+* Auditable
+* Aligned with defined business rules
+
+---
+
+## 🧠 Metadata-Driven Templates
+
+Templates can reference:
+
+* Dataset fields and transformations
+* Derived metrics and calculations
+* Validation results and rule outcomes
+* Execution metadata (timestamps, versions, sources)
+
+This allows the same pipeline to produce both:
+
+* The **data**
+* And the **documentation explaining that data**
+
+All from a single source of truth.
+
+---
+
+## 🧾 One Pipeline, Many Outputs
+
+A single ETLX pipeline can simultaneously:
+
+* Load and transform data
+* Generate analytical tables
+* Produce formatted reports
+* Export structured files
+* Emit metadata for governance systems
+
+This reduces duplication, manual work, and inconsistencies across reporting layers.
+
+---
+
 ## 🔚 Summary
 
 ETLX is not just an ETL tool.
 
 It is a **declarative, metadata-first execution framework** that:
 
-* Runs on multiple SQL engines
-* Produces auditable, inspectable pipelines
-* Bridges engineering, analytics, and governance
-* Turns configuration into documentation
+* Runs across multiple SQL engines and data platforms
+* Produces fully **auditable, inspectable, and reproducible** pipelines
+* Captures execution metadata, validations, timings, and lineage at every step
+* Bridges engineering, analytics, and governance in a single workflow
+* Turns configuration into **executable documentation**
+* Enables generation of **reports, datasets, and structured outputs** (tables, files, templates)
+* Supports **data lineage, data dictionaries, and governance artifacts** by design
+
+From data ingestion to reporting and documentation, ETLX provides a unified, transparent, and extensible foundation for building trustworthy data systems.
 
 ---
 
