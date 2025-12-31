@@ -3,7 +3,7 @@
 &lt;li&gt;Defines the overall ETL process.&lt;/li&gt;
 &lt;li&gt;Example:&lt;/li&gt;
 &lt;/ul&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+&lt;figure class="code-block" role="figure" aria-label="md code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
 &lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
@@ -75,7 +75,7 @@
 &lt;/span&gt;&lt;span class="lnt"&gt;67
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
 &lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ETL
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-md" data-lang="md"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ETL
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;``&lt;span class="sb"&gt;`yaml metadata
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;name: Daily_ETL
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;description: &amp;#39;Daily extraction at 5 AM&amp;#39;
@@ -242,7 +242,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;p&gt;&lt;strong&gt;Execution&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Exports</title><link>https://realdatadriven.github.io/etlx/configuration/exports/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/configuration/exports/</guid><description>&lt;h1 id="exports"&gt;Exports&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;EXPORTS&lt;/code&gt; section in the ETL configuration handles exporting data to files. This is particularly useful for generating reports for internal departments, regulators, partners, or saving processed data to a data lake. By leveraging DuckDB&amp;rsquo;s ability to export data in various formats, this section supports file generation with flexibility and precision.&lt;/p&gt;
 &lt;hr&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+&lt;figure class="code-block" role="figure" aria-label="md code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
 &lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
@@ -335,7 +335,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;span class="lnt"&gt;88
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
 &lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# EXPORTS
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-md" data-lang="md"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# EXPORTS
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gu"&gt;## Sales Data Export
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -440,7 +440,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;h2 id="-example-running-cleanup-scripts"&gt;&lt;strong&gt;🛠 Example: Running Cleanup Scripts&lt;/strong&gt;&lt;/h2&gt;
 &lt;p&gt;This example &lt;strong&gt;removes temporary data&lt;/strong&gt; after an ETL process.&lt;/p&gt;
 &lt;h2 id="-markdown-configuration"&gt;&lt;strong&gt;📄 Markdown Configuration&lt;/strong&gt;&lt;/h2&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+&lt;figure class="code-block" role="figure" aria-label="md code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
 &lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
@@ -477,7 +477,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;span class="lnt"&gt;32
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
 &lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# SCRIPTS
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-md" data-lang="md"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# SCRIPTS
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;Run Queries that does not need a return
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
@@ -599,7 +599,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;li&gt;&lt;code&gt;params&lt;/code&gt;: A map of input parameters required by the action type.&lt;/li&gt;
 &lt;/ul&gt;
 &lt;hr&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+&lt;figure class="code-block" role="figure" aria-label="md code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
 &lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
@@ -808,7 +808,7 @@ You can define patterns to match specific errors and provide SQL statements to r
 &lt;/span&gt;&lt;span class="lnt"&gt;204
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
 &lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-md" data-lang="md"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ACTIONS
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;``&lt;span class="sb"&gt;`yaml metadata

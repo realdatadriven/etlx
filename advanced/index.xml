@@ -21,7 +21,7 @@
 &lt;p&gt;For &lt;strong&gt;generic sections&lt;/strong&gt; (e.g., DATA_QUALITY, EXPORTS, NOTIFY, etc.):&lt;/p&gt;</description></item><item><title>runs_as override</title><link>https://realdatadriven.github.io/etlx/advanced/runs-as/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/runs-as/</guid><description>&lt;h1 id="advanced-workflow-execution-runs_as-override"&gt;Advanced Workflow Execution: &lt;code&gt;runs_as&lt;/code&gt; Override&lt;/h1&gt;
 &lt;p&gt;The &lt;code&gt;runs_as&lt;/code&gt; field in the metadata block of any Level 1 key allows ETLX to treat a custom section as a built-in block (like &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, etc.), enabling advanced chaining of processes within the same configuration.&lt;/p&gt;
 &lt;hr&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
+&lt;figure class="code-block" role="figure" aria-label="md code snippet"&gt;
  &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
 &lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
 &lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
@@ -38,7 +38,7 @@
 &lt;/span&gt;&lt;span class="lnt"&gt;12
 &lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
 &lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
+&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-md" data-lang="md"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ETL_AFTER_SOME_KEY
 &lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
 &lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;``&lt;span class="sb"&gt;`yaml metadata
