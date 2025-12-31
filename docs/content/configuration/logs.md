@@ -94,7 +94,7 @@ FROM READ_JSON('<fname>');
 
 By default is generated a sqlite db `etlx_logs.db` in temp folder, that'll depende on the OS, it adds to your config this peace os md:
 
-````markdown
+````md
 # AUTO_LOGS
 
 ```yaml metadata

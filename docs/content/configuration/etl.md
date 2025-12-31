@@ -9,7 +9,7 @@ draft = false
 - Defines the overall ETL process.
 - Example:
 
-````markdown
+````md
 # ETL
 ```yaml metadata
 name: Daily_ETL

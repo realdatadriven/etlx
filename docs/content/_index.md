@@ -106,6 +106,14 @@ SELECT * FROM PG.INPUT_1
 ```
 ...
 ````
+> `@DL_DSN_URL` (e.g. `mysql:db=ducklake_catalog host=your_mysql_host`) and
+`@OLTP_DSN_URL` (e.g. `postgres:dbname=erpdb host=your_postgres_host user=postgres password=your_pass`) are **environment variables** used to define database connection strings.
+
+>They can be provided through a `.env` file located at the root of the project and are automatically loaded at runtime.
+
+>These variables allow ETLX to connect to different data sources without hardcoding credentials, making configurations portable, secure, and environment-agnostic.
+
+
 Run it with:
 
 ```bash

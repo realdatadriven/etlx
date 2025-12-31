@@ -30,7 +30,7 @@ The `REQUIRES` section in the ETL configuration allows you to load dependencies 
 
 ## **Loading Markdown Example**
 
-````markdown
+````md
 # REQUIRES
 ```yaml
 description: "Load configuration dependencies from files or queries."

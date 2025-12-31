@@ -30,7 +30,7 @@ This example **checks for new columns in a JSON file** and **adds them to the de
 
 >If the `query_name` depends on attaching and detaching the main db where it will run, those should be passed as dependencies, because the dynamic queries are generate before any other query and put in the list for the list where it is to be executed, to be a simpler flow, but they are optional otherwise.
 
-````markdown
+````md
 ....
 
 ```yaml metadata

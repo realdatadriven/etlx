@@ -33,7 +33,7 @@ Each action under the `ACTIONS` section has the following:
 
 ---
 
-````markdown
+````md
 
 # ACTIONS
 
@@ -258,7 +258,7 @@ Use `db_2_db` when:
 
 ## 🧩 Example
 
-````markdown
+````md
 ...
 
 ## WRITE_RESULTS_MSSQL

@@ -23,7 +23,7 @@ This example **removes temporary data** after an ETL process.
 
 ## **📄 Markdown Configuration**
 
-````markdown
+````md
 # SCRIPTS
 
 Run Queries that does not need a return

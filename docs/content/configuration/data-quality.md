@@ -29,7 +29,7 @@ The `DATA_QUALITY` section allows you to define and execute validation rules to 
 
 ## **Data Quality Markdown Example**
 
-````markdown
+````md
 # DATA_QUALITY
 ```yaml
 description: "Runs some queries to check quality / validate."

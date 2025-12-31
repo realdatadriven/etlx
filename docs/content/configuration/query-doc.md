@@ -23,7 +23,7 @@ For each field:
 
 ## **Markdown Example**
 
-````markdown
+````md
 # My Complex Query
 This query processes sales and regions data.
 

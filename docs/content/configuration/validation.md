@@ -30,7 +30,7 @@ If the database you are using does not have a direct DuckDB scanner, but it is s
 
 # **Example Configuration:**
 
-````markdown
+````md
 ...
 ## table_from_odbc_source
 

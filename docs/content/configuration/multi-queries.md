@@ -29,7 +29,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 
 ## **Multi-Queries Markdown Example**
 
-````markdown
+````md
 # MULTI_QUERIES
 ```yaml
 description: "Define multiple structured queries combined with UNION."
