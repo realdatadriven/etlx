@@ -104,7 +104,7 @@ SELECT * FROM PG.INPUT_1
 CREATE TABLE DL.INPUT_1 AS
 SELECT * FROM PG.INPUT_1
 ```
-..
+...
 ````
 Run it with:
 
