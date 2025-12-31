@@ -137,6 +137,213 @@ No black boxes. No hidden state.
 * Lightweight ELT for analytics teams
 * Prototyping before production pipelines
 
+
+---
+
+## 🔌 Multi-Engine by Design
+
+While **DuckDB is the default and recommended execution engine**, ETLX is designed to be **engine-agnostic**.
+
+Depending on your use case, pipelines can run on:
+
+* **DuckDB** (recommended for analytics, local-first, and embedded workloads)
+* **PostgreSQL**
+* **SQLite**
+* **MySQL / MariaDB**
+* **SQL Server**
+* Any engine supported through **ODBC or DuckDB extensions**
+
+This allows ETLX to adapt to:
+
+* Local development and experimentation
+* On-prem or cloud-hosted databases
+* Hybrid architectures mixing analytical and operational systems
+
+DuckDB remains the **best fit for analytical workloads**, but ETLX does not lock you into a single execution engine.
+
+---
+
+## 🧠 Metadata-Driven by Design
+
+ETLX pipelines are more than just execution instructions —
+they are **structured metadata documents**.
+
+Every pipeline definition can describe:
+
+* Inputs and outputs
+* Field-level transformations
+* Business meaning and context
+* Data ownership and responsibility
+* Validation rules and expectations
+
+This means your pipeline definition can also serve as:
+
+* 📘 **Living documentation**
+* 🧭 **Data lineage source**
+* 📊 **Data dictionary**
+* 🛡️ **Governance metadata**
+
+All from the same configuration.
+
+---
+
+## 🧾 Self-Documenting Pipelines
+
+Because ETLX pipelines are defined as structured text, they can be **parsed, analyzed, and rendered** into documentation automatically.
+
+From a single pipeline definition, you can generate:
+
+* Table-level and column-level lineage
+* Field descriptions and transformation logic
+* Source → target mappings
+* Ownership and domain information
+* SQL logic and derived field explanations
+
+This makes ETLX suitable for:
+
+* Technical documentation portals
+* Data catalogs
+* Governance and compliance reporting
+* Automated lineage visualization
+
+---
+
+## 📊 Metadata → Documentation → Governance
+
+ETLX treats metadata as a **first-class citizen**.
+
+When properly defined, the same configuration can power:
+
+| Capability                 | Generated From                  |
+| -------------------------- | ------------------------------- |
+| Data dictionary            | Field metadata                  |
+| Lineage graphs             | Source & transformation mapping |
+| Transformation logic docs  | SQL + metadata                  |
+| Ownership & domain mapping | Dataset attributes              |
+| Audit & governance views   | Execution metadata              |
+
+In other words:
+
+> **Your pipeline configuration becomes your documentation.**
+
+No duplicated effort. No drift.
+
+---
+
+## 🧩 Designed for Automation & AI Assistance
+
+Because ETLX configurations are structured, readable, and machine-friendly:
+
+* They can be validated automatically
+* Used to generate documentation sites
+* Fed into LLMs for explanation, validation, or review
+* Used to auto-generate data contracts or schema docs
+
+This makes ETLX an ideal foundation for **metadata-driven data platforms**.
+
+## 🧾 Full Observability & Execution Traceability
+
+Every ETLX execution is **fully observable by design**.
+
+Each pipeline, step, and sub-step automatically captures detailed runtime metadata, making executions transparent, auditable, and debuggable — without requiring external tooling.
+
+For every run, ETLX records:
+
+* ⏱ **Start time and end time**
+* ⌛ **Execution duration**
+* 💾 **Memory usage and resource footprint**
+* ✅ **Validation results**
+* ⚠️ **Warnings and failed conditions**
+* 🔁 **Retries and conditional branches**
+* 📍 **Execution status per step and sub-step**
+
+This information is available at **pipeline**, **task**, and **sub-task** levels.
+
+---
+
+## 🔍 Fine-Grained Execution Details
+
+Each process and sub-process exposes:
+
+* Input and output metadata
+* Validation rules applied and their results
+* Conditional logic evaluation (why a step ran or was skipped)
+* Error context and failure reason (when applicable)
+
+This allows you to fully reconstruct **what happened, when, and why** — even long after execution.
+
+---
+
+## 📊 Built-In Operational Metadata
+
+All execution metadata can be:
+
+* Stored alongside pipeline results
+* Queried using SQL
+* Exported for observability platforms
+* Used to generate execution reports
+
+This enables:
+
+* Performance analysis over time
+* SLA and reliability tracking
+* Root-cause analysis
+* Auditable operational history
+
+---
+
+## 🧩 Configuration as the Source of Truth
+
+ETLX treats configuration as **executable documentation**.
+
+The same configuration that defines:
+
+* Sources and targets
+* Transformations
+* Validation rules
+* Conditions and dependencies
+
+…also defines:
+
+* What is logged
+* How it is validated
+* What metadata is captured
+* How execution should be interpreted
+
+This makes every pipeline **self-describing**, reproducible, and reviewable.
+
+---
+
+## 🧠 Designed for Observability, Governance & Scale
+
+By combining:
+
+* Structured configuration
+* Deterministic execution
+* Rich metadata capture
+
+ETLX enables:
+
+* End-to-end lineage generation
+* Data quality reporting
+* Governance and compliance workflows
+* Auditable execution trails
+
+All without introducing external orchestration complexity.
+
+---
+
+## 🔚 Summary
+
+ETLX is not just an ETL tool.
+
+It is a **declarative, metadata-first execution framework** that:
+
+* Runs on multiple SQL engines
+* Produces auditable, inspectable pipelines
+* Bridges engineering, analytics, and governance
+* Turns configuration into documentation
+
 ---
 
 ## 📦 Open Source & Extensible
