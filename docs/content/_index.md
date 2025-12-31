@@ -52,8 +52,8 @@ Leverage DuckDB for:
 
 Work seamlessly with:
 
-* Files (CSV, Parquet, JSON, Excel)
-* Databases (Postgres, SQLite, DuckDB)
+* Files (CSV, Parquet, JSON, Excel, ...)
+* Databases (Postgres, SQLite, DuckDB, ODBC, ... any DBMS with a DuckDB Extention)
 * APIs & external systems
 
 ### 🔹 Reproducible & Portable
@@ -67,28 +67,50 @@ ETLX pipelines are:
 ---
 
 ## 🧩 Example Workflow
-
+````md
+# INPUTS
 ```yaml
-pipeline:
-  - extract:
-      source: postgres
-      table: customers
-
-  - transform:
-      sql: |
-        SELECT *
-        FROM customers
-        WHERE active = true
-
-  - load:
-      target: parquet
-      path: data/customers.parquet
+name: INPUTS
+description: Extracts data from source and load on target
+runs_as: ETL
+active: true
 ```
 
+## INPUT_1
+```yaml
+name: INPUT_1
+description: Input 1 from an ODBC Source
+table: INPUT_1 # Destination Table
+load_conn: "duckdb:"
+load_before_sql:
+  - "ATTACH 'ducklake:@DL_DSN_URL' AS DL (DATA_PATH 's3://dl-bucket...')"
+  - "ATTACH '@OLTP_DSN_URL' AS PG (TYPE POSTGRES)"
+load_sql: load_input_in_dl
+load_on_err_match_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+load_on_err_match_sql: create_input_in_dl
+load_after_sql:
+  - DETACH DL
+  - DETACH pg
+active: true
+```
+
+```sql
+-- load_input_in_dl
+INSERT INTO DL.INPUT_1 BY NAME
+SELECT * FROM PG.INPUT_1
+```
+
+```sql
+-- create_input_in_dl
+CREATE TABLE DL.INPUT_1 AS
+SELECT * FROM PG.INPUT_1
+```
+..
+````
 Run it with:
 
 ```bash
-etlx run pipeline.yaml
+etlx run --config pipeline.md
 ```
 
 Simple. Transparent. Repeatable.
@@ -141,6 +163,4 @@ cd etlx
 ```
 
 Documentation, examples, and guides are available throughout this site.
-
----
 
