@@ -8,7 +8,7 @@ Quickstart:
 
 - Ensure `hugo` is installed (https://gohugo.io/getting-started/quick-start/).
 - From repo root, update submodules: `git submodule update --init --recursive`.
-- Start local server from `docs`: `hugo server --source docs --themesDir themes -D`.
+- Start local server from `docs`: `hugo server --source docs --themesDir themes -D --disableFastRender`.
 
 The site content is taken from the theme's exampleSite (https://github.com/Dobefu/hugo-theme-plume/tree/main/exampleSite).
 

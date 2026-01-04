@@ -40,25 +40,10 @@ disableKinds = ['taxonomy', 'term']
     pageRef = '/'
     weight = 10
 
-  #[[menus.main]]
-  #  name = 'Documentation'
-  #  pageRef = '/docs/'
-  #  weight = 20
-
   [[menus.main]]
-    name = 'Introduction'
-    url = '/introduction/'
+    name = 'Docs'
+    url = '/docs/'
     weight = 30
-
-  [[menus.main]]
-    name = 'Quick Start'
-    url = '/quick-start/'
-    weight = 40
-
-  [[menus.main]]
-    name = 'Configuration'
-    url = '/configuration/'
-    weight = 50
 
   [[menus.main]]
     name = 'Advanced'

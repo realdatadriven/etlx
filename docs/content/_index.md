@@ -117,7 +117,7 @@ SELECT * FROM PG.INPUT_1
 Run it with:
 
 ```bash
-etlx run --config pipeline.md
+etlx --config pipeline.md
 ```
 
 Simple. Transparent. Repeatable.

@@ -1,55 +1,32 @@
-<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Advanced on ETLX</title><link>https://realdatadriven.github.io/etlx/advanced/</link><description>Recent content in Advanced on ETLX</description><generator>Hugo</generator><language>en-US</language><atom:link href="https://realdatadriven.github.io/etlx/advanced/index.xml" rel="self" type="application/rss+xml"/><item><title>Dynamic Queries</title><link>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/dynamic-queries/</guid><description>&lt;h3 id="dynamic-query-generation-get_dyn_queries"&gt;Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;)&lt;/h3&gt;
-&lt;p&gt;In some advanced ETL workflows, you may need to dynamically generate SQL queries based on metadata or schema differences between the source and destination databases.&lt;/p&gt;
-&lt;hr&gt;
-&lt;h4 id="-why-use-dynamic-queries"&gt;&lt;strong&gt;🔹 Why Use Dynamic Queries?&lt;/strong&gt;&lt;/h4&gt;
-&lt;p&gt;✅ &lt;strong&gt;Schema Flexibility&lt;/strong&gt; – Automatically adapt to schema changes in the source system.&lt;br&gt;
-✅ &lt;strong&gt;Self-Evolving Workflows&lt;/strong&gt; – ETL jobs can generate and execute additional SQL queries as needed.&lt;br&gt;
-✅ &lt;strong&gt;Automation&lt;/strong&gt; – Reduces the need for manual intervention when new columns appear.&lt;/p&gt;</description></item><item><title>Conditional Execution</title><link>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/conditional-execution/</guid><description>&lt;h3 id="conditional-execution"&gt;Conditional Execution&lt;/h3&gt;
-&lt;p&gt;ETLX allows conditional execution of SQL blocks based on the results of a query. This is useful to skip operations dynamically depending on data context (e.g., skip a step if no new data is available, or if a condition in the target is not met.&lt;/p&gt;
-&lt;p&gt;You can define condition blocks using the following keys:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;
-&lt;p&gt;For &lt;strong&gt;ETL step-specific conditions&lt;/strong&gt;:&lt;/p&gt;
-&lt;ul&gt;
-&lt;li&gt;&lt;code&gt;extract_condition&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;transform_condition&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;&lt;code&gt;load_condition&lt;/code&gt;&lt;/li&gt;
-&lt;li&gt;etc.&lt;/li&gt;
-&lt;/ul&gt;
-&lt;/li&gt;
-&lt;li&gt;
-&lt;p&gt;For &lt;strong&gt;generic sections&lt;/strong&gt; (e.g., DATA_QUALITY, EXPORTS, NOTIFY, etc.):&lt;/p&gt;</description></item><item><title>runs_as override</title><link>https://realdatadriven.github.io/etlx/advanced/runs-as/</link><pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate><guid>https://realdatadriven.github.io/etlx/advanced/runs-as/</guid><description>&lt;h3 id="advanced-workflow-execution-runs_as-override"&gt;Advanced Workflow Execution: &lt;code&gt;runs_as&lt;/code&gt; Override&lt;/h3&gt;
-&lt;p&gt;The &lt;code&gt;runs_as&lt;/code&gt; field in the metadata block of any Level 1 key allows ETLX to treat a custom section as a built-in block (like &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, etc.), enabling advanced chaining of processes within the same configuration.&lt;/p&gt;
-&lt;hr&gt;
-&lt;figure class="code-block" role="figure" aria-label="markdown code snippet"&gt;
- &lt;button class="highlight__copy" title="Copy to clipboard"&gt;&lt;/button&gt;&lt;div class="highlight"&gt;&lt;div class="chroma"&gt;
-&lt;table class="lntable"&gt;&lt;tr&gt;&lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code&gt;&lt;span class="lnt"&gt; 1
-&lt;/span&gt;&lt;span class="lnt"&gt; 2
-&lt;/span&gt;&lt;span class="lnt"&gt; 3
-&lt;/span&gt;&lt;span class="lnt"&gt; 4
-&lt;/span&gt;&lt;span class="lnt"&gt; 5
-&lt;/span&gt;&lt;span class="lnt"&gt; 6
-&lt;/span&gt;&lt;span class="lnt"&gt; 7
-&lt;/span&gt;&lt;span class="lnt"&gt; 8
-&lt;/span&gt;&lt;span class="lnt"&gt; 9
-&lt;/span&gt;&lt;span class="lnt"&gt;10
-&lt;/span&gt;&lt;span class="lnt"&gt;11
-&lt;/span&gt;&lt;span class="lnt"&gt;12
-&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;
-&lt;td class="lntd"&gt;
-&lt;pre tabindex="0" class="chroma"&gt;&lt;code class="language-markdown" data-lang="markdown"&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;# ETL_AFTER_SOME_KEY
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gh"&gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;``&lt;span class="sb"&gt;`yaml metadata
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;runs_as: ETL
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;description: &amp;#34;Post-validation data transformation&amp;#34;
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;active: true
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="sb"&gt;`&lt;/span&gt;``
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gu"&gt;## ETL_OVER_SOME_MAIN_STEP
-&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;&lt;span class="gu"&gt;&lt;/span&gt;
-&lt;/span&gt;&lt;/span&gt;&lt;span class="line"&gt;&lt;span class="cl"&gt;...&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;
-&lt;/div&gt;
-&lt;/div&gt;&lt;/figure&gt;
-&lt;p&gt;In this example:&lt;/p&gt;</description></item></channel></rss>
+<?xml version="1.0" encoding="utf-8" standalone="yes"?>
+<rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom">
+  <channel>
+    <title>Advanced on ETLX</title>
+    <link>http://localhost:1313/etlx/advanced/</link>
+    <description>Recent content in Advanced on ETLX</description>
+    <generator>Hugo</generator>
+    <language>en-US</language>
+    <atom:link href="http://localhost:1313/etlx/advanced/index.xml" rel="self" type="application/rss+xml" />
+    <item>
+      <title>Dynamic Queries</title>
+      <link>http://localhost:1313/etlx/advanced/dynamic-queries/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/etlx/advanced/dynamic-queries/</guid>
+      <description>&lt;h1 id=&#34;dynamic-query-generation-get_dyn_queries&#34;&gt;Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;)&lt;/h1&gt;&#xA;&lt;p&gt;In some advanced ETL workflows, you may need to dynamically generate SQL queries based on metadata or schema differences between the source and destination databases.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;h2 id=&#34;-why-use-dynamic-queries&#34;&gt;&lt;strong&gt;🔹 Why Use Dynamic Queries?&lt;/strong&gt;&lt;/h2&gt;&#xA;&lt;p&gt;✅ &lt;strong&gt;Schema Flexibility&lt;/strong&gt; – Automatically adapt to schema changes in the source system.&lt;br&gt;&#xA;✅ &lt;strong&gt;Self-Evolving Workflows&lt;/strong&gt; – ETL jobs can generate and execute additional SQL queries as needed.&lt;br&gt;&#xA;✅ &lt;strong&gt;Automation&lt;/strong&gt; – Reduces the need for manual intervention when new columns appear.&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>Conditional Execution</title>
+      <link>http://localhost:1313/etlx/advanced/conditional-execution/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/etlx/advanced/conditional-execution/</guid>
+      <description>&lt;h1 id=&#34;conditional-execution&#34;&gt;Conditional Execution&lt;/h1&gt;&#xA;&lt;p&gt;ETLX allows conditional execution of SQL blocks based on the results of a query. This is useful to skip operations dynamically depending on data context (e.g., skip a step if no new data is available, or if a condition in the target is not met.&lt;/p&gt;&#xA;&lt;p&gt;You can define condition blocks using the following keys:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;For &lt;strong&gt;ETL step-specific conditions&lt;/strong&gt;:&lt;/p&gt;&#xA;&lt;ul&gt;&#xA;&lt;li&gt;&lt;code&gt;extract_condition&lt;/code&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;code&gt;transform_condition&lt;/code&gt;&lt;/li&gt;&#xA;&lt;li&gt;&lt;code&gt;load_condition&lt;/code&gt;&lt;/li&gt;&#xA;&lt;li&gt;etc.&lt;/li&gt;&#xA;&lt;/ul&gt;&#xA;&lt;/li&gt;&#xA;&lt;li&gt;&#xA;&lt;p&gt;For &lt;strong&gt;generic sections&lt;/strong&gt; (e.g., DATA_QUALITY, EXPORTS, NOTIFY, etc.):&lt;/p&gt;</description>
+    </item>
+    <item>
+      <title>runs_as override</title>
+      <link>http://localhost:1313/etlx/advanced/runs-as/</link>
+      <pubDate>Mon, 01 Jan 0001 00:00:00 +0000</pubDate>
+      <guid>http://localhost:1313/etlx/advanced/runs-as/</guid>
+      <description>&lt;h1 id=&#34;advanced-workflow-execution-runs_as-override&#34;&gt;Advanced Workflow Execution: &lt;code&gt;runs_as&lt;/code&gt; Override&lt;/h1&gt;&#xA;&lt;p&gt;The &lt;code&gt;runs_as&lt;/code&gt; field in the metadata block of any Level 1 key allows ETLX to treat a custom section as a built-in block (like &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, etc.), enabling advanced chaining of processes within the same configuration.&lt;/p&gt;&#xA;&lt;hr&gt;&#xA;&lt;div class=&#34;highlight&#34;&gt;&lt;div class=&#34;chroma&#34;&gt;&#xA;&lt;table class=&#34;lntable&#34;&gt;&lt;tr&gt;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code&gt;&lt;span class=&#34;lnt&#34;&gt; 1&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 2&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 3&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 4&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 5&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 6&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 7&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 8&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt; 9&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;10&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;11&#xA;&lt;/span&gt;&lt;span class=&#34;lnt&#34;&gt;12&#xA;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&#xA;&lt;td class=&#34;lntd&#34;&gt;&#xA;&lt;pre tabindex=&#34;0&#34; class=&#34;chroma&#34;&gt;&lt;code class=&#34;language-md&#34; data-lang=&#34;md&#34;&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;gh&#34;&gt;# ETL_AFTER_SOME_KEY&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;gh&#34;&gt;&lt;/span&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;``&lt;span class=&#34;sb&#34;&gt;`yaml metadata&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;sb&#34;&gt;runs_as: ETL&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;sb&#34;&gt;description: &amp;#34;Post-validation data transformation&amp;#34;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;sb&#34;&gt;active: true&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;sb&#34;&gt;`&lt;/span&gt;``&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;gu&#34;&gt;## ETL_OVER_SOME_MAIN_STEP&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;&lt;span class=&#34;gu&#34;&gt;&lt;/span&gt;&#xA;&lt;/span&gt;&lt;/span&gt;&lt;span class=&#34;line&#34;&gt;&lt;span class=&#34;cl&#34;&gt;...&#xA;&lt;/span&gt;&lt;/span&gt;&lt;/code&gt;&lt;/pre&gt;&lt;/td&gt;&lt;/tr&gt;&lt;/table&gt;&#xA;&lt;/div&gt;&#xA;&lt;/div&gt;&lt;p&gt;In this example:&lt;/p&gt;</description>
+    </item>
+  </channel>
+</rss>

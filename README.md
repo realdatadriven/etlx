@@ -1,20 +1,18 @@
-# ETLX
+# ETLX: DuckDB-Powered Markdown-Driven ETL Framework, A Modern Approach to ETL / ELT Workflows
 
-ETLX is a DuckDB-powered, Markdown-driven ETL / ELT framework. The complete, authoritative documentation has been moved to the Hugo site under `docs/`.
+ETLX leverages the power of DuckDB to provide a streamlined, configuration-driven approach to ETL / ELT workflows. With its Markdown-based configuration and extensibility, ETLX simplifies data integration, transformation, automation, quality check, documentation ...
 
-- View docs locally: `hugo server --source docs --themesDir docs/themes -D`
-- Build docs: `hugo --source docs --themesDir docs/themes --minify`
-- The docs site is published automatically to GitHub Pages by CI (see `.github/workflows/gh-pages.yml`).
+This project is a high-performance **ETL (Extract, Transform, Load) Framework** powered by **DuckDB**, designed to integrate and process data from diverse sources. It uses Markdown as configuration inputs (inspired by evidence.dev), where **YAML|TOML|JSON metadata** defines data source properties, and **SQL blocks** specify the logic for extraction, transformation, and loading.
 
-Quick start summary:
+Supports a variety of data sources, including:
 
-- Run binary: `./etlx --help` (see full usage in the docs)
-- Use Go: `go get github.com/realdatadriven/etlx`
-- Use the Docker image: `docker run --rm etlx:latest run --config /app/config.md`
+- Relational Databases: **Postgres**, **MySQL**, **SQLite**, **ODBC**.
 
-For full usage, configuration examples, and reference material, please see the documentation site in the `docs/` folder or visit the published site once CI finishes.
+- Cloud Storage: **S3**, **and other S3 compatible Object Storage**.
 
-License: MIT — see `LICENSE` for details.
+- File Formats: **CSV**, **Parquet**, **Spreadsheets**.
+
+By leveraging DuckDB's powerful processing capabilities, this framework enables seamless ETL / ELT operations.
 
 ---
 
@@ -260,7 +258,7 @@ Create a Markdown file with the ETL process configuration. For example:
 
 Markdown File (`etl_config.md`):
 
-````md
+````markdown
 # ETL
 ```yaml metadata
 name: Daily_ETL
@@ -368,7 +366,7 @@ etlx --config config.md --date 2024-01-01
 - Defines the overall ETL process.
 - Example:
 
-````md
+````markdown
 # ETL
 
 ```yaml metadata
@@ -458,7 +456,7 @@ If the database you are using does not have a direct DuckDB scanner, but it is s
 
 ##### **Example Configuration:**
 
-````md
+````markdown
 ...
 
 ## table_from_odbc_source
@@ -515,7 +513,7 @@ For each field:
 
 #### **Markdown Example**
 
-````md
+````markdown
 # My Complex Query
 This query processes sales and regions data.
 
@@ -680,7 +678,7 @@ The `DATA_QUALITY` section allows you to define and execute validation rules to 
 
 #### **Data Quality Markdown Example**
 
-````md
+````markdown
 # DATA_QUALITY
 ```yaml
 description: "Runs some queries to check quality / validate."
@@ -819,7 +817,7 @@ An export configuration is defined as a top-level heading (e.g., `# EXPORTS`) in
 
 #### **Export Markdown**
 
-````md
+````markdown
 # EXPORTS
 Exports data to files.
 
@@ -983,7 +981,7 @@ This is especially useful for **reporting**, **integration**, or **publishing do
 
 ##### 📦 Example
 
-````md
+````markdown
 ...
 ## TEXT_TMPL
 
@@ -1134,7 +1132,7 @@ This example **removes temporary data** after an ETL process.
 
 #### **📄 Markdown Configuration**
 
-````md
+````markdown
 # SCRIPTS
 
 Run Queries that does not need a return
@@ -1211,7 +1209,7 @@ The `MULTI_QUERIES` section allows you to define multiple queries with similar s
 
 #### **Multi-Queries Markdown Example**
 
-````md
+````markdown
 # MULTI_QUERIES
 ```yaml
 description: "Define multiple structured queries combined with UNION."
@@ -1434,7 +1432,7 @@ FROM READ_JSON('<fname>');
 
 By default is generated a sqlite db `etlx_logs.db` in temp folder, that'll depende on the OS, it adds to your config this peace os md:
 
-````md
+````markdown
 # AUTO_LOGS
 
 ```yaml metadata
@@ -1516,7 +1514,7 @@ The `REQUIRES` section in the ETL configuration allows you to load dependencies 
 
 #### **Loading Markdown Example**
 
-````md
+````markdown
 # REQUIRES
 ```yaml
 description: "Load configuration dependencies from files or queries."
@@ -1636,7 +1634,7 @@ Each action under the `ACTIONS` section has the following:
 
 ---
 
-````md
+````markdown
 
 # ACTIONS
 
@@ -1861,7 +1859,7 @@ Use `db_2_db` when:
 
 ###### 🧩 Example
 
-````md
+````markdown
 ...
 
 ## WRITE_RESULTS_MSSQL
@@ -1980,7 +1978,7 @@ This example sends an email **after an ETL process completes**, using **log data
 
 #### **📄 NOTIFY Markdown Configuration**
 
-````md
+````markdown
 
 # NOTIFY
 
@@ -2146,7 +2144,7 @@ This example **checks for new columns in a JSON file** and **adds them to the de
 
 >If the `query_name` depends on attaching and detaching the main db where it will run, those should be passed as dependencies, because the dynamic queries are generate before any other query and put in the list for the list where it is to be executed, to be a simpler flow, but they are optional otherwise.
 
-````md
+````markdown
 ....
 
 ```yaml metadata
@@ -2279,7 +2277,7 @@ To enable this behavior, ETLX introduces the `runs_as` field in the **metadata b
 
 ---
 
-````md
+````markdown
 
 # ETL_AFTER_SOME_KEY
 
