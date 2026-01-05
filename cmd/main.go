@@ -221,11 +221,11 @@ func main() {
 			}
 		}
 	} else {
-		etlxlib.Config["__order"] = []any
+		etlxlib.Config["__order"] = []any{}
 		for key, _ := range etlxlib.Config {
 			etlxlib.Config["__order"] = append(etlxlib.Config["__order"].([]any), key)
 		}
-		//hasOrderedKeys = true	
+		//hasOrderedKeys = true
 	}
 	// fmt.Println("LEVEL 1 H:", __order, len(__order))
 	if !hasOrderedKeys {
