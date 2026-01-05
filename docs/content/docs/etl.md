@@ -4,7 +4,7 @@ weight = 41
 draft = false
 +++
 
-# ETL
+## ETL
 
 - Defines the overall ETL process.
 - Example:
@@ -79,19 +79,19 @@ LIMIT 10;
 ...
 ````
 
-## 1. **ETL Process Starts**
+### 1. **ETL Process Starts**
 
 - Begin with the "ETL" key;
 - Extract metadata, specifically:
   - "connection": Main connection to the destination database.
   - "description": For logging the start and end time of the ETL process.
 
-## 2. **Loop through Level 2 key in under "ETL" key**
+### 2. **Loop through Level 2 key in under "ETL" key**
 
 - Iterate over each key (e.g., "sales_data")
 - For each key, access its "metadata" to process the ETL steps.
 
-## 3. **ETL Steps**
+### 3. **ETL Steps**
 
 - Each ETL step (`extract`, `transform`, `load`) has:
   - `_before_sql`: Queries to run first (setup).
@@ -106,6 +106,6 @@ LIMIT 10;
 - Additionally, error handling can be defined using `[step]_on_err_match_patt` and `[step]_on_err_match_sql` to handle specific database errors dynamically, where `[step]_on_err_match_patt` is the `regexp` patthern to match error,and if maches the `[step]_on_err_match_sql` is executed, the same can be applied for `[step]_before_on_err_match_patt` and `[step]_before_on_err_match_sql`.
    You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.
 
-## 4. **Output Logs**n
+### 4. **Output Logs**
 - Log progress (e.g., connection usage, start/end times, descriptions).
 - Gracefully handle missing or `null` keys.
