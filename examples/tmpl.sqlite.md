@@ -602,6 +602,62 @@ formula: |
     , ROUND(AVG(t.trip_distance), 2) AS avg_distance
 ```
 
+# QUALITY_CHECK
+```yaml
+description: "Runs some queries to check quality / validate."
+runs_as: DATA_QUALITY
+active: true
+```
+
+## Rule0001
+```yaml
+name: Rule0001
+description: "Check if the payment_type has only the values 0=Flex Fare, 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided trip."
+connection: "duckdb:"
+before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: fix_quality_err_query
+column: total_reg_with_err # Defaults to 'total'.
+check_only: false # runs only quality check if true
+fix_only: false # runs only quality fix if true and available and possible
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "TRIP_DATA"
+WHERE "payment_type" NOT IN (0,1,2,3,4,5,6);
+```
+
+```sql
+-- fix_quality_err_query
+UPDATE "TRIP_DATA"
+SET "payment_type" = 'default value'
+WHERE "payment_type" NOT IN (0,1,2,3,4,5,6);
+```
+
+## Rule0002
+```yaml
+name: Rule0002
+description: "Check if there is any trip with distance less than or equal to zero."
+connection: "duckdb:"
+before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
+query: quality_check_query
+fix_quality_err: null # no automated fixing for this
+column: total_reg_with_err # Defaults to 'total'.
+after_sql: "DETACH DB"
+active: true
+```
+
+```sql
+-- quality_check_query
+SELECT COUNT(*) AS "total_reg_with_err"
+FROM "TRIP_DATA"
+WHERE NOT "trip_distance" > 0;
+```
+
 # SAVE_LOGS
 
 ```yaml metadata
