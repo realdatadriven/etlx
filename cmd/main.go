@@ -244,7 +244,7 @@ func main() {
 			if !ok {
 				continue
 			}
-			if _, ok := _key_conf_metadata["runs_as"]; ok {
+			if _, ok := _key_conf_metadata["runs_as"]; !ok {
 				_key_conf_metadata["runs_as"] = strings.ToUpper(key)
 			}
 			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
