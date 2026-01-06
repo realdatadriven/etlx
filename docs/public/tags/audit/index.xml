@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Audit on ETLX | ETL / ELT Framework for Data Engineering</title><link>/tags/audit/</link><description>Recent content in Audit on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Tue, 06 Jan 2026 20:05:45 -0100</lastBuildDate><atom:link href="/tags/audit/index.xml" rel="self" type="application/rss+xml"/><item><title>Logs / Observability</title><link>/docs/features/logs/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/logs/</guid><description>&lt;h2 id="logs--observability-handling--logs"&gt;Logs / Observability Handling (&lt;code&gt;# LOGS&lt;/code&gt;) &lt;a href="#logs--observability-handling--logs" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX provides a &lt;strong&gt;logging mechanism&lt;/strong&gt; that allows &lt;strong&gt;saving logs&lt;/strong&gt; into a database. This is useful for tracking &lt;strong&gt;executions, debugging, and auditing ETL processes&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;By default, ETLX logs &lt;strong&gt;every relevant aspect of the pipeline&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Step name / description&lt;/li&gt;
+&lt;li&gt;Timestamp start / end&lt;/li&gt;
+&lt;li&gt;Duration in seconds&lt;/li&gt;
+&lt;li&gt;Success / failure&lt;/li&gt;
+&lt;li&gt;Messages and errors&lt;/li&gt;
+&lt;li&gt;Memory usage&lt;/li&gt;
+&lt;li&gt;Optional row counts, files generated, or other metrics&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All logs are serialized as &lt;strong&gt;JSON&lt;/strong&gt; and persisted using the LOGS block.&lt;/p&gt;</description></item></channel></rss>

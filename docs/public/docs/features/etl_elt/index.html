@@ -1,0 +1,437 @@
+<!doctype html><html lang=en-GB><head><meta charset=utf-8><title>ETL | ELT | ETLX</title><meta name=viewport content="width=device-width,initial-scale=1"><meta name=description content="ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are two data integration approaches used to move and process data from source systems to target systems, such as data warehouses or data lakes."><meta name=keywords content="Documentation,Hugo,Hugo Theme,Bootstrap"><meta name=author content="Colin Wilson - Lotus Labs"><meta name=email content="support@aigis.uk"><meta name=website content="https://lotusdocs.dev"><meta name=Version content="v0.1.0"><link rel=icon href=/favicon.ico sizes=any><link rel=icon type=image/svg+xml href=/favicon.svg><link rel=apple-touch-icon sizes=180x180 href=/apple-touch-icon.png><link rel=icon type=image/png sizes=32x32 href=/favicon-32x32.png><link rel=icon type=image/png sizes=16x16 href=/favicon-16x16.png><link rel=manifest crossorigin=use-credentials href=/site.webmanifest><meta property="og:title" content="ETL | ELT"><meta property="og:description" content="ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are two data integration approaches used to move and process data from source systems to target systems, such as data warehouses or data lakes."><meta property="og:type" content="article"><meta property="og:url" content="/docs/features/etl_elt/"><meta property="og:image" content="/opengraph/card-base-2_hu_f295d4f6c6f2dead.png"><meta property="article:section" content="docs"><meta property="article:published_time" content="2022-12-16T01:04:15+00:00"><meta property="article:modified_time" content="2026-01-04T19:58:22-01:00"><meta name=twitter:card content="summary_large_image"><meta name=twitter:image content="/opengraph/card-base-2_hu_f295d4f6c6f2dead.png"><meta name=twitter:title content="ETL | ELT"><meta name=twitter:description content="ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are two data integration approaches used to move and process data from source systems to target systems, such as data warehouses or data lakes."><link rel=alternate type=application/atom+xml title="Atom feed for ETLX | ETL / ELT Framework for Data Engineering" href=/index.xml><script>(()=>{var t=window.matchMedia&&window.matchMedia("(prefers-color-scheme: dark)").matches,e=localStorage.getItem("theme");t&&e===null&&(localStorage.setItem("theme","dark"),document.documentElement.setAttribute("data-dark-mode","")),t&&e==="dark"&&document.documentElement.setAttribute("data-dark-mode",""),e==="dark"&&document.documentElement.setAttribute("data-dark-mode","")})()</script><script type=text/javascript src=/docs/js/flexsearch.bundle.min.f5159d5a2151ffbb653996ec17eaff7da4e04c286bd879fc41839d36a5586f3f20eaead0b6089de48f9adc669cdee771.js integrity=sha384-9RWdWiFR/7tlOZbsF+r/faTgTChr2Hn8QYOdNqVYbz8g6urQtgid5I+a3Gac3udx crossorigin=anonymous></script><link rel=preconnect href=https://fonts.gstatic.com/><link rel=preconnect href=https://fonts.gstatic.com/ crossorigin><link href="https://fonts.googleapis.com/css?family=Inter:300,400,600,700|Fira+Code:500,700&display=block" rel=stylesheet><link rel=stylesheet href=/docs/scss/style.min.f667656027a2bf1743e3b5561f79d3e485d54e1a03ce867bea46027110dd846ceb0b4ab42659491adb6a1536089561e0.css integrity=sha384-9mdlYCeivxdD47VWH3nT5IXVThoDzoZ76kYCcRDdhGzrC0q0JllJGttqFTYIlWHg crossorigin=anonymous><script defer data-domain=realdatadriven.github.io/etlx data-api=/docs/s/api/event/ src=/docs/s/js/script.outbound-links.js></script><script>window.plausible=window.plausible||function(){(window.plausible.q=window.plausible.q||[]).push(arguments)}</script></head><body><div class=content><div class="page-wrapper toggled"><nav id=sidebar class=sidebar-wrapper><div class=sidebar-brand><a href=/ aria-label=HomePage alt=HomePage><svg id="Layer_1" viewBox="0 0 250 250"><path d="m143 39.5c-18 0-18 18-18 18s0-18-18-18H22c-2.76.0-5 2.24-5 5v143c0 2.76 2.24 5 5 5h76c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h76c2.76.0 5-2.24 5-5V44.5c0-2.76-2.24-5-5-5h-85zM206 163c0 1.38-1.12 2.5-2.5 2.5H143c-18 0-18 18-18 18s0-18-18-18H46.5c-1.38.0-2.5-1.12-2.5-2.5V69c0-1.38 1.12-2.5 2.5-2.5H98c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h51.5c1.38.0 2.5 1.12 2.5 2.5v94z" style="fill:#06f"/></svg></a></div><div class=sidebar-content style="height:calc(100% - 131px)"><ul class=sidebar-menu><li><a class=sidebar-root-link href=/docs/overview/><i class="material-icons me-2">circle</i>
+Overview</a></li><li><a class=sidebar-root-link href=/docs/quickstart/><i class="material-icons me-2">rocket_launch</i>
+Quickstart</a></li><li class="sidebar-dropdown current active"><button class=btn>
+<i class="material-icons me-2">auto_awesome</i>
+Features</button><div class="sidebar-submenu d-block"><ul><li><a class=sidebar-nested-link href=/docs/features/_etl_elt/>ETL | ELT</a></li><li class=current><a class=sidebar-nested-link href=/docs/features/etl_elt/>ETL | ELT</a></li></ul></div></li><li class=sidebar-dropdown><button class=btn>
+<i class="material-icons me-2">heart_plus</i>
+Contributing</button><div class=sidebar-submenu><ul><li><a class=sidebar-nested-link href=/docs/contributing/how-to-contribute/>How to Contribute</a></li><li><a class=sidebar-nested-link href=/docs/contributing/code-of-conduct/>Code of Conduct</a></li></ul></div></li><li class=sidebar-dropdown><button class=btn>
+<i class="material-icons me-2">help</i>
+Help</button><div class=sidebar-submenu><ul><li><a class=sidebar-nested-link href=/docs/help/troubleshooting/>Troubleshooting</a></li><li><a class=sidebar-nested-link href=/docs/help/faqs/>FAQ</a></li></ul></div></li></ul></div><ul class="sidebar-footer list-unstyled mb-0"></ul></nav><main class="page-content bg-transparent"><div id=top-header class="top-header d-print-none"><div class="header-bar d-flex justify-content-between"><div class="d-flex align-items-center"><a href=/ class="logo-icon me-3" aria-label=HomePage alt=HomePage><div class=small><svg id="Layer_1" viewBox="0 0 250 250"><path d="m143 39.5c-18 0-18 18-18 18s0-18-18-18H22c-2.76.0-5 2.24-5 5v143c0 2.76 2.24 5 5 5h76c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h76c2.76.0 5-2.24 5-5V44.5c0-2.76-2.24-5-5-5h-85zM206 163c0 1.38-1.12 2.5-2.5 2.5H143c-18 0-18 18-18 18s0-18-18-18H46.5c-1.38.0-2.5-1.12-2.5-2.5V69c0-1.38 1.12-2.5 2.5-2.5H98c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h51.5c1.38.0 2.5 1.12 2.5 2.5v94z" style="fill:#06f"/></svg></div><div class=big><svg id="Layer_1" viewBox="0 0 250 250"><path d="m143 39.5c-18 0-18 18-18 18s0-18-18-18H22c-2.76.0-5 2.24-5 5v143c0 2.76 2.24 5 5 5h76c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h76c2.76.0 5-2.24 5-5V44.5c0-2.76-2.24-5-5-5h-85zM206 163c0 1.38-1.12 2.5-2.5 2.5H143c-18 0-18 18-18 18s0-18-18-18H46.5c-1.38.0-2.5-1.12-2.5-2.5V69c0-1.38 1.12-2.5 2.5-2.5H98c7.2.0 8.64 11.52 8.93 16.13.07 1.05.95 1.87 2 1.87h32.14c1.06.0 1.94-.82 2-1.87.29-4.61 1.73-16.13 8.93-16.13h51.5c1.38.0 2.5 1.12 2.5 2.5v94z" style="fill:#06f"/></svg></div></a><button id=close-sidebar class="btn btn-icon btn-soft">
+<span class="material-icons size-20 menu-icon align-middle">menu</span>
+</button>
+<button id=flexsearch-button class="ms-3 btn btn-soft" data-bs-toggle=collapse data-bs-target=#FlexSearchCollapse aria-expanded=false aria-controls=FlexSearchCollapse>
+<span class="material-icons size-20 menu-icon align-middle">search</span>
+<span class="flexsearch-button-placeholder ms-1 me-2 d-none d-sm-block">Search</span><div class="d-none d-sm-block"><span class=flexsearch-button-keys><kbd class=flexsearch-button-cmd-key><svg width="44" height="15"><path d="M2.118 11.5A1.519 1.519.0 011 11.042 1.583 1.583.0 011 8.815a1.519 1.519.0 011.113-.458h.715V6.643h-.71A1.519 1.519.0 011 6.185 1.519 1.519.0 01.547 5.071 1.519 1.519.0 011 3.958 1.519 1.519.0 012.118 3.5a1.519 1.519.0 011.114.458A1.519 1.519.0 013.69 5.071v.715H5.4V5.071A1.564 1.564.0 016.976 3.5 1.564 1.564.0 018.547 5.071 1.564 1.564.0 016.976 6.643H6.261V8.357h.715a1.575 1.575.0 011.113 2.685 1.583 1.583.0 01-2.227.0A1.519 1.519.0 015.4 9.929V9.214H3.69v.715a1.519 1.519.0 01-.458 1.113A1.519 1.519.0 012.118 11.5zm0-.857a.714.714.0 00.715-.714V9.214H2.118a.715.715.0 100 1.429zm4.858.0a.715.715.0 100-1.429H6.261v.715a.714.714.0 00.715.714zM3.69 8.357H5.4V6.643H3.69zM2.118 5.786h.715V5.071a.714.714.0 00-.715-.714.715.715.0 00-.5 1.22A.686.686.0 002.118 5.786zm4.143.0h.715a.715.715.0 00.5-1.22.715.715.0 00-1.22.5z" fill="currentColor"/><path d="M12.4 11.475H11.344l3.879-7.95h1.056z" fill="currentColor"/><path d="M25.073 5.384l-.864.576a2.121 2.121.0 00-1.786-.923 2.207 2.207.0 00-2.266 2.326 2.206 2.206.0 002.266 2.325 2.1 2.1.0 001.782-.918l.84.617a3.108 3.108.0 01-2.622 1.293 3.217 3.217.0 01-3.349-3.317 3.217 3.217.0 013.349-3.317A3.046 3.046.0 0125.073 5.384z" fill="currentColor"/><path d="M30.993 5.142h-2.07v5.419H27.891V5.142h-2.07V4.164h5.172z" fill="currentColor"/><path d="M34.67 4.164c1.471.0 2.266.658 2.266 1.851.0 1.087-.832 1.809-2.134 1.855l2.107 2.691h-1.28L33.591 7.87H33.07v2.691H32.038v-6.4zm-1.6.969v1.8h1.572c.832.0 1.22-.3 1.22-.918s-.411-.882-1.22-.882z" fill="currentColor"/><path d="M42.883 10.561H38.31v-6.4h1.033V9.583h3.54z" fill="currentColor"/></svg>
+</kbd><kbd class=flexsearch-button-key><svg width="15" height="15"><path d="M5.926 12.279H4.41L9.073 2.721H10.59z" fill="currentColor"/></svg></kbd></span></div></button></div><div class="d-flex align-items-center"><ul class="list-unstyled mb-0"><li class="list-inline-item mb-0"><a href=https://github.com/realdatadriven/etlx alt=github rel="noopener noreferrer" target=_blank><div class="btn btn-icon btn-default border-0"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><title>GitHub</title><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37.0 00-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44.0 0020 4.77 5.07 5.07.0 0019.91 1S18.73.65 16 2.48a13.38 13.38.0 00-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07.0 005 4.77 5.44 5.44.0 003.5 8.55c0 5.42 3.3 6.61 6.44 7A3.37 3.37.0 009 18.13V22"/></svg></div></a></li></ul><button id=mode class="btn btn-icon btn-default ms-2" type=button aria-label="Toggle user interface mode">
+<span class=toggle-dark><svg height="30" width="30" viewBox="0 0 48 48" fill="currentColor"><title>Enable dark mode</title><path d="M24 42q-7.5.0-12.75-5.25T6 24t5.25-12.75T24 6q.4.0.85.025.45.025 1.15.075-1.8 1.6-2.8 3.95t-1 4.95q0 4.5 3.15 7.65Q28.5 25.8 33 25.8q2.6.0 4.95-.925T41.9 22.3q.05.6.075.975Q42 23.65 42 24q0 7.5-5.25 12.75T24 42zm0-3q5.45.0 9.5-3.375t5.05-7.925q-1.25.55-2.675.825Q34.45 28.8 33 28.8q-5.75.0-9.775-4.025T19.2 15q0-1.2.25-2.575t.9-3.125q-4.9 1.35-8.125 5.475Q9 18.9 9 24q0 6.25 4.375 10.625T24 39zm-.2-14.85z"/></svg>
+</span><span class=toggle-light><svg height="30" width="30" viewBox="0 0 48 48" fill="currentColor"><title>Enable light mode</title><path d="M24 31q2.9.0 4.95-2.05T31 24t-2.05-4.95T24 17t-4.95 2.05T17 24t2.05 4.95T24 31zm0 3q-4.15.0-7.075-2.925T14 24t2.925-7.075T24 14t7.075 2.925T34 24t-2.925 7.075T24 34zM3.5 25.5q-.65.0-1.075-.425Q2 24.65 2 24t.425-1.075Q2.85 22.5 3.5 22.5h5q.65.0 1.075.425Q10 23.35 10 24t-.425 1.075T8.5 25.5zm36 0q-.65.0-1.075-.425Q38 24.65 38 24t.425-1.075T39.5 22.5h5q.65.0 1.075.425Q46 23.35 46 24t-.425 1.075-1.075.425zM24 10q-.65.0-1.075-.425Q22.5 9.15 22.5 8.5v-5q0-.65.425-1.075Q23.35 2 24 2t1.075.425T25.5 3.5v5q0 .65-.425 1.075Q24.65 10 24 10zm0 36q-.65.0-1.075-.425T22.5 44.5v-5q0-.65.425-1.075Q23.35 38 24 38t1.075.425.425 1.075v5q0 .65-.425 1.075Q24.65 46 24 46zM12 14.1l-2.85-2.8q-.45-.45-.425-1.075.025-.625.425-1.075.45-.45 1.075-.45t1.075.45L14.1 12q.4.45.4 1.05.0.6-.4 1-.4.45-1.025.45T12 14.1zm24.7 24.75L33.9 36q-.4-.45-.4-1.075t.45-1.025q.4-.45 1-.45t1.05.45l2.85 2.8q.45.45.425 1.075-.025.625-.425 1.075-.45.45-1.075.45t-1.075-.45zM33.9 14.1q-.45-.45-.45-1.05.0-.6.45-1.05l2.8-2.85q.45-.45 1.075-.425.625.025 1.075.425.45.45.45 1.075t-.45 1.075L36 14.1q-.4.4-1.025.4t-1.075-.4zM9.15 38.85q-.45-.45-.45-1.075t.45-1.075L12 33.9q.45-.45 1.05-.45.6.0 1.05.45.45.45.45 1.05.0.6-.45 1.05l-2.8 2.85q-.45.45-1.075.425-.625-.025-1.075-.425zM24 24z"/></svg></span></button></div></div><div class=collapse id=FlexSearchCollapse><div class=flexsearch-container><div class=flexsearch-keymap><li><kbd class=flexsearch-button-cmd-key><svg width="15" height="15" aria-label="Arrow down" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M7.5 3.5v8m3-3-3 3-3-3"/></g></svg></kbd>
+<kbd class=flexsearch-button-cmd-key><svg width="15" height="15" aria-label="Arrow up" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M7.5 11.5v-8m3 3-3-3-3 3"/></g></svg></kbd>
+<span class=flexsearch-key-label>to navigate</span></li><li><kbd class=flexsearch-button-cmd-key><svg width="15" height="15" aria-label="Enter key" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M12 3.53088v3c0 1-1 2-2 2H4m3 3-3-3 3-3"/></g></svg></kbd>
+<span class=flexsearch-key-label>to select</span></li><li><kbd class=flexsearch-button-cmd-key><svg width="15" height="15" aria-label="Escape key" role="img"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="1.2"><path d="M13.6167 8.936c-.1065.3583-.6883.962-1.4875.962-.7993.0-1.653-.9165-1.653-2.1258v-.5678c0-1.2548.7896-2.1016 1.653-2.1016s1.3601.4778 1.4875 1.0724M9 6c-.1352-.4735-.7506-.9219-1.46-.8972-.7092.0246-1.344.57-1.344 1.2166s.4198.8812 1.3445.9805C8.465 7.3992 8.968 7.9337 9 8.5s-.454 1.398-1.4595 1.398C6.6593 9.898 6 9 5.963 8.4851m-1.4748.5368c-.2635.5941-.8099.876-1.5443.876s-1.7073-.6248-1.7073-2.204v-.4603c0-1.0416.721-2.131 1.7073-2.131.9864.0 1.6425 1.031 1.5443 2.2492h-2.956"/></g></svg></kbd>
+<span class=flexsearch-key-label>to close</span></li></div><form class="flexsearch position-relative flex-grow-1 ms-2 me-2"><div class="d-flex flex-row"><input id=flexsearch class=form-control type=search placeholder=Search aria-label=Search autocomplete=off>
+<button id=hideFlexsearch type=button class="ms-2 btn btn-soft">
+cancel</button></div><div id=suggestions class="shadow rounded-1 d-none"></div></form></div></div></div><div class=container-fluid><div class=layout-spacing><div class="d-md-flex justify-content-between align-items-center"><nav aria-label=breadcrumb class="d-inline-block pb-2 mt-1 mt-sm-0"><ul id=breadcrumbs class="breadcrumb bg-transparent mb-0" itemscope itemtype=https://schema.org/BreadcrumbList><li class="breadcrumb-item text-capitalize active" aria-current=page itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><a itemprop=item href=/docs/><i class="material-icons size-20 align-text-bottom" itemprop=name>Home</i>
+</a><meta itemprop=position content='1'></li><li class="breadcrumb-item text-capitalize" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><a itemprop=item href=/docs/features/><span itemprop=name>Features</span>
+</a><meta itemprop=position content='2'></li><li class="breadcrumb-item text-capitalize active" itemprop=itemListElement itemscope itemtype=https://schema.org/ListItem><span itemprop=name>ETL | ELT</span>
+<meta itemprop=position content='3'></li></ul></nav></div><div class="row flex-xl-nowrap"><div class="docs-toc col-xl-3 d-xl-block"><toc><div class="fw-bold text-uppercase mb-2">On this page</div><nav id=toc><ul><li><ul><li><a href=#etl--elt>ETL | ELT</a><ul><li><a href=#1-etl-process-starts>1. <strong>ETL Process Starts</strong></a></li><li><a href=#2-loop-through-level-2-key-in-under>2. <strong>Loop through Level 2 key in under “ETL” block</strong></a></li><li><a href=#3-etl-steps>3. <strong>ETL Steps</strong></a></li><li><a href=#4-output-logs>4. <strong>Output Logs</strong></a></li></ul></li></ul></li></ul></nav></toc></div><div class="docs-toc-mobile d-print-none d-xl-none"><button id=toc-dropdown-btn class="btn-secondary dropdown-toggle" type=button data-bs-toggle=dropdown data-bs-offset=0,0 aria-expanded=false>
+Table of Contents</button><nav id=toc-mobile><ul class=dropdown-menu><li><ul><li><a href=#etl--elt>ETL | ELT</a><ul><li><a href=#1-etl-process-starts>1. <strong>ETL Process Starts</strong></a></li><li><a href=#2-loop-through-level-2-key-in-under>2. <strong>Loop through Level 2 key in under “ETL” block</strong></a></li><li><a href=#3-etl-steps>3. <strong>ETL Steps</strong></a></li><li><a href=#4-output-logs>4. <strong>Output Logs</strong></a></li></ul></li></ul></li></ul></nav></div><div class="docs-content col-12 col-xl-9 mt-0"><div class="mb-0 d-flex"><i class="material-icons title-icon me-2">auto_awesome</i><h1 class="content-title mb-0">ETL | ELT</h1></div><p class="lead mb-3">ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are two data integration approaches used to move and process data from source systems to target systems, such as data warehouses or data lakes.</p><div id=content class=main-content data-bs-spy=scroll data-bs-root-margin="0px 0px -65%" data-bs-target=#toc-mobile><div data-prismjs-copy data-prismjs-copy-success data-prismjs-copy-error><h2 id=etl--elt>ETL | ELT <a href=#etl--elt class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h2><ul><li>Defines the overall ETL process with a level one heading <code># ETL</code> or any level one heading where in metadata the key <code>runs_as: ETL</code> or <code>runs_as: ELT</code> is defined.</li><li>Example:</li></ul><div class="prism-codeblock linenos style"><pre id=57f4027 class="language-md line-numbers">
+  <code># INPUTS
+```yaml
+name: INPUTS
+description: Extracts data from source and load on target
+runs_as: ETL
+active: true
+```
+
+## INPUT_1
+```yaml
+name: INPUT_1
+description: Input 1 from an ODBC Source
+table: INPUT_1 # Destination Table
+load_conn: &#34;duckdb:&#34;
+load_before_sql:
+  - &#34;ATTACH &#39;ducklake:@DL_DSN_URL&#39; AS DL (DATA_PATH &#39;s3://dl-bucket...&#39;)&#34;
+  - &#34;ATTACH &#39;@OLTP_DSN_URL&#39; AS PG (TYPE POSTGRES)&#34;
+load_sql: load_input_in_dl
+load_on_err_match_patt: &#39;(?i)table.&#43;with.&#43;name.&#43;(\w&#43;).&#43;does.&#43;not.&#43;exist&#39;
+load_on_err_match_sql: create_input_in_dl
+load_after_sql:
+  - DETACH DL
+  - DETACH pg
+active: true
+```
+
+```sql
+-- load_input_in_dl
+INSERT INTO DL.INPUT_1 BY NAME
+SELECT * FROM PG.INPUT_1
+```
+
+```sql
+-- create_input_in_dl
+CREATE TABLE DL.INPUT_1 AS
+SELECT * FROM PG.INPUT_1
+```
+...</code>
+  </pre></div><h3 id=1-etl-process-starts>1. <strong>ETL Process Starts</strong> <a href=#1-etl-process-starts class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h3><ul><li>Begin with the &ldquo;ETL&rdquo; block;</li><li>Extract metadata, specifically:<ul><li>&ldquo;connection&rdquo;: Main connection to the destination database.</li><li>&ldquo;description&rdquo;: For documentation porpose and logging the ETL process.</li></ul></li></ul><h3 id=2-loop-through-level-2-key-in-under>2. <strong>Loop through Level 2 key in under &ldquo;ETL&rdquo; block</strong> <a href=#2-loop-through-level-2-key-in-under class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h3><ul><li>Iterate over each key (e.g., &ldquo;INPUT_1&rdquo;)</li><li>For each key, access its &ldquo;metadata&rdquo; to process the ETL steps.</li></ul><h3 id=3-etl-steps>3. <strong>ETL Steps</strong> <a href=#3-etl-steps class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h3><ul><li>Each ETL step (<code>extract</code>, <code>transform</code>, <code>load</code>) has:<ul><li><code>_before_sql</code>: Queries to run first (setup).</li><li><code>_sql</code>: The main query or queries to run.</li><li><code>_after_sql</code>: Cleanup queries to run afterward.</li></ul></li><li>Queries can be:<ul><li><code>null</code>: Do nothing.</li><li><code>string</code>: Reference a single query key in the same map or the query itself.</li><li><code>array|list</code>: Execute all queries in sequence.</li><li>In case is not null it can be the query itself or just the name of a sql code block under the same key, where <code>sql [query_name]</code> or first line <code>-- [query_name]</code></li></ul></li><li>Use <code>_conn</code> for connection settings. If <code>null</code>, fall back to the main connection.</li><li>Additionally, error handling can be defined using <code>[step]_on_err_match_patt</code> and <code>[step]_on_err_match_sql</code> to handle specific database errors dynamically, where <code>[step]_on_err_match_patt</code> is the <code>regexp</code> patthern to match error,and if maches the <code>[step]_on_err_match_sql</code> is executed, the same can be applied for <code>[step]_before_on_err_match_patt</code> and <code>[step]_before_on_err_match_sql</code>.
+You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas.</li></ul><h3 id=4-output-logs>4. <strong>Output Logs</strong> <a href=#4-output-logs class=anchor aria-hidden=true><i class="material-icons align-middle">link</i></a></h3><ul><li>Log progress (e.g., connection usage, start/end times, descriptions, message, success or failure, memory usage, &mldr;).</li><li>Gracefully handle missing or <code>null</code> keys.</li></ul></div><div class="gitinfo d-flex flex-wrap justify-content-between align-items-center opacity-85 pt-3"><div id=edit-this-page class=mt-1><a href=https://github.com/realdatadriven/etlx/blob/main/content/docs/features/etl_elt.md alt="ETL | ELT" rel="noopener noreferrer" target=_blank><span class="me-1 align-text-bottom"><svg width="20" height="20" viewBox="0 0 32 32" fill="currentColor"><path d="M16 .396c-8.839.0-16 7.167-16 16 0 7.073 4.584 13.068 10.937 15.183.803.151 1.093-.344 1.093-.772.0-.38-.009-1.385-.015-2.719-4.453.964-5.391-2.151-5.391-2.151-.729-1.844-1.781-2.339-1.781-2.339-1.448-.989.115-.968.115-.968 1.604.109 2.448 1.645 2.448 1.645 1.427 2.448 3.744 1.74 4.661 1.328.14-1.031.557-1.74 1.011-2.135-3.552-.401-7.287-1.776-7.287-7.907.0-1.751.62-3.177 1.645-4.297-.177-.401-.719-2.031.141-4.235.0.0 1.339-.427 4.4 1.641 1.281-.355 2.641-.532 4-.541 1.36.009 2.719.187 4 .541 3.043-2.068 4.381-1.641 4.381-1.641.859 2.204.317 3.833.161 4.235 1.015 1.12 1.635 2.547 1.635 4.297.0 6.145-3.74 7.5-7.296 7.891.556.479 1.077 1.464 1.077 2.959.0 2.14-.02 3.864-.02 4.385.0.416.28.916 1.104.755 6.4-2.093 10.979-8.093 10.979-15.156.0-8.833-7.161-16-16-16z"/></svg>
+</span>Edit this page</a></div><div id=last-modified class=mt-1><p class="mb-0 fw-semibold">Last updated <span id=relativetime data-authdate=2026-01-04T19:58:22-0100 title="04 Jan 2026, 19:58 -01">04 Jan 2026, 19:58 -01
+</span>. <span class="material-icons size-20 align-text-bottom opacity-75">history</span></p></div></div><div class="container d-flex align-items-center justify-content-center"><div id=feedback-widget-emoticon class=mt-4><div id=feedback-cta class="d-flex justify-content-center py-1"><span class="fs-6 align-self-center align-middle ms-2 me-0">Was this page helpful?</span><div class=d-flex><div class="form-emoji d-flex ps-2"><div class=radio-emoji><input type=radio name=feedback-emoticon autocomplete=off value="Very Satisfied" id=radio_0 required>
+<label class="d-flex justify-content-center align-items-center" for=radio_0><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M480-260q68 0 123.5-38.5T684-4e2H276q25 63 80.5 101.5T480-260zM312-520l44-42 42 42 42-42-84-86-86 86 42 42zm250 0 42-42 44 42 42-42-86-86-84 86 42 42zM480-80q-83 0-156-31.5T197-197t-85.5-127T80-480t31.5-156T197-763t127-85.5T480-880t156 31.5T763-763t85.5 127T880-480t-31.5 156T763-197t-127 85.5T480-80zm0-4e2zm0 320q134 0 227-93t93-227-93-227-227-93-227 93-93 227 93 227 227 93z" fill="currentColor"/></svg></label></div><div class=radio-emoji><input type=radio name=feedback-emoticon autocomplete=off value=Satisfied id=radio_1 required>
+<label class="d-flex justify-content-center align-items-center" for=radio_1><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M620-520q25 0 42.5-17.5T680-580t-17.5-42.5T620-640t-42.5 17.5T560-580t17.5 42.5T620-520zm-280 0q25 0 42.5-17.5T4e2-580t-17.5-42.5T340-640t-42.5 17.5T280-580t17.5 42.5T340-520zm140 260q68 0 123.5-38.5T684-4e2h-66q-22 37-58.5 58.5T480-320t-79.5-21.5T342-4e2h-66q25 63 80.5 101.5T480-260zm0 180q-83 0-156-31.5T197-197t-85.5-127T80-480t31.5-156T197-763t127-85.5T480-880t156 31.5T763-763t85.5 127T880-480t-31.5 156T763-197t-127 85.5T480-80zm0-4e2zm0 320q134 0 227-93t93-227-93-227-227-93-227 93-93 227 93 227 227 93z" fill="currentColor"/></svg></label></div><div class=radio-emoji><input type=radio name=feedback-emoticon autocomplete=off value=Dissatisfied id=radio_2 required>
+<label class="d-flex justify-content-center align-items-center" for=radio_2><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M620-520q25 0 42.5-17.5T680-580t-17.5-42.5T620-640t-42.5 17.5T560-580t17.5 42.5T620-520zm-280 0q25 0 42.5-17.5T4e2-580t-17.5-42.5T340-640t-42.5 17.5T280-580t17.5 42.5T340-520zm140 1e2q-68 0-123.5 38.5T276-280h66q22-37 58.5-58.5T480-360t79.5 21.5T618-280h66q-25-63-80.5-101.5T480-420zm0 340q-83 0-156-31.5T197-197t-85.5-127T80-480t31.5-156T197-763t127-85.5T480-880t156 31.5T763-763t85.5 127T880-480t-31.5 156T763-197t-127 85.5T480-80zm0-4e2zm0 320q134 0 227-93t93-227-93-227-227-93-227 93-93 227 93 227 227 93z" fill="currentColor"/></svg></label></div><div class=radio-emoji><input type=radio name=feedback-emoticon autocomplete=off value="Very Dissatisfied" id=radio_3 required>
+<label class="d-flex justify-content-center align-items-center" for=radio_3><svg height="24" viewBox="0 -960 960 960" width="24"><path d="M480-420q-68 0-123.5 38.5T276-280h408q-25-63-80.5-101.5T480-420zm-168-60 44-42 42 42 42-42-42-42 42-44-42-42-42 42-44-42-42 42 42 44-42 42 42 42zm250 0 42-42 44 42 42-42-42-42 42-44-42-42-44 42-42-42-42 42 42 44-42 42 42 42zM480-80q-83 0-156-31.5T197-197t-85.5-127T80-480t31.5-156T197-763t127-85.5T480-880t156 31.5T763-763t85.5 127T880-480t-31.5 156T763-197t-127 85.5T480-80zm0-4e2zm0 320q134 0 227-93t93-227-93-227-227-93-227 93-93 227 93 227 227 93z" fill="currentColor"/></svg></label></div></div></div></div><div id=feedback-emoji-end class="d-flex justify-content-md-start justify-content-sm-center"></div><div id=feedback-send><div id=text-wrapper><textarea id=textarea-emoji cols=55 maxlength=500 rows=3 placeholder="(Optional) Try to be as specific and detailed as possible!" type=text class="feedback-textarea-emoji p-2 mb-2"></textarea></div><div id=feedback-emoji-submit-container class="d-flex justify-content-end"><button type=button id=feedback-emoji-submit-button class="feedback-submit-emoji-btn btn btn-sm btn-primary mt-1 mb-2" role=button type=submit disabled>
+Submit</button></div></div></div></div><script>const emojiTextWrapper=document.getElementById("text-wrapper"),emojiRadios=document.querySelectorAll('input[name="feedback-emoticon"]'),emojiContainer=document.getElementById("feedback-widget-emoticon"),feedbackEmojiCta=document.getElementById("feedback-cta"),feedbackEmojiSubmitContainer=document.getElementById("feedback-emoji-submit-container"),feedbackEmojiSubmitBtn=document.getElementById("feedback-emoji-submit-button");emojiRadios.forEach(e=>{e.addEventListener("change",function(e){const t=e.target.id;emojiContainer.style.borderRadius="8px",feedbackEmojiCta.classList.add("px-4"),emojiTextWrapper.classList.add("is-visible"),feedbackEmojiSubmitBtn.removeAttribute("disabled"),feedbackEmojiSubmitContainer.classList.add("is-visible")})}),feedbackEmojiSubmitBtn.addEventListener("click",e=>{const t=document.getElementById("feedback-emoji-end"),n=document.getElementById("feedback-send"),s=document.querySelector('input[name="feedback-emoticon"]:checked').value,o=document.getElementById("textarea-emoji").value;function i(){feedbackEmojiCta.remove(),n.remove(),t.innerHTML="Thank you for helping to improve ETLX Docs' documentation!",t.classList.add("is-visible")}try{plausible("Feedback",{callback:i,props:{rating:s,message:o}})}catch(e){console.log(e),feedbackEmojiCta.remove(),n.remove(),t.innerHTML="Sorry! There was an error while attempting to submit your feedback!",t.classList.add("is-visible")}})</script></div><div><hr class=doc-hr><div id=doc-nav class=d-print-none><div class="row flex-xl-nowrap"><div class="col-sm-6 pt-2 doc-next"><a href=/docs/features/_etl_elt/><div class="card h-100 my-1"><div class="card-body py-2"><p class="card-title fs-5 fw-semibold lh-base mb-0"><i class="material-icons align-middle">navigate_before</i> ETL | ELT</p><p class="card-text ms-2">How ETLX models, executes, and …</p></div></div></a></div><div class="col-sm-6 pt-2 doc-prev"><a class=ms-auto href=/docs/contributing/how-to-contribute/><div class="card h-100 my-1 text-end"><div class="card-body py-2"><p class="card-title fs-5 fw-semibold lh-base mb-0">How to Contribute <i class="material-icons align-middle">navigate_next</i></p><p class="card-text me-2">Contribute to code, improve …</p></div></div></a></div></div></div></div></div></div></div></div><footer class="shadow py-3 d-print-none"><div class=container-fluid><div class="row align-items-center"><div class=col><div class="text-sm-start text-center mx-md-2"><p class=mb-0>© 2026 Real Data-Driven. Built with <a href=https://github.com/colinwilson/lotusdocs><strong>Lotus Docs</strong></a></p></div></div></div></div></footer></main></div></div><button onclick=topFunction() id=back-to-top aria-label="Back to Top Button" class="back-to-top fs-5"><svg width="24" height="24"><path d="M12 10.224l-6.3 6.3-1.38-1.372L12 7.472l7.68 7.68-1.38 1.376z" style="fill:#fff"/></svg></button>
+<script>(()=>{var e=document.getElementById("mode");e!==null&&(window.matchMedia("(prefers-color-scheme: dark)").addEventListener("change",e=>{e.matches?(localStorage.setItem("theme","dark"),document.documentElement.setAttribute("data-dark-mode","")):(localStorage.setItem("theme","light"),document.documentElement.removeAttribute("data-dark-mode"))}),e.addEventListener("click",()=>{document.documentElement.toggleAttribute("data-dark-mode"),localStorage.setItem("theme",document.documentElement.hasAttribute("data-dark-mode")?"dark":"light")}),localStorage.getItem("theme")==="dark"?document.documentElement.setAttribute("data-dark-mode",""):document.documentElement.removeAttribute("data-dark-mode"))})()</script><script src=/docs/js/bootstrap.eac7ee3f6fa791c684e7a51fc2fd50b6f724271b9e39562e4fe8c3942412df3acbfc4045f043d03399dac70091207507.js integrity=sha384-6sfuP2+nkcaE56Ufwv1QtvckJxueOVYuT+jDlCQS3zrL/EBF8EPQM5naxwCRIHUH defer></script><script type=text/javascript src=/docs/js/bundle.min.109ccba7d519ca1b675cc8a5399ad4d2e4485e0aeefe870ce572a197b699763c6b7d7899482743dd4fa6f416c5cc8292.js integrity=sha384-EJzLp9UZyhtnXMilOZrU0uRIXgru/ocM5XKhl7aZdjxrfXiZSCdD3U+m9BbFzIKS crossorigin=anonymous defer></script><script type=module>
+    var suggestions = document.getElementById('suggestions');
+    var search = document.getElementById('flexsearch');
+
+    const flexsearchContainer = document.getElementById('FlexSearchCollapse');
+
+    const hideFlexsearchBtn = document.getElementById('hideFlexsearch');
+
+    const configObject = { toggle: false }
+    const flexsearchContainerCollapse = new Collapse(flexsearchContainer, configObject) 
+
+    if (search !== null) {
+        document.addEventListener('keydown', inputFocus);
+        flexsearchContainer.addEventListener('shown.bs.collapse', function () {
+            search.focus();
+        });
+        
+        var topHeader = document.getElementById("top-header");
+        document.addEventListener('click', function(elem) {
+            if (!flexsearchContainer.contains(elem.target) && !topHeader.contains(elem.target))
+                flexsearchContainerCollapse.hide();
+        });
+    }
+
+    hideFlexsearchBtn.addEventListener('click', () =>{
+        flexsearchContainerCollapse.hide()
+    })
+
+    function inputFocus(e) {
+        if (e.ctrlKey && e.key === '/') {
+            e.preventDefault();
+            flexsearchContainerCollapse.toggle();
+        }
+        if (e.key === 'Escape' ) {
+            search.blur();
+            
+            flexsearchContainerCollapse.hide();
+        }
+    };
+
+    document.addEventListener('click', function(event) {
+
+    var isClickInsideElement = suggestions.contains(event.target);
+
+    if (!isClickInsideElement) {
+        suggestions.classList.add('d-none');
+    }
+
+    });
+
+    
+
+
+    document.addEventListener('keydown',suggestionFocus);
+
+    function suggestionFocus(e) {
+    const suggestionsHidden = suggestions.classList.contains('d-none');
+    if (suggestionsHidden) return;
+
+    const focusableSuggestions= [...suggestions.querySelectorAll('a')];
+    if (focusableSuggestions.length === 0) return;
+
+    const index = focusableSuggestions.indexOf(document.activeElement);
+
+    if (e.key === "ArrowUp") {
+        e.preventDefault();
+        const nextIndex = index > 0 ? index - 1 : 0;
+        focusableSuggestions[nextIndex].focus();
+    }
+    else if (e.key === "ArrowDown") {
+        e.preventDefault();
+        const nextIndex= index + 1 < focusableSuggestions.length ? index + 1 : index;
+        focusableSuggestions[nextIndex].focus();
+    }
+
+    }
+
+    
+
+
+    (function(){
+
+    var index = new FlexSearch.Document({
+        
+        tokenize: "forward",
+        minlength:  0 ,
+        cache:  100 ,
+        optimize:  true ,
+        document: {
+        id: 'id',
+        store: [
+            "href", "title", "description"
+        ],
+        index: ["title", "description", "content"]
+        }
+    });
+
+
+    
+
+
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+
+
+    
+
+    
+
+    index.add(
+            {
+                id:  0 ,
+                href: "\/docs\/",
+                title: "Documentation",
+                description: "Documentation for ETLX, a declarative and metadata-first ETL framework for building transparent, reproducible, and observable data pipelines.",
+                content: ""
+            }
+        );
+    index.add(
+            {
+                id:  1 ,
+                href: "\/docs\/overview\/",
+                title: "Overview",
+                description: "ETLX is a modern, composable, metadata-driven ETL framework for data engineers.",
+                content: "Welcome to the ETLX documentation.\nThis guide explains what ETLX is, why it exists, and how to think about it before diving into pipelines, configuration, and execution details.\nIf you are looking for a fast way to get started, jump directly to the "
+            }
+        );
+    index.add(
+            {
+                id:  2 ,
+                href: "\/docs\/quickstart\/",
+                title: "Quickstart",
+                description: "Get ETLX running in minutes and execute your first declarative, metadata-driven data pipeline.",
+                content: "✅ Requirements linkDepending on how you install ETLX:\nMinimum link Linux, macOS, or Windows DuckDB-compatible environment Optional (for building from source) link Go ≥ 1.21 git 📦 Installation linkChoose one of the following options.\nOption 1: Precompiled Binary (Recommended) linkDownload the latest release for your OS from:\n👉 https://github.com/realdatadriven/etlx/releases\nMake it executable and verify:\nchmod +x etlx ./etlx --help Option 2: Install via Go linkIf you want ETLX as a Go dependency or to build it yourself:\ngo get github.com/realdatadriven/etlx Option 3: Clone the Repository link git clone https://github.com/realdatadriven/etlx.git cd etlx Run directly:\ngo run cmd/main.go --config pipeline.md ⚠️ Windows note If you encounter DuckDB build issues, use the official DuckDB library and build with:\nCGO_ENABLED=1 CGO_LDFLAGS=\"-L/path/to/libs\" \\ go run -tags=duckdb_use_lib cmd/main.go --config pipeline.md 🧱 Your First Pipeline linkETLX pipelines are defined using structured Markdown.\nCreate a file named pipeline.md:\n# INPUTS ```yaml name: INPUTS description: Extracts data from source and load on target runs_as: ETL active: true ``` ## INPUT_1 ```yaml name: INPUT_1 description: Input 1 from an ODBC Source table: INPUT_1 # Destination Table load_conn: \"duckdb:\" load_before_sql: - \"ATTACH 'ducklake:@DL_DSN_URL' AS DL (DATA_PATH 's3://dl-bucket...')\" - \"ATTACH '@OLTP_DSN_URL' AS PG (TYPE POSTGRES)\" load_sql: load_input_in_dl load_on_err_match_patt: '(?i)table.+with.+name.+(\\w+).+does.+not.+exist' load_on_err_match_sql: create_input_in_dl load_after_sql: - DETACH DL - DETACH pg active: true ``` ```sql -- load_input_in_dl INSERT INTO DL.INPUT_1 BY NAME SELECT * FROM PG.INPUT_1 ``` ```sql -- create_input_in_dl CREATE TABLE DL.INPUT_1 AS SELECT * FROM PG.INPUT_1 ``` ... ▶️ Run the Pipeline link etlx --config pipeline.md That’s it.\nETLX will:\nParse the configuration Resolve dependencies Execute steps deterministically Capture execution metadata automatically ⚙️ Common CLI Flags link Flag Description --config Path to pipeline file (default: config.md) --date Reference date (YYYY-MM-DD) --only Run only specific keys --skip Skip specific keys --steps Run specific steps (extract, transform, load) --clean Run clean_sql blocks --drop Run drop_sql blocks --rows Show row counts Example:\netlx --config pipeline.md --only sales --steps extract,load 🔐 Environment Variables linkETLX supports environment-based configuration.\nExample .env file:\nDL_DSN_URL=mysql:db=ducklake_catalog host=localhost OLTP_DSN_URL=postgres:dbname=erpdb host=localhost user=postgres These variables are automatically loaded at runtime.\n🐳 Running ETLX with Docker linkYou can run ETLX without installing anything locally.\nBuild the Image link docker build -t etlx:latest . Or pull (when available):\ndocker pull docker.io/realdatadriven/etlx:latest Run a Pipeline link docker run --rm \\ -v $(pwd)/pipeline.md:/app/pipeline.md:ro \\ etlx:latest --config /app/pipeline.md Using .env and Database Directory link docker run --rm \\ -v $(pwd)/.env:/app/.env:ro \\ -v $(pwd)/pipeline.md:/app/pipeline.md:ro \\ -v $(pwd)/database:/app/database \\ etlx:latest --config /app/pipeline.md Interactive Mode link docker run -it --rm etlx:latest repl 💡 Optional: Docker Alias linkMake Docker feel like a native binary:\nalias etlx=\"docker run --rm -v $(pwd):/app etlx:latest\" Now:\netlx --help etlx --config pipeline.md 🧠 What’s Next? link 📘 Core Concepts – Pipelines, steps, metadata 🔍 Execution \u0026 Observability – What ETLX records automatically 🧾 Self-Documenting Pipelines 🧬 Metadata → Lineage → Governance 🧩 Advanced Use Cases \u0026 Examples 👉 Continue with Core Concepts to understand how ETLX works under the hood.\n"
+            }
+        );
+    index.add(
+            {
+                id:  3 ,
+                href: "\/docs\/features\/_etl_elt\/",
+                title: "ETL | ELT",
+                description: "How ETLX models, executes, and observes ETL and ELT pipelines using declarative, metadata-driven configurations.",
+                content: "ETL | ELT in ETLX linkETLX supports both ETL (Extract–Transform–Load) and ELT (Extract–Load–Transform) execution models.\nRather than enforcing a specific pattern, ETLX lets you declare the intent of the pipeline, and then executes it deterministically based on metadata.\nAt the highest level, an ETL or ELT pipeline is defined by:\nA root block describing the pipeline One or more execution units (inputs, transformations, outputs) Explicit SQL blocks defining the logic Optional error handling and lifecycle hooks Defining an ETL or ELT Pipeline linkA pipeline is declared using a level-one Markdown heading (#) combined with metadata.\nThe execution mode is defined using the runs_as key:\nruns_as: ETL runs_as: ELT Example link # INPUTS ```yaml name: INPUTS description: Extracts data from source and loads it into the target runs_as: ETL active: true ``` ## INPUT_1 ```yaml name: INPUT_1 description: Input 1 from an ODBC source table: INPUT_1 load_conn: \"duckdb:\" load_before_sql: - \"ATTACH 'ducklake:@DL_DSN_URL' AS DL (DATA_PATH 's3://dl-bucket...')\" - \"ATTACH '@OLTP_DSN_URL' AS PG (TYPE POSTGRES)\" load_sql: load_input_in_dl load_on_err_match_patt: '(?i)table.+with.+name.+(\\w+).+does.+not.+exist' load_on_err_match_sql: create_input_in_dl load_after_sql: - DETACH DL - DETACH PG active: true ``` ```sql -- load_input_in_dl INSERT INTO DL.INPUT_1 BY NAME SELECT * FROM PG.INPUT_1 ``` ```sql -- create_input_in_dl CREATE TABLE DL.INPUT_1 AS SELECT * FROM PG.INPUT_1 ``` Execution Model link1. Pipeline Initialization linkExecution starts at the root pipeline block (# INPUTS).\nFrom this block, ETLX extracts:\nPipeline metadata\nname description runs_as (ETL or ELT) Global execution context\nDefault connection Execution timestamp Runtime metadata Activation state\nPipelines marked as active: false are skipped This metadata becomes part of the execution trace and observability layer.\n2. Iteration Over Execution Units linkEach level-two heading (## INPUT_1, ## TRANSFORM_X, etc.) represents an execution unit.\nFor each unit, ETLX:\nReads its metadata Resolves connections Determines which steps apply Executes steps in a deterministic order Inactive units (active: false) are skipped but still recorded in metadata.\nETL / ELT Steps linkEach execution unit may define one or more steps, depending on the execution model:\nextract transform load Each step supports a consistent lifecycle:\nStep Lifecycle Hooks linkFor any step (e.g. load):\nHook Purpose _before_sql Setup (e.g. attach databases, prepare schemas) _sql Main execution logic _after_sql Cleanup (detach, finalize, release resources) SQL Resolution Rules linkEach SQL hook can be defined as:\nnull → step is skipped string → reference to a named SQL block inline SQL string list/array → executed sequentially Named SQL blocks are resolved from:\nsql [query_name] blocks Or SQL comments: -- query_name This allows clear separation of metadata and logic.\nConnection Handling linkEach step can specify a connection using _conn.\nIf defined → used for that step If null or omitted → falls back to the pipeline’s default connection This enables multi-engine pipelines (DuckDB, Postgres, ODBC, etc.) within a single execution.\nError Handling \u0026 Recovery linkETLX provides pattern-based error handling, allowing pipelines to recover dynamically from known failure conditions.\nFor any step :\n_on_err_match_patt A regular expression matched against the database error message _on_err_match_sql SQL executed when the pattern matches This is especially useful for:\nCreating missing tables Initializing schemas Handling first-run scenarios Working with evolving datasets The same mechanism applies to:\n_before_on_err_match_* Observability \u0026 Execution Metadata linkEvery ETLX run is fully observable by design.\nFor each pipeline, step, and sub-step, ETLX records:\nStart and end timestamps Execution duration Connection used SQL executed Rows affected (when available) Errors, warnings, and retries Memory and resource usage This metadata can be:\nLogged Stored Queried via SQL Used to generate reports and documentation Design Principles linkETLX treats ETL and ELT pipelines as:\nDeclarative execution plans Structured metadata documents Executable documentation This ensures pipelines are:\nReproducible Inspectable Auditable Portable across environments Summary linkIn ETLX:\nETL and ELT are modes, not rigid architectures Configuration defines intent, not orchestration SQL remains first-class Metadata powers execution, observability, and documentation Pipelines are self-describing and deterministic Your pipeline configuration is your source of truth.\n"
+            }
+        );
+    index.add(
+            {
+                id:  4 ,
+                href: "\/docs\/features\/",
+                title: "Features",
+                description: "A guide to the core features of the ETLX framework.",
+                content: ""
+            }
+        );
+    index.add(
+            {
+                id:  5 ,
+                href: "\/docs\/features\/etl_elt\/",
+                title: "ETL | ELT",
+                description: "ETL (Extract, Transform, Load) and ELT (Extract, Load, Transform) are two data integration approaches used to move and process data from source systems to target systems, such as data warehouses or data lakes.",
+                content: "ETL | ELT link Defines the overall ETL process with a level one heading # ETL or any level one heading where in metadata the key runs_as: ETL or runs_as: ELT is defined. Example: # INPUTS ```yaml name: INPUTS description: Extracts data from source and load on target runs_as: ETL active: true ``` ## INPUT_1 ```yaml name: INPUT_1 description: Input 1 from an ODBC Source table: INPUT_1 # Destination Table load_conn: \"duckdb:\" load_before_sql: - \"ATTACH 'ducklake:@DL_DSN_URL' AS DL (DATA_PATH 's3://dl-bucket...')\" - \"ATTACH '@OLTP_DSN_URL' AS PG (TYPE POSTGRES)\" load_sql: load_input_in_dl load_on_err_match_patt: '(?i)table.+with.+name.+(\\w+).+does.+not.+exist' load_on_err_match_sql: create_input_in_dl load_after_sql: - DETACH DL - DETACH pg active: true ``` ```sql -- load_input_in_dl INSERT INTO DL.INPUT_1 BY NAME SELECT * FROM PG.INPUT_1 ``` ```sql -- create_input_in_dl CREATE TABLE DL.INPUT_1 AS SELECT * FROM PG.INPUT_1 ``` ... 1. ETL Process Starts link Begin with the “ETL” block; Extract metadata, specifically: “connection”: Main connection to the destination database. “description”: For documentation porpose and logging the ETL process. 2. Loop through Level 2 key in under “ETL” block link Iterate over each key (e.g., “INPUT_1”) For each key, access its “metadata” to process the ETL steps. 3. ETL Steps link Each ETL step (extract, transform, load) has: _before_sql: Queries to run first (setup). _sql: The main query or queries to run. _after_sql: Cleanup queries to run afterward. Queries can be: null: Do nothing. string: Reference a single query key in the same map or the query itself. array|list: Execute all queries in sequence. In case is not null it can be the query itself or just the name of a sql code block under the same key, where sql [query_name] or first line -- [query_name] Use _conn for connection settings. If null, fall back to the main connection. Additionally, error handling can be defined using [step]_on_err_match_patt and [step]_on_err_match_sql to handle specific database errors dynamically, where [step]_on_err_match_patt is the regexp patthern to match error,and if maches the [step]_on_err_match_sql is executed, the same can be applied for [step]_before_on_err_match_patt and [step]_before_on_err_match_sql. You can define patterns to match specific errors and provide SQL statements to resolve those errors. This feature is useful when working with dynamically created databases, tables, or schemas. 4. Output Logs link Log progress (e.g., connection usage, start/end times, descriptions, message, success or failure, memory usage, …). Gracefully handle missing or null keys. "
+            }
+        );
+    index.add(
+            {
+                id:  6 ,
+                href: "\/docs\/contributing\/",
+                title: "Contributing",
+                description: "How to contribute to Lotus Labs.",
+                content: ""
+            }
+        );
+    index.add(
+            {
+                id:  7 ,
+                href: "\/docs\/contributing\/how-to-contribute\/",
+                title: "How to Contribute",
+                description: "Contribute to code, improve documentation, help others, submit to showcase, and contribute financially.",
+                content: "Contribute to code linkCreate a Pull Request link Follow the GitHub flow. Follow the Conventional Commits Specification Improve documentation link Follow the GitHub flow. Follow the Conventional Commits Specification Create an issue link Bug report Feature request Help others linkLotus Docs Discussions is the place to get help and help others with Lotus Docs.\nSubmit to showcase linkShare what you’ve built with us.\nContribute financially linkHelp support the team developing Lotus Docs by becoming a financial contributor.\n"
+            }
+        );
+    index.add(
+            {
+                id:  8 ,
+                href: "\/docs\/contributing\/code-of-conduct\/",
+                title: "Code of Conduct",
+                description: "Contributor Covenant Code of Conduct.",
+                content: "Our Pledge linkWe as members, contributors, and leaders pledge to make participation in our community a harassment-free experience for everyone, regardless of age, body size, visible or invisible disability, ethnicity, sex characteristics, gender identity and expression, level of experience, education, socio-economic status, nationality, personal appearance, race, caste, color, religion, or sexual identity and orientation.\nWe pledge to act and interact in ways that contribute to an open, welcoming, diverse, inclusive, and healthy community.\nOur Standards linkExamples of behaviour that contributes to a positive environment for our community include:\nDemonstrating empathy and kindness toward other people Being respectful of differing opinions, viewpoints, and experiences Giving and gracefully accepting constructive feedback Accepting responsibility and apologizing to those affected by our mistakes, and learning from the experience Focusing on what is best not just for us as individuals, but for the overall community Examples of unacceptable behaviour include:\nThe use of sexualized language or imagery, and sexual attention or advances of any kind Trolling, insulting or derogatory comments, and personal or political attacks Public or private harassment Publishing others’ private information, such as a physical or email address, without their explicit permission Other conduct which could reasonably be considered inappropriate in a professional setting Enforcement Responsibilities linkCommunity leaders are responsible for clarifying and enforcing our standards of acceptable behaviour and will take appropriate and fair corrective action in response to any behaviour that they deem inappropriate, threatening, offensive, or harmful.\nCommunity leaders have the right and responsibility to remove, edit, or reject comments, commits, code, wiki edits, issues, and other contributions that are not aligned to this Code of Conduct, and will communicate reasons for moderation decisions when appropriate.\nScope linkThis Code of Conduct applies within all community spaces, and also applies when an individual is officially representing the community in public spaces. Examples of representing our community include using an official e-mail address, posting via an official social media account, or acting as an appointed representative at an online or offline event.\nEnforcement linkInstances of abusive, harassing, or otherwise unacceptable behaviour may be reported by contacting the project team at lotusdocs@aigis.uk. All complaints will be reviewed and investigated promptly and fairly.\nAll community leaders are obligated to respect the privacy and security of the reporter of any incident.\nEnforcement Guidelines linkCommunity leaders will follow these Community Impact Guidelines in determining the consequences for any action they deem in violation of this Code of Conduct:\n1. Correction linkCommunity Impact: Use of inappropriate language or other behaviour deemed unprofessional or unwelcome in the community.\nConsequence: A private, written warning from community leaders, providing clarity around the nature of the violation and an explanation of why the behaviour was inappropriate. A public apology may be requested.\n2. Warning linkCommunity Impact: A violation through a single incident or series of actions.\nConsequence: A warning with consequences for continued behaviour. No interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, for a specified period of time. This includes avoiding interactions in community spaces as well as external channels like social media. Violating these terms may lead to a temporary or permanent ban.\n3. Temporary Ban linkCommunity Impact: A serious violation of community standards, including sustained inappropriate behaviour.\nConsequence: A temporary ban from any sort of interaction or public communication with the community for a specified period of time. No public or private interaction with the people involved, including unsolicited interaction with those enforcing the Code of Conduct, is allowed during this period. Violating these terms may lead to a permanent ban.\n4. Permanent Ban linkCommunity Impact: Demonstrating a pattern of violation of community standards, including sustained inappropriate behaviour, harassment of an individual, or aggression toward or disparagement of classes of individuals.\nConsequence: A permanent ban from any sort of public interaction within the community.\nAttribution linkThis Code of Conduct is adapted from the Contributor Covenant, version 2.1, available at https://www.contributor-covenant.org/version/2/1/code_of_conduct.html.\nCommunity Impact Guidelines were inspired by Mozilla’s code of conduct enforcement ladder.\nFor answers to common questions about this code of conduct, see the FAQ at https://www.contributor-covenant.org/faq. Translations are available at https://www.contributor-covenant.org/translations.\n"
+            }
+        );
+    index.add(
+            {
+                id:  9 ,
+                href: "\/docs\/help\/",
+                title: "Help",
+                description: "Help using the ETLX.",
+                content: ""
+            }
+        );
+    index.add(
+            {
+                id:  10 ,
+                href: "\/docs\/help\/troubleshooting\/",
+                title: "Troubleshooting",
+                description: "Solutions to common problems.",
+                content: " warning Caution - This documentation is in progress "
+            }
+        );
+    index.add(
+            {
+                id:  11 ,
+                href: "\/docs\/help\/faqs\/",
+                title: "FAQ",
+                description: "Answers to frequently asked questions.",
+                content: " warning Caution - This documentation is in progress "
+            }
+        );
+    search.addEventListener('input', show_results, true);
+
+    function show_results(){
+        const maxResult =  5 ;
+        const minlength =  0 ;
+        var searchQuery = sanitizeHTML(this.value);
+        var results = index.search(searchQuery, {limit: maxResult, enrich: true});
+
+        
+        const flatResults = new Map(); 
+        for (const result of results.flatMap(r => r.result)) {
+        if (flatResults.has(result.doc.href)) continue;
+        flatResults.set(result.doc.href, result.doc);
+        }
+
+        suggestions.innerHTML = "";
+        suggestions.classList.remove('d-none');
+
+        
+        if (searchQuery.length < minlength) {
+            const minCharMessage = document.createElement('div')
+            minCharMessage.innerHTML = `Please type at least <strong>${minlength}</strong> characters`
+            minCharMessage.classList.add("suggestion__no-results");
+            suggestions.appendChild(minCharMessage);
+            return;
+        } else {
+            
+            if (flatResults.size === 0 && searchQuery) {
+                const noResultsMessage = document.createElement('div')
+                noResultsMessage.innerHTML = "No results for" + ` "<strong>${searchQuery}</strong>"`
+                noResultsMessage.classList.add("suggestion__no-results");
+                suggestions.appendChild(noResultsMessage);
+                return;
+            }
+        }
+
+        
+        for(const [href, doc] of flatResults) {
+            const entry = document.createElement('div');
+            suggestions.appendChild(entry);
+
+            const a = document.createElement('a');
+            a.href = href;
+            entry.appendChild(a);
+
+            const title = document.createElement('span');
+            title.textContent = doc.title;
+            title.classList.add("suggestion__title");
+            a.appendChild(title);
+
+            const description = document.createElement('span');
+            description.textContent = doc.description;
+            description.classList.add("suggestion__description");
+            a.appendChild(description);
+
+            suggestions.appendChild(entry);
+
+            if(suggestions.childElementCount == maxResult) break;
+        }
+    }
+    }());
+</script></body></html>

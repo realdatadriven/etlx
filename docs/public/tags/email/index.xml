@@ -1,0 +1,17 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Email on ETLX | ETL / ELT Framework for Data Engineering</title><link>/tags/email/</link><description>Recent content in Email on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Tue, 06 Jan 2026 20:05:45 -0100</lastBuildDate><atom:link href="/tags/email/index.xml" rel="self" type="application/rss+xml"/><item><title>Notifications</title><link>/docs/features/notify/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/notify/</guid><description>&lt;h2 id="notifications"&gt;Notifications &lt;a href="#notifications" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;NOTIFY&lt;/code&gt; section enables sending notifications (e.g., email via SMTP) with dynamic templates populated from SQL query results. This is useful for monitoring ETL processes and sending status reports.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="why-use-notify"&gt;&lt;strong&gt;Why Use NOTIFY?&lt;/strong&gt; &lt;a href="#why-use-notify" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;✅ &lt;strong&gt;Real-time updates on ETL status&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Customizable email templates with dynamic content&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Supports attachments for automated reporting&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Ensures visibility into ETL success or failure&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id="example-sending-etl-status-via-email"&gt;&lt;strong&gt;Example: Sending ETL Status via Email&lt;/strong&gt; &lt;a href="#example-sending-etl-status-via-email" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;This example sends an email &lt;strong&gt;after an ETL process completes&lt;/strong&gt;, using &lt;strong&gt;log data from the database&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Requires</title><link>/docs/features/require/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/require/</guid><description>&lt;h2 id="requires"&gt;Requires &lt;a href="#requires" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="loading-structure"&gt;&lt;strong&gt;Loading Structure&lt;/strong&gt; &lt;a href="#loading-structure" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section includes metadata describing its purpose and activation status.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Loading Options&lt;/strong&gt;:&lt;/p&gt;</description></item></channel></rss>

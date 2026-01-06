@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Management on ETLX | ETL / ELT Framework for Data Engineering</title><link>/tags/management/</link><description>Recent content in Management on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Tue, 06 Jan 2026 20:05:45 -0100</lastBuildDate><atom:link href="/tags/management/index.xml" rel="self" type="application/rss+xml"/><item><title>Exports</title><link>/docs/features/exports/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/exports/</guid><description>&lt;hr&gt;
+&lt;h2 id="exports"&gt;Exports &lt;a href="#exports" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;EXPORTS&lt;/code&gt; block defines how ETLX &lt;strong&gt;materializes data into external artifacts&lt;/strong&gt; such as files, reports, and documents. Exports are typically the &lt;strong&gt;final stage&lt;/strong&gt; of a pipeline, where curated data is delivered to downstream consumers like analysts, regulators, partners, or automated systems.&lt;/p&gt;
+&lt;p&gt;Unlike &lt;code&gt;ETL&lt;/code&gt; or &lt;code&gt;MULTI_QUERIES&lt;/code&gt;, which focus on data movement and computation, &lt;code&gt;EXPORTS&lt;/code&gt; is concerned with &lt;strong&gt;presentation, distribution, and persistence outside the database&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;ETLX leverages DuckDB’s native &lt;code&gt;COPY&lt;/code&gt; capabilities and extends them with &lt;strong&gt;template-based rendering&lt;/strong&gt; to support both structured and text-based outputs.&lt;/p&gt;</description></item><item><title>Actions</title><link>/docs/features/actions/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/actions/</guid><description>&lt;h1 id="actions"&gt;Actions &lt;a href="#actions" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h1&gt;&lt;p&gt;There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The &lt;code&gt;ACTIONS&lt;/code&gt; section allows you to define steps for copying or transferring files using the file system or external protocols.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="actions-structure"&gt;&lt;strong&gt;ACTIONS Structure&lt;/strong&gt; &lt;a href="#actions-structure" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each action under the &lt;code&gt;ACTIONS&lt;/code&gt; section has the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;name&lt;/code&gt;: Unique name for the action.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;description&lt;/code&gt;: Human-readable explanation.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;type&lt;/code&gt;: The kind of action to perform. Options:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;copy_file&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;compress&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;decompress&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ftp_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ftp_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sftp_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sftp_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;http_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;http_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;s3_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;s3_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;db_2_db&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;params&lt;/code&gt;: A map of input parameters required by the action type.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+
+
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+ &lt;div class="prism-codeblock linenos"&gt;
+ &lt;pre id="f361df2" class="language-md line-numbers"&gt;
+ &lt;code&gt;
+# ACTIONS
+
+```yaml metadata
+name: FileOperations
+description: &amp;#34;Transfer and organize generated reports&amp;#34;
+path: examples
+active: true
+```
+
+## COPY LOCAL FILE
+
+```yaml metadata
+name: CopyReportToArchive
+description: &amp;#34;Move final report to archive folder&amp;#34;
+type: copy_file
+params:
+ source: &amp;#34;/reports/final_report.xlsx&amp;#34;
+ target: &amp;#34;/reports/archive/final_report_YYYYMMDD.xlsx&amp;#34;
+active: true
+```
+
+## Compress to ZIP
+
+```yaml metadata
+name: CompressReports
+description: &amp;#34;Compress report files into a .zip archive&amp;#34;
+type: compress
+params:
+ compression: zip
+ files:
+ - &amp;#34;reports/report_1.csv&amp;#34;
+ - &amp;#34;reports/report_2.csv&amp;#34;
+ output: &amp;#34;archives/reports_YYYYMM.zip&amp;#34;
+active: true
+```
+
+## UNZIP
+
+```yaml metadata
+name: CompressReports
+description: &amp;#34;Compress report files into a .zip archive&amp;#34;
+type: decompress
+params:
+ compression: zip
+ input: &amp;#34;archives/reports_YYYYMM.zip&amp;#34;
+ output: &amp;#34;tmp&amp;#34;
+active: true
+```
+
+## Compress to GZ
+
+```yaml metadata
+name: CompressToGZ
+description: &amp;#34;Compress a summary file to .gz&amp;#34;
+type: compress
+params:
+ compression: gz
+ files:
+ - &amp;#34;reports/summary.csv&amp;#34;
+ output: &amp;#34;archives/summary_YYYYMM.csv.gz&amp;#34;
+active: true
+```
+
+## HTTP DOWNLOAD
+
+```yaml metadata
+name: DownloadFromAPI
+description: &amp;#34;Download dataset from HTTP endpoint&amp;#34;
+type: http_download
+params:
+ url: &amp;#34;https://api.example.com/data&amp;#34;
+ target: &amp;#34;data/today.json&amp;#34;
+ method: GET
+ headers:
+ Authorization: &amp;#34;Bearer @API_TOKEN&amp;#34;
+ Accept: &amp;#34;application/json&amp;#34;
+ params:
+ date: &amp;#34;YYYYMMDD&amp;#34;
+ limit: &amp;#34;1000&amp;#34;
+active: true
+```
+
+## HTTP UPLOAD
+
+```yaml metadata
+name: PushReportToWebhook
+description: &amp;#34;Upload final report to an HTTP endpoint&amp;#34;
+type: http_upload
+params:
+ url: &amp;#34;https://webhook.example.com/upload&amp;#34;
+ method: POST
+ source: &amp;#34;reports/final.csv&amp;#34;
+ headers:
+ Authorization: &amp;#34;Bearer @WEBHOOK_TOKEN&amp;#34;
+ Content-Type: &amp;#34;multipart/form-data&amp;#34;
+ params:
+ type: &amp;#34;summary&amp;#34;
+ date: &amp;#34;YYYYMMDD&amp;#34;
+active: true
+```
+
+## FTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: &amp;#34;Download data file from external FTP&amp;#34;
+type: ftp_download
+params:
+ host: &amp;#34;ftp.example.com&amp;#34;
+ port: &amp;#34;21&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@FTP_PASSWORD&amp;#34;
+ source: &amp;#34;/data/daily_report.csv&amp;#34;
+ target: &amp;#34;downloads/daily_report.csv&amp;#34;
+active: true
+```
+
+## FTP DOWNLOAD GLOB
+
+```yaml metadata
+name: FetchRemoteReport2024
+description: &amp;#34;Download data file from external FTP&amp;#34;
+type: ftp_download
+params:
+ host: &amp;#34;ftp.example.com&amp;#34;
+ port: &amp;#34;21&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@FTP_PASSWORD&amp;#34;
+ source: &amp;#34;/data/daily_report_2024*.csv&amp;#34;
+ target: &amp;#34;downloads/&amp;#34;
+active: true
+```
+
+## SFTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: &amp;#34;Download data file from external SFTP&amp;#34;
+type: stp_download
+params:
+ host: &amp;#34;sftp.example.com&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@SFTP_PASSWORD&amp;#34;
+ host_key: ~/.ssh/known_hosts # or a specific file
+ port: 22
+ source: &amp;#34;/data/daily_report.csv&amp;#34;
+ target: &amp;#34;downloads/daily_report.csv&amp;#34;
+active: true
+```
+
+## S3 UPLOAD
+
+```yaml metadata
+name: ArchiveToS3
+description: &amp;#34;Send latest results to S3 bucket&amp;#34;
+type: s3_upload
+params:
+ AWS_ACCESS_KEY_ID: &amp;#39;@AWS_ACCESS_KEY_ID&amp;#39;
+ AWS_SECRET_ACCESS_KEY: &amp;#39;@AWS_SECRET_ACCESS_KEY&amp;#39;
+ AWS_REGION: &amp;#39;@AWS_REGION&amp;#39;
+ AWS_ENDPOINT: 127.0.0.1:3000
+ S3_FORCE_PATH_STYLE: true
+ S3_DISABLE_SSL: false
+ S3_SKIP_SSL_VERIFY: true
+ bucket: &amp;#34;my-etlx-bucket&amp;#34;
+ key: &amp;#34;exports/summary_YYYYMMDD.xlsx&amp;#34;
+ source: &amp;#34;reports/summary.xlsx&amp;#34;
+active: true
+```
+
+## S3 DOWNLOAD
+
+```yaml metadata
+name: DownalodFromS3
+description: &amp;#34;Download file S3 from bucket&amp;#34;
+type: s3_download
+params:
+ AWS_ACCESS_KEY_ID: &amp;#39;@AWS_ACCESS_KEY_ID&amp;#39;
+ AWS_SECRET_ACCESS_KEY: &amp;#39;@AWS_SECRET_ACCESS_KEY&amp;#39;
+ AWS_REGION: &amp;#39;@AWS_REGION&amp;#39;
+ AWS_ENDPOINT: 127.0.0.1:3000
+ S3_FORCE_PATH_STYLE: true
+ S3_DISABLE_SSL: false
+ S3_SKIP_SSL_VERIFY: true
+ bucket: &amp;#34;my-etlx-bucket&amp;#34;
+ key: &amp;#34;exports/summary_YYYYMMDD.xlsx&amp;#34;
+ target: &amp;#34;reports/summary.xlsx&amp;#34;
+active: true
+```&lt;/code&gt;
+ &lt;/pre&gt;
+ &lt;/div&gt;
+&lt;h3 id="-actions--db_2_db-cross-database-write"&gt;📥 ACTIONS – &lt;code&gt;db_2_db&lt;/code&gt; (Cross-Database Write) &lt;a href="#-actions--db_2_db-cross-database-write" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h3&gt;&lt;blockquote&gt;
+&lt;p&gt;As of this moment, &lt;strong&gt;DuckDB does not support direct integration&lt;/strong&gt; with certain databases like &lt;strong&gt;MSSQL&lt;/strong&gt;, &lt;strong&gt;DB2&lt;/strong&gt;, or &lt;strong&gt;Oracle&lt;/strong&gt;, the same way it does with &lt;strong&gt;SQLite&lt;/strong&gt;, &lt;strong&gt;Postgres&lt;/strong&gt;, or &lt;strong&gt;MySQL&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Scripts</title><link>/docs/features/scripts/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/scripts/</guid><description>&lt;h2 id="scripts"&gt;Scripts &lt;a href="#scripts" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;strong&gt;SCRIPTS&lt;/strong&gt; section allows you to execute &lt;strong&gt;SQL statements that do not naturally belong to other ETLX blocks&lt;/strong&gt; such as &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;DATA_QUALITY&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, or &lt;code&gt;MULTI_QUERIES&lt;/code&gt;. It is designed for &lt;strong&gt;operational, maintenance, and orchestration-style SQL&lt;/strong&gt;, where the goal is execution rather than producing datasets.&lt;/p&gt;
+&lt;p&gt;Typical use cases include cleanup operations, database maintenance, schema adjustments, or any SQL that should run as part of a pipeline but does not produce query results.&lt;/p&gt;</description></item></channel></rss>

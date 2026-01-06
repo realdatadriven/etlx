@@ -1,0 +1,13 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Help on ETLX | ETL / ELT Framework for Data Engineering</title><link>/docs/help/</link><description>Recent content in Help on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Sat, 03 Jan 2026 08:59:33 -0100</lastBuildDate><atom:link href="/docs/help/index.xml" rel="self" type="application/rss+xml"/><item><title>Troubleshooting</title><link>/docs/help/troubleshooting/</link><pubDate>Thu, 12 Nov 2020 15:22:20 +0100</pubDate><guid>/docs/help/troubleshooting/</guid><description>&lt;div class="alert alert-warning d-flex" role="alert"&gt;
+ &lt;div class="flex-shrink-1 alert-icon"&gt;
+ &lt;span class="material-icons size-20 me-2"&gt;
+ warning
+ &lt;/span&gt;&lt;/div&gt;
+ &lt;div class="w-100"&gt;&lt;strong&gt;Caution&lt;/strong&gt; - This documentation is in progress&lt;/div&gt;
+ &lt;/div&gt;</description></item><item><title>FAQ</title><link>/docs/help/faqs/</link><pubDate>Tue, 06 Oct 2020 08:49:31 +0000</pubDate><guid>/docs/help/faqs/</guid><description>&lt;div class="alert alert-warning d-flex" role="alert"&gt;
+ &lt;div class="flex-shrink-1 alert-icon"&gt;
+ &lt;span class="material-icons size-20 me-2"&gt;
+ warning
+ &lt;/span&gt;&lt;/div&gt;
+ &lt;div class="w-100"&gt;&lt;strong&gt;Caution&lt;/strong&gt; - This documentation is in progress&lt;/div&gt;
+ &lt;/div&gt;</description></item></channel></rss>

@@ -1,0 +1,11 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Execution on ETLX | ETL / ELT Framework for Data Engineering</title><link>/tags/execution/</link><description>Recent content in Execution on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Tue, 06 Jan 2026 20:05:45 -0100</lastBuildDate><atom:link href="/tags/execution/index.xml" rel="self" type="application/rss+xml"/><item><title>Multi-Engine Execution</title><link>/docs/features/multi-engine-execution/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/multi-engine-execution/</guid><description>&lt;hr&gt;
+&lt;h2 id="multi-engine-execution"&gt;Multi-Engine Execution &lt;a href="#multi-engine-execution" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX is designed to be &lt;strong&gt;engine-agnostic by default&lt;/strong&gt;. While &lt;strong&gt;DuckDB is the recommended and primary execution engine&lt;/strong&gt;, ETLX can execute pipelines across &lt;strong&gt;multiple database engines within the same workflow&lt;/strong&gt;, depending on availability, constraints, and use cases.&lt;/p&gt;
+&lt;p&gt;This allows ETLX to operate:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Fully &lt;strong&gt;embedded and in-process&lt;/strong&gt; (DuckDB, SQLite)&lt;/li&gt;
+&lt;li&gt;Against &lt;strong&gt;external OLTP / analytical databases&lt;/strong&gt; (PostgreSQL, MySQL, SQL Server)&lt;/li&gt;
+&lt;li&gt;Through &lt;strong&gt;ODBC or other sqlx-supported drivers&lt;/strong&gt; for broader compatibility&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;🧠 DuckDB is a &lt;em&gt;developer choice&lt;/em&gt;, not a hard dependency.
+ETLX adapts to your environment instead of forcing a single execution engine.&lt;/p&gt;</description></item></channel></rss>

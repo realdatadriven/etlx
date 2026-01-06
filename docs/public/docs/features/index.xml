@@ -1,0 +1,425 @@
+<?xml version="1.0" encoding="utf-8" standalone="yes"?><rss version="2.0" xmlns:atom="http://www.w3.org/2005/Atom"><channel><title>Features on ETLX | ETL / ELT Framework for Data Engineering</title><link>/docs/features/</link><description>Recent content in Features on ETLX | ETL / ELT Framework for Data Engineering</description><generator>Hugo</generator><language>en-GB</language><lastBuildDate>Tue, 06 Jan 2026 20:05:45 -0100</lastBuildDate><atom:link href="/docs/features/index.xml" rel="self" type="application/rss+xml"/><item><title>ETL | ELT</title><link>/docs/features/etl-elt/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/etl-elt/</guid><description>&lt;hr&gt;
+&lt;h2 id="etl--elt-in-etlx"&gt;ETL | ELT in ETLX &lt;a href="#etl--elt-in-etlx" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX supports both &lt;strong&gt;ETL (Extract–Transform–Load)&lt;/strong&gt; and &lt;strong&gt;ELT (Extract–Load–Transform)&lt;/strong&gt; execution models.&lt;/p&gt;
+&lt;p&gt;Rather than enforcing a specific pattern, ETLX lets you &lt;strong&gt;declare the intent of the pipeline&lt;/strong&gt;, and then executes it deterministically based on metadata.&lt;/p&gt;
+&lt;p&gt;At the highest level, an ETL or ELT pipeline is defined by:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;A &lt;strong&gt;root block&lt;/strong&gt; describing the pipeline&lt;/li&gt;
+&lt;li&gt;One or more &lt;strong&gt;execution units&lt;/strong&gt; (inputs, transformations, outputs)&lt;/li&gt;
+&lt;li&gt;Explicit &lt;strong&gt;SQL blocks&lt;/strong&gt; defining the logic&lt;/li&gt;
+&lt;li&gt;Optional &lt;strong&gt;error handling and lifecycle hooks&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h2 id="defining-an-etl-or-elt-pipeline"&gt;Defining an ETL or ELT Pipeline &lt;a href="#defining-an-etl-or-elt-pipeline" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;A pipeline is declared using a &lt;strong&gt;level-one Markdown heading&lt;/strong&gt; (&lt;code&gt;#&lt;/code&gt;) combined with metadata.&lt;/p&gt;</description></item><item><title>ETL | ELT - Validation Rules</title><link>/docs/features/validation/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/validation/</guid><description>&lt;hr&gt;
+&lt;h2 id="validation-rules"&gt;Validation Rules &lt;a href="#validation-rules" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX allows &lt;strong&gt;data quality validation to be declared as metadata&lt;/strong&gt;, making validation a &lt;strong&gt;first-class concern&lt;/strong&gt; of ETL / ELT execution.&lt;/p&gt;
+&lt;p&gt;Validations are executed &lt;strong&gt;as part of the pipeline lifecycle&lt;/strong&gt;, not as an external check or post-process.&lt;/p&gt;
+&lt;p&gt;They allow you to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Fail fast on invalid data&lt;/li&gt;
+&lt;li&gt;Guard against silent data corruption&lt;/li&gt;
+&lt;li&gt;Encode business and technical expectations declaratively&lt;/li&gt;
+&lt;li&gt;Keep validation logic close to the data movement it protects&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+&lt;h3 id="declaring-validations"&gt;Declaring Validations &lt;a href="#declaring-validations" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;Validations are defined using the metadata key:&lt;/p&gt;</description></item><item><title>Query Documentation</title><link>/docs/features/query-documentation/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/query-documentation/</guid><description>&lt;h2 id="query-documentation"&gt;Query Documentation &lt;a href="#query-documentation" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;In ETLX, SQL queries are not treated as opaque strings. Instead, they are modeled as &lt;strong&gt;structured, inspectable, and executable documents&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;This is particularly important in ETL and ELT pipelines where transformation logic tends to grow organically and quickly becomes difficult to understand, govern, and audit. Query Documentation addresses this problem by allowing SQL logic to be decomposed into &lt;strong&gt;field-level components enriched with metadata&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;The result is not just better readability, but a foundation for &lt;strong&gt;data governance, lineage, and automated documentation&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Data Quality</title><link>/docs/features/data-quality/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/data-quality/</guid><description>&lt;h2 id="data-quality-in-etlx"&gt;Data Quality in ETLX &lt;a href="#data-quality-in-etlx" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Data quality in ETLX is &lt;strong&gt;not an afterthought&lt;/strong&gt; or an external process. It is a &lt;strong&gt;first-class execution model&lt;/strong&gt;, designed to validate, observe, and optionally correct data using declarative, SQL-driven rules.&lt;/p&gt;
+&lt;p&gt;Rather than embedding ad-hoc checks inside transformations, ETLX treats data quality as:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;strong&gt;Executable metadata&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;Auditable validation logic&lt;/strong&gt;&lt;/li&gt;
+&lt;li&gt;&lt;strong&gt;A governance primitive&lt;/strong&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;This allows quality rules to be reasoned about, documented, versioned, and executed independently of ETL or ELT pipelines.&lt;/p&gt;</description></item><item><title>Multi / Stacked Queries</title><link>/docs/features/multi-query/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/multi-query/</guid><description>&lt;h2 id="multi--stacked-queries"&gt;Multi / Stacked Queries &lt;a href="#multi--stacked-queries" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;MULTI_QUERIES&lt;/code&gt; block allows you to define multiple independent but structurally compatible queries and combine their results into a &lt;strong&gt;single unified dataset&lt;/strong&gt; using SQL &lt;code&gt;UNION&lt;/code&gt; or &lt;code&gt;UNION ALL&lt;/code&gt;. This pattern is especially useful for &lt;strong&gt;reporting, KPI generation, metric tables, and summary datasets&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;Instead of orchestrating many individual queries manually, &lt;code&gt;MULTI_QUERIES&lt;/code&gt; lets you declaratively describe each row or slice of a report and automatically aggregate them into a single execution plan.&lt;/p&gt;</description></item><item><title>Exports</title><link>/docs/features/exports/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/exports/</guid><description>&lt;hr&gt;
+&lt;h2 id="exports"&gt;Exports &lt;a href="#exports" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;EXPORTS&lt;/code&gt; block defines how ETLX &lt;strong&gt;materializes data into external artifacts&lt;/strong&gt; such as files, reports, and documents. Exports are typically the &lt;strong&gt;final stage&lt;/strong&gt; of a pipeline, where curated data is delivered to downstream consumers like analysts, regulators, partners, or automated systems.&lt;/p&gt;
+&lt;p&gt;Unlike &lt;code&gt;ETL&lt;/code&gt; or &lt;code&gt;MULTI_QUERIES&lt;/code&gt;, which focus on data movement and computation, &lt;code&gt;EXPORTS&lt;/code&gt; is concerned with &lt;strong&gt;presentation, distribution, and persistence outside the database&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;ETLX leverages DuckDB’s native &lt;code&gt;COPY&lt;/code&gt; capabilities and extends them with &lt;strong&gt;template-based rendering&lt;/strong&gt; to support both structured and text-based outputs.&lt;/p&gt;</description></item><item><title>Actions</title><link>/docs/features/actions/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/actions/</guid><description>&lt;h1 id="actions"&gt;Actions &lt;a href="#actions" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h1&gt;&lt;p&gt;There are scenarios in ETL workflows where actions such as downloading, uploading, compressing or copying files cannot be performed using SQL alone. The &lt;code&gt;ACTIONS&lt;/code&gt; section allows you to define steps for copying or transferring files using the file system or external protocols.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="actions-structure"&gt;&lt;strong&gt;ACTIONS Structure&lt;/strong&gt; &lt;a href="#actions-structure" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Each action under the &lt;code&gt;ACTIONS&lt;/code&gt; section has the following:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;name&lt;/code&gt;: Unique name for the action.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;description&lt;/code&gt;: Human-readable explanation.&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;type&lt;/code&gt;: The kind of action to perform. Options:
+&lt;ul&gt;
+&lt;li&gt;&lt;code&gt;copy_file&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;compress&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;decompress&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ftp_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;ftp_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sftp_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;sftp_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;http_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;http_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;s3_download&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;s3_upload&lt;/code&gt;&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;db_2_db&lt;/code&gt;&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;&lt;code&gt;params&lt;/code&gt;: A map of input parameters required by the action type.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;hr&gt;
+
+
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+ &lt;div class="prism-codeblock linenos"&gt;
+ &lt;pre id="f361df2" class="language-md line-numbers"&gt;
+ &lt;code&gt;
+# ACTIONS
+
+```yaml metadata
+name: FileOperations
+description: &amp;#34;Transfer and organize generated reports&amp;#34;
+path: examples
+active: true
+```
+
+## COPY LOCAL FILE
+
+```yaml metadata
+name: CopyReportToArchive
+description: &amp;#34;Move final report to archive folder&amp;#34;
+type: copy_file
+params:
+ source: &amp;#34;/reports/final_report.xlsx&amp;#34;
+ target: &amp;#34;/reports/archive/final_report_YYYYMMDD.xlsx&amp;#34;
+active: true
+```
+
+## Compress to ZIP
+
+```yaml metadata
+name: CompressReports
+description: &amp;#34;Compress report files into a .zip archive&amp;#34;
+type: compress
+params:
+ compression: zip
+ files:
+ - &amp;#34;reports/report_1.csv&amp;#34;
+ - &amp;#34;reports/report_2.csv&amp;#34;
+ output: &amp;#34;archives/reports_YYYYMM.zip&amp;#34;
+active: true
+```
+
+## UNZIP
+
+```yaml metadata
+name: CompressReports
+description: &amp;#34;Compress report files into a .zip archive&amp;#34;
+type: decompress
+params:
+ compression: zip
+ input: &amp;#34;archives/reports_YYYYMM.zip&amp;#34;
+ output: &amp;#34;tmp&amp;#34;
+active: true
+```
+
+## Compress to GZ
+
+```yaml metadata
+name: CompressToGZ
+description: &amp;#34;Compress a summary file to .gz&amp;#34;
+type: compress
+params:
+ compression: gz
+ files:
+ - &amp;#34;reports/summary.csv&amp;#34;
+ output: &amp;#34;archives/summary_YYYYMM.csv.gz&amp;#34;
+active: true
+```
+
+## HTTP DOWNLOAD
+
+```yaml metadata
+name: DownloadFromAPI
+description: &amp;#34;Download dataset from HTTP endpoint&amp;#34;
+type: http_download
+params:
+ url: &amp;#34;https://api.example.com/data&amp;#34;
+ target: &amp;#34;data/today.json&amp;#34;
+ method: GET
+ headers:
+ Authorization: &amp;#34;Bearer @API_TOKEN&amp;#34;
+ Accept: &amp;#34;application/json&amp;#34;
+ params:
+ date: &amp;#34;YYYYMMDD&amp;#34;
+ limit: &amp;#34;1000&amp;#34;
+active: true
+```
+
+## HTTP UPLOAD
+
+```yaml metadata
+name: PushReportToWebhook
+description: &amp;#34;Upload final report to an HTTP endpoint&amp;#34;
+type: http_upload
+params:
+ url: &amp;#34;https://webhook.example.com/upload&amp;#34;
+ method: POST
+ source: &amp;#34;reports/final.csv&amp;#34;
+ headers:
+ Authorization: &amp;#34;Bearer @WEBHOOK_TOKEN&amp;#34;
+ Content-Type: &amp;#34;multipart/form-data&amp;#34;
+ params:
+ type: &amp;#34;summary&amp;#34;
+ date: &amp;#34;YYYYMMDD&amp;#34;
+active: true
+```
+
+## FTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: &amp;#34;Download data file from external FTP&amp;#34;
+type: ftp_download
+params:
+ host: &amp;#34;ftp.example.com&amp;#34;
+ port: &amp;#34;21&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@FTP_PASSWORD&amp;#34;
+ source: &amp;#34;/data/daily_report.csv&amp;#34;
+ target: &amp;#34;downloads/daily_report.csv&amp;#34;
+active: true
+```
+
+## FTP DOWNLOAD GLOB
+
+```yaml metadata
+name: FetchRemoteReport2024
+description: &amp;#34;Download data file from external FTP&amp;#34;
+type: ftp_download
+params:
+ host: &amp;#34;ftp.example.com&amp;#34;
+ port: &amp;#34;21&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@FTP_PASSWORD&amp;#34;
+ source: &amp;#34;/data/daily_report_2024*.csv&amp;#34;
+ target: &amp;#34;downloads/&amp;#34;
+active: true
+```
+
+## SFTP DOWNLOAD
+
+```yaml metadata
+name: FetchRemoteReport
+description: &amp;#34;Download data file from external SFTP&amp;#34;
+type: stp_download
+params:
+ host: &amp;#34;sftp.example.com&amp;#34;
+ user: &amp;#34;myuser&amp;#34;
+ password: &amp;#34;@SFTP_PASSWORD&amp;#34;
+ host_key: ~/.ssh/known_hosts # or a specific file
+ port: 22
+ source: &amp;#34;/data/daily_report.csv&amp;#34;
+ target: &amp;#34;downloads/daily_report.csv&amp;#34;
+active: true
+```
+
+## S3 UPLOAD
+
+```yaml metadata
+name: ArchiveToS3
+description: &amp;#34;Send latest results to S3 bucket&amp;#34;
+type: s3_upload
+params:
+ AWS_ACCESS_KEY_ID: &amp;#39;@AWS_ACCESS_KEY_ID&amp;#39;
+ AWS_SECRET_ACCESS_KEY: &amp;#39;@AWS_SECRET_ACCESS_KEY&amp;#39;
+ AWS_REGION: &amp;#39;@AWS_REGION&amp;#39;
+ AWS_ENDPOINT: 127.0.0.1:3000
+ S3_FORCE_PATH_STYLE: true
+ S3_DISABLE_SSL: false
+ S3_SKIP_SSL_VERIFY: true
+ bucket: &amp;#34;my-etlx-bucket&amp;#34;
+ key: &amp;#34;exports/summary_YYYYMMDD.xlsx&amp;#34;
+ source: &amp;#34;reports/summary.xlsx&amp;#34;
+active: true
+```
+
+## S3 DOWNLOAD
+
+```yaml metadata
+name: DownalodFromS3
+description: &amp;#34;Download file S3 from bucket&amp;#34;
+type: s3_download
+params:
+ AWS_ACCESS_KEY_ID: &amp;#39;@AWS_ACCESS_KEY_ID&amp;#39;
+ AWS_SECRET_ACCESS_KEY: &amp;#39;@AWS_SECRET_ACCESS_KEY&amp;#39;
+ AWS_REGION: &amp;#39;@AWS_REGION&amp;#39;
+ AWS_ENDPOINT: 127.0.0.1:3000
+ S3_FORCE_PATH_STYLE: true
+ S3_DISABLE_SSL: false
+ S3_SKIP_SSL_VERIFY: true
+ bucket: &amp;#34;my-etlx-bucket&amp;#34;
+ key: &amp;#34;exports/summary_YYYYMMDD.xlsx&amp;#34;
+ target: &amp;#34;reports/summary.xlsx&amp;#34;
+active: true
+```&lt;/code&gt;
+ &lt;/pre&gt;
+ &lt;/div&gt;
+&lt;h3 id="-actions--db_2_db-cross-database-write"&gt;📥 ACTIONS – &lt;code&gt;db_2_db&lt;/code&gt; (Cross-Database Write) &lt;a href="#-actions--db_2_db-cross-database-write" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h3&gt;&lt;blockquote&gt;
+&lt;p&gt;As of this moment, &lt;strong&gt;DuckDB does not support direct integration&lt;/strong&gt; with certain databases like &lt;strong&gt;MSSQL&lt;/strong&gt;, &lt;strong&gt;DB2&lt;/strong&gt;, or &lt;strong&gt;Oracle&lt;/strong&gt;, the same way it does with &lt;strong&gt;SQLite&lt;/strong&gt;, &lt;strong&gt;Postgres&lt;/strong&gt;, or &lt;strong&gt;MySQL&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Scripts</title><link>/docs/features/scripts/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/scripts/</guid><description>&lt;h2 id="scripts"&gt;Scripts &lt;a href="#scripts" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;strong&gt;SCRIPTS&lt;/strong&gt; section allows you to execute &lt;strong&gt;SQL statements that do not naturally belong to other ETLX blocks&lt;/strong&gt; such as &lt;code&gt;ETL&lt;/code&gt;, &lt;code&gt;DATA_QUALITY&lt;/code&gt;, &lt;code&gt;EXPORTS&lt;/code&gt;, or &lt;code&gt;MULTI_QUERIES&lt;/code&gt;. It is designed for &lt;strong&gt;operational, maintenance, and orchestration-style SQL&lt;/strong&gt;, where the goal is execution rather than producing datasets.&lt;/p&gt;
+&lt;p&gt;Typical use cases include cleanup operations, database maintenance, schema adjustments, or any SQL that should run as part of a pipeline but does not produce query results.&lt;/p&gt;</description></item><item><title>Logs / Observability</title><link>/docs/features/logs/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/logs/</guid><description>&lt;h2 id="logs--observability-handling--logs"&gt;Logs / Observability Handling (&lt;code&gt;# LOGS&lt;/code&gt;) &lt;a href="#logs--observability-handling--logs" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX provides a &lt;strong&gt;logging mechanism&lt;/strong&gt; that allows &lt;strong&gt;saving logs&lt;/strong&gt; into a database. This is useful for tracking &lt;strong&gt;executions, debugging, and auditing ETL processes&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;By default, ETLX logs &lt;strong&gt;every relevant aspect of the pipeline&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Step name / description&lt;/li&gt;
+&lt;li&gt;Timestamp start / end&lt;/li&gt;
+&lt;li&gt;Duration in seconds&lt;/li&gt;
+&lt;li&gt;Success / failure&lt;/li&gt;
+&lt;li&gt;Messages and errors&lt;/li&gt;
+&lt;li&gt;Memory usage&lt;/li&gt;
+&lt;li&gt;Optional row counts, files generated, or other metrics&lt;/li&gt;
+&lt;/ul&gt;
+&lt;p&gt;All logs are serialized as &lt;strong&gt;JSON&lt;/strong&gt; and persisted using the LOGS block.&lt;/p&gt;</description></item><item><title>Notifications</title><link>/docs/features/notify/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/notify/</guid><description>&lt;h2 id="notifications"&gt;Notifications &lt;a href="#notifications" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;NOTIFY&lt;/code&gt; section enables sending notifications (e.g., email via SMTP) with dynamic templates populated from SQL query results. This is useful for monitoring ETL processes and sending status reports.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="why-use-notify"&gt;&lt;strong&gt;Why Use NOTIFY?&lt;/strong&gt; &lt;a href="#why-use-notify" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;✅ &lt;strong&gt;Real-time updates on ETL status&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Customizable email templates with dynamic content&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Supports attachments for automated reporting&lt;/strong&gt;&lt;br&gt;
+✅ &lt;strong&gt;Ensures visibility into ETL success or failure&lt;/strong&gt;&lt;/p&gt;
+&lt;h2 id="example-sending-etl-status-via-email"&gt;&lt;strong&gt;Example: Sending ETL Status via Email&lt;/strong&gt; &lt;a href="#example-sending-etl-status-via-email" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;This example sends an email &lt;strong&gt;after an ETL process completes&lt;/strong&gt;, using &lt;strong&gt;log data from the database&lt;/strong&gt;.&lt;/p&gt;</description></item><item><title>Requires</title><link>/docs/features/require/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/require/</guid><description>&lt;h2 id="requires"&gt;Requires &lt;a href="#requires" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section in the ETL configuration allows you to load dependencies from external Markdown configurations. These dependencies can either be loaded from file paths or dynamically through queries. This feature promotes modularity and reusability by enabling you to define reusable parts of the configuration in separate files or queries.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="loading-structure"&gt;&lt;strong&gt;Loading Structure&lt;/strong&gt; &lt;a href="#loading-structure" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ol&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Metadata&lt;/strong&gt;:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;The &lt;code&gt;REQUIRES&lt;/code&gt; section includes metadata describing its purpose and activation status.&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;&lt;strong&gt;Loading Options&lt;/strong&gt;:&lt;/p&gt;</description></item><item><title>Advanced Features</title><link>/docs/features/advanced/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/advanced/</guid><description>&lt;h2 id="advanced-features"&gt;Advanced Features &lt;a href="#advanced-features" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Error Handling:
+Define patterns for resolving errors dynamically during execution.&lt;/p&gt;
+
+
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+ 
+ 
+
+ 
+ 
+
+ &lt;div class="prism-codeblock linenos"&gt;
+ &lt;pre id="4562193" class="language-yaml line-numbers"&gt;
+ &lt;code&gt;load_on_err_match_patt: &amp;#34;(?i)table.&amp;#43;does.&amp;#43;not.&amp;#43;exist&amp;#34;
+load_on_err_match_sql: &amp;#34;CREATE TABLE sales_table (id INT, total FLOAT)&amp;#34;&lt;/code&gt;
+ &lt;/pre&gt;
+ &lt;/div&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Modular Configuration:
+Break down workflows into reusable components for better maintainability.&lt;/p&gt;
+&lt;/li&gt;
+&lt;/ul&gt;
+&lt;h3 id="-advanced-usage-dynamic-query-generation-get_dyn_queries"&gt;🛠️ Advanced Usage: Dynamic Query Generation (&lt;code&gt;get_dyn_queries[...]&lt;/code&gt;) &lt;a href="#-advanced-usage-dynamic-query-generation-get_dyn_queries" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h3&gt;&lt;p&gt;In some &lt;strong&gt;advanced ETL workflows&lt;/strong&gt;, you may need to &lt;strong&gt;dynamically generate SQL queries&lt;/strong&gt; based on metadata or schema differences between the source and destination databases.&lt;/p&gt;</description></item><item><title>Embedding in GO</title><link>/docs/features/embedding/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/embedding/</guid><description>&lt;h2 id="embedding-in-go"&gt;Embedding in Go &lt;a href="#embedding-in-go" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;To embed the ETL framework in a Go application, you can use the &lt;code&gt;etlx&lt;/code&gt; package and call &lt;code&gt;ConfigFromMDText&lt;/code&gt; and &lt;code&gt;RunETL&lt;/code&gt;. Example (from README):&lt;/p&gt;
+
+
+
+ 
+ 
+ 
+
+ 
+ 
+ 
+ 
+
+ 
+
+ &lt;div class="prism-codeblock "&gt;
+ &lt;pre id="1cdc31f" class="language-go "&gt;
+ &lt;code&gt;package main
+
+import (
+ &amp;#34;fmt&amp;#34;
+ &amp;#34;time&amp;#34;
+ &amp;#34;github.com/realdatadriven/etlx&amp;#34;
+)
+
+func main() {
+ etl := &amp;amp;etlx.ETLX{}
+
+ // Load configuration from Markdown text
+ err := etl.ConfigFromMDText(`# Your Markdown config here`)
+ if err != nil {
+ fmt.Printf(&amp;#34;Error loading config: %v\n&amp;#34;, err)
+ return
+ }
+
+ // Prepare date reference
+ dateRef := []time.Time{time.Now().AddDate(0, 0, -1)}
+
+ // Define additional options
+ options := map[string]any{
+ &amp;#34;only&amp;#34;: []string{&amp;#34;sales&amp;#34;},
+ &amp;#34;steps&amp;#34;: []string{&amp;#34;extract&amp;#34;, &amp;#34;load&amp;#34;},
+ }
+
+ // Run ETL process
+ logs, err := etl.RunETL(dateRef, nil, options)
+ if err != nil {
+ fmt.Printf(&amp;#34;Error running ETL: %v\n&amp;#34;, err)
+ return
+ }
+
+ // Print logs
+ for _, log := range logs {
+ fmt.Printf(&amp;#34;Log: %&amp;#43;v\n&amp;#34;, log)
+ }
+}&lt;/code&gt;
+ &lt;/pre&gt;
+ &lt;/div&gt;
+&lt;p&gt;This code snippet demonstrates how to set up and run an ETL process using the ETLX framework within a Go application. You can customize the configuration and options as needed for your specific use case.&lt;/p&gt;</description></item><item><title>DuckDB at the Core</title><link>/docs/features/ddb-at-the-core/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/ddb-at-the-core/</guid><description>&lt;h2 id="duckdb-at-the-core"&gt;DuckDB at the Core &lt;a href="#duckdb-at-the-core" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX is built &lt;strong&gt;around DuckDB&lt;/strong&gt; as its execution engine. At its core, ETLX embraces a &lt;strong&gt;SQL-first philosophy&lt;/strong&gt;, enabling powerful &lt;strong&gt;in-process analytics and transformations&lt;/strong&gt; without requiring external compute engines or distributed systems.&lt;/p&gt;
+&lt;p&gt;DuckDB acts as the &lt;strong&gt;analytical backbone&lt;/strong&gt; of the pipeline, executing transformations, validations, exports, and even orchestration-related logic using standard SQL.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="-why-duckdb"&gt;🧠 Why DuckDB? &lt;a href="#-why-duckdb" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;DuckDB is a modern analytical database designed for &lt;strong&gt;OLAP workloads&lt;/strong&gt;, embedded directly into applications. This makes it a perfect fit for ETLX.&lt;/p&gt;</description></item><item><title>Multi-Engine Execution</title><link>/docs/features/multi-engine-execution/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/multi-engine-execution/</guid><description>&lt;hr&gt;
+&lt;h2 id="multi-engine-execution"&gt;Multi-Engine Execution &lt;a href="#multi-engine-execution" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX is designed to be &lt;strong&gt;engine-agnostic by default&lt;/strong&gt;. While &lt;strong&gt;DuckDB is the recommended and primary execution engine&lt;/strong&gt;, ETLX can execute pipelines across &lt;strong&gt;multiple database engines within the same workflow&lt;/strong&gt;, depending on availability, constraints, and use cases.&lt;/p&gt;
+&lt;p&gt;This allows ETLX to operate:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;Fully &lt;strong&gt;embedded and in-process&lt;/strong&gt; (DuckDB, SQLite)&lt;/li&gt;
+&lt;li&gt;Against &lt;strong&gt;external OLTP / analytical databases&lt;/strong&gt; (PostgreSQL, MySQL, SQL Server)&lt;/li&gt;
+&lt;li&gt;Through &lt;strong&gt;ODBC or other sqlx-supported drivers&lt;/strong&gt; for broader compatibility&lt;/li&gt;
+&lt;/ul&gt;
+&lt;blockquote&gt;
+&lt;p&gt;🧠 DuckDB is a &lt;em&gt;developer choice&lt;/em&gt;, not a hard dependency.
+ETLX adapts to your environment instead of forcing a single execution engine.&lt;/p&gt;</description></item><item><title>Beyond ETL / ELT</title><link>/docs/features/beyond-etl/</link><pubDate>Tue, 16 Dec 2025 01:04:15 +0000</pubDate><guid>/docs/features/beyond-etl/</guid><description>&lt;h2 id="beyond-etl--elt"&gt;Beyond ETL / ELT &lt;a href="#beyond-etl--elt" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;ETLX is &lt;strong&gt;not just an ETL / ELT engine&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;It is a &lt;strong&gt;declarative specification&lt;/strong&gt; for describing &lt;em&gt;how modern data workflows should be built, executed, documented, audited, and governed&lt;/em&gt; — in a way that is &lt;strong&gt;transparent&lt;/strong&gt;, &lt;strong&gt;portable&lt;/strong&gt;, and &lt;strong&gt;self-documented&lt;/strong&gt;.&lt;/p&gt;
+&lt;p&gt;In ETLX, the pipeline &lt;em&gt;is&lt;/em&gt; the documentation.&lt;/p&gt;
+&lt;hr&gt;
+&lt;h2 id="from-pipelines-to-specifications"&gt;From Pipelines to Specifications &lt;a href="#from-pipelines-to-specifications" class="anchor" aria-hidden="true"&gt;&lt;i class="material-icons align-middle"&gt;link&lt;/i&gt;&lt;/a&gt;&lt;/h2&gt;&lt;p&gt;Traditional data platforms tend to:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;
+&lt;p&gt;Hide logic inside &lt;strong&gt;closed-source binaries&lt;/strong&gt;&lt;/p&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Spread business rules across:&lt;/p&gt;
+&lt;ul&gt;
+&lt;li&gt;SQL files&lt;/li&gt;
+&lt;li&gt;Python scripts&lt;/li&gt;
+&lt;li&gt;Airflow DAGs&lt;/li&gt;
+&lt;li&gt;Wiki pages&lt;/li&gt;
+&lt;li&gt;Spreadsheets&lt;/li&gt;
+&lt;/ul&gt;
+&lt;/li&gt;
+&lt;li&gt;
+&lt;p&gt;Separate &lt;strong&gt;execution&lt;/strong&gt;, &lt;strong&gt;documentation&lt;/strong&gt;, &lt;strong&gt;validation&lt;/strong&gt;, and &lt;strong&gt;governance&lt;/strong&gt; into disconnected systems&lt;/p&gt;</description></item></channel></rss>
