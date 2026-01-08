@@ -18,5 +18,476 @@
 </head>
 <body>
     <h1>Data Dictionary</h1>
+            <h2>
+                AUTO_LOGS — Logging
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+            </table>
+            <h2>
+                EXTRACT_LOAD — Extracts and Loads the data sets to the local analitical database
+
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>TRIP_DATA</td>
+                        <td>Example extrating trip data from web to a local database</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>ZONES</td>
+                        <td>Taxi Zone Lookup Table</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+            </table>
+            <h2>
+                GOVERNANCE_ARTIFACTS — Generates governance artifacts like data dictionary and data quality rules.
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>DATA_DICTIONARY</td>
+                        <td>Generates a data dictionary from the metadata of the queries.</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+            </table>
+            <h2>
+                QUALITY_CHECK — Runs some queries to check quality / validate.
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>Rule0001</td>
+                        <td>Check if the payment_type has only the values 0=Flex Fare, 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided trip.</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>Rule0002</td>
+                        <td>Check if there is any trip with distance less than or equal to zero.</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+            </table>
+            <h2>
+                QUERY_EXTRACT_TRIP_DATA — Extracts essential NYC Yellow Taxi trip fields (with governance metadata).
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>VendorID</td>
+                        <td>A code indicating which TPEP provider generated the record. 1=CMT, 2=Curb, 6=Myle, 7=Helix.</td>
+                        <td>integer</td>
+                        <td>data-providers</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>tpep_pickup_datetime</td>
+                        <td>Timestamp when the meter was engaged (trip start).</td>
+                        <td>timestamp</td>
+                        <td>taxi-analytics-team</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>tpep_dropoff_datetime</td>
+                        <td>Timestamp when the meter was disengaged (trip end).</td>
+                        <td>timestamp</td>
+                        <td>taxi-analytics-team</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>passenger_count</td>
+                        <td>Number of passengers, typically entered by the driver.</td>
+                        <td>integer</td>
+                        <td>ops</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>trip_distance</td>
+                        <td>Elapsed trip distance in miles, reported by the meter.</td>
+                        <td>double</td>
+                        <td>taxi-analytics-team</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>RatecodeID</td>
+                        <td>Final rate code at trip end. 1=Standard, 2=JFK, 3=Newark, 4=Nassau/Westchester, 5=Negotiated fare, 6=Group ride, 99=Unknown.</td>
+                        <td>integer</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>store_and_fwd_flag</td>
+                        <td>&#39;Y&#39; if the trip record was held in the vehicle before transmission (no server connection). &#39;N&#39; otherwise.</td>
+                        <td>string</td>
+                        <td>platform</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>PULocationID</td>
+                        <td>TLC Taxi Zone ID for pickup location.</td>
+                        <td>integer</td>
+                        <td>geo</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>DOLocationID</td>
+                        <td>TLC Taxi Zone ID for dropoff location.</td>
+                        <td>integer</td>
+                        <td>geo</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>payment_type</td>
+                        <td>How the passenger paid: 0=Flex Fare, 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided trip.</td>
+                        <td>integer</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>fare_amount</td>
+                        <td>Time-and-distance fare calculated by the meter.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>extra</td>
+                        <td>Miscellaneous extras and surcharges (e.g., peak surcharge).</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>mta_tax</td>
+                        <td>0.50 USD MTA tax triggered by metered rate.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>tip_amount</td>
+                        <td>Tip in USD. Only includes credit-card tips; cash tips are not recorded.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>tolls_amount</td>
+                        <td>Total tolls paid for the trip.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>improvement_surcharge</td>
+                        <td>Flat surcharge added at flag drop. Introduced in 2015.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>total_amount</td>
+                        <td>Total charged amount (fare &#43; extras &#43; taxes &#43; tips).</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>congestion_surcharge</td>
+                        <td>NY State congestion surcharge assessed per trip.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>airport_fee</td>
+                        <td>Fee for pickups at JFK or LaGuardia airports.</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+                    <tr>
+                        <td>cbd_congestion_fee</td>
+                        <td>MTA Congestion Relief Zone fee (in effect after Jan 5, 2025).</td>
+                        <td>numeric</td>
+                        <td>finance</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+            </table>
+            <h2>
+                QUERY_TOP_ZONES — Most common pickup/dropoff zone combinations with aggregated metrics.
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>pickup_borough</td>
+                        <td>Borough of the pickup location (from ZONES lookup).</td>
+                        <td>string</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.PULocationID, ZONES.Borough
+                        </td>
+                        <td>This field is a direct lookup of the pickup borough using the pickup location ID.
+</td>
+                    </tr>
+                    <tr>
+                        <td>pickup_zone</td>
+                        <td>Zone name of the pickup location (from ZONES lookup).</td>
+                        <td>string</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.PULocationID, ZONES.Zone
+                        </td>
+                        <td>This field is a direct lookup of the pickup zone using the pickup location ID.
+</td>
+                    </tr>
+                    <tr>
+                        <td>dropoff_borough</td>
+                        <td>Borough of the dropoff location (from ZONES lookup).</td>
+                        <td>string</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.DOLocationID, ZONES.Borough
+                        </td>
+                        <td>This field is a direct lookup of the dropoff borough using the dropoff location ID.
+</td>
+                    </tr>
+                    <tr>
+                        <td>dropoff_zone</td>
+                        <td>Zone name of the dropoff location (from ZONES lookup).</td>
+                        <td>string</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.DOLocationID, ZONES.Zone
+                        </td>
+                        <td>This field is a direct lookup of the dropoff zone using the dropoff location ID.
+</td>
+                    </tr>
+                    <tr>
+                        <td>total_trips</td>
+                        <td>Total number of trips between each pickup/dropoff zone pair.</td>
+                        <td>integer</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.*
+                        </td>
+                        <td>&#34;
+Count the number of trips in each pickup/dropoff combination.
+
+**Formula (LaTeX):**
+
+```latex
+\text{total\_trips} = \sum_{i=1}^{N} 1
+```&#34;
+</td>
+                    </tr>
+                    <tr>
+                        <td>avg_fare</td>
+                        <td>Average total fare for trips between the selected pickup and dropoff zones.</td>
+                        <td>numeric</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.total_amount
+                        </td>
+                        <td>&#34;
+Compute the arithmetic mean of total fares for the group, rounded to 2 decimals.
+
+**Formula (LaTeX):**
+
+```latex
+\text{avg\_fare} = \text{round}\!\left(\frac{1}{N}\sum_{i=1}^{N} \text{total\_amount}_i,\ 2\right)
+```&#34;
+</td>
+                    </tr>
+                    <tr>
+                        <td>avg_distance</td>
+                        <td>Average trip distance (miles).</td>
+                        <td>numeric</td>
+                        <td>N/A</td>
+                        <td>TRIP_DATA.trip_distance
+                        </td>
+                        <td>&#34;
+Compute the arithmetic mean of trip distances for the group, rounded to 2 decimals.
+
+**Formula (LaTeX):**
+
+```latex
+\text{avg\_distance} = \text{round}\!\left(\frac{1}{N}\sum_{i=1}^{N} \text{trip\_distance}_i,\ 2\right)
+```&#34;
+</td>
+                    </tr>
+            </table>
+            <h2>
+                SAVE_LOGS — Saving the logs in the same DB instead of the deafult temp style
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+            </table>
+            <h2>
+                TRANSFORM — Transforms the inputs into to desrable outputs
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                    <tr>
+                        <td>MostPopularRoutes</td>
+                        <td>Most Popular Routes - Identify the most common pickup-dropoff route combinations to understand travel patterns.
+</td>
+                        <td>N/A</td>
+                        <td>N/A</td>
+                        <td>
+                                N/A
+                        </td>
+                        <td>N/A</td>
+                    </tr>
+            </table>
+            <h2>
+                etlx config: EXTRACT_LOAD example (NYC Yellow Taxi — Jan 2024)
+            </h2>
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+            </table>
 </body>
 </html>
+

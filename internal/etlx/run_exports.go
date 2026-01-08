@@ -926,7 +926,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 			} else {
 				data := map[string]any{
-					"config": etlx.Config,
+					"conf": etlx.Config,
 				}
 				start3 := time.Now()
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()

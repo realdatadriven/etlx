@@ -710,48 +710,58 @@ active: true
 <body>
     <h1>Data Dictionary</h1>
     {{- range $queryName, $query := .conf }}
-    {{- $meta := index $query "metadata" }}
-    {{- if and $meta (not (index $meta "run_as")) }}
-    {{- with index $query "metadata" }}
-        <h2>{{ $queryName }} — {{ index . "description" }}</h2>
-    {{- else }}
-        <h2>{{ $queryName }}</h2>
-    {{- end }}
-    <table>
-        <tr>
-            <th>Field Name</th>
-            <th>Description</th>
-            <th>Type</th>
-            <th>Owner</th>
-            <th>Derived From</th>
-            <th>Formula</th>
-        </tr>
-        {{- $order := index $query "__order" }}
-        {{- range $i, $fieldName := $order }}
-        {{- $field := index $query $fieldName }}
-        {{- $meta := index $field "metadata" }}
-        <tr>
-            <td>{{ $fieldName }}</td>
-            <td>{{- with $meta }}{{ index . "description" }}{{ else }}N/A{{ end }}</td>
-            <td>{{- with $meta }}{{ index . "type" }}{{ else }}N/A{{ end }}</td>
-            <td>{{- with $meta }}{{ index . "owner" }}{{ else }}N/A{{ end }}</td>
-            <td>
-                {{- with index $meta "derived_from" }}
-                    {{- range $j, $v := . }}
-                    {{ if lt $j 0 }}, {{ end }}{{ $v }}
+        {{- if and
+            (ne $queryName "__order")
+            (kindIs "map" $query)
+        }}
+        {{- $meta := index $query "metadata" }}
+        {{- /* Only generate dictionary if run_as is NOT present */ -}}
+        {{- if or (not $meta) (not (hasKey $meta "run_as")) }}
+            <h2>
+                {{ $queryName }}
+                {{- with $meta }} — {{ index . "description" }}{{ end }}
+            </h2>
+            {{- $order := index $query "__order" }}
+            {{- if kindIs "slice" $order }}
+            <table>
+                <tr>
+                    <th>Field Name</th>
+                    <th>Description</th>
+                    <th>Type</th>
+                    <th>Owner</th>
+                    <th>Derived From</th>
+                    <th>Formula</th>
+                </tr>
+                {{- range $i, $fieldName := $order }}
+                    {{- $field := index $query $fieldName }}
+                    {{- if kindIs "map" $field }}
+                    {{- $fmeta := index $field "metadata" }}
+                    <tr>
+                        <td>{{ $fieldName }}</td>
+                        <td>{{ index $fmeta "description" | default "N/A" }}</td>
+                        <td>{{ index $fmeta "type" | default "N/A" }}</td>
+                        <td>{{ index $fmeta "owner" | default "N/A" }}</td>
+                        <td>
+                            {{- with index $fmeta "derived_from" }}
+                                {{- range $j, $src := . }}
+                                    {{- if $j }}, {{ end }}{{ $src }}
+                                {{- end }}
+                            {{- else }}
+                                N/A
+                            {{- end }}
+                        </td>
+                        <td>{{ index $fmeta "formula" | default "N/A" }}</td>
+                    </tr>
                     {{- end }}
-                {{- else }}
-                    N/A
                 {{- end }}
-            </td>
-            <td>{{- with $meta }}{{ index . "formula" }}{{ else }}N/A{{ end }}</td>
-        </tr>
+            </table>
+            {{- end }}
         {{- end }}
-    </table>
-    {{- end }}
+        {{- end }}
     {{- end }}
 </body>
 </html>
+
 ```
 
 # SAVE_LOGS
