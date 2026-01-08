@@ -303,24 +303,25 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						}
 					} else if strings.HasPrefix(info, "html") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "html"))
+						//fmt.Println("HTML:", key, content.String())
 						if key == "" {
-							fmt.Printf("missing query name for SQL block: %s", content.String())
+							fmt.Printf("missing name for HTML block: %s", content.String())
 						} else {
-							current[key] = content
+							current[key] = content.String()
 						}
 					} else if strings.HasPrefix(info, "python") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "python"))
 						if key == "" {
 							fmt.Printf("missing query name for python block: %s", content.String())
 						} else {
-							current[key] = content
+							current[key] = content.String()
 						}
 					} else if strings.HasPrefix(info, "py") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "py"))
 						if key == "" {
 							fmt.Printf("missing query name for python block: %s", content.String())
 						} else {
-							current[key] = content
+							current[key] = content.String()
 						}
 					}
 				}

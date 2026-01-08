@@ -336,7 +336,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				dtRef = dateRef[0].Format("2006-01-02")
 			}
 		}
-
 		if processLogs[0]["ref"] == nil {
 			processLogs[0]["ref"] = dtRef
 		}

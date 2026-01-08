@@ -603,6 +603,7 @@ formula: |
 ```
 
 # QUALITY_CHECK
+
 ```yaml
 description: "Runs some queries to check quality / validate."
 runs_as: DATA_QUALITY
@@ -610,6 +611,7 @@ active: true
 ```
 
 ## Rule0001
+
 ```yaml
 name: Rule0001
 description: "Check if the payment_type has only the values 0=Flex Fare, 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided trip."
@@ -639,6 +641,7 @@ WHERE "payment_type" NOT IN (0,1,2,3,4,5,6);
 ```
 
 ## Rule0002
+
 ```yaml
 name: Rule0002
 description: "Check if there is any trip with distance less than or equal to zero."
@@ -656,6 +659,99 @@ active: true
 SELECT COUNT(*) AS "total_err"
 FROM "TRIP_DATA"
 WHERE NOT "trip_distance" > 0;
+```
+
+<!-- markdownlint-disable MD025 -->
+# GOVERNANCE_ARTIFACTS
+
+```yaml metadata
+name: GOVERNANCE_ARTIFACTS
+description: "Generates governance artifacts like data dictionary and data quality rules."
+runs_as: EXPORTS
+active: true
+```
+
+## DATA_DICTIONARY
+
+```yaml metadata
+name: DATA_DICTIONARY
+description: "Generates a data dictionary from the metadata of the queries."
+connection: "duckdb:"
+before_sql: "ATTACH 'sqlite_ex.db' AS DB (TYPE SQLITE)"
+data_sql: null
+after_sql: "DETACH DB"
+tmp_prefix: null
+text_template: true
+template: data_dictionary_template
+return_content: false
+path: "data_dictionary.html"
+active: true
+```
+
+```html data_dictionary_template
+<html encoding="UTF-8" lang="en">
+<head>
+    <title>Data Dictionary</title>
+    <style>
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+        th, td {
+            border: 1px solid black;
+            padding: 8px;
+            text-align: left;
+        }
+        th {
+            background-color: #f2f2f2;
+        }
+    </style>
+</head>
+<body>
+    <h1>Data Dictionary</h1>
+    {{- range $queryName, $query := .conf }}
+    {{- $meta := index $query "metadata" }}
+    {{- if and $meta (not (index $meta "run_as")) }}
+    {{- with index $query "metadata" }}
+        <h2>{{ $queryName }} — {{ index . "description" }}</h2>
+    {{- else }}
+        <h2>{{ $queryName }}</h2>
+    {{- end }}
+    <table>
+        <tr>
+            <th>Field Name</th>
+            <th>Description</th>
+            <th>Type</th>
+            <th>Owner</th>
+            <th>Derived From</th>
+            <th>Formula</th>
+        </tr>
+        {{- $order := index $query "__order" }}
+        {{- range $i, $fieldName := $order }}
+        {{- $field := index $query $fieldName }}
+        {{- $meta := index $field "metadata" }}
+        <tr>
+            <td>{{ $fieldName }}</td>
+            <td>{{- with $meta }}{{ index . "description" }}{{ else }}N/A{{ end }}</td>
+            <td>{{- with $meta }}{{ index . "type" }}{{ else }}N/A{{ end }}</td>
+            <td>{{- with $meta }}{{ index . "owner" }}{{ else }}N/A{{ end }}</td>
+            <td>
+                {{- with index $meta "derived_from" }}
+                    {{- range $j, $v := . }}
+                    {{ if lt $j 0 }}, {{ end }}{{ $v }}
+                    {{- end }}
+                {{- else }}
+                    N/A
+                {{- end }}
+            </td>
+            <td>{{- with $meta }}{{ index . "formula" }}{{ else }}N/A{{ end }}</td>
+        </tr>
+        {{- end }}
+    </table>
+    {{- end }}
+    {{- end }}
+</body>
+</html>
 ```
 
 # SAVE_LOGS
