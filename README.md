@@ -82,6 +82,7 @@ FROM SRC.<table>
 ```
 ...
 ````
+> @PG_CON, @DL_CON are connection strings defined in the environment or in the `.env` file.
 
 Run it:
 
