@@ -23,12 +23,12 @@ Powered by [**DuckDB**](https://duckdb.org), but **not locked to it**.
 
 ## ✨ What Makes ETLX Different?
 
-✔ Pipelines are written in **Markdown + YAML + SQL**
-✔ The pipeline **is the documentation**
-✔ Runs on **DuckDB, PostgreSQL, SQLite, MySQL, SQL Server, ODBC**
-✔ One specification for **ETL / ELT, data quality, report generation and automation, scripts execution, ...**
-✔ Fully **auditable & reproducible** by design
-✔ Available as a **CLI and embeddable Go library**
+- ✔ Pipelines are written in **Markdown + YAML + SQL**
+- ✔ The pipeline **is the documentation**
+- ✔ Runs on **DuckDB, PostgreSQL, SQLite, MySQL, SQL Server, ODBC**
+- ✔ One specification for **ETL / ELT, data quality, report generation and automation, scripts execution, ...**
+- ✔ Fully **auditable & reproducible** by design
+- ✔ Available as a **CLI and embeddable Go library**
 
 > ETLX is not just a runtime — it is also a **specification for declarative data workflows**, where **all logic is explicit, inspectable, and versionable**.
 
@@ -69,15 +69,12 @@ load_after:
     - DETACH SRC # detaches the source DB
     - DETACH TGT # detaches the target DB
 ```
-
-```sql
--- load_sales_data
+```sql load_sales_data
 INSERT INTO TGT.<table> BY NAME
 SELECT *
 FROM SRC.<table>
 WHERE date_field = '{YYYY-MM-DD}'
 ```
-
 ```sql create_sales_table_instead
 CREATE TABLE TGT.<table> AS
 SELECT *
