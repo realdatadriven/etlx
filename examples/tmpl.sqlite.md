@@ -617,7 +617,7 @@ connection: "duckdb:"
 before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
 query: quality_check_query
 fix_quality_err: fix_quality_err_query
-column: total_reg_with_err # Defaults to 'total'.
+column: total_err # Defaults to 'total'.
 check_only: false # runs only quality check if true
 fix_only: false # runs only quality fix if true and available and possible
 after_sql: "DETACH DB"
@@ -626,7 +626,7 @@ active: true
 
 ```sql
 -- quality_check_query
-SELECT COUNT(*) AS "total_reg_with_err"
+SELECT COUNT(*) AS "total_err"
 FROM "TRIP_DATA"
 WHERE "payment_type" NOT IN (0,1,2,3,4,5,6);
 ```
@@ -646,14 +646,14 @@ connection: "duckdb:"
 before_sql: "ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE)"
 query: quality_check_query
 fix_quality_err: null # no automated fixing for this
-column: total_reg_with_err # Defaults to 'total'.
+column: total_err # Defaults to 'total'.
 after_sql: "DETACH DB"
 active: true
 ```
 
 ```sql
 -- quality_check_query
-SELECT COUNT(*) AS "total_reg_with_err"
+SELECT COUNT(*) AS "total_err"
 FROM "TRIP_DATA"
 WHERE NOT "trip_distance" > 0;
 ```
