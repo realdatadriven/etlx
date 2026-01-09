@@ -412,6 +412,7 @@ LIMIT 15
 name: QUERY_TOP_ZONES
 description: "Most common pickup/dropoff zone combinations with aggregated metrics."
 owner: taxi-analytics-team
+is_query: true
 source:
   - TRIP_DATA
   - ZONES
@@ -682,83 +683,130 @@ data_sql: null
 after_sql: "DETACH DB"
 tmp_prefix: null
 text_template: true
-template: data_dictionary_template
+template: governance_template
 return_content: false
 path: "data_dictionary.html"
 active: true
 ```
 
-```html data_dictionary_template
+```html governance_template
 <html encoding="UTF-8" lang="en">
 <head>
-    <title>Data Dictionary</title>
+    <title>Governance Artifacts</title>
     <style>
+        body {
+            font-family: Arial, sans-serif;
+        }
         table {
             width: 100%;
             border-collapse: collapse;
+            margin-bottom: 32px;
         }
         th, td {
             border: 1px solid black;
             padding: 8px;
             text-align: left;
+            vertical-align: top;
         }
         th {
             background-color: #f2f2f2;
         }
+        h1, h2, h3 {
+            margin-top: 32px;
+        }
     </style>
 </head>
 <body>
-    <h1>Data Dictionary</h1>
-    {{- range $queryName, $query := .conf }}
-        {{- if and
-            (ne $queryName "__order")
-            (kindIs "map" $query)
-        }}
-        {{- $meta := index $query "metadata" }}
-        {{- /* Only generate dictionary if run_as is NOT present */ -}}
-        {{- if or (not $meta) (not (hasKey $meta "run_as")) }}
-            <h2>
-                {{ $queryName }}
-                {{- with $meta }} — {{ index . "description" }}{{ end }}
-            </h2>
-            {{- $order := index $query "__order" }}
-            {{- if kindIs "slice" $order }}
-            <table>
+<h1>Governance Artifacts</h1>
+<h2>Data Dictionary</h2>
+{{- range $blockName, $block := .conf }}
+    {{- if and (ne $blockName "__order") (ne $blockName "metadata") (kindIs "map" $block)}}
+    {{- $meta := index $block "metadata" }}
+    <!-- ===================================================== -->
+    <!-- DATA DICTIONARY (no runs_as at level 1)               -->
+    <!-- ===================================================== -->
+    {{- if and (kindIs "map" $meta) (eq (index $meta "is_query") true)}}
+        <pre>{{$blockName }}</pre>
+        <h3>
+            {{ $blockName }}
+            {{- with $meta }} — {{ index . "description" }}{{ end }}
+        </h3>
+        {{- $order := index $block "__order" }}
+        {{- if kindIs "slice" $order }}
+        <table>
+            <tr>
+                <th>Field Name</th>
+                <th>Description</th>
+                <th>Type</th>
+                <th>Owner</th>
+                <th>Derived From</th>
+                <th>Formula</th>
+            </tr>
+            {{- range $i, $fieldName := $order }}
+                {{- $field := index $block $fieldName }}
+                {{- if kindIs "map" $field }}
+                {{- $fmeta := index $field "metadata" }}
                 <tr>
-                    <th>Field Name</th>
-                    <th>Description</th>
-                    <th>Type</th>
-                    <th>Owner</th>
-                    <th>Derived From</th>
-                    <th>Formula</th>
-                </tr>
-                {{- range $i, $fieldName := $order }}
-                    {{- $field := index $query $fieldName }}
-                    {{- if kindIs "map" $field }}
-                    {{- $fmeta := index $field "metadata" }}
-                    <tr>
-                        <td>{{ $fieldName }}</td>
-                        <td>{{ index $fmeta "description" | default "N/A" }}</td>
-                        <td>{{ index $fmeta "type" | default "N/A" }}</td>
-                        <td>{{ index $fmeta "owner" | default "N/A" }}</td>
-                        <td>
-                            {{- with index $fmeta "derived_from" }}
-                                {{- range $j, $src := . }}
-                                    {{- if $j }}, {{ end }}{{ $src }}
-                                {{- end }}
-                            {{- else }}
-                                N/A
+                    <td>{{ $fieldName }}</td>
+                    <td>{{ index $fmeta "description" | default "N/A" }}</td>
+                    <td>{{ index $fmeta "type" | default "N/A" }}</td>
+                    <td>{{ index $fmeta "owner" | default "N/A" }}</td>
+                    <td>
+                        {{- with index $fmeta "derived_from" }}
+                            {{- range $j, $src := . }}
+                                {{- if $j }}, {{ end }}{{ $src }}
                             {{- end }}
-                        </td>
-                        <td>{{ index $fmeta "formula" | default "N/A" }}</td>
-                    </tr>
-                    {{- end }}
+                        {{- else }}
+                            N/A
+                        {{- end }}
+                    </td>
+                    <td>{{ index $fmeta "formula" | default "N/A" }}</td>
+                </tr>
                 {{- end }}
-            </table>
             {{- end }}
-        {{- end }}
+        </table>
         {{- end }}
     {{- end }}
+    {{- end }}
+{{- end }}
+<h2>Data Quality Rules</h2>
+{{- range $blockName, $block := .conf }}
+    {{- if and (ne $blockName "__order") (ne $blockName "metadata") (kindIs "map" $block)}}
+    {{- $meta := index $block "metadata" }}
+    <!-- ===================================================== -->
+    <!-- DATA QUALITY RULES (runs_as = DATA_QUALITY)            -->
+    <!-- ===================================================== -->
+    {{- if and $meta (eq (index $meta "runs_as") "DATA_QUALITY")}}
+        <h2>
+            {{ $blockName }}
+            {{- with $meta }} — {{ index . "description" }}{{ end }}
+        </h2>
+        <table>
+            <tr>
+                <th>Rule Name</th>
+                <th>Description</th>
+                <th>Active</th>
+            </tr>
+            {{- range $ruleName, $rule := $block }}
+                {{- if and (ne $ruleName "metadata") (ne $ruleName "__order") (kindIs "map" $rule)}}
+                {{- $rmeta := index $rule "metadata" }}
+                <tr>
+                    <td>{{ $ruleName }}</td>
+                    <td>{{ index $rmeta "description" | default "N/A" }}</td>
+                    <td>
+                        {{- if hasKey $rule "active" -}}
+                            {{ index $rule "active" }}
+                        {{- else -}}
+                            true
+                        {{- end -}}
+                    </td>
+                </tr>
+                {{- end }}
+            {{- end }}
+        </table>
+    {{- end }}
+    {{- end }}
+{{- end }}
 </body>
 </html>
 ```

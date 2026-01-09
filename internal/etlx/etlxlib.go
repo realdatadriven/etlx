@@ -30,6 +30,7 @@ func addAutoLoggs(md string) string {
 
 %syaml metadata
 name: LOGS
+runs_as: LOGS
 description: "Logging"
 table: logs
 connection: "duckdb:"

@@ -41,7 +41,7 @@ Powered by [**DuckDB**](https://duckdb.org), but **not locked to it**.
 ```yaml
 name: INPUTS
 description: this defines a ETL / ELT block where every level two block with proper metadata (yaml) is treated as a step in the workflow
-runs_as: ETL # the run_as defines how the block shoud be treated
+runs_as: ETL # the runs_as defines how the block shoud be treated
 active: true # active if missing the is consider active, if false this block and all its child are ignored
 ```
 
