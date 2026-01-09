@@ -997,7 +997,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				}
 				tmpl, ok := item[template.(string)].(string)
 				if !ok {
-					tmpl = template.(string)
+					_data, err := os.ReadFile(template.(string))
+					if err != nil {
+						tmpl = template.(string)
+						// return fmt.Errorf("failed to read file: %w", err)
+					} else {
+						tmpl = string(_data)
+					}
 				}
 				// render template
 				parsedTmpl, err := etlx.RenderTemplate(tmpl, data)

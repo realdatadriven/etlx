@@ -74,6 +74,7 @@ This QueryDoc extracts selected fields from the NYC Yellow Taxi Trip Record data
 ```yaml metadata
 name: QUERY_EXTRACT_TRIP_DATA
 description: "Extracts essential NYC Yellow Taxi trip fields (with governance metadata)."
+is_query: true
 owner: taxi-analytics-team
 details: "https://www.nyc.gov/assets/tlc/downloads/pdf/data_dictionary_trip_records_yellow.pdf"
 source:
