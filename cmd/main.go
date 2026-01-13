@@ -176,7 +176,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "NOTIFY":
+					case "NOTIFY", "NOTIFICATION":
 						_logs, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
@@ -215,7 +215,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "LOGS":
+					case "LOGS", "OBSERVABILITY":
 						_logs, err := etlxlib.RunLOGS(dateRef, nil, logs, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
@@ -228,7 +228,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "REQUIRES":
+					case "REQUIRES", "IMPORTS":
 						_logs, err := etlxlib.LoadREQUIRES(nil, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
