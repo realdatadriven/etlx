@@ -150,7 +150,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "MULTI_QUERIES":
+					case "MULTI_QUERIES", "STACKED_QUERIES":
 						_logs, _, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
