@@ -211,6 +211,7 @@ func TableExistsInSheet(f *excelize.File, sheet, tableName string) (bool, *excel
 
 func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "EXPORTS"
+	process := "EXPORTS"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -218,8 +219,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
-		"name": key,
-		"key":  key, "start_at": start,
+		"process": process,
+		"name":    key,
+		"key":     key, "start_at": start,
 		"ref": nil,
 	})
 	mainDescription := ""
@@ -230,6 +232,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -259,6 +262,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			processLogs = append(processLogs, map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -272,6 +276,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -287,6 +292,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			if len(only.([]string)) == 0 {
 			} else if !etlx.Contains(only.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -302,6 +308,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			if len(skip.([]string)) == 0 {
 			} else if etlx.Contains(skip.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -342,6 +349,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
+			"process":     process,
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
 			"key":         key, "item_key": itemKey, "start_at": start3,
@@ -400,6 +408,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -465,6 +474,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -509,6 +519,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -908,6 +919,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -931,6 +943,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				start3 := time.Now()
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
@@ -1127,6 +1140,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],

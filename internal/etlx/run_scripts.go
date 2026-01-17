@@ -10,6 +10,7 @@ import (
 
 func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "SCRIPTS"
+	process := "SCRIPTS"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -18,8 +19,9 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 	start := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
-		"name": key,
-		"key":  key, "start_at": start,
+		"process": process,
+		"name":    key,
+		"key":     key, "start_at": start,
 		"ref":                   nil,
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,
@@ -34,6 +36,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -63,6 +66,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			processLogs = append(processLogs, map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -76,6 +80,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -112,6 +117,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
+			"process":     process,
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
 			"key":         key, "item_key": itemKey, "start_at": start3,
@@ -170,6 +176,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		if okBefore {
 			start3 := time.Now()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -239,6 +246,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -305,6 +313,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -346,6 +355,7 @@ func (etlx *ETLX) RunSCRIPTS(dateRef []time.Time, conf map[string]any, extraConf
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
 	processLogs[0] = map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],

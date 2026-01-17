@@ -9,6 +9,7 @@ import (
 
 func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, []map[string]any, error) {
 	key := "MULTI_QUERIES"
+	process := "MULTI_QUERIES"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -18,8 +19,9 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	start := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
-		"name": key,
-		"key":  key, "start_at": start,
+		"process": process,
+		"name":    key,
+		"key":     key, "start_at": start,
 		"ref":                   nil,
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,
@@ -43,6 +45,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	if active, okActive := metadata["active"]; okActive {
 		if !active.(bool) {
 			processLogs = append(processLogs, map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("KEY %s", key),
 				"description": metadata["description"].(string),
 				"key":         key,
@@ -146,6 +149,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	start3 := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 := map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": metadata["description"].(string),
 		"key":         key, "start_at": start3,
@@ -180,6 +184,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
+			"process":     process,
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,
@@ -218,6 +223,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	start3 = time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 = map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": metadata["description"].(string),
 		"key":         key, "start_at": start3,
@@ -345,6 +351,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
+			"process":     process,
 			"name":        key,
 			"description": metadata["description"].(string),
 			"key":         key, "start_at": start3,

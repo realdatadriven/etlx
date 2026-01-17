@@ -9,6 +9,7 @@ import (
 
 func (etlx *ETLX) RunLOGS(dateRef []time.Time, conf map[string]any, logs []map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "LOGS"
+	//process := "LOGS"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}

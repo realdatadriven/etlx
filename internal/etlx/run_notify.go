@@ -9,6 +9,7 @@ import (
 
 func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "NOTIFY"
+	process := "NOTIFY"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -27,6 +28,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -44,6 +46,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			processLogs = append(processLogs, map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -57,6 +60,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -87,6 +91,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		}
 		start3 := time.Now()
 		_log2 := map[string]any{
+			"process":     process,
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
 			"key":         key, "item_key": itemKey, "start_at": start3,
@@ -132,6 +137,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		if okBefore {
 			start3 := time.Now()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -182,6 +188,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		if okData && !failedCondition {
 			start3 := time.Now()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -276,6 +283,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		if okAfter {
 			start3 := time.Now()
 			_log2 := map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": start3,
@@ -307,6 +315,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
 	processLogs[0] = map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
