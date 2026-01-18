@@ -842,6 +842,17 @@ active: true
 </html>
 ```
 
+# EXPORT
+
+```yaml metadata
+name: EXPORT
+description: Export files
+runs_as: EXPORTS
+connection: "duckdb:"
+path: "static/uploads/tmp"
+active: true
+```
+
 ## hist_logs
 
 ```yaml metadata
