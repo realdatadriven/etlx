@@ -1337,7 +1337,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["mem_sys_end"] = mem_sys
 					_log3["num_gc_end"] = num_gc
 				}
-				processLogs = append(processLogs, _log3)
+				//processLogs = append(processLogs, _log3)
 			}
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3).Seconds()
