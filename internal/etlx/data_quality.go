@@ -126,6 +126,7 @@ func (etlx *ETLX) DataQualityFix(dbConn db.DBInterface, query any, item map[stri
 
 func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "DATA_QUALITY"
+	process := "DATA_QUALITY"
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
@@ -134,8 +135,9 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 	start := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
-		"name": key,
-		"key":  key, "start_at": start,
+		"process": process,
+		"name":    key,
+		"key":     key, "start_at": start,
 		"ref":                   nil,
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,
@@ -150,6 +152,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -165,6 +168,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			processLogs = append(processLogs, map[string]any{
+				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -178,6 +182,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -194,6 +199,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			if len(only.([]string)) == 0 {
 			} else if !etlx.Contains(only.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -209,6 +215,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			if len(skip.([]string)) == 0 {
 			} else if etlx.Contains(skip.([]string), itemKey) {
 				processLogs = append(processLogs, map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": time.Now(),
@@ -248,6 +255,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		start3 := time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
+			"process":               process,
 			"name":                  fmt.Sprintf("%s->%s", key, itemKey),
 			"description":           itemMetadata["description"].(string),
 			"key":                   key,
@@ -293,6 +301,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				start3 := time.Now()
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
@@ -450,6 +459,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				start3 := time.Now()
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 := map[string]any{
+					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"key":         key, "item_key": itemKey, "start_at": start3,
@@ -492,6 +502,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}
 	processLogs[0] = map[string]any{
+		"process":     process,
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
