@@ -879,7 +879,7 @@ before_sql:
   - "ATTACH 'database/sqlite_ex.db' AS DB (TYPE SQLITE)"
   - "USE DB;"
   - LOAD json
-  - "get_dyn_queries[create_columns_missing](ATTACH 'database/DB_EX_DGOV.db' AS DB (TYPE SQLITE), DETACH DB)"
+  - "get_dyn_queries[create_columns_missing](ATTACH 'database/sqlite_ex.db' AS DB (TYPE SQLITE),DETACH DB)"
 save_log_sql: INSERT INTO "DB"."<table>" BY NAME FROM read_json('<fname>')
 save_on_err_patt: "(?i)table.+does.+not.+exist"
 save_on_err_sql: CREATE TABLE IF NOT EXISTS "DB"."<table>" AS FROM read_json('<fname>');
