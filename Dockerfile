@@ -76,4 +76,4 @@ CMD []
 #podman tag etlx:latest docker.io/realdatadriven/etlx:v1.4.16
 #podman login docker.io
 #podman push docker.io/realdatadriven/etlx:latest
-#podman push docker.io/realdatadriven/etlx:v1.4.6
+#podman push docker.io/realdatadriven/etlx:v1.4.16
