@@ -56,10 +56,35 @@ func (etlx *ETLX) RenderTemplate(tmplStr string, data map[string]any) (string, e
 func (etlx *ETLX) SendEmail(data map[string]any) error {
 	// Load SMTP configuration from environment variables
 	smtpHost := os.Getenv("SMTP_HOST")
+	if _, ok := data["smtp_host"].(string); ok {
+		smtpHost = data["smtp_host"].(string)
+	} else if _, ok := data["host"].(string); ok {
+		smtpHost = data["host"].(string)
+	}
 	smtpPort := os.Getenv("SMTP_PORT")
+	if _, ok := data["smtp_port"].(string); ok {
+		smtpPort = data["smtp_port"].(string)
+	} else if _, ok := data["port"].(string); ok {
+		smtpPort = data["port"].(string)
+	}
 	smtpUsername := os.Getenv("SMTP_USERNAME")
+	if _, ok := data["smtp_username"].(string); ok {
+		smtpUsername = data["smtp_username"].(string)
+	} else if _, ok := data["username"].(string); ok {
+		smtpUsername = data["username"].(string)
+	}
 	smtpPassword := os.Getenv("SMTP_PASSWORD")
+	if _, ok := data["smtp_password"].(string); ok {
+		smtpPassword = data["smtp_password"].(string)
+	} else if _, ok := data["password"].(string); ok {
+		smtpPassword = data["password"].(string)
+	}
 	smtpFrom := os.Getenv("SMTP_FROM")
+	if _, ok := data["smtp_from"].(string); ok {
+		smtpFrom = data["smtp_from"].(string)
+	} else if _, ok := data["from"].(string); ok {
+		smtpFrom = data["from"].(string)
+	}
 	// Extract fields from data
 	to := parseSlice(data["to"])
 	cc := parseSlice(data["cc"])
