@@ -69,12 +69,14 @@ load_after:
     - DETACH SRC # detaches the source DB
     - DETACH TGT # detaches the target DB
 ```
+
 ```sql load_sales_data
 INSERT INTO TGT.<table> BY NAME
 SELECT *
 FROM SRC.<table>
 WHERE date_field = '{YYYY-MM-DD}'
 ```
+
 ```sql create_sales_table_instead
 CREATE TABLE TGT.<table> AS
 SELECT *
