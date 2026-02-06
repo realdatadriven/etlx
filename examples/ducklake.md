@@ -16,7 +16,7 @@ active: false
 name: SAMPLE_DB
 description: Generate sample data
 connection: "duckdb:database/sample.duckdb"
-script_sql: CALL dbgen(sf = 1)
+script_sql: CALL dbgen(sf = 0.1)
 active: false
 ```
 
