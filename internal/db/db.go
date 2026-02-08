@@ -360,6 +360,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 				"referred_column": row["to"].(string),
 			}
 		}
+		field_order := 0
 		for _, row := range *res {
 			fk := false
 			var referred_table string
@@ -385,6 +386,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 					nullable = true
 				}
 			}
+			field_order += 1
 			_aux_row := map[string]any{
 				"db":              dbName,
 				"table":           table,
@@ -399,6 +401,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 				"fk":              fk,
 				"referred_table":  referred_table,
 				"referred_column": referred_column,
+				"field_order":     field_order,
 				"user_id":         user_id,
 				"created_at":      time.Now(),
 				"updated_at":      time.Now(),
@@ -480,6 +483,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 				"referred_column": row["to"].(string),
 			}
 		}
+		field_order := 0
 		for _, row := range *res {
 			//fmt.Println("NAME:", row["name"])
 			fk := false
@@ -506,6 +510,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 					nullable = true
 				}
 			}
+			field_order += 1
 			_aux_row := map[string]interface{}{
 				"db":              dbName,
 				"table":           table,
@@ -520,6 +525,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 				"fk":              fk,
 				"referred_table":  referred_table,
 				"referred_column": referred_column,
+				"field_order":     field_order,
 				"user_id":         user_id,
 				"created_at":      time.Now(),
 				"updated_at":      time.Now(),
