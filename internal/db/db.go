@@ -89,7 +89,8 @@ func setStrEnv(input string) string {
 
 // Adjust the query based on the database driver
 func adjustQuery(driver, query string) string {
-	if driver == "postgres" {
+	switch driver {
+	case "postgres":
 		// Replace ? with $1, $2, $3, etc. for PostgreSQL
 		count := 1
 		var result strings.Builder
@@ -104,10 +105,10 @@ func adjustQuery(driver, query string) string {
 			}
 		}
 		return result.String()
-	} else if driver == "mysql" {
+	case "mysql":
 		// Replace double quotes " with backticks ` for MySQL
 		return strings.ReplaceAll(query, `"`, "`")
-	} else if driver == "mssql" {
+	case "mssql":
 		return strings.ReplaceAll(query, `"`, "")
 	}
 	// SQLite uses ? placeholders, so no changes needed
