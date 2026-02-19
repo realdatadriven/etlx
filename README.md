@@ -30,7 +30,7 @@ Powered by [**DuckDB**](https://duckdb.org), but **not locked to it**.
 - ✔ Fully **auditable & reproducible** by design
 - ✔ Available as a **CLI and embeddable Go library**
 
-> ETLX is not just a runtime — it is also a **specification for declarative data workflows**, where **all logic is explicit, inspectable, and versionable**.
+> ETLX is not just a runtime — it also meant to be a **specification for declarative data workflows**, where **all logic is explicit, inspectable, and versionable**.
 
 ---
 
