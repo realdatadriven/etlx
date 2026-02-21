@@ -540,7 +540,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			if ok, _ := fileExists(template.(string)); !ok {
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s error: %s givem as template does not exists", key, itemKey, template)
+				_log2["msg"] = fmt.Sprintf("Main: %s -> %s error: %s givem as template does not exists", key, itemKey, template)
 				_log2["end_at"] = time.Now()
 				_log2["duration"] = time.Since(start3).Seconds()
 				_log2["mem_alloc_end"] = mem_alloc
@@ -554,7 +554,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				if ext != ".xlsx" && ext != ".xls" && ext != ".xlsm" {
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("unsupported template file extension: %s", ext)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s unsupported template file extension: %s", ext, key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
@@ -572,7 +572,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					if err != nil {
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("failed to open template file: %s", err)
+						_log2["msg"] = fmt.Sprintf("Main: %s -> %s failed to open template file: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3).Seconds()
 						_log2["mem_alloc_end"] = mem_alloc
@@ -590,7 +590,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				} else {
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("template doesn't exists: %s", template)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s template doesn't exists: %s", key, itemKey, template)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
@@ -605,7 +605,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				case nil:
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s error mapping empty", key, itemKey)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s error mapping empty", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
@@ -627,7 +627,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					if err != nil {
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute map query: %s", key, itemKey, err)
+						_log2["msg"] = fmt.Sprintf("Main: %s -> %s -> failed to execute map query: %s", key, itemKey, err)
 						_log2["end_at"] = time.Now()
 						_log2["duration"] = time.Since(start3).Seconds()
 						_log2["mem_alloc_end"] = mem_alloc
@@ -645,7 +645,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				default:
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping data type: %T", key, itemKey, _map)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s invalid mapping data type: %T", key, itemKey, _map)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
@@ -658,7 +658,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				if len(_mapp) == 0 {
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s invalid mapping length Zero: ", key, itemKey)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s invalid mapping length Zero: ", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
@@ -728,7 +728,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							//fmt.Printf("error executing query for detail ID %v: %s\n", detail, err)
 							_log2["success"] = false
-							_log2["msg"] = fmt.Sprintf("%s -> %s -> %s -> failed to execute query: %s", key, itemKey, sheet, err)
+							_log2["msg"] = fmt.Sprintf("Main: %s -> %s -> %s -> failed to execute query: %s", key, itemKey, sheet, err)
 							_log2["end_at"] = time.Now()
 							_log2["duration"] = time.Since(start3).Seconds()
 							_log2["mem_alloc_end"] = mem_alloc
@@ -746,7 +746,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					}
 					// Convert the start column to an integer offset
 					startColIndex := int(strings.ToUpper(col)[0] - 'A')
-					if _type == "value" {
+					switch _type {
+					case "value":
 						// cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
 						// fmt.Println(columnIndexToName(startColIndex))
 						cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
@@ -764,13 +765,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						} else {
 							file.SetCellValue(sheet, cell, nil)
 						}
-					} else if _type == "formula" {
+					case "formula":
 						if okFormula && formula != "" {
 							if err := file.SetCellFormula(sheet, _range, formula); err != nil {
 								fmt.Printf("Failed to set formula: %v", err)
 							}
 						}
-					} else {
+					default:
 						rowIdx := startRow
 						// Write column headers
 						if header {
@@ -889,12 +890,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to save file: %s", key, itemKey, err)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s -> failed to save file: %s", key, itemKey, err)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s -> %s", key, itemKey)
+					_log2["msg"] = fmt.Sprintf("Main: %s -> %s", key, itemKey)
 					_log2["end_at"] = time.Now()
 					_log2["duration"] = time.Since(start3).Seconds()
 					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
@@ -914,7 +915,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 			}
 			processLogs = append(processLogs, _log2)
-
 		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
 			start3 := time.Now()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
