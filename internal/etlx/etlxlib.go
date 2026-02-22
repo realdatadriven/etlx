@@ -380,7 +380,7 @@ func (etlx *ETLX) PrintConfigAsJSON(config map[string]any) {
 			fmt.Println(err)
 		}
 		fmt.Println(_file)
-		fmt.Println(string(jsonData))
+		//fmt.Println(string(jsonData))
 	}
 }
 
