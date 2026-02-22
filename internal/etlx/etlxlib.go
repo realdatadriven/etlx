@@ -370,18 +370,18 @@ func replacePlaceholdersRegex(text string, metadata map[string]any) string {
 
 // PrintConfigAsJSON prints the configuration map in JSON format
 func (etlx *ETLX) PrintConfigAsJSON(config map[string]any) {
-	jsonData, err := json.MarshalIndent(config, "", "  ")
-	if err != nil {
-		log.Fatalf("Error converting config to JSON: %v", err)
-	}
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		jsonData, err := json.MarshalIndent(config, "", "  ")
+		if err != nil {
+			log.Fatalf("Error converting config to JSON: %v", err)
+		}
 		_file, err := etlx.TempFIle("", string(jsonData), "config.*.json")
 		if err != nil {
 			fmt.Println(err)
 		}
 		fmt.Println(_file)
+		fmt.Println(string(jsonData))
 	}
-	fmt.Println(string(jsonData))
 }
 
 // and removes the matched line along with any leading newline in the remaining content.
