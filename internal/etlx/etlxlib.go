@@ -500,7 +500,7 @@ func (etlx *ETLX) GetGODateFormat(format string) string {
 		{`HH`, "15"},
 		{`mm`, "04"},
 		{`SS`, "05"},
-		{`TSTAMP|STAMP|TS`, "20060102150405000"},
+		{`TSTAMP|STAMP|TS`, "20060102150405"},
 	}
 	for _, f := range formats {
 		re := regexp.MustCompile(f.frmt)
