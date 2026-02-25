@@ -30,6 +30,31 @@ connection: "'ducklake:sqlite:database/dl_metadata.sqlite' AS dl (DATA_PATH 'dat
 active: true
 ```
 
+## orders
+
+```yaml metadata
+name: orders
+description: orders
+table: orders
+database: "ATTACH 'ducklake:sqlite:database/dl_metadata.sqlite' AS dl (DATA_PATH 'database/dl/')"
+load_conn: "duckdb:"
+load_before_sql:
+  - INSTALL ducklake -- OR FORCE INSTALL ducklake FROM core_nightly
+  - INSTALL sqlite
+  - "ATTACH 'ducklake:sqlite:database/dl_metadata.sqlite' AS dl (DATA_PATH 'database/dl/')"
+  - ATTACH 'database/sample.duckdb' AS S
+load_sql: INSERT INTO dl."<table>" BY NAME SELECT * FROM S."<table>"
+load_on_err_match_patt: '(?i)table.+with.+name.+(\w+).+does.+not.+exist'
+load_on_err_match_sql: CREATE TABLE dl."<table>" AS SELECT * FROM S."<table>"
+load_after_sql:
+  - DETACH S 
+  - DETACH dl
+drop_sql: DROP TABLE dl."<table>"
+clean_sql: DELETE FROM dl."<table>"
+rows_sql: SELECT COUNT(*) AS "nrows" FROM dl."<table>"
+active: true
+```
+
 ## lineitem
 
 ```yaml metadata

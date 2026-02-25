@@ -254,8 +254,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					return fmt.Errorf("%s ERR: trying to create the export path %s -> %s", key, pth, err)
 				}
 			}
-		} else {
-
 		}
 		mainConn, _ := metadata["connection"].(string)
 		mainDescription = metadata["description"].(string)
