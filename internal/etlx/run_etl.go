@@ -584,6 +584,15 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		key = keys[0]
 	}
 	// fmt.Println(key, dateRef)
+	
+	// Initialize OpenTelemetry context
+	om := GetOTelManager()
+	rootSpan, rootCtx := om.StartOperationSpan("RunETL", map[string]any{
+		"key":     key,
+		"process": process,
+	})
+	defer rootSpan.End()
+	
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{
@@ -599,7 +608,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
@@ -607,10 +616,17 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now(),
 					"success": true,
 					"msg":     "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.RecordLogEntry(rootSpan, logEntry)
 				return fmt.Errorf("deactivated %s", "")
 			}
 		}
+		
+		// Create span for this item
+		_, itemSpan := om.tracer.Start(rootCtx, fmt.Sprintf("ETL_%s", itemKey))
+		defer itemSpan.End()
+		
 		//fmt.Println(metadata, itemKey, item)
 		mainConn, okMainConn := metadata["connection"].(string)
 		if !okMainConn {
@@ -619,7 +635,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
-			processLogs = append(processLogs, map[string]any{
+			logEntry := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
@@ -627,13 +643,15 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				"end_at":  time.Now(),
 				"success": true,
 				"msg":     "Missing metadata in item",
-			})
+			}
+			processLogs = append(processLogs, logEntry)
+			om.RecordLogEntry(itemSpan, logEntry)
 			return nil
 		}
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -641,7 +659,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now(),
 					"success": true,
 					"msg":     "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.RecordLogEntry(itemSpan, logEntry)
 				return nil
 			}
 		}
@@ -650,7 +670,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			//fmt.Println("ONLY", only, len(only.([]string)))
 			if len(only.([]string)) == 0 {
 			} else if !etlx.Contains(only.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -658,7 +678,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now(),
 					"success": true,
 					"msg":     "Excluded from the process",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.RecordLogEntry(itemSpan, logEntry)
 				return nil
 			}
 		}
@@ -666,7 +688,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			//fmt.Println("SKIP", skip, len(skip.([]string)))
 			if len(skip.([]string)) == 0 {
 			} else if etlx.Contains(skip.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -674,7 +696,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now(),
 					"success": true,
 					"msg":     "Excluded from the process",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.RecordLogEntry(itemSpan, logEntry)
 				return nil
 			}
 		}

@@ -131,6 +131,12 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 		key = keys[0]
 	}
 	//fmt.Println(key, dateRef)
+	
+	// Initialize OpenTelemetry context
+	om := GetOTelManager()
+	rootSpan, _ := om.StartOperationSpan("RunDATA_QUALITY", map[string]any{"key": key, "process": process})
+	defer rootSpan.End()
+	
 	var processLogs []map[string]any
 	start := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()

@@ -14,6 +14,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		key = keys[0]
 	}
 	//fmt.Println(key, dateRef)
+	
+	// Initialize OpenTelemetry context
+	om := GetOTelManager()
+	rootSpan, _ := om.StartOperationSpan("RunMULTI_QUERIES", map[string]any{"key": key, "process": process})
+	defer rootSpan.End()
+	
 	var processData []map[string]any
 	var processLogs []map[string]any
 	start := time.Now()

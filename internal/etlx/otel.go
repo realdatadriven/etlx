@@ -189,3 +189,43 @@ func (om *OTelManager) Shutdown() error {
 
 	return nil
 }
+
+// StartOperationSpan creates a span for an operation and returns the span and context
+func (om *OTelManager) StartOperationSpan(operationName string, attributes map[string]any) (oteltrace.Span, context.Context) {
+	ctx, span := om.tracer.Start(om.ctx, operationName)
+	
+	// Add attributes 
+	attrs := make([]attribute.KeyValue, 0)
+	for key, value := range attributes {
+		attrs = append(attrs, attribute.String(key, fmt.Sprintf("%v", value)))
+	}
+	span.SetAttributes(attrs...)
+	
+	return span, ctx
+}
+
+// RecordLogEntry adds a log entry to processLogs and records it as span attributes
+func (om *OTelManager) RecordLogEntry(span oteltrace.Span, logEntry map[string]any) {
+	om.mu.Lock()
+	defer om.mu.Unlock()
+	
+	om.processLogs = append(om.processLogs, logEntry)
+	
+	// Also record to span
+	for key, value := range logEntry {
+		switch v := value.(type) {
+		case string:
+			span.SetAttributes(attribute.String(key, v))
+		case int:
+			span.SetAttributes(attribute.Int(key, v))
+		case float64:
+			span.SetAttributes(attribute.Float64(key, v))
+		case bool:
+			span.SetAttributes(attribute.Bool(key, v))
+		case time.Time:
+			span.SetAttributes(attribute.String(key, v.Format(time.RFC3339)))
+		default:
+			span.SetAttributes(attribute.String(key, fmt.Sprintf("%v", v)))
+		}
+	}
+}
