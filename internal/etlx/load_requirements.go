@@ -12,12 +12,22 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		key = keys[0]
 	}
 	//fmt.Println(key, dateRef)
+	
+	// Initialize OpenTelemetry context
+	om := GetOTelManager()
+	ctx, rootSpan := om.tracer.Start(om.ctx, "LoadREQUIRES")
+	defer rootSpan.End()
+	
 	var processLogs []map[string]any
 	start := time.Now()
-	processLogs = append(processLogs, map[string]any{
+	
+	startLog := map[string]any{
 		"name":     key,
 		"start_at": start,
-	})
+	}
+	processLogs = append(processLogs, startLog)
+	om.processLogs = append(om.processLogs, startLog)
+	
 	mainDescription := ""
 	// Define the runner as a simple function
 	REQUIRESRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
@@ -25,14 +35,16 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
 					"start_at":    time.Now(),
 					"end_at":      time.Now(),
 					"success":     true,
 					"msg":         "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 				return fmt.Errorf("dectivated %s", "")
 			}
 		}
@@ -40,36 +52,40 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
-			processLogs = append(processLogs, map[string]any{
+			logEntry := map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
 				"start_at":    time.Now(),
 				"end_at":      time.Now(),
 				"success":     true,
 				"msg":         "Missing metadata in item",
-			})
+			}
+			processLogs = append(processLogs, logEntry)
+			om.processLogs = append(om.processLogs, logEntry)
 			return nil
 		}
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"start_at":    time.Now(),
 					"end_at":      time.Now(),
 					"success":     true,
 					"msg":         "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 				return nil
 			}
 		}
+		
+		// Create child span for this item
+		_, itemSpan := om.tracer.Start(ctx, fmt.Sprintf("%s->%s", key, itemKey))
+		defer itemSpan.End()
+		
 		start3 := time.Now()
-		_log2 := map[string]any{
-			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": itemMetadata["description"].(string),
-			"start_at":    start3,
-		}
 		path, okPath := itemMetadata["path"]
 		beforeSQL, okBefore := itemMetadata["before_sql"]
 		query, okQuery := itemMetadata["query"]
@@ -85,50 +101,78 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			}
 			dbConn, err := etlx.GetDB(conn.(string))
 			if err != nil {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				processLogs = append(processLogs, _log2)
+				logEntry := map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start3,
+					"success":     false,
+					"msg":         fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err),
+					"end_at":      time.Now(),
+					"duration":    time.Since(start3).Seconds(),
+					"error":       err.Error(),
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
+				itemSpan.RecordError(err)
 				return nil
 			}
 			defer dbConn.Close()
-			_log2["success"] = true
-			_log2["msg"] = fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn)
-			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3).Seconds()
-			processLogs = append(processLogs, _log2)
+			
+			logEntry := map[string]any{
+				"name":        fmt.Sprintf("%s->%s", key, itemKey),
+				"description": itemMetadata["description"].(string),
+				"start_at":    start3,
+				"success":     true,
+				"msg":         fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn),
+				"end_at":      time.Now(),
+				"duration":    time.Since(start3).Seconds(),
+			}
+			processLogs = append(processLogs, logEntry)
+			om.processLogs = append(om.processLogs, logEntry)
+			om.RecordEvent(itemSpan, "Connection established", map[string]any{"connection": conn})
+			
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
 				start3 := time.Now()
-				_log2 := map[string]any{
+				logEntry := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start3,
 				}
 				err = etlx.ExecuteQuery(dbConn, beforeSQL, item, "", "", nil)
 				if err != nil {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
+					logEntry["success"] = false
+					logEntry["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
+					logEntry["end_at"] = time.Now()
+					logEntry["duration"] = time.Since(start3).Seconds()
+					logEntry["error"] = err.Error()
+					itemSpan.RecordError(err)
 				} else {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
+					logEntry["success"] = true
+					logEntry["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
+					logEntry["end_at"] = time.Now()
+					logEntry["duration"] = time.Since(start3).Seconds()
 				}
-				processLogs = append(processLogs, _log2)
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 			}
 			// MAIN QUERY
 			rows, _, err := etlx.Query(dbConn, query.(string), item, "", "", nil)
 			// Fetch data from the database using the provided SQL query
 			if err != nil {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				processLogs = append(processLogs, _log2)
+				logEntry := map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start3,
+					"success":     false,
+					"msg":         fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err),
+					"end_at":      time.Now(),
+					"duration":    time.Since(start3).Seconds(),
+					"error":       err.Error(),
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
+				itemSpan.RecordError(err)
 				return nil
 			}
 			if len(*rows) > 0 {
@@ -141,67 +185,105 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				if okConf && mdConf != nil {
 					err := etl.ConfigFromMDText(mdConf.(string))
 					if err != nil {
-						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("Error parsing config string: %s", err)
-						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3).Seconds()
-						processLogs = append(processLogs, _log2)
+						logEntry := map[string]any{
+							"name":        fmt.Sprintf("%s->%s", key, itemKey),
+							"description": itemMetadata["description"].(string),
+							"start_at":    start3,
+							"success":     false,
+							"msg":         fmt.Sprintf("Error parsing config string: %s", err),
+							"end_at":      time.Now(),
+							"duration":    time.Since(start3).Seconds(),
+							"error":       err.Error(),
+						}
+						processLogs = append(processLogs, logEntry)
+						om.processLogs = append(om.processLogs, logEntry)
+						itemSpan.RecordError(err)
 						return nil
 					}
 				} else {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to get md conf string query: %s column %s", key, itemKey, query, column)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
-					processLogs = append(processLogs, _log2)
+					logEntry := map[string]any{
+						"name":        fmt.Sprintf("%s->%s", key, itemKey),
+						"description": itemMetadata["description"].(string),
+						"start_at":    start3,
+						"success":     false,
+						"msg":         fmt.Sprintf("%s -> %s -> failed to get md conf string query: %s column %s", key, itemKey, query, column),
+						"end_at":      time.Now(),
+						"duration":    time.Since(start3).Seconds(),
+					}
+					processLogs = append(processLogs, logEntry)
+					om.processLogs = append(om.processLogs, logEntry)
 					return nil
 				}
 			} else {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				processLogs = append(processLogs, _log2)
+				logEntry := map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start3,
+					"success":     false,
+					"msg":         fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err),
+					"end_at":      time.Now(),
+					"duration":    time.Since(start3).Seconds(),
+					"error":       err.Error(),
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 				return nil
 			}
 			// QUERIES TO RUN AT THE END
 			if okAfter {
 				start3 := time.Now()
-				_log2 := map[string]any{
+				logEntry := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
 					"start_at":    start3,
 				}
 				err = etlx.ExecuteQuery(dbConn, afterSQL, item, "", "", nil)
 				if err != nil {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
+					logEntry["success"] = false
+					logEntry["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
+					logEntry["end_at"] = time.Now()
+					logEntry["duration"] = time.Since(start3).Seconds()
+					logEntry["error"] = err.Error()
+					itemSpan.RecordError(err)
 				} else {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
+					logEntry["success"] = true
+					logEntry["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
+					logEntry["end_at"] = time.Now()
+					logEntry["duration"] = time.Since(start3).Seconds()
 				}
-				processLogs = append(processLogs, _log2)
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 			}
 		} else if path != nil && okPath {
 			if ok, _ := fileExists(path.(string)); ok {
 				err := etl.ConfigFromFile(path.(string))
 				if err != nil {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("Error parsing config: %s -> %s", path, err)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
-					processLogs = append(processLogs, _log2)
+					logEntry := map[string]any{
+						"name":        fmt.Sprintf("%s->%s", key, itemKey),
+						"description": itemMetadata["description"].(string),
+						"start_at":    start3,
+						"success":     false,
+						"msg":         fmt.Sprintf("Error parsing config: %s -> %s", path, err),
+						"end_at":      time.Now(),
+						"duration":    time.Since(start3).Seconds(),
+						"error":       err.Error(),
+					}
+					processLogs = append(processLogs, logEntry)
+					om.processLogs = append(om.processLogs, logEntry)
+					itemSpan.RecordError(err)
 				}
 			} else {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("file doesn't exists: %s", path)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				processLogs = append(processLogs, _log2)
+				logEntry := map[string]any{
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"start_at":    start3,
+					"success":     false,
+					"msg":         fmt.Sprintf("file doesn't exists: %s", path),
+					"end_at":      time.Now(),
+					"duration":    time.Since(start3).Seconds(),
+				}
+				processLogs = append(processLogs, logEntry)
+				om.processLogs = append(om.processLogs, logEntry)
 				return nil
 			}
 		}
@@ -215,6 +297,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				data, err := os.ReadFile(path.(string))
 				if err != nil {
 					fmt.Printf("LOAD RAW FILE: failed to read file: %s", err)
+					om.RecordEvent(itemSpan, "File read error", map[string]any{"path": path, "error": err.Error()})
 				} else {
 					etlx.Config[itemKey] = string(data)
 				}
@@ -231,11 +314,18 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				}
 			}
 		}
-		_log2["success"] = true
-		_log2["msg"] = "Successfully loaded!"
-		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3).Seconds()
-		processLogs = append(processLogs, _log2)
+		logEntry := map[string]any{
+			"name":        fmt.Sprintf("%s->%s", key, itemKey),
+			"description": itemMetadata["description"].(string),
+			"start_at":    start3,
+			"success":     true,
+			"msg":         "Successfully loaded!",
+			"end_at":      time.Now(),
+			"duration":    time.Since(start3).Seconds(),
+		}
+		processLogs = append(processLogs, logEntry)
+		om.processLogs = append(om.processLogs, logEntry)
+		om.RecordEvent(itemSpan, "Config loaded successfully", map[string]any{})
 		return nil
 	}
 	// Check if the input conf is nil or empty
@@ -254,5 +344,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		"end_at":      time.Now(),
 		"duration":    time.Since(start).Seconds(),
 	}
+	om.processLogs[0] = processLogs[0]
 	return processLogs, nil
 }
+

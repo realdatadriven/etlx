@@ -216,6 +216,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		key = keys[0]
 	}
 	//fmt.Println(key, dateRef)
+	
+	// Initialize OpenTelemetry context
+	om := GetOTelManager()
+	rootSpan, _ := om.StartOperationSpan("RunEXPORTS", map[string]any{"key": key, "process": process})
+	defer rootSpan.End()
+	
 	var processLogs []map[string]any
 	start := time.Now()
 	processLogs = append(processLogs, map[string]any{

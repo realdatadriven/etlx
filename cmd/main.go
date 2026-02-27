@@ -13,6 +13,20 @@ import (
 
 func main() {
 	etlx.LoadDotEnv()
+	
+	// Initialize OpenTelemetry
+	om, otelErr := etlx.InitializeOTel("etlx-cli")
+	if otelErr != nil {
+		log.Printf("Warning: Failed to initialize OpenTelemetry: %v\n", otelErr)
+	}
+	defer func() {
+		if om != nil {
+			if err := om.Shutdown(); err != nil {
+				log.Printf("Error shutting down OpenTelemetry: %v\n", err)
+			}
+		}
+	}()
+	
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
@@ -123,10 +137,18 @@ func main() {
 			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
 				fmt.Printf("%s RUN AS %s:\n", key, runs_as)
 				if etlxlib.Contains(_keys, runs_as) {
+					// Create OTel span for this operation
+					runOm := om
+					if runOm == nil {
+						runOm = etlx.GetOTelManager()
+					}
+					
 					switch runs_as {
 					case "ETL", "ELT":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("ETL_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunETL(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -137,9 +159,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "DATA_QUALITY", "DATAQUALITY", "QUALITY":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("DataQuality_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunDATA_QUALITY(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -151,8 +176,10 @@ func main() {
 							logs = append(logs, _logs...)
 						}
 					case "MULTI_QUERIES", "STACKED_QUERIES":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("MultiQueries_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, _, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -163,9 +190,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "EXPORTS":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Exports_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunEXPORTS(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -176,9 +206,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "NOTIFY", "NOTIFICATION":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Notify_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -189,9 +222,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "ACTIONS":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Actions_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunACTIONS(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -202,9 +238,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "SCRIPTS":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Scripts_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunSCRIPTS(dateRef, nil, extraConf, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -215,9 +254,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "LOGS", "OBSERVABILITY":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Logs_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.RunLOGS(dateRef, nil, logs, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -228,9 +270,12 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					case "REQUIRES", "IMPORTS":
+						opSpan, _ := runOm.StartOperationSpan(fmt.Sprintf("Requires_%s", key), map[string]any{"step": runs_as, "key": key})
 						_logs, err := etlxlib.LoadREQUIRES(nil, key)
 						if err != nil {
+							opSpan.RecordError(err)
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {
 							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
@@ -241,6 +286,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+						opSpan.End()
 					default:
 						//
 					}
