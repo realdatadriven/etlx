@@ -13,6 +13,20 @@ import (
 
 func main() {
 	etlx.LoadDotEnv()
+	
+	// Initialize OpenTelemetry
+	om, otelErr := etlx.InitializeOTel("etlx-cli")
+	if otelErr != nil {
+		log.Printf("Warning: Failed to initialize OpenTelemetry: %v\n", otelErr)
+	}
+	defer func() {
+		if om != nil {
+			if err := om.Shutdown(); err != nil {
+				log.Printf("Error shutting down OpenTelemetry: %v\n", err)
+			}
+		}
+	}()
+	
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference

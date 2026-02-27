@@ -54,3 +54,15 @@ func LoadDotEnv() {
 		fmt.Println("Error loading .env file")
 	}
 }
+
+// OpenTelemetry exports
+type OTelManager = etlxlib.OTelManager
+
+func InitializeOTel(serviceName string) (*OTelManager, error) {
+	return etlxlib.InitializeOTel(serviceName)
+}
+
+func GetOTelManager() *OTelManager {
+	return etlxlib.GetOTelManager()
+}
+

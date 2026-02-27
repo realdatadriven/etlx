@@ -15,6 +15,7 @@ import (
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
+	"go.opentelemetry.io/otel/trace"
 	"gopkg.in/yaml.v3"
 )
 
@@ -893,4 +894,79 @@ func (etlx *ETLX) TempFIle(dir string, content string, name string) (string, err
 	// Get the name of the temporary file
 	tempFileName := tempFile.Name()
 	return tempFileName, nil
+}
+
+// GetOTelManager returns the OpenTelemetry manager
+func (etlx *ETLX) GetOTelManager() *OTelManager {
+	return GetOTelManager()
+}
+
+// StartProcessLog creates a span for a process and returns the log entry
+func (etlx *ETLX) StartProcessLog(operationName string, key string) (map[string]any, trace.Span, error) {
+	om := GetOTelManager()
+	span, _ := om.StartSpan(operationName, map[string]any{
+		"key":            key,
+		"operation_name": operationName,
+	})
+
+	logEntry := map[string]any{
+		"name":     key,
+		"start_at": time.Now(),
+		"span_id": span.SpanContext().SpanID().String(),
+		"trace_id": span.SpanContext().TraceID().String(),
+	}
+
+	return logEntry, span, nil
+}
+
+// EndProcessLog ends the span and returns the complete log entry
+func (etlx *ETLX) EndProcessLog(span trace.Span, logEntry map[string]any, success bool, err error) map[string]any {
+	om := GetOTelManager()
+	
+	if logEntry == nil {
+		logEntry = make(map[string]any)
+	}
+
+	logEntry["end_at"] = time.Now()
+	logEntry["success"] = success
+
+	if err != nil {
+		logEntry["error"] = err.Error()
+		logEntry["success"] = false
+	}
+
+	// Calculate duration if start_at exists
+	if startAt, ok := logEntry["start_at"].(time.Time); ok {
+		duration := time.Since(startAt)
+		logEntry["duration"] = duration.String()
+		logEntry["duration_ms"] = duration.Milliseconds()
+	}
+
+	// End span if provided
+	if span != nil {
+		om.EndSpan(span, logEntry)
+	}
+
+	return logEntry
+}
+
+// RecordProcessEvent records an event in the current span
+func (etlx *ETLX) RecordProcessEvent(span trace.Span, eventName string, attributes map[string]any) {
+	om := GetOTelManager()
+	
+	if span != nil {
+		om.RecordEvent(span, eventName, attributes)
+	}
+}
+
+// GetProcessLogs returns all collected process logs from OpenTelemetry
+func (etlx *ETLX) GetProcessLogs() []map[string]any {
+	om := GetOTelManager()
+	return om.GetProcessLogs()
+}
+
+// ClearProcessLogs clears the process logs
+func (etlx *ETLX) ClearProcessLogs() {
+	om := GetOTelManager()
+	om.ClearProcessLogs()
 }
