@@ -1,8 +1,14 @@
 package etlxlib
 
 import (
+	"context"
+	"database/sql"
 	"fmt"
+	"log"
 	"strings"
+	"time"
+
+	"github.com/jmoiron/sqlx"
 )
 
 // SQLDialect defines the interface for different SQL database dialects.
@@ -81,12 +87,12 @@ func (b *BaseDialect) GetDefaultValue(field map[string]any) string {
 }
 
 func (b *BaseDialect) GetColumnComment(tableName, columnName, comment string) string { return "" }
-func (b *BaseDialect) GetTableComment(tableName, comment string) string { return "" }
-func (b *BaseDialect) SupportsInlineColumnComment() bool { return false }
-func (b *BaseDialect) SupportsTableComment() bool { return false }
+func (b *BaseDialect) GetTableComment(tableName, comment string) string              { return "" }
+func (b *BaseDialect) SupportsInlineColumnComment() bool                             { return false }
+func (b *BaseDialect) SupportsTableComment() bool                                    { return false }
 
 // PostgresDialect implements SQLDialect for PostgreSQL.
-type PostgresDialect struct { BaseDialect }
+type PostgresDialect struct{ BaseDialect }
 
 func (p *PostgresDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -133,7 +139,7 @@ func (p *PostgresDialect) GetTableComment(tableName, comment string) string {
 func (p *PostgresDialect) SupportsTableComment() bool { return true }
 
 // MySQLDialect implements SQLDialect for MySQL.
-type MySQLDialect struct { BaseDialect }
+type MySQLDialect struct{ BaseDialect }
 
 func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -169,10 +175,10 @@ func (m *MySQLDialect) GetTableComment(tableName, comment string) string {
 }
 
 func (m *MySQLDialect) SupportsInlineColumnComment() bool { return true }
-func (m *MySQLDialect) SupportsTableComment() bool { return true }
+func (m *MySQLDialect) SupportsTableComment() bool        { return true }
 
 // SQLiteDialect implements SQLDialect for SQLite.
-type SQLiteDialect struct { BaseDialect }
+type SQLiteDialect struct{ BaseDialect }
 
 func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -203,7 +209,7 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 }
 
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
-type MSSQLDialect struct { BaseDialect }
+type MSSQLDialect struct{ BaseDialect }
 
 func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -265,7 +271,7 @@ func generateCreateTableSQL(driver, tableName, tableComment string, fields []map
 		nullable := dialect.GetNullable(field)
 		unique := dialect.GetUnique(field)
 		defaultValue := dialect.GetDefaultValue(field)
-		
+
 		columnDef := fmt.Sprintf("    %s %s%s%s%s%s%s", name, columnType, primaryKey, autoincrement, nullable, unique, defaultValue)
 
 		if comment, ok := field["comment"].(string); ok && comment != "" {
@@ -335,7 +341,7 @@ func InsertData(db *sqlx.DB, tableName string, columns []map[string]any, data []
 		isExcluded  bool
 		isNullable  bool
 	}
-	
+
 	schemaColumnMap := make(map[string]schemaColInfo)
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
 
@@ -372,7 +378,7 @@ func InsertData(db *sqlx.DB, tableName string, columns []map[string]any, data []
 			colInfo, existsInSchema := schemaColumnMap[colName]
 			if !existsInSchema {
 				// This should ideally not happen if allSchemaColumnNames is derived from schemaColumnMap
-				continue 
+				continue
 			}
 
 			if val, ok := row[colName]; ok {
@@ -418,7 +424,6 @@ func InsertData(db *sqlx.DB, tableName string, columns []map[string]any, data []
 
 	return nil
 }
-
 
 // METADATA
 func generateSeedData(parsedTables map[string]map[string]any, dbName string) map[string]any {
@@ -614,7 +619,7 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
 
-		for i, row := range rows {
+		for _, row := range rows {
 			// Prepare the common named params that almost every row has
 			params := map[string]any{
 				"db":         targetDBName,
@@ -899,9 +904,9 @@ func LoadOrSyncMenusFromConfig(
 				  AND app_id = :app_id
 				LIMIT 1
 			`, map[string]any{
-				"menu_id":   menu.MenuID,
-				"table_id":  tblMeta.TableID,
-				"app_id":    app.AppID,
+				"menu_id":  menu.MenuID,
+				"table_id": tblMeta.TableID,
+				"app_id":   app.AppID,
 			})
 			if err != nil && err != sql.ErrNoRows {
 				return fmt.Errorf("check menu_table link: %w", err)
@@ -945,7 +950,7 @@ func LoadOrSyncMenusFromConfig(
 // Helpers (safe type extraction)
 // ──────────────────────────────────────────────
 
-func getString(m map[string]any, key string, fallback string) string {
+func getString2(m map[string]any, key string, fallback string) string {
 	if v, ok := m[key]; ok {
 		if s, ok := v.(string); ok {
 			return s
@@ -968,7 +973,7 @@ func getFloat64(m map[string]any, key string, fallback float64) float64 {
 	return fallback
 }
 
-func getBool(m map[string]any, key string, fallback bool) bool {
+func getBool2(m map[string]any, key string, fallback bool) bool {
 	if v, ok := m[key]; ok {
 		if b, ok := v.(bool); ok {
 			return b
@@ -976,6 +981,7 @@ func getBool(m map[string]any, key string, fallback bool) bool {
 	}
 	return fallback
 }
+
 /*/ Example Usage (for testing purposes)
 func main() {
 	// Example table definition (similar to your YAML structure)
