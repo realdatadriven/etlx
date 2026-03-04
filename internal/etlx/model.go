@@ -588,8 +588,8 @@ func getAny(m map[string]any, key string, fallback any) any {
 // SeedData matches what generateSeedData returns
 type SeedData map[string][]map[string]any
 
-// UpsertSeedDataSafe loads metadata tables using SELECT → (UPDATE or INSERT) pattern
-func UpsertSeedDataSafe(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
+// UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
+func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
 	targetTables := []string{
 		"table",
 		"translate_table",
@@ -599,11 +599,11 @@ func UpsertSeedDataSafe(ctx context.Context, db *sqlx.DB, seed SeedData, targetD
 
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
+		return fmt.Errorf("begin transaction: %w", err)
 	}
 	defer tx.Rollback()
 
-	now := time.Now().UTC().Format("2006-01-02 15:04:05") // adjust format to match your column type
+	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName]
@@ -615,101 +615,105 @@ func UpsertSeedDataSafe(ctx context.Context, db *sqlx.DB, seed SeedData, targetD
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
 
 		for i, row := range rows {
-			// Decide which columns form the natural key
-			var whereClause string
-			var whereArgs []any
-			var logKey string
-
-			switch tableName {
-			case "table", "translate_table":
-				whereClause = `db = ? AND "table" = ?`
-				whereArgs = []any{targetDBName, row["table"]}
-				logKey = fmt.Sprintf("%v", row["table"])
-
-			case "translate_table_field", "table_schema":
-				whereClause = `db = ? AND "table" = ? AND field = ?`
-				whereArgs = []any{targetDBName, row["table"], row["field"]}
-				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
-
-			default:
-				continue
+			// Prepare the common named params that almost every row has
+			params := map[string]any{
+				"db":         targetDBName,
+				"table":      row["table"],
+				"user_id":    row["user_id"],
+				"excluded":   row["excluded"],
+				"created_at": row["created_at"],
+				"updated_at": now, // always refresh updated_at
 			}
 
-			// 1. Check if row already exists
-			var exists bool
-			checkQuery := fmt.Sprintf("SELECT 1 FROM %q WHERE %s LIMIT 1", tableName, whereClause)
+			// Add table-specific keys
+			if tableName == "translate_table_field" || tableName == "table_schema" {
+				params["field"] = row["field"]
+			}
 
-			err := tx.GetContext(ctx, &exists, checkQuery, whereArgs...)
+			// Decide PK / unique key for existence check & where clause
+			var whereClause string
+			var logKey string
+
+			if tableName == "translate_table_field" || tableName == "table_schema" {
+				whereClause = `db = :db AND "table" = :table AND field = :field`
+				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
+			} else {
+				whereClause = `db = :db AND "table" = :table`
+				logKey = fmt.Sprintf("%v", row["table"])
+			}
+
+			// 1. Check if row exists
+			var exists bool
+			checkQuery := fmt.Sprintf(`SELECT 1 FROM %q WHERE %s LIMIT 1`, tableName, whereClause)
+
+			err := tx.GetContext(ctx, &exists, checkQuery, params)
 			if err != nil && err != sql.ErrNoRows {
-				return fmt.Errorf("check existence %s (%s): %w", tableName, logKey, err)
+				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
 			}
 
 			if exists {
-				// 2a. UPDATE
-				updateFields := make([]string, 0, len(row))
-				updateArgs := make([]any, 0, len(row))
+				// 2a. UPDATE – only changeable fields
+				updateParts := []string{`"updated_at" = :updated_at`}
+				updateParams := map[string]any{"updated_at": now}
+
 				for k, v := range row {
-					// Skip keys that are part of the where clause to avoid overwriting identity
-					if k == "db" || k == "table" || k == "field" {
+					// Skip identity columns and already handled fields
+					if k == "db" || k == "table" || k == "field" || k == "created_at" || k == "updated_at" {
 						continue
 					}
-					updateFields = append(updateFields, fmt.Sprintf(`%q = ?`, k))
-					updateArgs = append(updateArgs, v)
+					updateParts = append(updateParts, fmt.Sprintf(`%q = :%s`, k, k))
+					updateParams[k] = v
 				}
-
-				// Add updated_at if you want to force refresh
-				updateFields = append(updateFields, `"updated_at" = ?`)
-				updateArgs = append(updateArgs, now)
 
 				updateQuery := fmt.Sprintf(`
 					UPDATE %q
 					SET %s
 					WHERE %s
-				`, tableName, strings.Join(updateFields, ", "), whereClause)
+				`, tableName, strings.Join(updateParts, ", "), whereClause)
 
-				// merge where args at the end
-				updateArgs = append(updateArgs, whereArgs...)
+				// Merge where params into update params
+				for k, v := range params {
+					updateParams[k] = v
+				}
 
-				res, err := tx.ExecContext(ctx, updateQuery, updateArgs...)
+				res, err := tx.NamedExecContext(ctx, updateQuery, updateParams)
 				if err != nil {
-					return fmt.Errorf("update %s (%s): %w", tableName, logKey, err)
+					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
 				}
 
 				affected, _ := res.RowsAffected()
-				fmt.Printf("  updated  %-40s (%d)\n", logKey, affected)
+				fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
 
 			} else {
-				// 2b. INSERT
-				cols := make([]string, 0, len(row))
-				placeholders := make([]string, 0, len(row))
-				args := make([]any, 0, len(row))
+				// 2b. INSERT – all fields from the row + ensure timestamps
+				cols := []string{}
+				names := []string{}
 
-				for k, v := range row {
+				for k := range row {
 					cols = append(cols, `"`+k+`"`)
-					placeholders = append(placeholders, "?")
-					args = append(args, v)
+					names = append(names, ":"+k)
 				}
 
-				// If created_at / updated_at missing → fill them
+				// Guarantee timestamps if missing in the seed map
 				if _, has := row["created_at"]; !has {
 					cols = append(cols, `"created_at"`)
-					placeholders = append(placeholders, "?")
-					args = append(args, now)
+					names = append(names, ":created_at")
+					params["created_at"] = now
 				}
 				if _, has := row["updated_at"]; !has {
 					cols = append(cols, `"updated_at"`)
-					placeholders = append(placeholders, "?")
-					args = append(args, now)
+					names = append(names, ":updated_at")
+					params["updated_at"] = now
 				}
 
 				insertQuery := fmt.Sprintf(`
 					INSERT INTO %q (%s)
 					VALUES (%s)
-				`, tableName, strings.Join(cols, ", "), strings.Join(placeholders, ", "))
+				`, tableName, strings.Join(cols, ", "), strings.Join(names, ", "))
 
-				_, err := tx.ExecContext(ctx, insertQuery, args...)
+				_, err := tx.NamedExecContext(ctx, insertQuery, params)
 				if err != nil {
-					return fmt.Errorf("insert %s (%s): %w", tableName, logKey, err)
+					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
 				}
 
 				fmt.Printf("  inserted %-40s\n", logKey)
@@ -718,10 +722,10 @@ func UpsertSeedDataSafe(ctx context.Context, db *sqlx.DB, seed SeedData, targetD
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit: %w", err)
+		return fmt.Errorf("commit failed: %w", err)
 	}
 
-	fmt.Println("\nAll seed data processed successfully.")
+	fmt.Println("\nSeed data load completed successfully.")
 	return nil
 }
 
