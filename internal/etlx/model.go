@@ -585,6 +585,153 @@ func getAny(m map[string]any, key string, fallback any) any {
 	return fallback
 }
 
+// SeedData is the structure you get from generateSeedData()
+type SeedData map[string][]map[string]any
+
+// UpsertSeedData loads or updates the metadata tables using upsert logic
+func UpsertSeedData(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
+	targetTables := []string{
+		"table",
+		"translate_table",
+		"translate_table_field",
+		"table_schema",
+	}
+
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin transaction: %w", err)
+	}
+	defer tx.Rollback() // rollback unless we Commit()
+
+	for _, tableName := range targetTables {
+		rows, ok := seed[tableName]
+		if !ok || len(rows) == 0 {
+			log.Printf("No data for table %q → skipping", tableName)
+			continue
+		}
+
+		fmt.Printf("\nProcessing table %q (%d rows)...\n", tableName, len(rows))
+
+		// 1. Delete existing rows for this db
+		var deleteQuery string
+		var deleteArgs []any
+
+		if tableName == "translate_table_field" || tableName == "table_schema" {
+			// more granular delete (per table + field) is possible, but usually we clear whole db first
+			deleteQuery = fmt.Sprintf("DELETE FROM %q WHERE db = ?", tableName)
+			deleteArgs = []any{targetDBName}
+		} else {
+			deleteQuery = fmt.Sprintf("DELETE FROM %q WHERE db = ?", tableName)
+			deleteArgs = []any{targetDBName}
+		}
+
+		res, err := tx.ExecContext(ctx, deleteQuery, deleteArgs...)
+		if err != nil {
+			return fmt.Errorf("delete from %s: %w", tableName, err)
+		}
+		delCount, _ := res.RowsAffected()
+		fmt.Printf("  → deleted %d existing rows for db=%s\n", delCount, targetDBName)
+
+		// 2. Insert / upsert all rows
+		inserted := 0
+		updated := 0
+
+		for _, row := range rows {
+			// Build INSERT ... ON CONFLICT DO UPDATE
+			// We need to decide the conflict target per table
+			var query string
+			var args []any
+			var conflictTarget string
+			var updateSet []string
+
+			switch tableName {
+			case "table":
+				conflictTarget = "(db, \"table\")"
+				updateSet = []string{
+					"table_desc = EXCLUDED.table_desc",
+					"user_id = EXCLUDED.user_id",
+					"created_at = EXCLUDED.created_at",
+					"updated_at = EXCLUDED.updated_at",
+					"excluded = EXCLUDED.excluded",
+				}
+
+			case "translate_table":
+				conflictTarget = "(db, \"table\", lang)"
+				updateSet = []string{
+					"table_org_desc = EXCLUDED.table_org_desc",
+					"table_transl_desc = EXCLUDED.table_transl_desc",
+					"user_id = EXCLUDED.user_id",
+					"created_at = EXCLUDED.created_at",
+					"updated_at = EXCLUDED.updated_at",
+					"excluded = EXCLUDED.excluded",
+				}
+
+			case "translate_table_field", "table_schema":
+				conflictTarget = "(db, \"table\", field)"
+				updateSet = buildUpdateSetFromKeys(row, []string{
+					"field_org_desc", "field_transl_desc", // translate_table_field
+					"type", "pk", "autoincrement", "nullable", "default", "comment",
+					"fk", "referred_table", "referred_column", "field_order",
+					"user_id", "created_at", "updated_at", "excluded",
+				})
+			}
+
+			// Build columns and placeholders
+			cols := make([]string, 0, len(row))
+			placeholders := make([]string, 0, len(row))
+			for k := range row {
+				cols = append(cols, `"`+k+`"`)
+				placeholders = append(placeholders, "?")
+				args = append(args, row[k])
+			}
+
+			query = fmt.Sprintf(`
+				INSERT INTO %q (%s)
+				VALUES (%s)
+				ON CONFLICT %s
+				DO UPDATE SET %s
+			`,
+				tableName,
+				strings.Join(cols, ", "),
+				strings.Join(placeholders, ", "),
+				conflictTarget,
+				strings.Join(updateSet, ", "),
+			)
+
+			_, err := tx.ExecContext(ctx, query, args...)
+			if err != nil {
+				return fmt.Errorf("upsert into %s (table=%v, field=%v): %w",
+					tableName, row["table"], row["field"], err)
+			}
+
+			// Naive way: assume insert if no conflict, update if conflict
+			// For real statistics you would need RETURNING or separate count
+			inserted++
+		}
+
+		fmt.Printf("  → upserted %d rows (approximate)\n", inserted)
+	}
+
+	if err := tx.Commit(); err != nil {
+		return fmt.Errorf("commit transaction: %w", err)
+	}
+
+	fmt.Println("\nSeed data upsert completed.")
+	return nil
+}
+
+// buildUpdateSetFromKeys creates UPDATE SET clauses only for known fields
+func buildUpdateSetFromKeys(row map[string]any, known []string) []string {
+	set := make([]string, 0, len(known))
+	for _, k := range known {
+		if _, exists := row[k]; exists {
+			set = append(set, fmt.Sprintf("%q = EXCLUDED.%[1]q", k))
+		}
+	}
+	return set
+}
+
+
 /*/ Example Usage (for testing purposes)
 func main() {
 	// Example table definition (similar to your YAML structure)
