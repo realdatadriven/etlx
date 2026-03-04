@@ -232,11 +232,11 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 // getDialect returns the appropriate SQLDialect implementation.
 func getDialect(driver string) SQLDialect {
 	switch driver {
-	case "postgres":
+	case "postgres", "pg":
 		return &PostgresDialect{}
-	case "mysql":
+	case "mysql", "mariadb":
 		return &MySQLDialect{}
-	case "sqlite3":
+	case "sqlite3", "sqlite":
 		return &SQLiteDialect{}
 	case "sqlserver", "mssql":
 		return &MSSQLDialect{}
@@ -317,7 +317,109 @@ func generateCreateTableSQL(driver, tableName, tableComment string, fields []map
 	return schema.String() + ";\n"
 }
 
-// Example Usage (for testing purposes)
+// ColumnDefinition represents the structure of a column from the YAML schema.
+type ColumnDefinition struct {
+	Name string `json:"name"`
+	Type string `json:"type"`
+	// Add other fields from your YAML schema as needed, e.g., Pk, Autoincrement, Nullable, etc.
+}
+
+// InsertData inserts a slice of data rows into the specified table.
+// It automatically handles default values for 'created_at', 'updated_at', and 'excluded'
+// if they are defined in the schema but not present in the data row.
+func InsertData(db *sqlx.DB, tableName string, columns []map[string]any, data []map[string]any) error {
+	// Map schema column names to their properties for quick lookup
+	type schemaColInfo struct {
+		isCreatedAt bool
+		isUpdatedAt bool
+		isExcluded  bool
+		isNullable  bool
+	}
+	
+	schemaColumnMap := make(map[string]schemaColInfo)
+	var allSchemaColumnNames []string // To maintain order for INSERT statement
+
+	for _, col := range columns {
+		colName, ok := col["name"].(string)
+		if !ok {
+			return fmt.Errorf("column definition missing 'name' field")
+		}
+
+		info := schemaColInfo{}
+		if colName == "created_at" {
+			info.isCreatedAt = true
+		}
+		if colName == "updated_at" {
+			info.isUpdatedAt = true
+		}
+		if colName == "excluded" {
+			info.isExcluded = true
+		}
+		if nullable, ok := col["nullable"].(bool); ok && nullable {
+			info.isNullable = true
+		}
+		schemaColumnMap[colName] = info
+		allSchemaColumnNames = append(allSchemaColumnNames, colName)
+	}
+
+	for i, row := range data {
+		insertCols := []string{}
+		insertVals := []string{} // For named parameters, e.g., ":colName"
+		insertMap := make(map[string]any)
+		now := time.Now() // Get current time once per row for consistency
+
+		for _, colName := range allSchemaColumnNames {
+			colInfo, existsInSchema := schemaColumnMap[colName]
+			if !existsInSchema {
+				// This should ideally not happen if allSchemaColumnNames is derived from schemaColumnMap
+				continue 
+			}
+
+			if val, ok := row[colName]; ok {
+				// Value exists in the data row, use it
+				insertCols = append(insertCols, colName)
+				insertVals = append(insertVals, ":"+colName)
+				insertMap[colName] = val
+			} else {
+				// Value not in data row, check for defaults based on schema definition
+				if colInfo.isCreatedAt {
+					insertCols = append(insertCols, colName)
+					insertVals = append(insertVals, ":"+colName)
+					insertMap[colName] = now
+				} else if colInfo.isUpdatedAt {
+					insertCols = append(insertCols, colName)
+					insertVals = append(insertVals, ":"+colName)
+					insertMap[colName] = now
+				} else if colInfo.isExcluded {
+					insertCols = append(insertCols, colName)
+					insertVals = append(insertVals, ":"+colName)
+					insertMap[colName] = false
+				} else if !colInfo.isNullable {
+					// If a non-nullable column is missing from data and has no default, it's an error
+					return fmt.Errorf("row %d: non-nullable column '%s' missing from data and no default provided", i, colName)
+				}
+				// If it's nullable and not provided, it will be omitted from the INSERT, allowing DB default/NULL
+			}
+		}
+
+		// Construct the INSERT statement
+		if len(insertCols) == 0 {
+			return fmt.Errorf("row %d: no columns to insert", i)
+		}
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
+			tableName, strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
+
+		// Execute the insert using NamedExec for safety and convenience
+		_, err := db.NamedExec(query, insertMap)
+		if err != nil {
+			return fmt.Errorf("failed to insert row %d into %s: %w", i, tableName, err)
+		}
+	}
+
+	return nil
+}
+
+/*/ Example Usage (for testing purposes)
 func main() {
 	// Example table definition (similar to your YAML structure)
 	fields := []map[string]any{
@@ -340,4 +442,4 @@ func main() {
 
 	fmt.Println("--- MSSQL ---")
 	fmt.Println(generateCreateTableSQL("mssql", "users", "Table of users", fields))
-}
+}*/
