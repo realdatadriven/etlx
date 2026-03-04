@@ -585,11 +585,11 @@ func getAny(m map[string]any, key string, fallback any) any {
 	return fallback
 }
 
-// SeedData is the structure you get from generateSeedData()
+// SeedData matches what generateSeedData returns
 type SeedData map[string][]map[string]any
 
-// UpsertSeedData loads or updates the metadata tables using upsert logic
-func UpsertSeedData(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
+// UpsertSeedDataSafe loads metadata tables using SELECT → (UPDATE or INSERT) pattern
+func UpsertSeedDataSafe(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
 	targetTables := []string{
 		"table",
 		"translate_table",
@@ -599,136 +599,130 @@ func UpsertSeedData(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBNam
 
 	tx, err := db.BeginTxx(ctx, nil)
 	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
+		return fmt.Errorf("begin tx: %w", err)
 	}
-	defer tx.Rollback() // rollback unless we Commit()
+	defer tx.Rollback()
+
+	now := time.Now().UTC().Format("2006-01-02 15:04:05") // adjust format to match your column type
 
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName]
 		if !ok || len(rows) == 0 {
-			log.Printf("No data for table %q → skipping", tableName)
+			log.Printf("No seed data for %q → skipping", tableName)
 			continue
 		}
 
-		fmt.Printf("\nProcessing table %q (%d rows)...\n", tableName, len(rows))
+		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
 
-		// 1. Delete existing rows for this db
-		var deleteQuery string
-		var deleteArgs []any
-
-		if tableName == "translate_table_field" || tableName == "table_schema" {
-			// more granular delete (per table + field) is possible, but usually we clear whole db first
-			deleteQuery = fmt.Sprintf("DELETE FROM %q WHERE db = ?", tableName)
-			deleteArgs = []any{targetDBName}
-		} else {
-			deleteQuery = fmt.Sprintf("DELETE FROM %q WHERE db = ?", tableName)
-			deleteArgs = []any{targetDBName}
-		}
-
-		res, err := tx.ExecContext(ctx, deleteQuery, deleteArgs...)
-		if err != nil {
-			return fmt.Errorf("delete from %s: %w", tableName, err)
-		}
-		delCount, _ := res.RowsAffected()
-		fmt.Printf("  → deleted %d existing rows for db=%s\n", delCount, targetDBName)
-
-		// 2. Insert / upsert all rows
-		inserted := 0
-		updated := 0
-
-		for _, row := range rows {
-			// Build INSERT ... ON CONFLICT DO UPDATE
-			// We need to decide the conflict target per table
-			var query string
-			var args []any
-			var conflictTarget string
-			var updateSet []string
+		for i, row := range rows {
+			// Decide which columns form the natural key
+			var whereClause string
+			var whereArgs []any
+			var logKey string
 
 			switch tableName {
-			case "table":
-				conflictTarget = "(db, \"table\")"
-				updateSet = []string{
-					"table_desc = EXCLUDED.table_desc",
-					"user_id = EXCLUDED.user_id",
-					"created_at = EXCLUDED.created_at",
-					"updated_at = EXCLUDED.updated_at",
-					"excluded = EXCLUDED.excluded",
-				}
-
-			case "translate_table":
-				conflictTarget = "(db, \"table\", lang)"
-				updateSet = []string{
-					"table_org_desc = EXCLUDED.table_org_desc",
-					"table_transl_desc = EXCLUDED.table_transl_desc",
-					"user_id = EXCLUDED.user_id",
-					"created_at = EXCLUDED.created_at",
-					"updated_at = EXCLUDED.updated_at",
-					"excluded = EXCLUDED.excluded",
-				}
+			case "table", "translate_table":
+				whereClause = `db = ? AND "table" = ?`
+				whereArgs = []any{targetDBName, row["table"]}
+				logKey = fmt.Sprintf("%v", row["table"])
 
 			case "translate_table_field", "table_schema":
-				conflictTarget = "(db, \"table\", field)"
-				updateSet = buildUpdateSetFromKeys(row, []string{
-					"field_org_desc", "field_transl_desc", // translate_table_field
-					"type", "pk", "autoincrement", "nullable", "default", "comment",
-					"fk", "referred_table", "referred_column", "field_order",
-					"user_id", "created_at", "updated_at", "excluded",
-				})
+				whereClause = `db = ? AND "table" = ? AND field = ?`
+				whereArgs = []any{targetDBName, row["table"], row["field"]}
+				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
+
+			default:
+				continue
 			}
 
-			// Build columns and placeholders
-			cols := make([]string, 0, len(row))
-			placeholders := make([]string, 0, len(row))
-			for k := range row {
-				cols = append(cols, `"`+k+`"`)
-				placeholders = append(placeholders, "?")
-				args = append(args, row[k])
+			// 1. Check if row already exists
+			var exists bool
+			checkQuery := fmt.Sprintf("SELECT 1 FROM %q WHERE %s LIMIT 1", tableName, whereClause)
+
+			err := tx.GetContext(ctx, &exists, checkQuery, whereArgs...)
+			if err != nil && err != sql.ErrNoRows {
+				return fmt.Errorf("check existence %s (%s): %w", tableName, logKey, err)
 			}
 
-			query = fmt.Sprintf(`
-				INSERT INTO %q (%s)
-				VALUES (%s)
-				ON CONFLICT %s
-				DO UPDATE SET %s
-			`,
-				tableName,
-				strings.Join(cols, ", "),
-				strings.Join(placeholders, ", "),
-				conflictTarget,
-				strings.Join(updateSet, ", "),
-			)
+			if exists {
+				// 2a. UPDATE
+				updateFields := make([]string, 0, len(row))
+				updateArgs := make([]any, 0, len(row))
+				for k, v := range row {
+					// Skip keys that are part of the where clause to avoid overwriting identity
+					if k == "db" || k == "table" || k == "field" {
+						continue
+					}
+					updateFields = append(updateFields, fmt.Sprintf(`%q = ?`, k))
+					updateArgs = append(updateArgs, v)
+				}
 
-			_, err := tx.ExecContext(ctx, query, args...)
-			if err != nil {
-				return fmt.Errorf("upsert into %s (table=%v, field=%v): %w",
-					tableName, row["table"], row["field"], err)
+				// Add updated_at if you want to force refresh
+				updateFields = append(updateFields, `"updated_at" = ?`)
+				updateArgs = append(updateArgs, now)
+
+				updateQuery := fmt.Sprintf(`
+					UPDATE %q
+					SET %s
+					WHERE %s
+				`, tableName, strings.Join(updateFields, ", "), whereClause)
+
+				// merge where args at the end
+				updateArgs = append(updateArgs, whereArgs...)
+
+				res, err := tx.ExecContext(ctx, updateQuery, updateArgs...)
+				if err != nil {
+					return fmt.Errorf("update %s (%s): %w", tableName, logKey, err)
+				}
+
+				affected, _ := res.RowsAffected()
+				fmt.Printf("  updated  %-40s (%d)\n", logKey, affected)
+
+			} else {
+				// 2b. INSERT
+				cols := make([]string, 0, len(row))
+				placeholders := make([]string, 0, len(row))
+				args := make([]any, 0, len(row))
+
+				for k, v := range row {
+					cols = append(cols, `"`+k+`"`)
+					placeholders = append(placeholders, "?")
+					args = append(args, v)
+				}
+
+				// If created_at / updated_at missing → fill them
+				if _, has := row["created_at"]; !has {
+					cols = append(cols, `"created_at"`)
+					placeholders = append(placeholders, "?")
+					args = append(args, now)
+				}
+				if _, has := row["updated_at"]; !has {
+					cols = append(cols, `"updated_at"`)
+					placeholders = append(placeholders, "?")
+					args = append(args, now)
+				}
+
+				insertQuery := fmt.Sprintf(`
+					INSERT INTO %q (%s)
+					VALUES (%s)
+				`, tableName, strings.Join(cols, ", "), strings.Join(placeholders, ", "))
+
+				_, err := tx.ExecContext(ctx, insertQuery, args...)
+				if err != nil {
+					return fmt.Errorf("insert %s (%s): %w", tableName, logKey, err)
+				}
+
+				fmt.Printf("  inserted %-40s\n", logKey)
 			}
-
-			// Naive way: assume insert if no conflict, update if conflict
-			// For real statistics you would need RETURNING or separate count
-			inserted++
 		}
-
-		fmt.Printf("  → upserted %d rows (approximate)\n", inserted)
 	}
 
 	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit transaction: %w", err)
+		return fmt.Errorf("commit: %w", err)
 	}
 
-	fmt.Println("\nSeed data upsert completed.")
+	fmt.Println("\nAll seed data processed successfully.")
 	return nil
-}
-
-// buildUpdateSetFromKeys creates UPDATE SET clauses only for known fields
-func buildUpdateSetFromKeys(row map[string]any, known []string) []string {
-	set := make([]string, 0, len(known))
-	for _, k := range known {
-		if _, exists := row[k]; exists {
-			set = append(set, fmt.Sprintf("%q = EXCLUDED.%[1]q", k))
-		}
-	}
-	return set
 }
 
 
