@@ -419,6 +419,172 @@ func InsertData(db *sqlx.DB, tableName string, columns []map[string]any, data []
 	return nil
 }
 
+
+// METADATA
+func generateSeedData(parsedTables map[string]map[string]any, dbName string) map[string]any {
+	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
+
+	data := map[string]any{
+		"table":                 []map[string]any{},
+		"translate_table":       []map[string]any{},
+		"translate_table_field": []map[string]any{},
+		"table_schema":          []map[string]any{},
+	}
+
+	for tableName, tableDef := range parsedTables {
+		commentAny, hasComment := tableDef["comment"]
+		comment := ""
+		if hasComment {
+			if s, ok := commentAny.(string); ok {
+				comment = s
+			}
+		}
+
+		// 1) table row
+		tableRow := map[string]any{
+			"table":      tableName,
+			"table_desc": comment,
+			"db":         dbName,
+			"user_id":    1,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		data["table"] = append(data["table"].([]map[string]any), tableRow)
+
+		// 2) translate_table row (english default)
+		translateTableRow := map[string]any{
+			"table_org_desc":    comment,
+			"table_transl_desc": comment, // ← can be empty or later translated
+			"table":             tableName,
+			"db":                dbName,
+			"lang":              "en",
+			"user_id":           1,
+			"created_at":        now,
+			"updated_at":        now,
+			"excluded":          false,
+		}
+		data["translate_table"] = append(data["translate_table"].([]map[string]any), translateTableRow)
+
+		// 3+4) columns → translate_table_field + table_schema
+		columnsAny, hasColumns := tableDef["columns"]
+		if !hasColumns {
+			continue
+		}
+
+		columns, ok := columnsAny.(map[string]any)
+		if !ok {
+			continue
+		}
+
+		fieldOrder := 0
+
+		for colName, colDefAny := range columns {
+			colDef, ok := colDefAny.(map[string]any)
+			if !ok {
+				continue
+			}
+
+			fieldOrder++
+
+			// ──────────────────────────────────────────────
+			// extract column properties with safe type assertions
+			// ──────────────────────────────────────────────
+
+			colType := getString(colDef, "type", "unknown")
+			colComment := getString(colDef, "comment", "")
+			pk := getBool(colDef, "pk", false)
+			autoincrement := getBool(colDef, "autoincrement", false)
+			nullable := getBool(colDef, "nullable", true) // default nullable=true if missing
+			defaultVal := getAny(colDef, "default", nil)
+
+			fkRef := getString(colDef, "fk", "")
+			var referredTable, referredColumn string
+			fk := fkRef != ""
+			if fk {
+				parts := strings.Split(fkRef, ".")
+				if len(parts) == 2 {
+					referredTable = parts[0]
+					referredColumn = parts[1]
+				}
+			}
+
+			// ──────────────────────────────────────────────
+			// translate_table_field row
+			// ──────────────────────────────────────────────
+			ttfRow := map[string]any{
+				"field_org_desc":    colComment,
+				"field_transl_desc": colComment, // ← can be translated later
+				"field":             colName,
+				"table":             tableName,
+				"db":                dbName,
+				"lang":              "en",
+				"user_id":           1,
+				"created_at":        now,
+				"updated_at":        now,
+				"excluded":          false,
+			}
+			data["translate_table_field"] = append(data["translate_table_field"].([]map[string]any), ttfRow)
+
+			// ──────────────────────────────────────────────
+			// table_schema row
+			// ──────────────────────────────────────────────
+			schemaRow := map[string]any{
+				"db":              dbName,
+				"table":           tableName,
+				"field":           colName,
+				"type":            colType,
+				"pk":              pk,
+				"autoincrement":   autoincrement,
+				"nullable":        nullable,
+				"default":         defaultVal,
+				"comment":         colComment,
+				"fk":              fk,
+				"referred_table":  referredTable,
+				"referred_column": referredColumn,
+				"field_order":     fieldOrder,
+				"user_id":         1,
+				"created_at":      now,
+				"updated_at":      now,
+				"excluded":        false,
+				// "computed":     ... (add when you start using it)
+			}
+			data["table_schema"] = append(data["table_schema"].([]map[string]any), schemaRow)
+		}
+	}
+
+	return data
+}
+
+// ──────────────────────────────────────────────
+// small helpers (safe type casting)
+// ──────────────────────────────────────────────
+
+func getString(m map[string]any, key string, fallback string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return fallback
+}
+
+func getBool(m map[string]any, key string, fallback bool) bool {
+	if v, ok := m[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return fallback
+}
+
+func getAny(m map[string]any, key string, fallback any) any {
+	if v, ok := m[key]; ok {
+		return v
+	}
+	return fallback
+}
+
 /*/ Example Usage (for testing purposes)
 func main() {
 	// Example table definition (similar to your YAML structure)
