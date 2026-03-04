@@ -729,7 +729,253 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 	return nil
 }
 
+// InterfaceConf represents the parsed cs_app structure
+type InterfaceConf map[string]map[string]any
 
+// LoadOrSyncMenusFromConfig creates/updates menus and menu_table links
+func LoadOrSyncMenusFromConfig(
+	ctx context.Context,
+	db *sqlx.DB,
+	conf InterfaceConf,
+	dbName string, // e.g. "ADMIN"
+	appUserID int, // usually 1
+) error {
+	tx, err := db.BeginTxx(ctx, nil)
+	if err != nil {
+		return fmt.Errorf("begin tx: %w", err)
+	}
+	defer tx.Rollback()
+
+	now := time.Now().UTC().Format("2006-01-02 15:04:05")
+
+	// 1. Find the main app record (assuming one app per db)
+	var app struct {
+		AppID int `db:"app_id"`
+	}
+	err = tx.GetContext(ctx, &app, `
+		SELECT app_id FROM app 
+		WHERE db = :db 
+		LIMIT 1
+	`, map[string]any{"db": dbName})
+	if err == sql.ErrNoRows {
+		return fmt.Errorf("no app found for db = %q", dbName)
+	}
+	if err != nil {
+		return fmt.Errorf("find app failed: %w", err)
+	}
+
+	// 2. Process each menu section
+	for menuName, menuCfg := range conf {
+		activeAny, hasActive := menuCfg["active"]
+		active := false
+		if hasActive {
+			active, _ = activeAny.(bool)
+		}
+		if !active {
+			continue
+		}
+
+		icon := getString(menuCfg, "menu_icon", "")
+		order := getFloat64(menuCfg, "menu_order", 999)
+		config := getString(menuCfg, "menu_config", "")
+
+		// Check if menu already exists
+		var menu struct {
+			MenuID int `db:"menu_id"`
+		}
+		err = tx.GetContext(ctx, &menu, `
+			SELECT menu_id FROM menu 
+			WHERE menu = :menu AND app_id = :app_id
+		`, map[string]any{
+			"menu":   menuName,
+			"app_id": app.AppID,
+		})
+
+		if err == sql.ErrNoRows {
+			// INSERT new menu
+			res, err := tx.NamedExecContext(ctx, `
+				INSERT INTO menu (
+					menu, menu_desc, menu_icon, menu_order, menu_config,
+					app_id, user_id, active,
+					created_at, updated_at, excluded
+				) VALUES (
+					:menu, :menu_desc, :menu_icon, :menu_order, :menu_config,
+					:app_id, :user_id, :active,
+					:created_at, :updated_at, :excluded
+				)
+			`, map[string]any{
+				"menu":        menuName,
+				"menu_desc":   menuName, // or more descriptive if you want
+				"menu_icon":   icon,
+				"menu_order":  order,
+				"menu_config": config,
+				"app_id":      app.AppID,
+				"user_id":     appUserID,
+				"active":      true,
+				"created_at":  now,
+				"updated_at":  now,
+				"excluded":    false,
+			})
+			if err != nil {
+				return fmt.Errorf("insert menu %q: %w", menuName, err)
+			}
+
+			// Get the inserted ID (sqlite/mysql/postgres compatible way)
+			lastID, err := res.LastInsertId()
+			if err != nil {
+				// fallback: query again
+				err = tx.GetContext(ctx, &menu, `
+					SELECT menu_id FROM menu 
+					WHERE menu = :menu AND app_id = :app_id
+				`, map[string]any{"menu": menuName, "app_id": app.AppID})
+				if err != nil {
+					return fmt.Errorf("retrieve new menu_id for %q: %w", menuName, err)
+				}
+			} else {
+				menu.MenuID = int(lastID)
+			}
+
+			fmt.Printf("Created menu %q → ID %d\n", menuName, menu.MenuID)
+
+		} else if err != nil {
+			return fmt.Errorf("check menu %q: %w", menuName, err)
+		} else {
+			fmt.Printf("Menu %q already exists → ID %d\n", menuName, menu.MenuID)
+		}
+
+		// 3. Link tables (menu_table entries)
+		tablesAny, hasTables := menuCfg["tables"]
+		if !hasTables {
+			continue
+		}
+
+		tables, ok := tablesAny.([]any)
+		if !ok {
+			continue
+		}
+
+		for _, tItem := range tables {
+			var tblName string
+			var linkActive bool = true
+			var requiresRLA bool = false
+
+			switch v := tItem.(type) {
+			case string:
+				tblName = v
+			case map[string]any:
+				tblName = getString(v, "table", "")
+				linkActive = getBool(v, "active", true)
+				requiresRLA = getBool(v, "requires_rla", false)
+			default:
+				continue
+			}
+
+			if tblName == "" {
+				continue
+			}
+
+			// Find table metadata record
+			var tblMeta struct {
+				TableID int `db:"table_id"`
+			}
+			err = tx.GetContext(ctx, &tblMeta, `
+				SELECT table_id FROM "table" 
+				WHERE "table" = :table AND db = :db
+			`, map[string]any{"table": tblName, "db": dbName})
+			if err == sql.ErrNoRows {
+				fmt.Printf("Warning: table %q not found in metadata → skipping link\n", tblName)
+				continue
+			}
+			if err != nil {
+				return fmt.Errorf("find table %q: %w", tblName, err)
+			}
+
+			// Check if link already exists
+			var exists bool
+			err = tx.GetContext(ctx, &exists, `
+				SELECT 1 FROM menu_table 
+				WHERE menu_id = :menu_id 
+				  AND table_id = :table_id 
+				  AND app_id = :app_id
+				LIMIT 1
+			`, map[string]any{
+				"menu_id":   menu.MenuID,
+				"table_id":  tblMeta.TableID,
+				"app_id":    app.AppID,
+			})
+			if err != nil && err != sql.ErrNoRows {
+				return fmt.Errorf("check menu_table link: %w", err)
+			}
+
+			if !exists {
+				_, err = tx.NamedExecContext(ctx, `
+					INSERT INTO menu_table (
+						menu_id, table_id, app_id,
+						active, requires_rla,
+						user_id, created_at, updated_at, excluded
+					) VALUES (
+						:menu_id, :table_id, :app_id,
+						:active, :requires_rla,
+						:user_id, :created_at, :updated_at, :excluded
+					)
+				`, map[string]any{
+					"menu_id":      menu.MenuID,
+					"table_id":     tblMeta.TableID,
+					"app_id":       app.AppID,
+					"active":       linkActive,
+					"requires_rla": requiresRLA,
+					"user_id":      appUserID,
+					"created_at":   now,
+					"updated_at":   now,
+					"excluded":     false,
+				})
+				if err != nil {
+					return fmt.Errorf("insert menu_table %q → %q: %w", menuName, tblName, err)
+				}
+
+				fmt.Printf("  Linked table %q (active=%v, rla=%v)\n", tblName, linkActive, requiresRLA)
+			}
+		}
+	}
+
+	return tx.Commit()
+}
+
+// ──────────────────────────────────────────────
+// Helpers (safe type extraction)
+// ──────────────────────────────────────────────
+
+func getString(m map[string]any, key string, fallback string) string {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(string); ok {
+			return s
+		}
+	}
+	return fallback
+}
+
+func getFloat64(m map[string]any, key string, fallback float64) float64 {
+	if v, ok := m[key]; ok {
+		switch val := v.(type) {
+		case float64:
+			return val
+		case int:
+			return float64(val)
+		case int64:
+			return float64(val)
+		}
+	}
+	return fallback
+}
+
+func getBool(m map[string]any, key string, fallback bool) bool {
+	if v, ok := m[key]; ok {
+		if b, ok := v.(bool); ok {
+			return b
+		}
+	}
+	return fallback
+}
 /*/ Example Usage (for testing purposes)
 func main() {
 	// Example table definition (similar to your YAML structure)
