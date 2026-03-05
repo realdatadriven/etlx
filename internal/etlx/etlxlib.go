@@ -16,6 +16,7 @@ import (
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 	"gopkg.in/yaml.v3"
+	goyaml "github.com/goccy/go-yaml"
 )
 
 type ETLX struct {
@@ -244,6 +245,20 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						metaData := make(map[string]any)
 						var err error
 						if strings.HasPrefix(info, "yaml") {
+							// Parse YAML
+							// err = yaml.Unmarshal([]byte(contentFinal), &metaData)
+							var doc goyaml.MapSlice
+							err := goyaml.UnmarshalWithOptions(
+								[]byte(contentFinal),
+								&doc,
+								goyaml.UseOrderedMap(),
+							)
+							if err != nil {
+								log.Fatal(err)
+							}
+							// Convert recursively
+							metaData = ConvertToOrderedMap(doc).(map[string]any)
+						} else if strings.HasPrefix(info, "yaml--deactivated") {
 							// Parse YAML
 							err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 						} else if strings.HasPrefix(info, "toml") {
@@ -893,4 +908,45 @@ func (etlx *ETLX) TempFIle(dir string, content string, name string) (string, err
 	// Get the name of the temporary file
 	tempFileName := tempFile.Name()
 	return tempFileName, nil
+}
+
+// ConvertToOrderedMap recursively converts yaml.MapSlice (or any) to map[string]any with "__order" at each map level
+func ConvertToOrderedMap(node any) any {
+	switch v := node.(type) {
+	case goyaml.MapSlice:
+		m := make(map[string]any, len(v)+1) // +1 for __order
+		order := make([]string, 0, len(v))
+
+		for _, item := range v {
+			key, ok := item.Key.(string)
+			if !ok {
+				continue // skip non-string keys (rare)
+			}
+			order = append(order, key)
+
+			// Recurse on value
+			m[key] = ConvertToOrderedMap(item.Value)
+		}
+
+		m["__order"] = order
+		return m
+
+	case []any:
+		// For lists: recurse on items, but no __order
+		for i, item := range v {
+			v[i] = ConvertToOrderedMap(item)
+		}
+		return v
+
+	case map[string]any:
+		// If already a map (though from goccy it should be MapSlice), recurse on values
+		for k, val := range v {
+			v[k] = ConvertToOrderedMap(val)
+		}
+		return v
+
+	default:
+		// Scalars: leave as-is
+		return v
+	}
 }
