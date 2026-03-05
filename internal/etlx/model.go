@@ -253,7 +253,7 @@ func getDialect(driver string) SQLDialect {
 }
 
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
-func generateCreateTableSQL(driver, tableName, tableComment string, fields []map[string]any) string {
+func generateCreateTableSQL(driver, tableName, tableComment string, fields map[string]any) string {
 	dialect := getDialect(driver)
 	var schema strings.Builder
 
@@ -264,7 +264,8 @@ func generateCreateTableSQL(driver, tableName, tableComment string, fields []map
 	var primaryKeyColumns []string
 	var postCreateTableSQL []string // For comments or other post-creation statements
 
-	for _, field := range fields {
+	for _, _field := range fields {
+		field := _field.(map[string]any) // Type assertion for field definition
 		name := field["name"].(string)
 		columnType := dialect.GetColumnType(field)
 		primaryKey := dialect.GetPrimaryKey(field)
@@ -334,7 +335,7 @@ type ColumnDefinition struct {
 // InsertData inserts a slice of data rows into the specified table.
 // It automatically handles default values for 'created_at', 'updated_at', and 'excluded'
 // if they are defined in the schema but not present in the data row.
-func InsertData(dbCon db.DBInterface, tableName string, columns []map[string]any, data []map[string]any) error {
+func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, data []map[string]any) error {
 	// Map schema column names to their properties for quick lookup
 	type schemaColInfo struct {
 		isCreatedAt bool
@@ -346,7 +347,8 @@ func InsertData(dbCon db.DBInterface, tableName string, columns []map[string]any
 	schemaColumnMap := make(map[string]schemaColInfo)
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
 
-	for _, col := range columns {
+	for _, _col := range columns {
+		col := _col.(map[string]any) // Type assertion for column definition
 		colName, ok := col["name"].(string)
 		if !ok {
 			return fmt.Errorf("column definition missing 'name' field")
@@ -1114,6 +1116,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
+	fmt.Println("CONN:", conn)
 	order := []string{}
 	__order, okOrder := data["__order"].([]any)
 	if !okOrder {
@@ -1129,6 +1132,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
 		}
+		fmt.Println("ITEM KEY:", itemKey)
 		item := data[itemKey]
 		if _, isMap := item.(map[string]any); !isMap {
 			continue
@@ -1149,8 +1153,10 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		}
 		comment, _ := itemMetadata.(map[string]any)["comment"].(string)
 		driver := dbConn.GetDriverName()
-		columns, ok := itemMetadata.(map[string]any)["columns"].([]map[string]any)
+		fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
+		columns, ok := itemMetadata.(map[string]any)["columns"].(map[string]any)
 		if !ok {
+			fmt.Println("COLUMNS NOT FOUND")
 			continue
 		}
 		start3 = time.Now()
@@ -1167,6 +1173,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"num_gc_start":          num_gc,
 		}
 		createTableSQL := generateCreateTableSQL(driver, table, comment, columns)
+		fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 		_, err := dbConn.ExecuteQuery(createTableSQL)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		if err != nil {
