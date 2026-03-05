@@ -14,6 +14,8 @@ import (
 
 // SQLDialect defines the interface for different SQL database dialects.
 type SQLDialect interface {
+	GetTableName(tableName string) string
+	GetColumnName(fieldName string) string
 	GetColumnType(field map[string]any) string
 	GetPrimaryKey(field map[string]any) string
 	GetAutoIncrement(field map[string]any) string
@@ -28,6 +30,14 @@ type SQLDialect interface {
 
 // BaseDialect provides common implementations for SQLDialect interface.
 type BaseDialect struct{}
+
+func (b *BaseDialect) GetColumnName(fieldName string) string {
+	return fieldName
+}
+
+func (b *BaseDialect) GetTableName(tableName string) string {
+	return tableName
+}
 
 func (b *BaseDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -95,6 +105,14 @@ func (b *BaseDialect) SupportsTableComment() bool                               
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
 
+func (p *PostgresDialect) GetTableName(tableName string) string {
+	return fmt.Sprintf(`"%s"`, tableName)
+}
+
+func (p *PostgresDialect) GetColumnName(fieldName string) string {
+	return fmt.Sprintf(`"%s"`, fieldName)
+}
+
 func (p *PostgresDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
@@ -142,6 +160,10 @@ func (p *PostgresDialect) SupportsTableComment() bool { return true }
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
+func (m *MySQLDialect) GetTableName(tableName string) string {
+	return fmt.Sprintf("`%s`", tableName)
+}
+
 func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
@@ -166,6 +188,10 @@ func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 	}
 }
 
+func (m *MySQLDialect) GetColumnName(fieldName string) string {
+	return fmt.Sprintf("`%s`", fieldName)
+}
+
 func (m *MySQLDialect) GetColumnComment(tableName, columnName, comment string) string {
 	// MySQL supports inline column comments
 	return fmt.Sprintf(" COMMENT '%s'", strings.ReplaceAll(comment, "'", "''"))
@@ -180,6 +206,14 @@ func (m *MySQLDialect) SupportsTableComment() bool        { return true }
 
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
+
+func (s *SQLiteDialect) GetTableName(tableName string) string {
+	return fmt.Sprintf(`"%s"`, tableName)
+}
+
+func (s *SQLiteDialect) GetColumnName(fieldName string) string {
+	return fmt.Sprintf(`"%s"`, fieldName)
+}
 
 func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -211,6 +245,14 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
 type MSSQLDialect struct{ BaseDialect }
+
+func (ms *MSSQLDialect) GetTableName(tableName string) string {
+	return fmt.Sprintf(`[%s]`, tableName)
+}
+
+func (ms *MSSQLDialect) GetColumnName(fieldName string) string {
+	return fmt.Sprintf(`[%s]`, fieldName)
+}
 
 func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	sqlType := field["type"].(string)
@@ -258,11 +300,11 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	var schema strings.Builder
 	switch createAll {
 	case "checkfirst":
-		schema.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", tableName))
+		schema.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", dialect.GetTableName(tableName)))
 	case "replace":
-		schema.WriteString(fmt.Sprintf("CREATE OR REPLACE TABLE %s (\n", tableName))
+		schema.WriteString(fmt.Sprintf("CREATE OR REPLACE TABLE %s (\n", dialect.GetTableName(tableName)))
 	default:
-		schema.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
+		schema.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", dialect.GetTableName(tableName)))
 	}
 
 	var columnDefs []string
@@ -287,7 +329,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		if fieldName == "__order" {
 			continue
 		}
-		name := fieldName
+		name := dialect.GetColumnName(fieldName)
 		columnType := dialect.GetColumnType(field)
 		primaryKey := dialect.GetPrimaryKey(field)
 		autoincrement := dialect.GetAutoIncrement(field)
@@ -395,7 +437,9 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		if colName == "excluded" {
 			info.isExcluded = true
 		}
-		if nullable, ok := col["nullable"].(bool); ok && nullable {
+		if _, ok := col["nullable"].(bool); !ok {
+			info.isNullable = true
+		} else if nullable, ok := col["nullable"].(bool); ok && nullable {
 			info.isNullable = true
 		}
 		schemaColumnMap[colName] = info
@@ -1189,8 +1233,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			if !ok {
 				continue
 			}
-			driver := dbConn.GetDriverName()
-			fmt.Printf("Dropping table %s (if exists) with driver %s\n", table, driver)
+			//driver := dbConn.GetDriverName()
+			// fmt.Printf("Dropping table %s (if exists) with driver %s\n", table, driver)
 			start3 = time.Now()
 			desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 			if !okDesc {

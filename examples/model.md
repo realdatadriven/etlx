@@ -7,7 +7,7 @@ description: CS ADMIN Model
 runs_as: MODEL
 conn: 'sqlite3:database/ADMIN.db'
 create_all: checkfirst
-drop_all: true
+_drop_all: checkfirst
 active: true
 cs_app:
     Dashboards:
@@ -110,7 +110,7 @@ columns:
   updated_at:           { type: datetime, comment: "Updated at" }
   excluded:             { type: boolean, default: false, comment: "Excluded" }
 data:
-  - {user_id: 1, username: root, first_name: Super, last_name: Admin, email: real.datadriven@gmail.com, role_id: 1, lang_id: 1, active: true, alter_pass_nxt_login: true, excluded: false}
+  - {user_id: 1, username: root, password: '*****', first_name: Super, last_name: Admin, email: real.datadriven@gmail.com, role_id: 1, lang_id: 1, active: true, alter_pass_nxt_login: true, excluded: false}
 ```
 
 ## USER_ROLE
@@ -145,7 +145,7 @@ columns:
   updated_at:  { type: datetime, comment: "Updated at" }
   excluded:    { type: boolean, default: false, comment: "Excluded" }
 data:
-  - {app_id: 1, app: ADMIN, app_desc: Admin, version: 1.0.0, user_id: 1, excluded: false}
+  - {app_id: 1, app: ADMIN, app_desc: Admin, db: ADMIN, version: 1.0.0, user_id: 1, excluded: false}
 ```
 
 ## MENU
