@@ -1,8 +1,6 @@
 module github.com/realdatadriven/etlx
 
-go 1.25.0
-
-toolchain go1.25.5
+go 1.25.5
 
 require (
 	github.com/BurntSushi/toml v1.6.0
@@ -13,6 +11,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.7
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.96.0
 	github.com/duckdb/duckdb-go/v2 v2.5.5
+	github.com/goccy/go-yaml v1.19.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
@@ -34,7 +33,6 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.3.3 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.3.3 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.3.3 // indirect
-	github.com/goccy/go-yaml v1.19.2 // indirect
 )
 
 require (
