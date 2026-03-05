@@ -343,7 +343,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			if dialect.SupportsInlineColumnComment() {
 				columnDef += dialect.GetColumnComment("", "", comment) // Inline comment, table/column name not needed here
 			} else {
-				postCreateTableSQL = append(postCreateTableSQL, dialect.GetColumnComment(tableName, name, comment))
+				postCreateTableSQL = append(postCreateTableSQL, dialect.GetColumnComment(dialect.GetTableName(tableName), name, comment))
 			}
 		}
 		columnDefs = append(columnDefs, columnDef)
@@ -360,7 +360,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			if len(parts) == 2 {
 				referencedTable := parts[0]
 				referencedColumn := parts[1]
-				foreignKeyConstraints = append(foreignKeyConstraints, fmt.Sprintf("    FOREIGN KEY (%s) REFERENCES %s(%s)", name, referencedTable, referencedColumn))
+				foreignKeyConstraints = append(foreignKeyConstraints, fmt.Sprintf("    FOREIGN KEY (%s) REFERENCES %s(%s)", name, dialect.GetTableName(referencedTable), dialect.GetColumnName(referencedColumn)))
 			}
 		}
 	}
@@ -496,7 +496,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		}
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
 			tableName, strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
-		fmt.Println(query)
+		// fmt.Println(query)
 		// Execute the insert using NamedExec for safety and convenience
 		_, err := dbCon.ExecuteNamedQuery(query, insertMap)
 		if err != nil {
@@ -512,7 +512,7 @@ func generateDropTableSQL(tableName string) string {
 }
 
 // METADATA
-func generateSeedData(parsedTables map[string]map[string]any, dbName string) map[string]any {
+func generateSeedData(parsedTables map[string]any, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
 
 	data := map[string]any{
@@ -523,7 +523,8 @@ func generateSeedData(parsedTables map[string]map[string]any, dbName string) map
 	}
 
 	for tableName, tableDef := range parsedTables {
-		commentAny, hasComment := tableDef["comment"]
+		// fmt.Println(1, tableName, tableDef)
+		commentAny, hasComment := tableDef.(map[string]any)["comment"]
 		comment := ""
 		if hasComment {
 			if s, ok := commentAny.(string); ok {
@@ -558,7 +559,8 @@ func generateSeedData(parsedTables map[string]map[string]any, dbName string) map
 		data["translate_table"] = append(data["translate_table"].([]map[string]any), translateTableRow)
 
 		// 3+4) columns → translate_table_field + table_schema
-		columnsAny, hasColumns := tableDef["columns"]
+		columnsAny, hasColumns := tableDef.(map[string]any)["columns"]
+		//fmt.Println(2, tableName, comment, columnsAny)
 		if !hasColumns {
 			continue
 		}
@@ -567,15 +569,26 @@ func generateSeedData(parsedTables map[string]map[string]any, dbName string) map
 		if !ok {
 			continue
 		}
-
+		filedsByOrder, ok := columns["__order"].([]any) // Get the column order from the special __order key
+		if !ok {
+			filedsByOrder = make([]any, 0)
+			// If __order is missing, we can iterate over the map keys in any order (not guaranteed)
+			for colName := range columns {
+				filedsByOrder = append(filedsByOrder, colName)
+			}
+		}
 		fieldOrder := 0
-
-		for colName, colDefAny := range columns {
+		for _, colNameAny := range filedsByOrder {
+			colName, ok := colNameAny.(string)
+			colDefAny, hasColDef := columns[colName]
+			//fmt.Println(colName, hasColDef, colDefAny)
+			if !ok || !hasColDef {
+				continue
+			}
 			colDef, ok := colDefAny.(map[string]any)
 			if !ok {
 				continue
 			}
-
 			fieldOrder++
 
 			// ──────────────────────────────────────────────
@@ -677,27 +690,21 @@ func getAny(m map[string]any, key string, fallback any) any {
 }
 
 // SeedData matches what generateSeedData returns
-type SeedData map[string][]map[string]any
+type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
-func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, targetDBName string) error {
+func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
 	targetTables := []string{
 		"table",
 		"translate_table",
 		"translate_table_field",
 		"table_schema",
 	}
-
-	tx, err := db.BeginTxx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("begin transaction: %w", err)
-	}
-	defer tx.Rollback()
-
+	dialect := getDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 
 	for _, tableName := range targetTables {
-		rows, ok := seed[tableName]
+		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
 			log.Printf("No seed data for %q → skipping", tableName)
 			continue
@@ -735,11 +742,16 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 
 			// 1. Check if row exists
 			var exists bool
-			checkQuery := fmt.Sprintf(`SELECT 1 FROM %q WHERE %s LIMIT 1`, tableName, whereClause)
+			checkQuery := fmt.Sprintf(`SELECT 1 as exists FROM %q WHERE %s LIMIT 1`, dialect.GetTableName(tableName), dialect.GetColumnName(whereClause))
 
-			err := tx.GetContext(ctx, &exists, checkQuery, params)
+			// err := tx.GetContext(ctx, &exists, checkQuery, params)
+			res, _, err := dbCon.QueryMultiRows(checkQuery, []any{})
 			if err != nil && err != sql.ErrNoRows {
 				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
+			} else if len(*res) > 0 {
+				exists = true
+			} else {
+				exists = false
 			}
 
 			if exists {
@@ -752,7 +764,7 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 					if k == "db" || k == "table" || k == "field" || k == "created_at" || k == "updated_at" {
 						continue
 					}
-					updateParts = append(updateParts, fmt.Sprintf(`%q = :%s`, k, k))
+					updateParts = append(updateParts, fmt.Sprintf(`%q = :%s`, dialect.GetColumnName(k), k))
 					updateParams[k] = v
 				}
 
@@ -760,19 +772,18 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 					UPDATE %q
 					SET %s
 					WHERE %s
-				`, tableName, strings.Join(updateParts, ", "), whereClause)
+				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause)
 
 				// Merge where params into update params
 				for k, v := range params {
 					updateParams[k] = v
 				}
 
-				res, err := tx.NamedExecContext(ctx, updateQuery, updateParams)
+				affected, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
 				if err != nil {
 					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
 				}
 
-				affected, _ := res.RowsAffected()
 				fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
 
 			} else {
@@ -781,7 +792,7 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 				names := []string{}
 
 				for k := range row {
-					cols = append(cols, `"`+k+`"`)
+					cols = append(cols, dialect.GetColumnName(k))
 					names = append(names, ":"+k)
 				}
 
@@ -800,9 +811,9 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 				insertQuery := fmt.Sprintf(`
 					INSERT INTO %q (%s)
 					VALUES (%s)
-				`, tableName, strings.Join(cols, ", "), strings.Join(names, ", "))
+				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
 
-				_, err := tx.NamedExecContext(ctx, insertQuery, params)
+				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
 					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
 				}
@@ -810,10 +821,6 @@ func UpsertSeedDataNamed(ctx context.Context, db *sqlx.DB, seed SeedData, target
 				fmt.Printf("  inserted %-40s\n", logKey)
 			}
 		}
-	}
-
-	if err := tx.Commit(); err != nil {
-		return fmt.Errorf("commit failed: %w", err)
 	}
 
 	fmt.Println("\nSeed data load completed successfully.")
@@ -1068,31 +1075,6 @@ func getBool2(m map[string]any, key string, fallback bool) bool {
 	return fallback
 }
 
-/*/ Example Usage (for testing purposes)
-func main() {
-	// Example table definition (similar to your YAML structure)
-	fields := []map[string]any{
-		{"name": "id", "type": "INTEGER", "pk": true, "autoincrement": true, "comment": "Primary ID"},
-		{"name": "name", "type": "VARCHAR", "length": 255, "nullable": false, "unique": true, "comment": "User Name"},
-		{"name": "email", "type": "VARCHAR", "length": 100, "nullable": false, "default": "", "comment": "User Email"},
-		{"name": "is_active", "type": "BOOLEAN", "default": true, "comment": "Is Active"},
-		{"name": "created_at", "type": "DATETIME", "comment": "Creation Timestamp"},
-		{"name": "role_id", "type": "INTEGER", "fk": "roles.id", "comment": "Foreign Key to Roles"},
-	}
-
-	fmt.Println("--- PostgreSQL ---")
-	fmt.Println(generateCreateTableSQL("postgres", "users", "Table of users", fields))
-
-	fmt.Println("--- MySQL ---")
-	fmt.Println(generateCreateTableSQL("mysql", "users", "Table of users", fields))
-
-	fmt.Println("--- SQLite3 ---")
-	fmt.Println(generateCreateTableSQL("sqlite3", "users", "Table of users", fields))
-
-	fmt.Println("--- MSSQL ---")
-	fmt.Println(generateCreateTableSQL("mssql", "users", "Table of users", fields))
-}*/
-
 func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "MODEL"
 	process := "MODEL"
@@ -1156,19 +1138,23 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	if processLogs[0]["ref"] == nil {
 		processLogs[0]["ref"] = dtRef
 	}
-	/*database, okDb := metadata["database"].(string)
+	database, okDb := metadata["database"].(string)
 	if !okDb {
 		database, okDb = metadata["name"].(string)
 		if !okDb {
 			return nil, fmt.Errorf("%s err no database defined", key)
 		}
-	}*/
+	}
 	conn, okCon := metadata["connection"].(string)
 	if !okCon {
 		conn, okCon = metadata["conn"].(string)
 		if !okCon {
 			return nil, fmt.Errorf("%s err no connection defined", key)
 		}
+	}
+	adminConn, okAdminCon := metadata["admin_connection"].(string)
+	if !okAdminCon {
+		adminConn, _ = metadata["admin_conn"].(string)
 	}
 	create_all, _ := metadata["create_all"].(string)
 	drop_all, _ := metadata["drop_all"].(string)
@@ -1213,7 +1199,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			order = append(order, itemKey.(string))
 		}
 	}
-
+	_tables := map[string]any{}
 	if drop_all != "" {
 		// loop in reverse order for dropping tables to handle dependencies
 		for i := len(order) - 1; i >= 0; i-- {
@@ -1296,9 +1282,10 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			if !ok {
 				continue
 			}
+			_tables[table] = itemMetadata // just to keep track of tables for potential future use
 			comment, _ := itemMetadata.(map[string]any)["comment"].(string)
 			driver := dbConn.GetDriverName()
-			fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
+			//fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
 			columns, ok := itemMetadata.(map[string]any)["columns"].(map[string]any)
 			if !ok {
 				// fmt.Println("COLUMNS NOT FOUND")
@@ -1335,6 +1322,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				fmt.Println(createTableSQL, _log2["msg"])
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
@@ -1388,10 +1376,120 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 						processLogs = append(processLogs, _log2)
 					}
 				} else {
-					fmt.Printf("No data to insert for %s->%s\n", key, itemKey)
+					// fmt.Printf("No data to insert for %s->%s\n", key, itemKey)
 				}
 			}
 		}
+	}
+	var adminDb db.DBInterface
+	if adminConn == "" {
+		// adminDb = dbConn
+		start3 = time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2 = map[string]any{
+			"process":               process,
+			"name":                  key,
+			"description":           metadata["description"].(string),
+			"key":                   key,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
+		}
+		adminDb, err = etlx.GetDB(conn)
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
+		if err != nil {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			processLogs = append(processLogs, _log2)
+			return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
+		} else {
+			defer adminDb.Close()
+		}
+	} else {
+		start3 = time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2 = map[string]any{
+			"process":               process,
+			"name":                  key,
+			"description":           metadata["description"].(string),
+			"key":                   key,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
+		}
+		adminDb, err = etlx.GetDB(adminConn)
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
+		if err != nil {
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			processLogs = append(processLogs, _log2)
+			return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
+		} else {
+			defer adminDb.Close()
+		}
+	}
+	// ADD TABLE METADATA
+	updateTableMetadataSQL, _ := metadata["update_table_metadata"].(bool)
+	if drop_all == "" && updateTableMetadataSQL {
+		// fmt.Println("UPDATE TABLE METADATA", updateTableMetadataSQL)
+		start3 = time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2 = map[string]any{
+			"process":               process,
+			"name":                  fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"description":           fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"key":                   key,
+			"item_key":              nil,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
+		}
+		_data := generateSeedData(_tables, database)
+		err = UpsertSeedDataNamed(adminDb, _data, database)
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		if err != nil {
+			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s ERR: upserting seed data: %s", key, err)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
+		} else {
+			fmt.Printf("%s: seed data upserted successfully\n", key)
+			_log2["success"] = true
+			_log2["msg"] = fmt.Sprintf("%s: seed data upserted successfully", key)
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
+		}
+		processLogs = append(processLogs, _log2)
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{

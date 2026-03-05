@@ -12,11 +12,11 @@ import (
 	"time"
 
 	"github.com/BurntSushi/toml"
+	goyaml "github.com/goccy/go-yaml"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
 	"github.com/yuin/goldmark/text"
 	"gopkg.in/yaml.v3"
-	goyaml "github.com/goccy/go-yaml"
 )
 
 type ETLX struct {
