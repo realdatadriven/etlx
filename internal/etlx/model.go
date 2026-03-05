@@ -253,20 +253,38 @@ func getDialect(driver string) SQLDialect {
 }
 
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
-func generateCreateTableSQL(driver, tableName, tableComment string, fields map[string]any) string {
+func generateCreateTableSQL(driver, tableName, tableComment, createAll string, fields map[string]any) string {
 	dialect := getDialect(driver)
 	var schema strings.Builder
-
-	schema.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
+	switch createAll {
+	case "checkfirst":
+		schema.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", tableName))
+	case "replace":
+		schema.WriteString(fmt.Sprintf("CREATE OR REPLACE TABLE %s (\n", tableName))
+	default:
+		schema.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", tableName))
+	}
 
 	var columnDefs []string
 	var foreignKeyConstraints []string
 	var primaryKeyColumns []string
-	var postCreateTableSQL []string // For comments or other post-creation statements
-
-	for fieldName, _field := range fields {
+	var postCreateTableSQL []string                // For comments or other post-creation statements
+	filedsByOrder, ok := fields["__order"].([]any) // Get the field order from the special __order key
+	if !ok {
+		filedsByOrder = make([]any, 0)
+		// If __order is missing, we can iterate over the map keys in any order (not guaranteed)
+		for fieldName := range fields {
+			filedsByOrder = append(filedsByOrder, fieldName)
+		}
+	}
+	for _, fieldNameAny := range filedsByOrder {
+		fieldName := fieldNameAny.(string)
+		_field := fields[fieldName]
 		field, ok := _field.(map[string]any) // Type assertion for field definition
 		if !ok {
+			continue
+		}
+		if fieldName == "__order" {
 			continue
 		}
 		name := fieldName
@@ -349,15 +367,22 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 
 	schemaColumnMap := make(map[string]schemaColInfo)
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
-
-	for _, _col := range columns {
+	/*filedsByOrder, ok := columns["__order"].([]any) // Get the column order from the special __order key
+	if !ok {
+		filedsByOrder = make([]any, 0)
+		// If __order is missing, we can iterate over the map keys in any order (not guaranteed)
+		for colName := range columns {
+			filedsByOrder = append(filedsByOrder, colName)
+		}
+	}*/
+	for colName, _col := range columns {
+		// fmt.Println(colName, _col)
+		if colName == "__order" || colName == "metadata" {
+			continue
+		}
 		col, ok := _col.(map[string]any) // Type assertion for column definition
 		if !ok {
-			return fmt.Errorf("column definition is not a valid map[string]any")
-		}
-		colName, ok := col["name"].(string)
-		if !ok {
-			return fmt.Errorf("column definition missing 'name' field")
+			return fmt.Errorf("column (%s) definition is not a valid map[string]any", colName)
 		}
 
 		info := schemaColInfo{}
@@ -427,7 +452,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		}
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
 			tableName, strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
-
+		fmt.Println(query)
 		// Execute the insert using NamedExec for safety and convenience
 		_, err := dbCon.ExecuteNamedQuery(query, insertMap)
 		if err != nil {
@@ -436,6 +461,10 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 	}
 
 	return nil
+}
+
+func generateDropTableSQL(tableName string) string {
+	return fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)
 }
 
 // METADATA
@@ -1097,6 +1126,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			return nil, fmt.Errorf("%s err no connection defined", key)
 		}
 	}
+	create_all, _ := metadata["create_all"].(string)
+	drop_all, _ := metadata["drop_all"].(string)
 	start3 := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 := map[string]any{
@@ -1126,7 +1157,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
-	fmt.Println("CONN:", conn)
+	// fmt.Println("CONN:", conn)
 	order := []string{}
 	__order, okOrder := data["__order"].([]any)
 	if !okOrder {
@@ -1138,61 +1169,57 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			order = append(order, itemKey.(string))
 		}
 	}
-	for _, itemKey := range order {
-		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
-			continue
-		}
-		fmt.Println("ITEM KEY:", itemKey)
-		item := data[itemKey]
-		if _, isMap := item.(map[string]any); !isMap {
-			continue
-		}
-		itemMetadata, ok := item.(map[string]any)["metadata"]
-		if !ok {
-			continue
-		}
-		// ACTIVE
-		if active, okActive := itemMetadata.(map[string]any)["active"]; okActive {
-			if !active.(bool) {
+
+	if drop_all != "" {
+		// loop in reverse order for dropping tables to handle dependencies
+		for i := len(order) - 1; i >= 0; i-- {
+			itemKey := order[i]
+			if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 				continue
 			}
-		}
-		table, ok := itemMetadata.(map[string]any)["table"].(string)
-		if !ok {
-			continue
-		}
-		comment, _ := itemMetadata.(map[string]any)["comment"].(string)
-		driver := dbConn.GetDriverName()
-		fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
-		columns, ok := itemMetadata.(map[string]any)["columns"].(map[string]any)
-		if !ok {
-			fmt.Println("COLUMNS NOT FOUND")
-			continue
-		}
-		start3 = time.Now()
-		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
-		if !okDesc {
-			desc = fmt.Sprintf("%s->%s", key, itemKey)
-		}
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2 = map[string]any{
-			"process":     process,
-			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": desc,
-			"key":         key, "item_key": itemKey, "start_at": start3,
-			"ref":                   dtRef,
-			"mem_alloc_start":       mem_alloc,
-			"mem_total_alloc_start": mem_total_alloc,
-			"mem_sys_start":         mem_sys,
-			"num_gc_start":          num_gc,
-		}
-		createTableSQL := generateCreateTableSQL(driver, table, comment, columns)
-		fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-		_, err := dbConn.ExecuteQuery(createTableSQL)
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		if err != nil {
-			_log2["success"] = false
-			_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
+			item := data[itemKey]
+			if _, isMap := item.(map[string]any); !isMap {
+				continue
+			}
+			itemMetadata, ok := item.(map[string]any)["metadata"]
+			if !ok {
+				continue
+			}
+			table, ok := itemMetadata.(map[string]any)["table"].(string)
+			if !ok {
+				continue
+			}
+			driver := dbConn.GetDriverName()
+			fmt.Printf("Dropping table %s (if exists) with driver %s\n", table, driver)
+			start3 = time.Now()
+			desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
+			if !okDesc {
+				desc = fmt.Sprintf("%s->%s", key, itemKey)
+			}
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2 = map[string]any{
+				"process":     process,
+				"name":        fmt.Sprintf("%s->%s", key, itemKey),
+				"description": desc,
+				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":                   dtRef,
+				"mem_alloc_start":       mem_alloc,
+				"mem_total_alloc_start": mem_total_alloc,
+				"mem_sys_start":         mem_sys,
+				"num_gc_start":          num_gc,
+			}
+			dropTableSQL := generateDropTableSQL(table) //generateDropTableSQL(driver, table, drop_all)
+			_, err := dbConn.ExecuteQuery(dropTableSQL)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			if err != nil {
+				fmt.Printf("%s ERR: dropping table %s: %s\n", key, table, err)
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s ERR: dropping table %s: %s", key, table, err)
+			} else {
+				fmt.Printf("%s: table %s dropped or did not exist\n", key, table)
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s: table %s dropped or did not exist", key, table)
+			}
 			_log2["end_at"] = time.Now()
 			_log2["duration"] = time.Since(start3).Seconds()
 			_log2["mem_alloc_end"] = mem_alloc
@@ -1200,53 +1227,124 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
-		} else {
-			_log2["success"] = true
-			_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
-			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3).Seconds()
-			_log2["mem_alloc_end"] = mem_alloc
-			_log2["mem_total_alloc_end"] = mem_total_alloc
-			_log2["mem_sys_end"] = mem_sys
-			_log2["num_gc_end"] = num_gc
-			processLogs = append(processLogs, _log2)
-			// ADD DATA
-			if dataRows, okData := itemMetadata.(map[string]any)["data"].([]any); okData {
-				start3 = time.Now()
-				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-				_log2 = map[string]any{
-					"process":     process,
-					"name":        fmt.Sprintf("%s->%s", key, itemKey),
-					"description": fmt.Sprintf("Inserting data into %s", table),
-					"key":         key, "item_key": itemKey, "start_at": start3,
-					"ref":                   dtRef,
-					"mem_alloc_start":       mem_alloc,
-					"mem_total_alloc_start": mem_total_alloc,
-					"mem_sys_start":         mem_sys,
-					"num_gc_start":          num_gc,
+		}
+	} else {
+		for _, itemKey := range order {
+			if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
+				continue
+			}
+			// // fmt.Println("ITEM KEY:", itemKey)
+			item := data[itemKey]
+			if _, isMap := item.(map[string]any); !isMap {
+				continue
+			}
+			itemMetadata, ok := item.(map[string]any)["metadata"]
+			if !ok {
+				continue
+			}
+			// ACTIVE
+			if active, okActive := itemMetadata.(map[string]any)["active"]; okActive {
+				if !active.(bool) {
+					continue
 				}
-				err = InsertData(dbConn, table, columns, dataRows)
-				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-				if err != nil {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
-					_log2["mem_alloc_end"] = mem_alloc
-					_log2["mem_total_alloc_end"] = mem_total_alloc
-					_log2["mem_sys_end"] = mem_sys
-					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
+			}
+			table, ok := itemMetadata.(map[string]any)["table"].(string)
+			if !ok {
+				continue
+			}
+			comment, _ := itemMetadata.(map[string]any)["comment"].(string)
+			driver := dbConn.GetDriverName()
+			fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
+			columns, ok := itemMetadata.(map[string]any)["columns"].(map[string]any)
+			if !ok {
+				// fmt.Println("COLUMNS NOT FOUND")
+				continue
+			}
+			start3 = time.Now()
+			desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
+			if !okDesc {
+				desc = fmt.Sprintf("%s->%s", key, itemKey)
+			}
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2 = map[string]any{
+				"process":     process,
+				"name":        fmt.Sprintf("%s->%s", key, itemKey),
+				"description": desc,
+				"key":         key, "item_key": itemKey, "start_at": start3,
+				"ref":                   dtRef,
+				"mem_alloc_start":       mem_alloc,
+				"mem_total_alloc_start": mem_total_alloc,
+				"mem_sys_start":         mem_sys,
+				"num_gc_start":          num_gc,
+			}
+			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
+			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
+			_, err := dbConn.ExecuteQuery(createTableSQL)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
+				_log2["end_at"] = time.Now()
+				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
+				processLogs = append(processLogs, _log2)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
+				_log2["end_at"] = time.Now()
+				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
+				processLogs = append(processLogs, _log2)
+				// ADD DATA
+				dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
+				if okData {
+					start3 = time.Now()
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+					_log2 = map[string]any{
+						"process":               process,
+						"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+						"description":           fmt.Sprintf("Inserting data into %s", table),
+						"key":                   key,
+						"item_key":              itemKey,
+						"start_at":              start3,
+						"ref":                   dtRef,
+						"mem_alloc_start":       mem_alloc,
+						"mem_total_alloc_start": mem_total_alloc,
+						"mem_sys_start":         mem_sys,
+						"num_gc_start":          num_gc,
+					}
+					err = InsertData(dbConn, table, columns, dataRows)
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+					if err != nil {
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
+						processLogs = append(processLogs, _log2)
+						fmt.Println(_log2["msg"])
+					} else {
+						_log2["success"] = true
+						_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
+						_log2["end_at"] = time.Now()
+						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
+						processLogs = append(processLogs, _log2)
+					}
 				} else {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
-					_log2["end_at"] = time.Now()
-					_log2["duration"] = time.Since(start3).Seconds()
-					_log2["mem_alloc_end"] = mem_alloc
-					_log2["mem_total_alloc_end"] = mem_total_alloc
-					_log2["mem_sys_end"] = mem_sys
-					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
+					fmt.Printf("No data to insert for %s->%s\n", key, itemKey)
 				}
 			}
 		}

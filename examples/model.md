@@ -6,8 +6,8 @@ name: ADMIN
 description: CS ADMIN Model
 runs_as: MODEL
 conn: 'sqlite3:database/ADMIN.db'
-screate_all: checkfirst
-drop_all: checkfirst
+create_all: checkfirst
+drop_all: true
 active: true
 cs_app:
     Dashboards:
