@@ -1205,6 +1205,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 					"num_gc_start":          num_gc,
 				}
 				err = InsertData(dbConn, table, columns, dataRows)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
