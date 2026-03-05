@@ -264,9 +264,12 @@ func generateCreateTableSQL(driver, tableName, tableComment string, fields map[s
 	var primaryKeyColumns []string
 	var postCreateTableSQL []string // For comments or other post-creation statements
 
-	for _, _field := range fields {
-		field := _field.(map[string]any) // Type assertion for field definition
-		name := field["name"].(string)
+	for fieldName, _field := range fields {
+		field, ok := _field.(map[string]any) // Type assertion for field definition
+		if !ok {
+			continue
+		}
+		name := fieldName
 		columnType := dialect.GetColumnType(field)
 		primaryKey := dialect.GetPrimaryKey(field)
 		autoincrement := dialect.GetAutoIncrement(field)
@@ -335,7 +338,7 @@ type ColumnDefinition struct {
 // InsertData inserts a slice of data rows into the specified table.
 // It automatically handles default values for 'created_at', 'updated_at', and 'excluded'
 // if they are defined in the schema but not present in the data row.
-func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, data []map[string]any) error {
+func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, data []any) error {
 	// Map schema column names to their properties for quick lookup
 	type schemaColInfo struct {
 		isCreatedAt bool
@@ -348,7 +351,10 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
 
 	for _, _col := range columns {
-		col := _col.(map[string]any) // Type assertion for column definition
+		col, ok := _col.(map[string]any) // Type assertion for column definition
+		if !ok {
+			return fmt.Errorf("column definition is not a valid map[string]any")
+		}
 		colName, ok := col["name"].(string)
 		if !ok {
 			return fmt.Errorf("column definition missing 'name' field")
@@ -371,7 +377,11 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		allSchemaColumnNames = append(allSchemaColumnNames, colName)
 	}
 
-	for i, row := range data {
+	for i, _row := range data {
+		row, ok := _row.(map[string]any) // Type assertion for data row
+		if !ok {
+			return fmt.Errorf("row %d is not a valid map[string]any", i)
+		}
 		insertCols := []string{}
 		insertVals := []string{} // For named parameters, e.g., ":colName"
 		insertMap := make(map[string]any)
@@ -1160,11 +1170,15 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			continue
 		}
 		start3 = time.Now()
+		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
+		if !okDesc {
+			desc = fmt.Sprintf("%s->%s", key, itemKey)
+		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":     process,
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": itemMetadata.(map[string]any)["description"].(string),
+			"description": desc,
 			"key":         key, "item_key": itemKey, "start_at": start3,
 			"ref":                   dtRef,
 			"mem_alloc_start":       mem_alloc,
@@ -1197,13 +1211,13 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 			// ADD DATA
-			if dataRows, okData := itemMetadata.(map[string]any)["data"].([]map[string]any); okData {
+			if dataRows, okData := itemMetadata.(map[string]any)["data"].([]any); okData {
 				start3 = time.Now()
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
-					"description": itemMetadata.(map[string]any)["description"].(string),
+					"description": fmt.Sprintf("Inserting data into %s", table),
 					"key":         key, "item_key": itemKey, "start_at": start3,
 					"ref":                   dtRef,
 					"mem_alloc_start":       mem_alloc,
