@@ -781,12 +781,12 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					updateParams[k] = v
 				}
 
-				affected, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
+				_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
 				if err != nil {
 					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
 				}
 
-				fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
+				//fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
 
 			} else {
 				// 2b. INSERT – all fields from the row + ensure timestamps
@@ -824,7 +824,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
 				}
 
-				fmt.Printf("  inserted %-40s\n", logKey)
+				//fmt.Printf("  inserted %-40s\n", logKey)
 			}
 		}
 	}
@@ -1504,6 +1504,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: loading/syncing menus from config: %s", key, err)
 		} else {
+			fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
