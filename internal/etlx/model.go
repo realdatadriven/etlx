@@ -835,7 +835,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 }
 
 // InterfaceConf represents the parsed cs_app structure
-type InterfaceConf map[string]map[string]any
+type InterfaceConf map[string]any
 
 // LoadOrSyncMenusFromConfig creates/updates menus and menu_table links
 func LoadOrSyncMenusFromConfig(
@@ -858,7 +858,11 @@ func LoadOrSyncMenusFromConfig(
 	}
 	app = (*_app)
 	// 2. Process each menu section
-	for menuName, menuCfg := range conf {
+	for menuName, _menuCfg := range conf {
+		menuCfg, ok := _menuCfg.(map[string]any)
+		if !ok {
+			continue
+		}
 		activeAny, hasActive := menuCfg["active"]
 		active := false
 		if hasActive {
@@ -1020,15 +1024,6 @@ func LoadOrSyncMenusFromConfig(
 // Helpers (safe type extraction)
 // ──────────────────────────────────────────────
 
-func getString2(m map[string]any, key string, fallback string) string {
-	if v, ok := m[key]; ok {
-		if s, ok := v.(string); ok {
-			return s
-		}
-	}
-	return fallback
-}
-
 func getFloat64(m map[string]any, key string, fallback float64) float64 {
 	if v, ok := m[key]; ok {
 		switch val := v.(type) {
@@ -1038,15 +1033,6 @@ func getFloat64(m map[string]any, key string, fallback float64) float64 {
 			return float64(val)
 		case int64:
 			return float64(val)
-		}
-	}
-	return fallback
-}
-
-func getBool2(m map[string]any, key string, fallback bool) bool {
-	if v, ok := m[key]; ok {
-		if b, ok := v.(bool); ok {
-			return b
 		}
 	}
 	return fallback
@@ -1465,6 +1451,42 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["mem_total_alloc_end"] = mem_total_alloc
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
+		}
+		processLogs = append(processLogs, _log2)
+	}
+	cs_app, ok := conf["cs_app"].(map[string]any)
+	if ok {
+		start3 = time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2 = map[string]any{
+			"process":               process,
+			"name":                  fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"description":           fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"key":                   key,
+			"item_key":              nil,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
+		}
+		err = LoadOrSyncMenusFromConfig(context.Background(), adminDb, cs_app, database, 1)
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["end_at"] = time.Now()
+		_log2["duration"] = time.Since(start3).Seconds()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
+		if err != nil {
+			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s ERR: loading/syncing menus from config: %s", key, err)
+		} else {
+			fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
+			_log2["success"] = true
+			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
 		processLogs = append(processLogs, _log2)
 	}
