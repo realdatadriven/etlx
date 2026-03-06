@@ -12,7 +12,9 @@ import (
 
 // SQLDialect defines the interface for different SQL database dialects.
 type SQLDialect interface {
-	GetCreateTableIfNotExists(tableName string) string, string
+	GetCreateTable(tableName string) (string, string)
+	GetCreateOrReplaceTable(tableName string) (string, string)
+	GetCreateTableIfNotExists(tableName string) (string, string)
 	GetTableName(tableName string) string
 	GetColumnName(fieldName string) string
 	GetColumnType(field map[string]any) string
@@ -25,13 +27,26 @@ type SQLDialect interface {
 	GetTableComment(tableName, comment string) string
 	SupportsInlineColumnComment() bool
 	SupportsTableComment() bool
+	DropTableIfExists(tableName string) string
 }
 
 // BaseDialect provides common implementations for SQLDialect interface.
 type BaseDialect struct{}
 
-func (ms *BaseDialect) GetCreateTableIfNotExists(tableName string) string, string {
+func (ms *BaseDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
 	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (`, tableName), ``
+}
+
+func (ms *BaseDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE %s (`, tableName), ``
+}
+
+func (ms *BaseDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE OR REPLACE TABLE %s (`, tableName), ``
+}
+
+func (b *BaseDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)
 }
 
 func (b *BaseDialect) GetColumnName(fieldName string) string {
@@ -108,8 +123,21 @@ func (b *BaseDialect) SupportsTableComment() bool                               
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
 
-func (ms *PostgresDialect) GetCreateTableIfNotExists(tableName string) string, string {
+func (ms *PostgresDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
 	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
+}
+
+func (ms *PostgresDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE "%s" (`, tableName), ``
+}
+
+func (ms *PostgresDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	// PostgreSQL does not support CREATE OR REPLACE TABLE, so we can simulate it with DROP + CREATE
+	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s"; CREATE TABLE "%s" (`, tableName, tableName), ``
+}
+
+func (p *PostgresDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s";`, tableName)
 }
 
 func (p *PostgresDialect) GetTableName(tableName string) string {
@@ -167,8 +195,21 @@ func (p *PostgresDialect) SupportsTableComment() bool { return true }
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
-func (ms *MySQLDialect) GetCreateTableIfNotExists(tableName string) string, string {
+func (ms *MySQLDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
 	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (", tableName), ``
+}
+
+func (ms *MySQLDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	// MySQL does not support CREATE OR REPLACE TABLE, so we can simulate it with DROP + CREATE
+	return fmt.Sprintf("DROP TABLE IF EXISTS `%s`; CREATE TABLE `%s` (", tableName, tableName), ``
+}
+
+func (ms *MySQLDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf("CREATE TABLE `%s` (", tableName), ``
+}
+
+func (m *MySQLDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf("DROP TABLE IF EXISTS `%s`;", tableName)
 }
 
 func (m *MySQLDialect) GetTableName(tableName string) string {
@@ -218,8 +259,21 @@ func (m *MySQLDialect) SupportsTableComment() bool        { return true }
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
 
-func (ms *SQLiteDialect) GetCreateTableIfNotExists(tableName string) string, string {
+func (ms *SQLiteDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
 	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
+}
+
+func (ms *SQLiteDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE "%s" (`, tableName), ``
+}
+
+func (ms *SQLiteDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	// SQLite does not support CREATE OR REPLACE TABLE, so we can simulate it with DROP + CREATE
+	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s"; CREATE TABLE "%s" (`, tableName, tableName), ``
+}
+
+func (s *SQLiteDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s";`, tableName)
 }
 
 func (s *SQLiteDialect) GetTableName(tableName string) string {
@@ -261,8 +315,21 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
 type MSSQLDialect struct{ BaseDialect }
 
-func (ms *MSSQLDialect) GetCreateTableIfNotExists(tableName string) string, string {
-	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NULL BEGING CREATE TABLE [%s] ( `, tableName), ` END `
+func (ms *MSSQLDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
+	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NULL BEGING CREATE TABLE [%s] ( `, tableName, tableName), ` END `
+}
+
+func (ms *MSSQLDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE [%s] (`, tableName), ``
+}
+
+func (ms *MSSQLDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	// MSSQL does not support CREATE OR REPLACE TABLE, so we can simulate it with DROP + CREATE
+	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NOT NULL DROP TABLE [%s]; CREATE TABLE [%s] (`, tableName, tableName, tableName), ``
+}
+
+func (ms *MSSQLDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NOT NULL DROP TABLE [%s];`, tableName, tableName)
 }
 
 func (ms *MSSQLDialect) GetTableName(tableName string) string {
@@ -297,8 +364,8 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	}
 }
 
-// getDialect returns the appropriate SQLDialect implementation.
-func getDialect(driver string) SQLDialect {
+// GetDialect returns the appropriate SQLDialect implementation.
+func GetDialect(driver string) SQLDialect {
 	switch driver {
 	case "postgres", "pg":
 		return &PostgresDialect{}
@@ -315,7 +382,7 @@ func getDialect(driver string) SQLDialect {
 
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
 func generateCreateTableSQL(driver, tableName, tableComment, createAll string, fields map[string]any) string {
-	dialect := getDialect(driver)
+	dialect := GetDialect(driver)
 	var start, end string
 	var schema strings.Builder
 	switch createAll {
@@ -323,9 +390,11 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		start, end = dialect.GetCreateTableIfNotExists(tableName)
 		schema.WriteString(start)
 	case "replace":
-		schema.WriteString(fmt.Sprintf("CREATE OR REPLACE TABLE %s (\n", dialect.GetTableName(tableName)))
+		start, end = dialect.GetCreateOrReplaceTable(tableName)
+		schema.WriteString(start)
 	default:
-		schema.WriteString(fmt.Sprintf("CREATE TABLE %s (\n", dialect.GetTableName(tableName)))
+		start, end = dialect.GetCreateTable(tableName)
+		schema.WriteString(start)
 	}
 
 	var columnDefs []string
@@ -427,7 +496,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		isExcluded  bool
 		isNullable  bool
 	}
-	dialect := getDialect(dbCon.GetDriverName())
+	dialect := GetDialect(dbCon.GetDriverName())
 	schemaColumnMap := make(map[string]schemaColInfo)
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
 	/*filedsByOrder, ok := columns["__order"].([]any) // Get the column order from the special __order key
@@ -528,8 +597,9 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 	return nil
 }
 
-func generateDropTableSQL(tableName string) string {
-	return fmt.Sprintf("DROP TABLE IF EXISTS %s;", tableName)
+func generateDropTableSQL(driver, tableName string) string {
+	dialect := GetDialect(driver)
+	return dialect.DropTableIfExists(tableName)
 }
 
 // METADATA
@@ -721,7 +791,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 		"translate_table_field",
 		"table_schema",
 	}
-	dialect := getDialect(dbCon.GetDriverName())
+	dialect := GetDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 
 	for _, tableName := range targetTables {
@@ -982,7 +1052,7 @@ func LoadOrSyncMenusFromConfig(
 			if order != 999 {
 				updateParts = append(updateParts, `menu_order = :menu_order`)
 				updateParams["menu_order"] = order
-			}	
+			}
 			if config != "" {
 				updateParts = append(updateParts, `menu_config = :menu_config`)
 				updateParams["menu_config"] = config
@@ -1092,10 +1162,10 @@ func LoadOrSyncMenusFromConfig(
 				// Optionally update link if active status or requires_rla has changed
 				updateParts := []string{}
 				updateParams := map[string]any{
-					"menu_id":      menu["menu_id"],
-					"table_id":     tblMeta["table_id"],
-					"app_id":       app["app_id"],
-					"updated_at":   now,
+					"menu_id":    menu["menu_id"],
+					"table_id":   tblMeta["table_id"],
+					"app_id":     app["app_id"],
+					"updated_at": now,
 				}
 				if linkActive {
 					updateParts = append(updateParts, `active = :active`)
@@ -1111,7 +1181,7 @@ func LoadOrSyncMenusFromConfig(
 						SET %s, updated_at = :updated_at
 						WHERE menu_id = :menu_id AND table_id = :table_id AND app_id = :app_id
 					`, strings.Join(updateParts, ", "))
-					_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)	
+					_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
 					if err != nil {
 						fmt.Printf("update menu_table link %s → %s: %v", menuName, tblName, err)
 					} else {
@@ -1305,7 +1375,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"mem_sys_start":         mem_sys,
 				"num_gc_start":          num_gc,
 			}
-			dropTableSQL := generateDropTableSQL(table) //generateDropTableSQL(driver, table, drop_all)
+			dropTableSQL := generateDropTableSQL(dbConn.GetDriverName(), table)
 			_, err := dbConn.ExecuteQuery(dropTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			if err != nil {
