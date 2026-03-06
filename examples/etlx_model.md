@@ -1,3 +1,5 @@
+<!-- markdownlint-disable MD022 -->
+<!-- markdownlint-disable MD031 -->
 # ETLX_MODEL
 ```yaml
 name: ETLX
@@ -5,31 +7,33 @@ description: ETLX Model
 runs_as: MODEL
 conn: 'sqlite3:database/ETLX.db'
 admin_conn: 'sqlite3:database/ADMIN.db'
+create_all: checkfirst
+_drop_all: checkfirst
 active: true
+update_table_metadata: true
 cs_app:
-cs_app:
-    Dashboards:
-        menu_icon: document-report
-        menu_order: 1
-        active: true
-        menu_config: '{"label": "dashboard","tooltip": "dashboard_desc","load_items": {"table": "dashboard","tables": ["dashboard"]}}'
-        tables:
-            - dashboard
-    ETLX:
-        menu_icon: circle-stack
-        menu_order: 2
-        active: true
-        tables:
-            - etlx
-            - etlx_conf
-            - manage_query
-    Notebook:
-        menu_icon: book-open
-        menu_order: 3
-        active: true
-        menu_config: '{"label": "notebook","tooltip": "notebook_desc","load_items": {"table": "notebook","tables": ["notebook"]}}'
-        tables:
-            - notebook
+  Dashboards:
+    menu_icon: document-report
+    menu_order: 1
+    active: true
+    menu_config: '{"label": "dashboard","tooltip": "dashboard_desc","load_items": {"table": "dashboard","tables": ["dashboard"]}}'
+    tables:
+      - dashboard
+  ETLX:
+    menu_icon: circle-stack
+    menu_order: 2
+    active: true
+    tables:
+      - etlx
+      - etlx_conf
+      - manage_query
+  Notebook:
+    menu_icon: book-open
+    menu_order: 3
+    active: true
+    menu_config: '{"label": "notebook","tooltip": "notebook_desc","load_items": {"table": "notebook","tables": ["notebook"]}}'
+    tables:
+      - notebook
 ```
 
 ## ETLX
@@ -64,25 +68,6 @@ columns:
   created_at:      { type: datetime, comment: "Created at" }
   updated_at:      { type: datetime, comment: "Updated at" }
   excluded:        { type: boolean, default: false, comment: "Excluded" }
-```
-
-## ARROW_FLIGHT
-```yaml
-table: arrow_flight
-comment: Expose Arrow Flight
-columns:
-  arrow_flight_id:   { type: integer, pk: true, autoincrement: true, comment: "ID" }
-  arrow_flight:      { type: varchar(200), unique: true, nullable: false, comment: "Name" }
-  arrow_flight_desc: { type: text, comment: "Description" }
-  startup_sql:       { type: text, comment: "Startup SQL" }
-  main_sql:          { type: text, nullable: false, comment: "Main SQL" }
-  shutdown_sql:      { type: text, comment: "Shutdown SQL" }
-  active:            { type: boolean, default: true, comment: "Active" }
-  user_id:           { type: integer, comment: "User ID" }
-  app_id:            { type: integer, comment: "App ID" }
-  created_at:        { type: datetime, comment: "Created at" }
-  updated_at:        { type: datetime, comment: "Updated at" }
-  excluded:          { type: boolean, default: false, comment: "Excluded" }
 ```
 
 ## MANAGE_QUERY

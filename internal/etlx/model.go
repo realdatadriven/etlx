@@ -935,6 +935,7 @@ func LoadOrSyncMenusFromConfig(
 	conf InterfaceConf,
 	dbName string, // e.g. "ADMIN"
 	appUserID int, // usually 1
+	desc string, // optional app description
 ) error {
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 	// 1. Find the main app record (assuming one app per db)
@@ -942,13 +943,20 @@ func LoadOrSyncMenusFromConfig(
 	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
 	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName}...)
 	if err != nil {
+		return fmt.Errorf("find app failed: %w", err)
+	}
+	if len(*_app) == 0 {
 		// create the app record if not found
-		insertAppSQL := `INSERT INTO app (app, app_desc, db, user_id, active, created_at, updated_at, excluded)
-			VALUES (:app, :app_desc, :db, :user_id, :active, :created_at, :updated_at, :excluded)`
+		insertAppSQL := `INSERT INTO app (app, app_desc, db, version, user_id, created_at, updated_at, excluded)
+			VALUES (:app, :app_desc, :db, :version, :user_id, :created_at, :updated_at, :excluded)`
+		if desc == "" {
+			desc = fmt.Sprintf("Auto-created app for db %q", dbName)
+		}
 		appData := map[string]any{
 			"app":        dbName,
-			"app_desc":   fmt.Sprintf("Auto-created app for db %q", dbName),
+			"app_desc":   desc,
 			"db":         dbName,
+			"version":    "1.0.0",
 			"user_id":    appUserID,
 			"active":     true,
 			"created_at": now,
@@ -964,9 +972,6 @@ func LoadOrSyncMenusFromConfig(
 				return fmt.Errorf("find app failed: %w", err)
 			}
 		}
-	}
-	if len(*_app) == 0 {
-		return fmt.Errorf("no app found for db = %q", dbName)
 	}
 	app = (*_app)
 	// 2. Process each menu section
@@ -1540,6 +1545,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			defer adminDb.Close()
 		}
 	} else {
+		fmt.Println("ADMIN CONN:", adminConn)
 		start3 = time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
@@ -1611,8 +1617,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		processLogs = append(processLogs, _log2)
 	}
 	cs_app, ok := metadata["cs_app"].(map[string]any)
-	if drop_all == "" && ok {
-		fmt.Println("LOADING/SYNCING MENUS FROM CONFIG", cs_app)
+	if drop_all == "" && ok && updateTableMetadataSQL {
+		// fmt.Println("LOADING/SYNCING MENUS FROM CONFIG", cs_app)
 		start3 = time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
@@ -1628,7 +1634,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1)
+		app_desc, _ := metadata["description"].(string)
+		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc)
 		if err != nil {
 			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
 			_log2["success"] = false
