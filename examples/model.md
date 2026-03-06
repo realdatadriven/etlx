@@ -195,6 +195,8 @@ comment: Menu Tables
 columns:
   menu_table_id:  { type: integer, pk: true, autoincrement: true, comment: "Menu Table ID" }
   menu_id:        { type: integer, fk: "menu.menu_id", comment: "Menu ID" }
+  table_id:       { type: integer, fk: "table.table_id", comment: "Table ID" }
+  app_id:         { type: integer, fk: "app.app_id", comment: "App ID" }
   user_id:        { type: integer, fk: "users.user_id", comment: "User ID" }
   active:         { type: boolean, default: true, comment: "Active" }
   requires_rla:   { type: boolean, default: false, comment: "Requires Row Level Access" }
@@ -249,6 +251,7 @@ columns:
   read:                   { type: boolean, default: false, comment: "Read" }
   update:                 { type: boolean, default: false, comment: "Update" }
   delete:                 { type: boolean, default: false, comment: "Delete" }
+  share:                  { type: boolean, default: false, comment: "Share" }
   user_id:                { type: integer, fk: "users.user_id", comment: "User ID" }
   created_at:             { type: datetime, comment: "Created at" }
   updated_at:             { type: datetime, comment: "Updated at" }
@@ -274,6 +277,7 @@ columns:
   db:          { type: varchar(200), comment: "Database" }
   row_id:      { type: integer, comment: "Database" }
   app_id:      { type: integer, fk: "app.app_id", comment: "App ID" }
+  old_data:    { type: text, comment: "Old Data" }
   new_data:    { type: text, comment: "New Data" }
   created_at:  { type: datetime, comment: "Created at" }
   updated_at:  { type: datetime, comment: "Updated at" }
@@ -380,6 +384,7 @@ columns:
 table: translate_table
 comment: Translate Table
 columns:
+  transl_tbl_id:     { type: integer, pk: true, autoincrement: true, comment: "Translate Table ID" }
   table_org_desc:    { type: varchar(200), nullable: false, comment: "Table Org. Desc" }
   table_transl_desc: { type: varchar(200), nullable: false, comment: "Table Transl. Desc" }
   table:             { type: varchar(200), nullable: false, comment: "Table" }
