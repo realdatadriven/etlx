@@ -12,6 +12,7 @@ import (
 
 // SQLDialect defines the interface for different SQL database dialects.
 type SQLDialect interface {
+	GetCreateTableIfNotExists(tableName string) string, string
 	GetTableName(tableName string) string
 	GetColumnName(fieldName string) string
 	GetColumnType(field map[string]any) string
@@ -28,6 +29,10 @@ type SQLDialect interface {
 
 // BaseDialect provides common implementations for SQLDialect interface.
 type BaseDialect struct{}
+
+func (ms *BaseDialect) GetCreateTableIfNotExists(tableName string) string, string {
+	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS %s (`, tableName), ``
+}
 
 func (b *BaseDialect) GetColumnName(fieldName string) string {
 	return fieldName
@@ -103,6 +108,10 @@ func (b *BaseDialect) SupportsTableComment() bool                               
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
 
+func (ms *PostgresDialect) GetCreateTableIfNotExists(tableName string) string, string {
+	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
+}
+
 func (p *PostgresDialect) GetTableName(tableName string) string {
 	return fmt.Sprintf(`"%s"`, tableName)
 }
@@ -158,6 +167,10 @@ func (p *PostgresDialect) SupportsTableComment() bool { return true }
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
+func (ms *MySQLDialect) GetCreateTableIfNotExists(tableName string) string, string {
+	return fmt.Sprintf("CREATE TABLE IF NOT EXISTS `%s` (", tableName), ``
+}
+
 func (m *MySQLDialect) GetTableName(tableName string) string {
 	return fmt.Sprintf("`%s`", tableName)
 }
@@ -205,6 +218,10 @@ func (m *MySQLDialect) SupportsTableComment() bool        { return true }
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
 
+func (ms *SQLiteDialect) GetCreateTableIfNotExists(tableName string) string, string {
+	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
+}
+
 func (s *SQLiteDialect) GetTableName(tableName string) string {
 	return fmt.Sprintf(`"%s"`, tableName)
 }
@@ -243,6 +260,10 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
 type MSSQLDialect struct{ BaseDialect }
+
+func (ms *MSSQLDialect) GetCreateTableIfNotExists(tableName string) string, string {
+	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NULL BEGING CREATE TABLE [%s] ( `, tableName), ` END `
+}
 
 func (ms *MSSQLDialect) GetTableName(tableName string) string {
 	return fmt.Sprintf(`[%s]`, tableName)
@@ -295,10 +316,12 @@ func getDialect(driver string) SQLDialect {
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
 func generateCreateTableSQL(driver, tableName, tableComment, createAll string, fields map[string]any) string {
 	dialect := getDialect(driver)
+	var start, end string
 	var schema strings.Builder
 	switch createAll {
 	case "checkfirst":
-		schema.WriteString(fmt.Sprintf("CREATE TABLE IF NOT EXISTS %s (\n", dialect.GetTableName(tableName)))
+		start, end = dialect.GetCreateTableIfNotExists(tableName)
+		schema.WriteString(start)
 	case "replace":
 		schema.WriteString(fmt.Sprintf("CREATE OR REPLACE TABLE %s (\n", dialect.GetTableName(tableName)))
 	default:
@@ -383,7 +406,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		schema.WriteString("\n" + sql)
 	}
 
-	return schema.String() + ";\n"
+	return schema.String() + end + ";\n"
 }
 
 // ColumnDefinition represents the structure of a column from the YAML schema.
