@@ -768,12 +768,12 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					if k == "db" || k == "table" || k == "field" || k == "created_at" || k == "updated_at" {
 						continue
 					}
-					updateParts = append(updateParts, fmt.Sprintf(`%q = :%s`, dialect.GetColumnName(k), k))
+					updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 					updateParams[k] = v
 				}
 
 				updateQuery := fmt.Sprintf(`
-					UPDATE %q
+					UPDATE %s
 					SET %s
 					WHERE %s
 				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
