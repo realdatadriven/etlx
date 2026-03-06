@@ -1,7 +1,6 @@
 package etlxlib
 
 import (
-	"context"
 	"database/sql"
 	"fmt"
 	"log"
