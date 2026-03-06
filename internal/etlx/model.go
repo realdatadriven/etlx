@@ -1484,7 +1484,6 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: loading/syncing menus from config: %s", key, err)
 		} else {
-			fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
