@@ -406,7 +406,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		isExcluded  bool
 		isNullable  bool
 	}
-
+	dialect := getDialect(dbCon.GetDriverName())
 	schemaColumnMap := make(map[string]schemaColInfo)
 	var allSchemaColumnNames []string // To maintain order for INSERT statement
 	/*filedsByOrder, ok := columns["__order"].([]any) // Get the column order from the special __order key
@@ -465,21 +465,21 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 
 			if val, ok := row[colName]; ok {
 				// Value exists in the data row, use it
-				insertCols = append(insertCols, colName)
+				insertCols = append(insertCols, dialect.GetColumnName(colName))
 				insertVals = append(insertVals, ":"+colName)
 				insertMap[colName] = val
 			} else {
 				// Value not in data row, check for defaults based on schema definition
 				if colInfo.isCreatedAt {
-					insertCols = append(insertCols, colName)
+					insertCols = append(insertCols, dialect.GetColumnName(colName))
 					insertVals = append(insertVals, ":"+colName)
 					insertMap[colName] = now
 				} else if colInfo.isUpdatedAt {
-					insertCols = append(insertCols, colName)
+					insertCols = append(insertCols, dialect.GetColumnName(colName))
 					insertVals = append(insertVals, ":"+colName)
 					insertMap[colName] = now
 				} else if colInfo.isExcluded {
-					insertCols = append(insertCols, colName)
+					insertCols = append(insertCols, dialect.GetColumnName(colName))
 					insertVals = append(insertVals, ":"+colName)
 					insertMap[colName] = false
 				} else if !colInfo.isNullable {
@@ -495,7 +495,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 			return fmt.Errorf("row %d: no columns to insert", i)
 		}
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-			tableName, strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
+			dialect.GetTableName(tableName), strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
 		// fmt.Println(query)
 		// Execute the insert using NamedExec for safety and convenience
 		_, err := dbCon.ExecuteNamedQuery(query, insertMap)
@@ -719,7 +719,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				"table":      row["table"],
 				"user_id":    row["user_id"],
 				"excluded":   row["excluded"],
-				"created_at": row["created_at"],
+				"created_at": now,
 				"updated_at": now, // always refresh updated_at
 			}
 
@@ -731,21 +731,22 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			// Decide PK / unique key for existence check & where clause
 			var whereClause string
 			var logKey string
-
+			_chk_params := []any{}
 			if tableName == "translate_table_field" || tableName == "table_schema" {
-				whereClause = `db = :db AND "table" = :table AND field = :field`
+				whereClause = `db = ? AND "table" = ? AND field = ? AND excluded = false`
+				_chk_params = []any{targetDBName, row["table"], row["field"]}
 				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
 			} else {
-				whereClause = `db = :db AND "table" = :table`
+				whereClause = `db = :db AND "table" = :table AND excluded = false`
+				_chk_params = []any{targetDBName, row["table"]}
 				logKey = fmt.Sprintf("%v", row["table"])
 			}
 
 			// 1. Check if row exists
 			var exists bool
-			checkQuery := fmt.Sprintf(`SELECT 1 as exists FROM %q WHERE %s LIMIT 1`, dialect.GetTableName(tableName), dialect.GetColumnName(whereClause))
-
-			// err := tx.GetContext(ctx, &exists, checkQuery, params)
-			res, _, err := dbCon.QueryMultiRows(checkQuery, []any{})
+			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
+			fmt.Println("checkQuery:", checkQuery, _chk_params)
+			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil && err != sql.ErrNoRows {
 				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
 			} else if len(*res) > 0 {
@@ -809,10 +810,10 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				}
 
 				insertQuery := fmt.Sprintf(`
-					INSERT INTO %q (%s)
+					INSERT INTO %s (%s)
 					VALUES (%s)
 				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
-
+				fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
 					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
