@@ -730,14 +730,17 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 
 			// Decide PK / unique key for existence check & where clause
 			var whereClause string
+			var whereClause2 string
 			var logKey string
 			_chk_params := []any{}
 			if tableName == "translate_table_field" || tableName == "table_schema" {
 				whereClause = `db = ? AND "table" = ? AND field = ? AND excluded = false`
+				whereClause2 = `db = :db AND "table" = :table AND field = :field AND excluded = false`
 				_chk_params = []any{targetDBName, row["table"], row["field"]}
 				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
 			} else {
 				whereClause = `db = :db AND "table" = :table AND excluded = false`
+				whereClause2 = `db = :db AND "table" = :table AND excluded = false`
 				_chk_params = []any{targetDBName, row["table"]}
 				logKey = fmt.Sprintf("%v", row["table"])
 			}
@@ -773,7 +776,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					UPDATE %q
 					SET %s
 					WHERE %s
-				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause)
+				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
 
 				// Merge where params into update params
 				for k, v := range params {
@@ -791,10 +794,14 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				// 2b. INSERT – all fields from the row + ensure timestamps
 				cols := []string{}
 				names := []string{}
-
+				// fmt.Println("ROW:", row)
 				for k := range row {
 					cols = append(cols, dialect.GetColumnName(k))
 					names = append(names, ":"+k)
+					if _, ok := params[k]; !ok {
+						// fmt.Println(k, row[k], params[k])
+						params[k] = row[k]
+					}
 				}
 
 				// Guarantee timestamps if missing in the seed map
