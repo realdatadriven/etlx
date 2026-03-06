@@ -839,7 +839,6 @@ type InterfaceConf map[string]any
 
 // LoadOrSyncMenusFromConfig creates/updates menus and menu_table links
 func LoadOrSyncMenusFromConfig(
-	ctx context.Context,
 	dbCon db.DBInterface,
 	conf InterfaceConf,
 	dbName string, // e.g. "ADMIN"
@@ -1454,8 +1453,9 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		}
 		processLogs = append(processLogs, _log2)
 	}
-	cs_app, ok := conf["cs_app"].(map[string]any)
-	if ok {
+	cs_app, ok := metadata["cs_app"].(map[string]any)
+	if drop_all == "" && ok {
+		fmt.Println("LOADING/SYNCING MENUS FROM CONFIG", cs_app)
 		start3 = time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
@@ -1471,7 +1471,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		err = LoadOrSyncMenusFromConfig(context.Background(), adminDb, cs_app, database, 1)
+		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3).Seconds()
