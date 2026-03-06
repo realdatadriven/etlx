@@ -945,10 +945,41 @@ func LoadOrSyncMenusFromConfig(
 
 			fmt.Printf("Created menu %q → ID %d\n", menuName, menu["menu_id"])
 
-		} else if err != nil {
-			return fmt.Errorf("check menu %q: %w", menuName, err)
 		} else {
 			fmt.Printf("Menu %q already exists → ID %d\n", menuName, menu["menu_id"])
+			// update existing menu if needed (e.g., active status, icon, order, config)
+			updateParts := []string{}
+			updateParams := map[string]any{
+				"menu_id": menu["menu_id"],
+			}
+			if icon != "" {
+				updateParts = append(updateParts, `menu_icon = :menu_icon`)
+				updateParams["menu_icon"] = icon
+			}
+			if order != 999 {
+				updateParts = append(updateParts, `menu_order = :menu_order`)
+				updateParams["menu_order"] = order
+			}	
+			if config != "" {
+				updateParts = append(updateParts, `menu_config = :menu_config`)
+				updateParams["menu_config"] = config
+			}
+			updateParts = append(updateParts, `active = :active`)
+			updateParams["active"] = active
+			updateParams["updated_at"] = now
+			if len(updateParts) > 0 {
+				updateQuery := fmt.Sprintf(`
+					UPDATE menu
+					SET %s, updated_at = :updated_at
+					WHERE menu_id = :menu_id
+				`, strings.Join(updateParts, ", "))
+				_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
+				if err != nil {
+					fmt.Printf("update menu %s: %v", menuName, err)
+				} else {
+					fmt.Printf("Updated menu %s (ID %d)\n", menuName, menu["menu_id"])
+				}
+			}
 		}
 
 		// 3. Link tables (menu_table entries)
@@ -985,7 +1016,7 @@ func LoadOrSyncMenusFromConfig(
 			// Find table metadata record
 			var tblMeta map[string]any
 			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`
-			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName})
+			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName}...)
 			if err != nil {
 				return fmt.Errorf("find table %q: %w", tblName, err)
 			}
@@ -1033,6 +1064,37 @@ func LoadOrSyncMenusFromConfig(
 				}
 
 				fmt.Printf("  Linked table %q (active=%v, rla=%v)\n", tblName, linkActive, requiresRLA)
+			} else {
+				fmt.Printf("  Link already exists for table %q\n", tblName)
+				// Optionally update link if active status or requires_rla has changed
+				updateParts := []string{}
+				updateParams := map[string]any{
+					"menu_id":      menu["menu_id"],
+					"table_id":     tblMeta["table_id"],
+					"app_id":       app["app_id"],
+					"updated_at":   now,
+				}
+				if linkActive {
+					updateParts = append(updateParts, `active = :active`)
+					updateParams["active"] = linkActive
+				}
+				if requiresRLA {
+					updateParts = append(updateParts, `requires_rla = :requires_rla`)
+					updateParams["requires_rla"] = requiresRLA
+				}
+				if len(updateParts) > 0 {
+					updateQuery := fmt.Sprintf(`
+						UPDATE menu_table
+						SET %s, updated_at = :updated_at
+						WHERE menu_id = :menu_id AND table_id = :table_id AND app_id = :app_id
+					`, strings.Join(updateParts, ", "))
+					_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)	
+					if err != nil {
+						fmt.Printf("update menu_table link %s → %s: %v", menuName, tblName, err)
+					} else {
+						fmt.Printf("  Updated link for table %q (active=%v, rla=%v)\n", tblName, linkActive, requiresRLA)
+					}
+				}
 			}
 		}
 	}
