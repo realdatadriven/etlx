@@ -1027,7 +1027,7 @@ func LoadOrSyncMenusFromConfig(
 			tblMeta = (*_tblMeta)
 			// Check if link already exists
 			var exists bool
-			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? LIMIT 1 `
+			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? AND excluded = false LIMIT 1 `
 			_res, _, err := dbCon.QuerySingleRow(sql, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
 			if err != nil {
 				return fmt.Errorf("check menu_table link: %w", err)
