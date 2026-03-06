@@ -849,7 +849,28 @@ func LoadOrSyncMenusFromConfig(
 	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
 	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName}...)
 	if err != nil {
-		return fmt.Errorf("find app failed: %w", err)
+		// create the app record if not found
+		insertAppSQL := `INSERT INTO app (app, app_desc, db, user_id, active, created_at, updated_at, excluded)
+			VALUES (:app, :app_desc, :db, :user_id, :active, :created_at, :updated_at, :excluded)`
+		appData := map[string]any{
+			"app":        dbName,
+			"app_desc":   fmt.Sprintf("Auto-created app for db %q", dbName),
+			"db":         dbName,
+			"user_id":    appUserID,
+			"active":     true,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		_, err := dbCon.ExecuteNamedQuery(insertAppSQL, appData)
+		if err != nil {
+			return fmt.Errorf("create app failed: %w", err)
+		} else {
+			_app, _, err = dbCon.QuerySingleRow(sql, []any{dbName}...)
+			if err != nil {
+				return fmt.Errorf("find app failed: %w", err)
+			}
+		}
 	}
 	if len(*_app) == 0 {
 		return fmt.Errorf("no app found for db = %q", dbName)
@@ -881,17 +902,16 @@ func LoadOrSyncMenusFromConfig(
 		menu = (*_menu)
 		if len(menu) == 0 {
 			// INSERT new menu
-			LastInsertId, err := dbCon.ExecuteQueryPGInsertWithLastInsertId(`
-				INSERT INTO menu (
-					menu, menu_desc, menu_icon, menu_order, menu_config,
-					app_id, user_id, active,
-					created_at, updated_at, excluded
-				) VALUES (
-					:menu, :menu_desc, :menu_icon, :menu_order, :menu_config,
-					:app_id, :user_id, :active,
-					:created_at, :updated_at, :excluded
-				)
-			`, map[string]any{
+			sql = `INSERT INTO menu (
+				menu, menu_desc, menu_icon, menu_order, menu_config,
+				app_id, user_id, active,
+				created_at, updated_at, excluded
+			) VALUES (
+				:menu, :menu_desc, :menu_icon, :menu_order, :menu_config,
+				:app_id, :user_id, :active,
+				:created_at, :updated_at, :excluded
+			)`
+			_data := map[string]any{
 				"menu":        menuName,
 				"menu_desc":   menuName, // or more descriptive if you want
 				"menu_icon":   icon,
@@ -903,19 +923,18 @@ func LoadOrSyncMenusFromConfig(
 				"created_at":  now,
 				"updated_at":  now,
 				"excluded":    false,
-			})
+			}
+			LastInsertId, err := dbCon.ExecuteQueryPGInsertWithLastInsertId(sql, _data)
 			if err != nil {
 				return fmt.Errorf("insert menu %q: %w", menuName, err)
 			}
 
 			// Get the inserted ID (sqlite/mysql/postgres compatible way)
 			lastID := LastInsertId
-			if err != nil {
+			if lastID == 0 {
 				// fallback: query again
-				_menu, _, err = dbCon.QuerySingleRow(`
-					SELECT menu_id FROM menu 
-					WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1
-				`, []any{menuName, app["app_id"]}...)
+				sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1`
+				_menu, _, err = dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
 				if err != nil {
 					return fmt.Errorf("retrieve new menu_id for %q: %w", menuName, err)
 				}
@@ -965,7 +984,8 @@ func LoadOrSyncMenusFromConfig(
 
 			// Find table metadata record
 			var tblMeta map[string]any
-			_tblMeta, _, err := dbCon.QuerySingleRow(`SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`, []any{tblName, dbName})
+			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`
+			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName})
 			if err != nil {
 				return fmt.Errorf("find table %q: %w", tblName, err)
 			}
@@ -976,7 +996,8 @@ func LoadOrSyncMenusFromConfig(
 			tblMeta = (*_tblMeta)
 			// Check if link already exists
 			var exists bool
-			_res, _, err := dbCon.QuerySingleRow(`SELECT * FROM menu_table  WHERE menu_id = :menu_id  AND table_id = :table_id AND app_id = :app_id LIMIT 1 `, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
+			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? LIMIT 1 `
+			_res, _, err := dbCon.QuerySingleRow(sql, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
 			if err != nil {
 				return fmt.Errorf("check menu_table link: %w", err)
 			}
@@ -986,17 +1007,16 @@ func LoadOrSyncMenusFromConfig(
 				exists = true
 			}
 			if !exists {
-				_, err = dbCon.ExecuteNamedQuery(`
-					INSERT INTO menu_table (
-						menu_id, table_id, app_id,
-						active, requires_rla,
-						user_id, created_at, updated_at, excluded
-					) VALUES (
-						:menu_id, :table_id, :app_id,
-						:active, :requires_rla,
-						:user_id, :created_at, :updated_at, :excluded
-					)
-				`, map[string]any{
+				sql = `INSERT INTO menu_table (
+					menu_id, table_id, app_id,
+					active, requires_rla,
+					user_id, created_at, updated_at, excluded
+				) VALUES (
+					:menu_id, :table_id, :app_id,
+					:active, :requires_rla,
+					:user_id, :created_at, :updated_at, :excluded
+				)`
+				_data := map[string]any{
 					"menu_id":      menu["menu_id"],
 					"table_id":     tblMeta["table_id"],
 					"app_id":       app["app_id"],
@@ -1006,7 +1026,8 @@ func LoadOrSyncMenusFromConfig(
 					"created_at":   now,
 					"updated_at":   now,
 					"excluded":     false,
-				})
+				}
+				_, err = dbCon.ExecuteNamedQuery(sql, _data)
 				if err != nil {
 					return fmt.Errorf("insert menu_table %q → %q: %w", menuName, tblName, err)
 				}
