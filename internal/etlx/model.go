@@ -748,7 +748,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			// 1. Check if row exists
 			var exists bool
 			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
-			fmt.Println("checkQuery:", checkQuery, _chk_params)
+			// fmt.Println("checkQuery:", checkQuery, _chk_params)
 			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil && err != sql.ErrNoRows {
 				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
@@ -820,7 +820,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					INSERT INTO %s (%s)
 					VALUES (%s)
 				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
-				fmt.Println(insertQuery, params)
+				// fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
 					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
