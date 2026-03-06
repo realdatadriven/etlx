@@ -1383,7 +1383,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: dropping table %s: %s", key, table, err)
 			} else {
-				fmt.Printf("%s: table %s dropped or did not exist\n", key, table)
+				// fmt.Printf("%s: table %s dropped or did not exist\n", key, table)
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s dropped or did not exist", key, table)
 			}
@@ -1449,26 +1449,20 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			_, err := dbConn.ExecuteQuery(createTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["end_at"] = time.Now()
+			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				_log2["mem_alloc_end"] = mem_alloc
-				_log2["mem_total_alloc_end"] = mem_total_alloc
-				_log2["mem_sys_end"] = mem_sys
-				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 				fmt.Println(createTableSQL, _log2["msg"])
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
-				_log2["end_at"] = time.Now()
-				_log2["duration"] = time.Since(start3).Seconds()
-				_log2["mem_alloc_end"] = mem_alloc
-				_log2["mem_total_alloc_end"] = mem_total_alloc
-				_log2["mem_sys_end"] = mem_sys
-				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 				// ADD DATA
 				dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
@@ -1489,29 +1483,23 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 						"num_gc_start":          num_gc,
 					}
 					err = InsertData(dbConn, table, columns, dataRows)
-					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					if err != nil {
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
-						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3).Seconds()
-						_log2["mem_alloc_end"] = mem_alloc
-						_log2["mem_total_alloc_end"] = mem_total_alloc
-						_log2["mem_sys_end"] = mem_sys
-						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
 						fmt.Println(_log2["msg"])
 					} else {
 						_log2["success"] = true
 						_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
-						_log2["end_at"] = time.Now()
-						_log2["duration"] = time.Since(start3).Seconds()
-						_log2["mem_alloc_end"] = mem_alloc
-						_log2["mem_total_alloc_end"] = mem_total_alloc
-						_log2["mem_sys_end"] = mem_sys
-						_log2["num_gc_end"] = num_gc
-						processLogs = append(processLogs, _log2)
 					}
+					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+					_log2["end_at"] = time.Now()
+					_log2["duration"] = time.Since(start3).Seconds()
+					_log2["mem_alloc_end"] = mem_alloc
+					_log2["mem_total_alloc_end"] = mem_total_alloc
+					_log2["mem_sys_end"] = mem_sys
+					_log2["num_gc_end"] = num_gc
+					processLogs = append(processLogs, _log2)
 				} else {
 					// fmt.Printf("No data to insert for %s->%s\n", key, itemKey)
 				}
@@ -1567,12 +1555,12 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"num_gc_start":          num_gc,
 		}
 		adminDb, err = etlx.GetDB(adminConn)
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["mem_alloc_end"] = mem_alloc
-		_log2["mem_total_alloc_end"] = mem_total_alloc
-		_log2["mem_sys_end"] = mem_sys
-		_log2["num_gc_end"] = num_gc
 		if err != nil {
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 			_log2["end_at"] = time.Now()
@@ -1604,28 +1592,22 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		}
 		_data := generateSeedData(_tables, database)
 		err = UpsertSeedDataNamed(adminDb, _data, database)
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: upserting seed data: %s", key, err)
-			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3).Seconds()
-			_log2["mem_alloc_end"] = mem_alloc
-			_log2["mem_total_alloc_end"] = mem_total_alloc
-			_log2["mem_sys_end"] = mem_sys
-			_log2["num_gc_end"] = num_gc
 		} else {
 			fmt.Printf("%s: seed data upserted successfully\n", key)
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: seed data upserted successfully", key)
-			_log2["end_at"] = time.Now()
-			_log2["duration"] = time.Since(start3).Seconds()
-			_log2["mem_alloc_end"] = mem_alloc
-			_log2["mem_total_alloc_end"] = mem_total_alloc
-			_log2["mem_sys_end"] = mem_sys
-			_log2["num_gc_end"] = num_gc
 		}
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["end_at"] = time.Now()
+		_log2["duration"] = time.Since(start3).Seconds()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
 	}
 	cs_app, ok := metadata["cs_app"].(map[string]any)
@@ -1647,13 +1629,6 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"num_gc_start":          num_gc,
 		}
 		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1)
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now()
-		_log2["duration"] = time.Since(start3).Seconds()
-		_log2["mem_alloc_end"] = mem_alloc
-		_log2["mem_total_alloc_end"] = mem_total_alloc
-		_log2["mem_sys_end"] = mem_sys
-		_log2["num_gc_end"] = num_gc
 		if err != nil {
 			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
 			_log2["success"] = false
@@ -1663,6 +1638,13 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["end_at"] = time.Now()
+		_log2["duration"] = time.Since(start3).Seconds()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
