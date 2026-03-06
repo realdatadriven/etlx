@@ -8,7 +8,6 @@ import (
 	"strings"
 	"time"
 
-	"github.com/jmoiron/sqlx"
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
@@ -841,35 +840,23 @@ type InterfaceConf map[string]map[string]any
 // LoadOrSyncMenusFromConfig creates/updates menus and menu_table links
 func LoadOrSyncMenusFromConfig(
 	ctx context.Context,
-	db *sqlx.DB,
+	dbCon db.DBInterface,
 	conf InterfaceConf,
 	dbName string, // e.g. "ADMIN"
 	appUserID int, // usually 1
 ) error {
-	tx, err := db.BeginTxx(ctx, nil)
-	if err != nil {
-		return fmt.Errorf("begin tx: %w", err)
-	}
-	defer tx.Rollback()
-
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
-
 	// 1. Find the main app record (assuming one app per db)
-	var app struct {
-		AppID int `db:"app_id"`
-	}
-	err = tx.GetContext(ctx, &app, `
-		SELECT app_id FROM app 
-		WHERE db = :db 
-		LIMIT 1
-	`, map[string]any{"db": dbName})
-	if err == sql.ErrNoRows {
-		return fmt.Errorf("no app found for db = %q", dbName)
-	}
+	app := map[string]any{}
+	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
 	}
-
+	if len(*_app) == 0 {
+		return fmt.Errorf("no app found for db = %q", dbName)
+	}
+	app = (*_app)
 	// 2. Process each menu section
 	for menuName, menuCfg := range conf {
 		activeAny, hasActive := menuCfg["active"]
@@ -880,26 +867,19 @@ func LoadOrSyncMenusFromConfig(
 		if !active {
 			continue
 		}
-
 		icon := getString(menuCfg, "menu_icon", "")
 		order := getFloat64(menuCfg, "menu_order", 999)
 		config := getString(menuCfg, "menu_config", "")
-
-		// Check if menu already exists
-		var menu struct {
-			MenuID int `db:"menu_id"`
+		menu := map[string]any{}
+		sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1`
+		_menu, _, err := dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
+		if err != nil {
+			return fmt.Errorf("check menu %q: %w", menuName, err)
 		}
-		err = tx.GetContext(ctx, &menu, `
-			SELECT menu_id FROM menu 
-			WHERE menu = :menu AND app_id = :app_id
-		`, map[string]any{
-			"menu":   menuName,
-			"app_id": app.AppID,
-		})
-
-		if err == sql.ErrNoRows {
+		menu = (*_menu)
+		if len(menu) == 0 {
 			// INSERT new menu
-			res, err := tx.NamedExecContext(ctx, `
+			LastInsertId, err := dbCon.ExecuteQueryPGInsertWithLastInsertId(`
 				INSERT INTO menu (
 					menu, menu_desc, menu_icon, menu_order, menu_config,
 					app_id, user_id, active,
@@ -915,7 +895,7 @@ func LoadOrSyncMenusFromConfig(
 				"menu_icon":   icon,
 				"menu_order":  order,
 				"menu_config": config,
-				"app_id":      app.AppID,
+				"app_id":      app["app_id"],
 				"user_id":     appUserID,
 				"active":      true,
 				"created_at":  now,
@@ -927,26 +907,27 @@ func LoadOrSyncMenusFromConfig(
 			}
 
 			// Get the inserted ID (sqlite/mysql/postgres compatible way)
-			lastID, err := res.LastInsertId()
+			lastID := LastInsertId
 			if err != nil {
 				// fallback: query again
-				err = tx.GetContext(ctx, &menu, `
+				_menu, _, err = dbCon.QuerySingleRow(`
 					SELECT menu_id FROM menu 
-					WHERE menu = :menu AND app_id = :app_id
-				`, map[string]any{"menu": menuName, "app_id": app.AppID})
+					WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1
+				`, []any{menuName, app["app_id"]}...)
 				if err != nil {
 					return fmt.Errorf("retrieve new menu_id for %q: %w", menuName, err)
 				}
+				menu = (*_menu)
 			} else {
-				menu.MenuID = int(lastID)
+				menu["menu_id"] = int(lastID)
 			}
 
-			fmt.Printf("Created menu %q → ID %d\n", menuName, menu.MenuID)
+			fmt.Printf("Created menu %q → ID %d\n", menuName, menu["menu_id"])
 
 		} else if err != nil {
 			return fmt.Errorf("check menu %q: %w", menuName, err)
 		} else {
-			fmt.Printf("Menu %q already exists → ID %d\n", menuName, menu.MenuID)
+			fmt.Printf("Menu %q already exists → ID %d\n", menuName, menu["menu_id"])
 		}
 
 		// 3. Link tables (menu_table entries)
@@ -981,40 +962,29 @@ func LoadOrSyncMenusFromConfig(
 			}
 
 			// Find table metadata record
-			var tblMeta struct {
-				TableID int `db:"table_id"`
-			}
-			err = tx.GetContext(ctx, &tblMeta, `
-				SELECT table_id FROM "table" 
-				WHERE "table" = :table AND db = :db
-			`, map[string]any{"table": tblName, "db": dbName})
-			if err == sql.ErrNoRows {
-				fmt.Printf("Warning: table %q not found in metadata → skipping link\n", tblName)
-				continue
-			}
+			var tblMeta map[string]any
+			_tblMeta, _, err := dbCon.QuerySingleRow(`SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`, []any{tblName, dbName})
 			if err != nil {
 				return fmt.Errorf("find table %q: %w", tblName, err)
 			}
-
+			if len(*_tblMeta) == 0 {
+				fmt.Printf("Warning: table %q not found in metadata → skipping link\n", tblName)
+				continue
+			}
+			tblMeta = (*_tblMeta)
 			// Check if link already exists
 			var exists bool
-			err = tx.GetContext(ctx, &exists, `
-				SELECT 1 FROM menu_table 
-				WHERE menu_id = :menu_id 
-				  AND table_id = :table_id 
-				  AND app_id = :app_id
-				LIMIT 1
-			`, map[string]any{
-				"menu_id":  menu.MenuID,
-				"table_id": tblMeta.TableID,
-				"app_id":   app.AppID,
-			})
-			if err != nil && err != sql.ErrNoRows {
+			_res, _, err := dbCon.QuerySingleRow(`SELECT * FROM menu_table  WHERE menu_id = :menu_id  AND table_id = :table_id AND app_id = :app_id LIMIT 1 `, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
+			if err != nil {
 				return fmt.Errorf("check menu_table link: %w", err)
 			}
-
+			if len(*_res) == 0 {
+				exists = false
+			} else {
+				exists = true
+			}
 			if !exists {
-				_, err = tx.NamedExecContext(ctx, `
+				_, err = dbCon.ExecuteNamedQuery(`
 					INSERT INTO menu_table (
 						menu_id, table_id, app_id,
 						active, requires_rla,
@@ -1025,9 +995,9 @@ func LoadOrSyncMenusFromConfig(
 						:user_id, :created_at, :updated_at, :excluded
 					)
 				`, map[string]any{
-					"menu_id":      menu.MenuID,
-					"table_id":     tblMeta.TableID,
-					"app_id":       app.AppID,
+					"menu_id":      menu["menu_id"],
+					"table_id":     tblMeta["table_id"],
+					"app_id":       app["app_id"],
 					"active":       linkActive,
 					"requires_rla": requiresRLA,
 					"user_id":      appUserID,
@@ -1043,8 +1013,7 @@ func LoadOrSyncMenusFromConfig(
 			}
 		}
 	}
-
-	return tx.Commit()
+	return nil
 }
 
 // ──────────────────────────────────────────────
