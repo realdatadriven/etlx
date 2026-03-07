@@ -889,7 +889,6 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 		table["config"] = jsonData
 		data["custom_table"] = append(data["custom_table"].([]map[string]any), table)
 	}
-
 	return data
 }
 
@@ -1078,8 +1077,9 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 	if len(*_app) > 0 {
 		app = (*_app)
 	}
+	// fmt.Println("APP:", app)
 	targetTables := []string{
-		"custom_from",
+		"custom_form",
 		"custom_table",
 	}
 	dialect := GetDialect(dbCon.GetDriverName())
@@ -1087,7 +1087,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
-			log.Printf("No seed data for %q → skipping", tableName)
+			log.Printf("\nNo custom data for %q → skipping", tableName)
 			continue
 		}
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))

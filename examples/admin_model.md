@@ -622,8 +622,8 @@ form_layout:
   tabs_steps_conf: []
 form_extra_options: []
 table_layout:
-  allow_in_submenu: {},
-  default_order: [],
+  allow_in_submenu: {}
+  default_order: []
   allow_import: false
 table_extra_options:
   - {size: 12, component: EvidenceDash, label: dashboard, intercept_r: true}
