@@ -39,3 +39,4 @@ logs.*.json
 *.gz
 *nyc*
 --public/
+examples/saas_model.md

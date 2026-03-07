@@ -9,8 +9,8 @@ conn: 'sqlite3:database/ETLX.db'
 admin_conn: 'sqlite3:database/ADMIN.db'
 create_all: checkfirst
 _drop_all: checkfirst
-active: true
 update_table_metadata: true
+active: true
 cs_app:
   Dashboards:
     menu_icon: document-report
