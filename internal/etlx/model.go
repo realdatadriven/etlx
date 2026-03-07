@@ -1068,6 +1068,129 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 	return nil
 }
 
+func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+	app := map[string]any{}
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
+	if err != nil {
+		return fmt.Errorf("find app failed: %w", err)
+	}
+	if len(*_app) > 0 {
+		app = (*_app)
+	}
+	targetTables := []string{
+		"custom_from",
+		"custom_table",
+	}
+	dialect := GetDialect(dbCon.GetDriverName())
+	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
+	for _, tableName := range targetTables {
+		rows, ok := seed[tableName].([]map[string]any)
+		if !ok || len(rows) == 0 {
+			log.Printf("No seed data for %q → skipping", tableName)
+			continue
+		}
+		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
+		for _, row := range rows {
+			// Prepare the common named params that almost every row has
+			params := map[string]any{
+				"db":         targetDBName,
+				"table":      row["table"],
+				"app_id":     app["app_id"],
+				"user_id":    row["user_id"],
+				"excluded":   row["excluded"],
+				"created_at": now,
+				"updated_at": now, // always refresh updated_at
+			}
+			// Decide PK / unique key for existence check & where clause
+			var whereClause string
+			var whereClause2 string
+			var logKey string
+			_chk_params := []any{}
+			whereClause = `db = :db AND "table" = :table AND excluded = false`
+			whereClause2 = `db = :db AND "table" = :table AND excluded = false`
+			_chk_params = []any{targetDBName, row["table"]}
+			logKey = fmt.Sprintf("%v", row["table"])
+			// 1. Check if row exists
+			var exists bool
+			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
+			// fmt.Println("checkQuery:", checkQuery, _chk_params)
+			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
+			if err != nil {
+				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
+			} else if len(*res) > 0 {
+				exists = true
+			} else {
+				exists = false
+			}
+			if exists {
+				// 2a. UPDATE – only changeable fields
+				updateParts := []string{`"updated_at" = :updated_at`}
+				updateParams := map[string]any{"updated_at": now}
+				for k, v := range row {
+					// Skip identity columns and already handled fields
+					if k == "db" || k == "table" || k == "created_at" || k == "updated_at" {
+						continue
+					}
+					updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
+					updateParams[k] = v
+				}
+				updateQuery := fmt.Sprintf(`
+					UPDATE %s
+					SET %s
+					WHERE %s
+				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
+				// Merge where params into update params
+				for k, v := range params {
+					updateParams[k] = v
+				}
+				_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
+				if err != nil {
+					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
+				}
+				//fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
+			} else {
+				// 2b. INSERT – all fields from the row + ensure timestamps
+				cols := []string{}
+				names := []string{}
+				// fmt.Println("ROW:", row)
+				for k := range row {
+					cols = append(cols, dialect.GetColumnName(k))
+					names = append(names, ":"+k)
+					if _, ok := params[k]; !ok {
+						// fmt.Println(k, row[k], params[k])
+						params[k] = row[k]
+					}
+				}
+				// Guarantee timestamps if missing in the seed map
+				if _, has := row["created_at"]; !has {
+					cols = append(cols, `"created_at"`)
+					names = append(names, ":created_at")
+					params["created_at"] = now
+				}
+				if _, has := row["updated_at"]; !has {
+					cols = append(cols, `"updated_at"`)
+					names = append(names, ":updated_at")
+					params["updated_at"] = now
+				}
+				insertQuery := fmt.Sprintf(`
+					INSERT INTO %s (%s)
+					VALUES (%s)
+				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
+				// fmt.Println(insertQuery, params)
+				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
+				if err != nil {
+					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
+				}
+				//fmt.Printf("  inserted %-40s\n", logKey)
+			}
+		}
+	}
+
+	fmt.Println("\nSeed data load completed successfully.")
+	return nil
+}
+
 // InterfaceConf represents the parsed cs_app structure
 type InterfaceConf map[string]any
 
@@ -1786,6 +1909,44 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
+		}
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["end_at"] = time.Now()
+		_log2["duration"] = time.Since(start3).Seconds()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
+		processLogs = append(processLogs, _log2)
+	}
+	// CUSTOM DATA
+	if drop_all == "" && updateTableMetadataSQL {
+		// fmt.Println("UPDATE TABLE METADATA", updateTableMetadataSQL)
+		start3 = time.Now()
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2 = map[string]any{
+			"process":               process,
+			"name":                  fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"description":           fmt.Sprintf("%s->%s", key, "Update Table Metadata"),
+			"key":                   key,
+			"item_key":              nil,
+			"start_at":              start3,
+			"ref":                   dtRef,
+			"mem_alloc_start":       mem_alloc,
+			"mem_total_alloc_start": mem_total_alloc,
+			"mem_sys_start":         mem_sys,
+			"num_gc_start":          num_gc,
+		}
+		_data := generateCustomData(_tables, database)
+		err = UpsertCustomFT(adminDb, _data, database)
+		if err != nil {
+			fmt.Printf("%s ERR: upserting custom data: %s\n", key, err)
+			_log2["success"] = false
+			_log2["msg"] = fmt.Sprintf("%s ERR: upserting custom data: %s", key, err)
+		} else {
+			fmt.Printf("%s: custom data upserted successfully\n", key)
+			_log2["success"] = true
+			_log2["msg"] = fmt.Sprintf("%s: custom data upserted successfully", key)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now()
