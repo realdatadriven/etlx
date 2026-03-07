@@ -603,16 +603,30 @@ table: dashboard
 comment: Dashboards
 columns:
   dashboard_id:   { type: integer, pk: true, autoincrement: true, comment: "Dashboard ID" }
-  dashboard:      { type: varchar(200), comment: "Dashboard" }
-  dashboard_desc: { type: text, comment: "Description" }
-  dashboard_conf: { type: text, nullable: false, comment: "Conf / Params" }
-  order:          { type: integer, comment: "Order" }
-  active:         { type: boolean, default: true, comment: "Active" }
+  dashboard:      { type: varchar(200), comment: "Dashboard", form_display: true }
+  dashboard_desc: { type: text, comment: "Description", form_display: true }
+  dashboard_conf: { type: text, nullable: false, comment: "Conf / Params", form_display: true, form_code: markdown}
+  order:          { type: integer, comment: "Order", form_display: true, form_sizelg: 3, form_sizexl: 3 }
+  active:         { type: boolean, default: true, comment: "Active", form_display: true, form_sizelg: 3, form_sizexl: 3}
   user_id:        { type: integer, fk: "users.user_id", comment: "User ID" }
   app_id:         { type: integer, fk: "app.app_id", comment: "App ID" }
   created_at:     { type: datetime, comment: "Created at" }
   updated_at:     { type: datetime, comment: "Updated at" }
   excluded:       { type: boolean, default: false, comment: "Excluded" }
+form_layout:
+  tabs_steps: tabs
+  form_in_popup: false
+  size: 10
+  sub_form_size: null
+  allow_in_subform: {}
+  tabs_steps_conf: []
+form_extra_options: []
+table_layout:
+  allow_in_submenu: {},
+  default_order: [],
+  allow_import: false
+table_extra_options:
+  - {size: 12, component: EvidenceDash, label: dashboard, intercept_r: true}
 ```
 
 ## DASHBOARD_COMMENT

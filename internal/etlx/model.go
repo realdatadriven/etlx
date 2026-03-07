@@ -2,6 +2,7 @@ package etlxlib
 
 import (
 	"database/sql"
+	"encoding/json"
 	"fmt"
 	"log"
 	"strings"
@@ -746,6 +747,147 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 			}
 			data["table_schema"] = append(data["table_schema"].([]map[string]any), schemaRow)
 		}
+	}
+
+	return data
+}
+
+func generateCustomData(parsedTables map[string]any, dbName string) map[string]any {
+	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
+	data := map[string]any{
+		"custom_table": []map[string]any{},
+		"custom_form":  []map[string]any{},
+	}
+	for tableName, tableDef := range parsedTables {
+		// fmt.Println(1, tableName, tableDef)
+		// ──────────────────────────────────────────────
+		// custom_form
+		// ──────────────────────────────────────────────
+		form := map[string]any{
+			"table":      tableName,
+			"db":         dbName,
+			"config":     "{}", // default empty JSON config, can be updated later
+			"user_id":    1,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		// ──────────────────────────────────────────────
+		// custom_table
+		// ──────────────────────────────────────────────
+		table := map[string]any{
+			"table":      tableName,
+			"db":         dbName,
+			"config":     "{}", // default empty JSON config, can be updated later
+			"user_id":    1,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		// 3+4) columns → translate_table_field + table_schema
+		columnsAny, hasColumns := tableDef.(map[string]any)["columns"]
+		//fmt.Println(2, tableName, comment, columnsAny)
+		if !hasColumns {
+			continue
+		}
+		columns, ok := columnsAny.(map[string]any)
+		if !ok {
+			continue
+		}
+		filedsByOrder, ok := columns["__order"].([]any) // Get the column order from the special __order key
+		if !ok {
+			filedsByOrder = make([]any, 0)
+			// If __order is missing, we can iterate over the map keys in any order (not guaranteed)
+			for colName := range columns {
+				filedsByOrder = append(filedsByOrder, colName)
+			}
+		}
+		fieldOrder := 0
+		form_fields := map[string]any{}
+		table_fields := map[string]any{}
+		for _, colNameAny := range filedsByOrder {
+			colName, ok := colNameAny.(string)
+			colDefAny, hasColDef := columns[colName]
+			//fmt.Println(colName, hasColDef, colDefAny)
+			if !ok || !hasColDef {
+				continue
+			}
+			colDef, ok := colDefAny.(map[string]any)
+			if !ok {
+				continue
+			}
+			fieldOrder++
+			// ──────────────────────────────────────────────
+			// extract column properties with safe type assertions
+			// ──────────────────────────────────────────────
+
+			//colType := getString(colDef, "type", "unknown")
+			colComment := getString(colDef, "comment", "")
+			//pk := getBool(colDef, "pk", false)
+			autoincrement := getBool(colDef, "autoincrement", false)
+			nullable := getBool(colDef, "nullable", true) // default nullable=true if missing
+			// defaultVal := getAny(colDef, "default", nil)
+
+			fkRef := getString(colDef, "fk", "")
+			fk := fkRef != ""
+			if fk {
+			}
+			form_field := map[string]any{
+				"name":          colNameAny,
+				"label":         colComment, // default label same as name, can be updated later
+				"display":       false,      // default display=true, can be updated later
+				"order":         fieldOrder, // to maintain the order of fields in the form
+				"autoincrement": autoincrement,
+				"required":      !nullable,
+				"sizeXs":        12,
+				"sizesm":        12,
+				"sizemd":        12,
+				"sizelg":        12,
+			}
+			// for key in colDef if starts with form_ split on underscore and add to field with the suffix as key, e.g. form_label → label
+			for k, v := range colDef {
+				if strings.HasPrefix(k, "form_") {
+					form_field[strings.TrimPrefix(k, "form_")] = v
+				}
+			}
+			form_fields[colName] = form_field
+			table_field := map[string]any{
+				"name":    colNameAny,
+				"label":   colComment, // default label same as name, can be updated later
+				"display": true,       // default display=true, can be updated later
+				"order":   fieldOrder,
+			}
+			// for key in colDef if starts with table_ split on underscore and add to field with the suffix as key, e.g. table_label → label
+			for k, v := range colDef {
+				if strings.HasPrefix(k, "table_") {
+					table_field[strings.TrimPrefix(k, "table_")] = v
+				}
+			}
+		}
+		form_config := map[string]any{
+			"fields":        form_fields,
+			"layout":        tableDef.(map[string]any)["form_layout"],        // optional, can be generated later based on field order
+			"extra_options": tableDef.(map[string]any)["form_extra_options"], // optional, for any additional form-level options
+		}
+		// config to json
+		jsonData, err := json.Marshal(form_config)
+		if err != nil {
+			log.Fatalf("Error converting config to JSON: %v", err)
+		}
+		form["config"] = jsonData
+		data["custom_form"] = append(data["custom_form"].([]map[string]any), form)
+		table_config := map[string]any{
+			"fields":        table_fields,
+			"layout":        tableDef.(map[string]any)["table_layout"],
+			"extra_options": tableDef.(map[string]any)["table_extra_options"],
+		}
+		// config to json
+		jsonData, err = json.Marshal(table_config)
+		if err != nil {
+			log.Fatalf("Error converting config to JSON: %v", err)
+		}
+		table["config"] = jsonData
+		data["custom_table"] = append(data["custom_table"].([]map[string]any), table)
 	}
 
 	return data
