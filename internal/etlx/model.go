@@ -863,6 +863,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 					table_field[strings.TrimPrefix(k, "table_")] = v
 				}
 			}
+			table_fields[colName] = table_field
 		}
 		form_config := map[string]any{
 			"fields":        form_fields,
@@ -874,7 +875,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 		if err != nil {
 			log.Fatalf("Error converting config to JSON: %v", err)
 		}
-		form["config"] = jsonData
+		form["config"] = string(jsonData)
 		data["custom_form"] = append(data["custom_form"].([]map[string]any), form)
 		table_config := map[string]any{
 			"fields":        table_fields,
@@ -886,7 +887,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 		if err != nil {
 			log.Fatalf("Error converting config to JSON: %v", err)
 		}
-		table["config"] = jsonData
+		table["config"] = string(jsonData)
 		data["custom_table"] = append(data["custom_table"].([]map[string]any), table)
 	}
 	return data
@@ -1077,7 +1078,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 	if len(*_app) > 0 {
 		app = (*_app)
 	}
-	// fmt.Println("APP:", app)
+	// fmt.Println("APP ID:", app["app_id"])
 	targetTables := []string{
 		"custom_form",
 		"custom_table",
@@ -1135,15 +1136,12 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 					updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 					updateParams[k] = v
 				}
-				updateQuery := fmt.Sprintf(`
-					UPDATE %s
-					SET %s
-					WHERE %s
-				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
+				updateQuery := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
 				// Merge where params into update params
 				for k, v := range params {
 					updateParams[k] = v
 				}
+				//fmt.Println(updateQuery, updateParams)
 				_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
 				if err != nil {
 					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
@@ -1173,10 +1171,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 					names = append(names, ":updated_at")
 					params["updated_at"] = now
 				}
-				insertQuery := fmt.Sprintf(`
-					INSERT INTO %s (%s)
-					VALUES (%s)
-				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
+				insertQuery := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
 				// fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
@@ -1810,7 +1805,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			defer adminDb.Close()
 		}
 	} else {
-		fmt.Println("ADMIN CONN:", adminConn)
+		//fmt.Println("ADMIN CONN:", adminConn)
 		start3 = time.Now()
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
