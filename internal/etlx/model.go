@@ -1103,12 +1103,13 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 				"created_at": now,
 				"updated_at": now, // always refresh updated_at
 			}
+			row["app_id"] = app["app_id"] // ensure app_id is in the row for insert/update
 			// Decide PK / unique key for existence check & where clause
 			var whereClause string
 			var whereClause2 string
 			var logKey string
 			_chk_params := []any{}
-			whereClause = `db = :db AND "table" = :table AND excluded = false`
+			whereClause = `db = ? AND "table" = ? AND excluded = false`
 			whereClause2 = `db = :db AND "table" = :table AND excluded = false`
 			_chk_params = []any{targetDBName, row["table"]}
 			logKey = fmt.Sprintf("%v", row["table"])
