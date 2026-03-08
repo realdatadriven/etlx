@@ -82,7 +82,8 @@ func main() {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
 	logs := []map[string]any{}
-	_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "MODEL"}
+	//_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "MODEL"}
+	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL"}
 	__order, ok := etlxlib.Config["__order"].([]string)
 	hasOrderedKeys := false
 	if !ok {
@@ -96,7 +97,7 @@ func main() {
 		}
 	} else {
 		etlxlib.Config["__order"] = []any{}
-		for key, _ := range etlxlib.Config {
+		for key := range etlxlib.Config {
 			etlxlib.Config["__order"] = append(etlxlib.Config["__order"].([]any), key)
 		}
 		//hasOrderedKeys = true
