@@ -35,6 +35,7 @@ func main() {
 	config := make(map[string]any)
 	// Parse the file content
 	etlxlib := &etlx.ETLX{Config: config}
+	etlxlib.MetadataOrder = true
 	err := etlxlib.ConfigFromFile(*filePath)
 	if err != nil {
 		log.Fatalf("Error parsing Markdown: %v", err)

@@ -22,6 +22,7 @@ import (
 type ETLX struct {
 	Config           map[string]any
 	autoLogsDisabled bool
+	MetadataOrder    bool
 }
 
 func addAutoLoggs(md string) string {
@@ -78,7 +79,7 @@ FROM missing_columns
 WHERE (SELECT COUNT(*) FROM destination_columns) > 0;
 %s
 `, "```", "```", "```", "```")
-		//fmt.Println(_auto_logs)
+		// fmt.Println(_auto_logs)
 		return md + _auto_logs
 	}
 	return md
@@ -244,7 +245,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						}
 						metaData := make(map[string]any)
 						var err error
-						if strings.HasPrefix(info, "yaml") {
+						if strings.HasPrefix(info, "yaml") && etlx.MetadataOrder {
 							// Parse YAML
 							// err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 							var doc goyaml.MapSlice
@@ -258,7 +259,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 							}
 							// Convert recursively
 							metaData = ConvertToOrderedMap(doc).(map[string]any)
-						} else if strings.HasPrefix(info, "yaml--deactivated") {
+						} else if strings.HasPrefix(info, "yaml") {
 							// Parse YAML
 							err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 						} else if strings.HasPrefix(info, "toml") {
