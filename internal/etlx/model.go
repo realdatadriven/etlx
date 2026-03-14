@@ -225,12 +225,12 @@ func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 			return "INT AUTO_INCREMENT"
 		}
 		return "INT"
-	case "VARCHAR":
+	case "VARCHAR", "STRING":
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("VARCHAR(%d)", length)
 		}
 		return "TEXT" // Default to TEXT if length not specified for VARCHAR
-	case "TEXT":
+	case "TEXT", "LONGTEXT":
 		return "TEXT"
 	case "DATETIME":
 		return "DATETIME"
