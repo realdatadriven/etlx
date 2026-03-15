@@ -1,6 +1,7 @@
 package etlxlib
 
 import (
+	"bytes"
 	"database/sql"
 	"encoding/json"
 	"fmt"
@@ -839,7 +840,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 				"order":         fieldOrder, // to maintain the order of fields in the form
 				"autoincrement": autoincrement,
 				"required":      !nullable,
-				"sizeXs":        12,
+				"sizexs":        12,
 				"sizesm":        12,
 				"sizemd":        12,
 				"sizelg":        12,
@@ -889,6 +890,196 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 		}
 		table["config"] = string(jsonData)
 		data["custom_table"] = append(data["custom_table"].([]map[string]any), table)
+	}
+	return data
+}
+
+// ──────────────────────────────────────────────
+// Main function – modified to preserve field order in config JSON
+// ──────────────────────────────────────────────
+
+func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string]any {
+	now := time.Now().UTC().Format(time.RFC3339)
+	data := map[string]any{
+		"custom_table": []map[string]any{},
+		"custom_form":  []map[string]any{},
+	}
+	for tableName, tableDefAny := range parsedTables {
+		tableDef, ok := tableDefAny.(map[string]any)
+		if !ok {
+			continue
+		}
+		// ──────────────────────────────────────────────
+		// custom_form / custom_table entries
+		// ──────────────────────────────────────────────
+		form := map[string]any{
+			"table":      tableName,
+			"db":         dbName,
+			"config":     "{}", // will be replaced
+			"user_id":    1,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		tableEntry := map[string]any{
+			"table":      tableName,
+			"db":         dbName,
+			"config":     "{}", // will be replaced
+			"user_id":    1,
+			"created_at": now,
+			"updated_at": now,
+			"excluded":   false,
+		}
+		// ──────────────────────────────────────────────
+		// columns + order
+		// ──────────────────────────────────────────────
+		columnsAny, hasColumns := tableDef["columns"]
+		if !hasColumns {
+			continue
+		}
+		columns, ok := columnsAny.(map[string]any)
+		if !ok {
+			continue
+		}
+		// Get field order (most important part)
+		fieldsByOrderAny, hasOrder := columns["__order"]
+		var fieldsByOrder []string
+		if hasOrder {
+			if arr, ok := fieldsByOrderAny.([]any); ok {
+				for _, v := range arr {
+					if s, ok := v.(string); ok {
+						fieldsByOrder = append(fieldsByOrder, s)
+					}
+				}
+			}
+		}
+		// Fallback: collect keys (order not guaranteed, but at least we have something)
+		if len(fieldsByOrder) == 0 {
+			for colName := range columns {
+				if colName != "__order" { // skip the order key itself
+					fieldsByOrder = append(fieldsByOrder, colName)
+				}
+			}
+		}
+		// ──────────────────────────────────────────────
+		// Build ordered fields for form & table
+		// ──────────────────────────────────────────────
+		var formFieldsOrdered []map[string]any
+		var tableFieldsOrdered []map[string]any
+		fieldOrder := 0
+		for _, colName := range fieldsByOrder {
+			colDefAny, exists := columns[colName]
+			if !exists {
+				continue
+			}
+			colDef, ok := colDefAny.(map[string]any)
+			if !ok {
+				continue
+			}
+			fieldOrder++
+			// Common properties
+			colComment := getString(colDef, "comment", colName)
+			autoincrement := getBool(colDef, "autoincrement", false)
+			nullable := getBool(colDef, "nullable", true)
+			// ─── Form field ───
+			formField := map[string]any{
+				"name":          colName,
+				"label":         colComment,
+				"display":       false,
+				"order":         fieldOrder,
+				"autoincrement": autoincrement,
+				"required":      !nullable,
+				"sizexs":        12,
+				"sizesm":        12,
+				"sizemd":        12,
+				"sizelg":        12,
+			}
+			// Apply form_* overrides
+			for k, v := range colDef {
+				if strings.HasPrefix(k, "form_") {
+					formField[strings.TrimPrefix(k, "form_")] = v
+				}
+			}
+			formFieldsOrdered = append(formFieldsOrdered, formField)
+			// ─── Table field ───
+			tableField := map[string]any{
+				"name":    colName,
+				"label":   colComment,
+				"display": true,
+				"order":   fieldOrder,
+			}
+			// Apply table_* overrides
+			for k, v := range colDef {
+				if strings.HasPrefix(k, "table_") {
+					tableField[strings.TrimPrefix(k, "table_")] = v
+				}
+			}
+			tableFieldsOrdered = append(tableFieldsOrdered, tableField)
+		}
+		// ──────────────────────────────────────────────
+		// Build config JSON manually → preserve field order
+		// ──────────────────────────────────────────────
+		// Helper: marshal single value safely
+		marshalValue := func(v any) string {
+			b, err := json.Marshal(v)
+			if err != nil {
+				log.Printf("json marshal error: %v", err)
+				return "null"
+			}
+			return string(b)
+		}
+		// ─── Form config ───
+		var formConfigBuf bytes.Buffer
+		formConfigBuf.WriteString(`{"fields":{`)
+		for i, field := range formFieldsOrdered {
+			if i > 0 {
+				formConfigBuf.WriteByte(',')
+			}
+			formConfigBuf.WriteString(fmt.Sprintf(`"%s":`, field["name"]))
+			fieldJSON, _ := json.Marshal(field) // safe, it's a map
+			formConfigBuf.Write(fieldJSON)
+		}
+		formConfigBuf.WriteString(`}`)
+		// Optional parts – preserve order if they are maps (or sort if you want)
+		if layout, ok := tableDef["form_layout"]; ok {
+			layoutJSON := marshalValue(layout)
+			formConfigBuf.WriteString(`,"layout":`)
+			formConfigBuf.WriteString(layoutJSON)
+		}
+		if extra, ok := tableDef["form_extra_options"]; ok {
+			extraJSON := marshalValue(extra)
+			formConfigBuf.WriteString(`,"extra_options":`)
+			formConfigBuf.WriteString(extraJSON)
+		}
+		formConfigBuf.WriteByte('}')
+		form["config"] = formConfigBuf.String()
+		// ─── Table config ─── (same pattern)
+		var tableConfigBuf bytes.Buffer
+		tableConfigBuf.WriteString(`{"fields":{`)
+		for i, field := range tableFieldsOrdered {
+			if i > 0 {
+				tableConfigBuf.WriteByte(',')
+			}
+			tableConfigBuf.WriteString(fmt.Sprintf(`"%s":`, field["name"]))
+			fieldJSON, _ := json.Marshal(field)
+			tableConfigBuf.Write(fieldJSON)
+		}
+		tableConfigBuf.WriteString(`}`)
+		if layout, ok := tableDef["table_layout"]; ok {
+			layoutJSON := marshalValue(layout)
+			tableConfigBuf.WriteString(`,"layout":`)
+			tableConfigBuf.WriteString(layoutJSON)
+		}
+		if extra, ok := tableDef["table_extra_options"]; ok {
+			extraJSON := marshalValue(extra)
+			tableConfigBuf.WriteString(`,"extra_options":`)
+			tableConfigBuf.WriteString(extraJSON)
+		}
+		tableConfigBuf.WriteByte('}')
+		tableEntry["config"] = tableConfigBuf.String()
+		// Append to result
+		data["custom_form"] = append(data["custom_form"].([]map[string]any), form)
+		data["custom_table"] = append(data["custom_table"].([]map[string]any), tableEntry)
 	}
 	return data
 }
@@ -1933,7 +2124,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateCustomData(_tables, database)
+		_data := generateCustomDataV2(_tables, database)
 		err = UpsertCustomFT(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting custom data: %s\n", key, err)
