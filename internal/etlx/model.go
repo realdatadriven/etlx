@@ -993,6 +993,7 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				"sizesm":        12,
 				"sizemd":        12,
 				"sizelg":        12,
+				"sizexg":        12,
 			}
 			// Apply form_* overrides
 			for k, v := range colDef {
@@ -1005,7 +1006,7 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 			tableField := map[string]any{
 				"name":    colName,
 				"label":   colComment,
-				"display": true,
+				"display": false,
 				"order":   fieldOrder,
 			}
 			// Apply table_* overrides
