@@ -17,6 +17,7 @@ func GetDB(conn string) (db.DBInterface, error) {
 }
 
 func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
+	conn = etlx.ReplaceEnvVariable(conn)
 	driver, dsn, err := etlx.ParseConnection(conn)
 	if err != nil {
 		return nil, err
