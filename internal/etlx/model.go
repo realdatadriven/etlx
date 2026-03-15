@@ -998,6 +998,12 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 			// Apply form_* overrides
 			for k, v := range colDef {
 				if strings.HasPrefix(k, "form_") {
+					if strings.TrimPrefix(k, "form_") == "size" {
+						// special handling for form_size → sizexs, sizesm, sizemd, sizelg, sizexg
+						formField["sizelg"] = v
+						formField["sizexg"] = v
+						continue
+					}
 					formField[strings.TrimPrefix(k, "form_")] = v
 				}
 			}
