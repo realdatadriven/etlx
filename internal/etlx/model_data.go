@@ -55,7 +55,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	}
 	dialect := GetDialect(dbCon.GetDriverName())
 	var exists bool
-	checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(table), whereClause)
+	checkQuery := fmt.Sprintf(`SELECT * FROM %s %s LIMIT 1`, dialect.GetTableName(table), whereClause)
 	res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("existence check failed %s : %w", table, err)
@@ -67,9 +67,12 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	if exists {
 		updateParts := []string{}
 		for k := range data {
+			if k == "__order" {
+				continue
+			}
 			updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 		}
-		updateQuery := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause2)
+		updateQuery := fmt.Sprintf(`UPDATE %s SET %s %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause2)
 		_, err := dbCon.ExecuteNamedQuery(updateQuery, data)
 		if err != nil {
 			return nil, fmt.Errorf("update failed %s: %w", table, err)
@@ -78,6 +81,9 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 		cols := []string{}
 		names := []string{}
 		for k := range data {
+			if k == "__order" {
+				continue
+			}
 			cols = append(cols, dialect.GetColumnName(k))
 			names = append(names, ":"+k)
 		}
@@ -259,13 +265,12 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		if !ok {
 			continue
 		}
-		pk, _ := itemMetadata.(map[string]any)["pk"].(string)
-		//fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
+		cond, _ := itemMetadata.(map[string]any)["cond"].(string)
+		// fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, conn, itemMetadata.(map[string]any)["description"])
 		data, ok := itemMetadata.(map[string]any)["data"].(map[string]any)
 		if !ok {
 			continue
 		}
-
 		start3 = time.Now()
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
@@ -300,7 +305,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 					if filename != "" {
 						data[colName], err = ResolveFileContentSafe(filename, "./")
 						if err != nil {
-							fmt.Printf("%s ERR: resolving file content for %s: %s", key, filename, err)
+							fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
 						}
 					}
 				}
@@ -311,11 +316,11 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			case map[string]any:
 				// do nothing
 			default:
-				println(table, colName, v)
+				//println(table, colName, v)
 			}
 		}
 		// insert into table dbConn, table, data
-		_, err := etlx.InsertOrUpdate(dbConn, table, pk, data)
+		_, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3).Seconds()
@@ -329,9 +334,10 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			processLogs = append(processLogs, _log2)
 		} else {
 			_log2["success"] = true
-			_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
+			_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 			processLogs = append(processLogs, _log2)
 		}
+		fmt.Println(table, _log2["msg"])
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{

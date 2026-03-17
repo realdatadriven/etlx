@@ -83,7 +83,7 @@ func main() {
 	}
 	logs := []map[string]any{}
 	//_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "MODEL"}
-	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL"}
+	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "MODEL_DATA", "CSDATA"}
 	__order, ok := etlxlib.Config["__order"].([]string)
 	hasOrderedKeys := false
 	if !ok {
@@ -257,6 +257,7 @@ func main() {
 							logs = append(logs, _logs...)
 						}
 					case "MODEL_DATA", "CSDATA":
+						//fmt.Printf("%s AS %s START:\n", key, runs_as)
 						_logs, err := etlxlib.RunMODEL_DATA(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
