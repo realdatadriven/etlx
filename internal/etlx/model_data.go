@@ -1,6 +1,7 @@
 package etlxlib
 
 import (
+	"database/sql"
 	"errors"
 	"fmt"
 	"os"
@@ -8,23 +9,22 @@ import (
 	"regexp"
 	"strings"
 	"time"
+
+	"github.com/realdatadriven/etlx/internal/db"
 )
 
 func ResolveFileContentSafe(filename string, allowedDir string) (string, error) {
-
 	// Clean and resolve path
 	cleanPath := filepath.Clean(filename)
 	if cleanPath != filename || strings.Contains(filename, "..") {
 		return "", errors.New("invalid filename - path traversal attempt?")
 	}
-
 	// Join with base directory and resolve to absolute path
 	fullPath := filepath.Join(allowedDir, filename)
 	absPath, err := filepath.Abs(fullPath)
 	if err != nil {
 		return "", err
 	}
-
 	// Security: must be inside allowedDir
 	absBase, err := filepath.Abs(allowedDir)
 	if err != nil {
@@ -34,19 +34,96 @@ func ResolveFileContentSafe(filename string, allowedDir string) (string, error) 
 		absPath != absBase {
 		return "", errors.New("file path is outside of allowed directory")
 	}
-
 	content, err := os.ReadFile(absPath)
 	if err != nil {
 		return "", fmt.Errorf("cannot read %q: %w", filename, err)
 	}
-
 	return string(content), nil
 }
-func InsertOrUpdate(dbConn any, table string, data map[string]any) (any, error) {
-	// This is a placeholder function. You should implement the actual logic to insert or update data in your database.
-	// The implementation will depend on the database driver you are using (e.g., database/sql, gorm, etc.).
-	// For example, you might want to check if a record with a certain primary key exists and then decide to insert or update accordingly.
+func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string, data map[string]any) (any, error) {
+	var whereClause string
+	var whereClause2 string
+	_chk_params := []any{}
+	if cond != "" {
+		whereClause = cond
+		_sql, args, err := etlx.NamedToPositional(cond, data)
+		if err != nil {
+			return nil, fmt.Errorf("failed to convert named parameters: %w", err)
+		}
+		whereClause2 = _sql
+		_chk_params = args
+	}
+	dialect := GetDialect(dbCon.GetDriverName())
+	var exists bool
+	checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(table), whereClause)
+	res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
+	if err != nil && err != sql.ErrNoRows {
+		return nil, fmt.Errorf("existence check failed %s : %w", table, err)
+	} else if len(*res) > 0 {
+		exists = true
+	} else {
+		exists = false
+	}
+	if exists {
+		updateParts := []string{}
+		for k := range data {
+			updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
+		}
+		updateQuery := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause2)
+		_, err := dbCon.ExecuteNamedQuery(updateQuery, data)
+		if err != nil {
+			return nil, fmt.Errorf("update failed %s: %w", table, err)
+		}
+	} else {
+		cols := []string{}
+		names := []string{}
+		for k := range data {
+			cols = append(cols, dialect.GetColumnName(k))
+			names = append(names, ":"+k)
+		}
+		insertQuery := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, dialect.GetTableName(table), strings.Join(cols, ", "), strings.Join(names, ", "))
+		_, err := dbCon.ExecuteNamedQuery(insertQuery, data)
+		if err != nil {
+			return nil, fmt.Errorf("insert failed %s: %w", table, err)
+		}
+	}
 	return nil, nil
+}
+
+// NamedToPositional converts named parameters (:name) to positional (?)
+// and returns ordered arguments slice
+func (etlx *ETLX) NamedToPositional(sql string, data map[string]any) (string, []any, error) {
+	// Find all :param occurrences
+	re := regexp.MustCompile(`:([a-zA-Z_][a-zA-Z0-9_]*)`)
+	matches := re.FindAllStringSubmatch(sql, -1)
+	if len(matches) == 0 {
+		return sql, nil, nil
+	}
+	// Collect unique parameter names in order of appearance
+	seen := make(map[string]bool)
+	var paramOrder []string
+	for _, match := range matches {
+		name := match[1]
+		if !seen[name] {
+			seen[name] = true
+			paramOrder = append(paramOrder, name)
+		}
+	}
+	// Check for missing values
+	var args []any
+	for _, name := range paramOrder {
+		val, ok := data[name]
+		if !ok {
+			return "", nil, fmt.Errorf("missing value for parameter: %s", name)
+		}
+		args = append(args, val)
+	}
+	// Replace :name → ?
+	result := re.ReplaceAllStringFunc(sql, func(s string) string {
+		// We could also do a map lookup here, but simpler to just replace with ?
+		return "?"
+	})
+	return result, args, nil
 }
 func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "MODEL_DATA"
@@ -182,11 +259,13 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		if !ok {
 			continue
 		}
+		pk, _ := itemMetadata.(map[string]any)["pk"].(string)
 		//fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, driver, comment)
 		data, ok := itemMetadata.(map[string]any)["data"].(map[string]any)
 		if !ok {
 			continue
 		}
+
 		start3 = time.Now()
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
@@ -235,8 +314,8 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				println(table, colName, v)
 			}
 		}
-		// insert into table dbConn, table, data		
-		_, err := InsertOrUpdate(dbConn, table, data)
+		// insert into table dbConn, table, data
+		_, err := etlx.InsertOrUpdate(dbConn, table, pk, data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3).Seconds()
