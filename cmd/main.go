@@ -256,6 +256,19 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
+					case "MODEL_DATA", "CSDATA":
+						_logs, err := etlxlib.RunMODEL_DATA(dateRef, nil, extraConf, key)
+						if err != nil {
+							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+						} else {
+							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+								if err != nil {
+									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+								}
+							}
+							logs = append(logs, _logs...)
+						}
 					default:
 						//
 					}
