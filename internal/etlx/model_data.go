@@ -1,17 +1,53 @@
 package etlxlib
 
 import (
-	"bytes"
-	"database/sql"
-	"encoding/json"
+	"errors"
 	"fmt"
-	"log"
+	"os"
+	"path/filepath"
+	"regexp"
 	"strings"
 	"time"
-
-	"github.com/realdatadriven/etlx/internal/db"
 )
 
+func ResolveFileContentSafe(filename string, allowedDir string) (string, error) {
+
+	// Clean and resolve path
+	cleanPath := filepath.Clean(filename)
+	if cleanPath != filename || strings.Contains(filename, "..") {
+		return "", errors.New("invalid filename - path traversal attempt?")
+	}
+
+	// Join with base directory and resolve to absolute path
+	fullPath := filepath.Join(allowedDir, filename)
+	absPath, err := filepath.Abs(fullPath)
+	if err != nil {
+		return "", err
+	}
+
+	// Security: must be inside allowedDir
+	absBase, err := filepath.Abs(allowedDir)
+	if err != nil {
+		return "", err
+	}
+	if !strings.HasPrefix(absPath, absBase+string(filepath.Separator)) &&
+		absPath != absBase {
+		return "", errors.New("file path is outside of allowed directory")
+	}
+
+	content, err := os.ReadFile(absPath)
+	if err != nil {
+		return "", fmt.Errorf("cannot read %q: %w", filename, err)
+	}
+
+	return string(content), nil
+}
+func InsertOrUpdate(dbConn any, table string, data map[string]any) (any, error) {
+	// This is a placeholder function. You should implement the actual logic to insert or update data in your database.
+	// The implementation will depend on the database driver you are using (e.g., database/sql, gorm, etc.).
+	// For example, you might want to check if a record with a certain primary key exists and then decide to insert or update accordingly.
+	return nil, nil
+}
 func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "MODEL_DATA"
 	process := "MODEL_DATA"
@@ -75,13 +111,6 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 	if processLogs[0]["ref"] == nil {
 		processLogs[0]["ref"] = dtRef
 	}
-	database, okDb := metadata["database"].(string)
-	if !okDb {
-		database, okDb = metadata["name"].(string)
-		if !okDb {
-			return nil, fmt.Errorf("%s err no database defined", key)
-		}
-	}
 	conn, okCon := metadata["connection"].(string)
 	if !okCon {
 		conn, okCon = metadata["conn"].(string)
@@ -129,7 +158,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		for _, itemKey := range __order {
 			order = append(order, itemKey.(string))
 		}
-	}	
+	}
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
@@ -178,8 +207,36 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 		// each key in data
-		
-		_, err := dbConn.ExecuteQuery(createTableSQL)
+		fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
+		nowPattern := regexp.MustCompile(`^Now\(\)$`)
+		for colName, input := range data {
+			// switch type of _data to string or map
+			switch v := input.(type) {
+			case string:
+				matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+				if len(matches) != 2 {
+					// pass
+				} else {
+					filename := strings.TrimSpace(matches[1])
+					if filename != "" {
+						data[colName], err = ResolveFileContentSafe(filename, "./")
+						if err != nil {
+							fmt.Printf("%s ERR: resolving file content for %s: %s", key, filename, err)
+						}
+					}
+				}
+				matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+				if len(matchesNow) == 1 {
+					data[colName] = time.Now() //.Format("2006-01-02 15:04:05")
+				}
+			case map[string]any:
+				// do nothing
+			default:
+				println(table, colName, v)
+			}
+		}
+		// insert into table dbConn, table, data		
+		_, err := InsertOrUpdate(dbConn, table, data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now()
 		_log2["duration"] = time.Since(start3).Seconds()
