@@ -55,7 +55,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	}
 	dialect := GetDialect(dbCon.GetDriverName())
 	var exists bool
-	checkQuery := fmt.Sprintf(`SELECT * FROM %s %s LIMIT 1`, dialect.GetTableName(table), whereClause)
+	checkQuery := fmt.Sprintf(`SELECT * FROM %s %s LIMIT 1`, dialect.GetTableName(table), whereClause2)
 	res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 	if err != nil && err != sql.ErrNoRows {
 		return nil, fmt.Errorf("existence check failed %s : %w", table, err)
@@ -67,15 +67,15 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	if exists {
 		updateParts := []string{}
 		for k := range data {
-			if k == "__order" {
+			if k == "__order" || k == "created_at" {
 				continue
 			}
 			updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 		}
-		updateQuery := fmt.Sprintf(`UPDATE %s SET %s %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause2)
+		updateQuery := fmt.Sprintf(`UPDATE %s SET %s %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause)
 		_, err := dbCon.ExecuteNamedQuery(updateQuery, data)
 		if err != nil {
-			return nil, fmt.Errorf("update failed %s: %w", table, err)
+			return nil, fmt.Errorf("update failed %s: %w,\n query: %s,\n data: %v", table, err, updateQuery, data)
 		}
 	} else {
 		cols := []string{}
@@ -278,10 +278,12 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
-			"process":     process,
-			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": desc,
-			"key":         key, "item_key": itemKey, "start_at": start3,
+			"process":               process,
+			"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+			"description":           desc,
+			"key":                   key,
+			"item_key":              itemKey,
+			"start_at":              start3,
 			"ref":                   dtRef,
 			"mem_alloc_start":       mem_alloc,
 			"mem_total_alloc_start": mem_total_alloc,
@@ -303,7 +305,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				} else {
 					filename := strings.TrimSpace(matches[1])
 					if filename != "" {
-						data[colName], err = ResolveFileContentSafe(filename, "./")
+						data[colName], err = ResolveFileContentSafe(filename, "")
 						if err != nil {
 							fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
 						}

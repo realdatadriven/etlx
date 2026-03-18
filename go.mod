@@ -5,7 +5,7 @@ go 1.25.7
 require (
 	github.com/BurntSushi/toml v1.6.0
 	github.com/Masterminds/sprig/v3 v3.3.0
-	github.com/alexbrainman/odbc v0.0.0-20250601004241-49e6b2bc0cf0
+	//github.com/alexbrainman/odbc v0.0.0-20250601004241-49e6b2bc0cf0
 	github.com/aws/aws-sdk-go-v2 v1.41.4
 	github.com/aws/aws-sdk-go-v2/config v1.32.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.12
@@ -15,8 +15,8 @@ require (
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
 	github.com/joho/godotenv v1.5.1
-	github.com/lib/pq v1.11.2
-	github.com/mattn/go-sqlite3 v1.14.34
+	github.com/lib/pq v1.12.0
+	github.com/mattn/go-sqlite3 v1.14.37
 	github.com/microsoft/go-mssqldb v1.9.8
 	github.com/pkg/sftp v1.13.10
 	github.com/xuri/excelize/v2 v2.10.1
@@ -85,7 +85,7 @@ require (
 	golang.org/x/net v0.52.0 // indirect
 	golang.org/x/sync v0.20.0 // indirect
 	golang.org/x/sys v0.42.0 // indirect
-	golang.org/x/telemetry v0.0.0-20260312161427-1546bf4b83fe // indirect
+	golang.org/x/telemetry v0.0.0-20260316223853-b6b0c46d1ccd // indirect
 	golang.org/x/tools v0.43.0 // indirect
 	golang.org/x/xerrors v0.0.0-20240903120638-7835f813f4da // indirect
 )

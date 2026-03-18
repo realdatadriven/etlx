@@ -25,11 +25,11 @@ func NewDuckDB(dsn string) (*db.DuckDB, error) {
 	return db.NewDuckDB(dsn)
 }
 
-type ODBC = db.ODBC
+/*type ODBC = db.ODBC
 
 func NewODBC(dsn string) (*db.ODBC, error) {
 	return db.NewODBC(dsn)
-}
+}*/
 
 func ReplaceDBName(dsn, dbname string) (string, error) {
 	return db.ReplaceDBName(dsn, dbname)

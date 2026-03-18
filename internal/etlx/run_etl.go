@@ -89,10 +89,10 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		}
 		driver = "duckdb"
 	case "odbc":
-		dbConn, err = db.NewODBC(_dsn)
+		/*dbConn, err = db.NewODBC(_dsn)
 		if err != nil {
 			return nil, fmt.Errorf("ODBC Conn: %s", err)
-		}
+		}*/
 	default:
 		dbConn, err = db.New(driver, _dsn)
 		if err != nil {

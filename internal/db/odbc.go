@@ -1,6 +1,6 @@
 package db
 
-import (
+/*import (
 	"context"
 	"database/sql"
 	"encoding/csv"
@@ -144,37 +144,6 @@ func (db *ODBC) ExecuteQueryPGInsertWithLastInsertId(query string, data ...inter
 	return 0, fmt.Errorf("not suported %s", "_")
 }
 
-func isUTF8(s string) bool {
-	return utf8.ValidString(s)
-}
-
-func convertToUTF8(isoStr string) (string, error) {
-	if isUTF8(isoStr) {
-		return isoStr, nil
-	}
-	reader := strings.NewReader(isoStr)
-	transformer := charmap.ISO8859_1.NewDecoder()
-	utf8Bytes, err := io.ReadAll(transform.NewReader(reader, transformer))
-	if err != nil {
-		return "", err
-	}
-	return string(utf8Bytes), nil
-}
-
-func hasDecimalPlace(v interface{}) (bool, error) {
-	// Try to cast v to float64
-	floatVal, ok := v.(float64)
-	if !ok {
-		return false, fmt.Errorf("value is not a float64, it is %v", reflect.TypeOf(v))
-	}
-
-	// Check if the float has a decimal part
-	if floatVal != float64(int(floatVal)) {
-		return true, nil
-	}
-	return false, nil
-}
-
 func (db *ODBC) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
@@ -258,9 +227,6 @@ func (db *ODBC) QuerySingleRow(query string, params ...interface{}) (*map[string
 	}
 	defer rows.Close()
 	if rows.Next() {
-		/*if err := rows.Scan(result); err != nil {
-			return nil, false, err
-		}*/
 		result, err = ScanRowToMap(rows)
 		if err != nil {
 			return nil, false, fmt.Errorf("failed to scan row to map: %w", err)
@@ -295,3 +261,4 @@ func (db *ODBC) IsEmpty(value interface{}) bool {
 		return false
 	}
 }
+*/

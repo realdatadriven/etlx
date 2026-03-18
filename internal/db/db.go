@@ -6,14 +6,19 @@ import (
 	"encoding/csv"
 	"errors"
 	"fmt"
+	"io"
 	"net/url"
 	"os"
 	"path/filepath"
+	"reflect"
 	"regexp"
 	"strings"
 	"time"
+	"unicode/utf8"
 
 	"github.com/jmoiron/sqlx"
+	"golang.org/x/text/encoding/charmap"
+	"golang.org/x/text/transform"
 
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
@@ -898,4 +903,35 @@ func contains(slice []interface{}, element interface{}) bool {
 		}
 	}
 	return false
+}
+
+func isUTF8(s string) bool {
+	return utf8.ValidString(s)
+}
+
+func convertToUTF8(isoStr string) (string, error) {
+	if isUTF8(isoStr) {
+		return isoStr, nil
+	}
+	reader := strings.NewReader(isoStr)
+	transformer := charmap.ISO8859_1.NewDecoder()
+	utf8Bytes, err := io.ReadAll(transform.NewReader(reader, transformer))
+	if err != nil {
+		return "", err
+	}
+	return string(utf8Bytes), nil
+}
+
+func hasDecimalPlace(v interface{}) (bool, error) {
+	// Try to cast v to float64
+	floatVal, ok := v.(float64)
+	if !ok {
+		return false, fmt.Errorf("value is not a float64, it is %v", reflect.TypeOf(v))
+	}
+
+	// Check if the float has a decimal part
+	if floatVal != float64(int(floatVal)) {
+		return true, nil
+	}
+	return false, nil
 }
