@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"sort"
 	"strings"
 	"time"
 
@@ -380,6 +381,10 @@ func GetDialect(driver string) SQLDialect {
 	default:
 		return &BaseDialect{} // Fallback or error handling
 	}
+}
+
+func (etlx *ETLX) GetDialect(driver string) SQLDialect {
+	return GetDialect(driver)
 }
 
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
@@ -978,9 +983,11 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				continue
 			}
 			fieldOrder++
-			_order, ok := colDef["order"].(int)
+			_order, ok := colDef["order"].(float64)
+			// fmt.Printf("1 - CONF ORDER: %v, type: %T\n", colDef["order"], colDef["order"])
 			if ok {
-				fieldOrder = _order
+				//fmt.Printf("2 - CONF ORDER: %v\n", _order)
+				fieldOrder = int(_order)
 			}
 			// Common properties
 			colComment := getString(colDef, "comment", colName)
@@ -1043,12 +1050,20 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 		// ─── Form config ───
 		var formConfigBuf bytes.Buffer
 		formConfigBuf.WriteString(`{"fields":{`)
-		formFieldsOrdered = sort.Slice(formFieldsOrdered, func(i, j int) bool {
-			orderI := data[i]["order"].(int) // json numbers → float64
-			orderJ := data[j]["order"].(int)
+		sort.Slice(formFieldsOrdered, func(i, j int) bool {
+			orderI, _ := formFieldsOrdered[i]["order"].(int) // json numbers → float64
+			orderJ, _ := formFieldsOrdered[j]["order"].(int)
+			/*if tableName == "app" {
+				fmt.Printf("Comparing %s.%s (order %d) with %s.%s (order %d)\n",
+					tableName, formFieldsOrdered[i]["name"], orderI,
+					tableName, formFieldsOrdered[j]["name"], orderJ)
+			}*/
 			return orderI < orderJ
 		})
 		for i, field := range formFieldsOrdered {
+			/*if tableName == "app" {
+				fmt.Printf("Form field %d: %s (order %v)\n", i, field["name"], field["order"])
+			}*/
 			if i > 0 {
 				formConfigBuf.WriteByte(',')
 			}
@@ -1073,6 +1088,11 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 		// ─── Table config ─── (same pattern)
 		var tableConfigBuf bytes.Buffer
 		tableConfigBuf.WriteString(`{"fields":{`)
+		sort.Slice(tableFieldsOrdered, func(i, j int) bool {
+			orderI, _ := tableFieldsOrdered[i]["order"].(int) // json numbers → float64
+			orderJ, _ := tableFieldsOrdered[j]["order"].(int)
+			return orderI < orderJ
+		})
 		for i, field := range tableFieldsOrdered {
 			if i > 0 {
 				tableConfigBuf.WriteByte(',')
