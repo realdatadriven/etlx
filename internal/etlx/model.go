@@ -897,6 +897,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 // ──────────────────────────────────────────────
 // Main function – modified to preserve field order in config JSON
 // ──────────────────────────────────────────────
+// order []map[string]any{} by key order
 
 func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -977,6 +978,10 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				continue
 			}
 			fieldOrder++
+			_order, ok := colDef["order"].(int)
+			if ok {
+				fieldOrder = _order
+			}
 			// Common properties
 			colComment := getString(colDef, "comment", colName)
 			autoincrement := getBool(colDef, "autoincrement", false)
@@ -1038,6 +1043,11 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 		// ─── Form config ───
 		var formConfigBuf bytes.Buffer
 		formConfigBuf.WriteString(`{"fields":{`)
+		formFieldsOrdered = sort.Slice(formFieldsOrdered, func(i, j int) bool {
+			orderI := data[i]["order"].(int) // json numbers → float64
+			orderJ := data[j]["order"].(int)
+			return orderI < orderJ
+		})
 		for i, field := range formFieldsOrdered {
 			if i > 0 {
 				formConfigBuf.WriteByte(',')
