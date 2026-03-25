@@ -9,8 +9,8 @@ require (
 	github.com/aws/aws-sdk-go-v2 v1.41.4
 	github.com/aws/aws-sdk-go-v2/config v1.32.12
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.12
-	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.1
-	github.com/duckdb/duckdb-go/v2 v2.10500.0
+	github.com/aws/aws-sdk-go-v2/service/s3 v1.97.2
+	github.com/duckdb/duckdb-go/v2 v2.10501.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
@@ -20,7 +20,7 @@ require (
 	github.com/microsoft/go-mssqldb v1.9.8
 	github.com/pkg/sftp v1.13.10
 	github.com/xuri/excelize/v2 v2.10.1
-	github.com/yuin/goldmark v1.7.16
+	github.com/yuin/goldmark v1.8.2
 	golang.org/x/crypto v0.49.0
 	golang.org/x/text v0.35.0
 	gopkg.in/yaml.v3 v3.0.1
@@ -28,11 +28,11 @@ require (
 
 require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.8 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10500.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10500.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10500.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10500.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10500.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10501.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10501.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10501.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10501.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10501.0 // indirect
 )
 
 require (
@@ -40,7 +40,7 @@ require (
 	github.com/Masterminds/goutils v1.1.1 // indirect
 	github.com/Masterminds/semver/v3 v3.4.0 // indirect
 	github.com/apache/arrow-go/v18 v18.5.2 // indirect
-	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.7 // indirect
+	github.com/aws/aws-sdk-go-v2/aws/protocol/eventstream v1.7.8 // indirect
 	github.com/aws/aws-sdk-go-v2/feature/ec2/imds v1.18.20 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/configsources v1.4.20 // indirect
 	github.com/aws/aws-sdk-go-v2/internal/endpoints/v2 v2.7.20 // indirect
@@ -54,7 +54,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.17 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.9 // indirect
 	github.com/aws/smithy-go v1.24.2 // indirect
-	github.com/duckdb/duckdb-go-bindings v0.10500.0 // indirect
+	github.com/duckdb/duckdb-go-bindings v0.10501.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect
@@ -64,7 +64,7 @@ require (
 	github.com/hashicorp/errwrap v1.1.0 // indirect
 	github.com/hashicorp/go-multierror v1.1.1 // indirect
 	github.com/huandu/xstrings v1.5.0 // indirect
-	github.com/klauspost/compress v1.18.4 // indirect
+	github.com/klauspost/compress v1.18.5 // indirect
 	github.com/klauspost/cpuid/v2 v2.3.0 // indirect
 	github.com/kr/fs v0.1.0 // indirect
 	//	github.com/duckdb/duckdb-go/arrowmapping v0.0.21 // indirect

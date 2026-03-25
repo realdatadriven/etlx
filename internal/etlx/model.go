@@ -629,7 +629,7 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 				comment = s
 			}
 		}
-
+		tooltip, _ := tableDef.(map[string]any)["tooltip"]
 		// 1) table row
 		tableRow := map[string]any{
 			"table":      tableName,
@@ -646,6 +646,7 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 		translateTableRow := map[string]any{
 			"table_org_desc":    comment,
 			"table_transl_desc": comment, // ← can be empty or later translated
+			"table_tooltip":     tooltip, // ← can be empty or later translated
 			"table":             tableName,
 			"db":                dbName,
 			"lang":              "en",
@@ -695,6 +696,7 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 
 			colType := getString(colDef, "type", "unknown")
 			colComment := getString(colDef, "comment", "")
+			colTooltip, _ := colDef["tooltip"]
 			pk := getBool(colDef, "pk", false)
 			autoincrement := getBool(colDef, "autoincrement", false)
 			nullable := getBool(colDef, "nullable", true) // default nullable=true if missing
@@ -717,6 +719,7 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 			ttfRow := map[string]any{
 				"field_org_desc":    colComment,
 				"field_transl_desc": colComment, // ← can be translated later
+				"field_tooltip":     colTooltip, // ← can be translated later
 				"field":             colName,
 				"table":             tableName,
 				"db":                dbName,
@@ -1717,9 +1720,10 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	start := time.Now()
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
-		"process": process,
-		"name":    key,
-		"key":     key, "start_at": start,
+		"process":               process,
+		"name":                  key,
+		"key":                   key,
+		"start_at":              start,
 		"ref":                   nil,
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,
@@ -1929,10 +1933,12 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			}
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 = map[string]any{
-				"process":     process,
-				"name":        fmt.Sprintf("%s->%s", key, itemKey),
-				"description": desc,
-				"key":         key, "item_key": itemKey, "start_at": start3,
+				"process":               process,
+				"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+				"description":           desc,
+				"key":                   key,
+				"item_key":              itemKey,
+				"start_at":              start3,
 				"ref":                   dtRef,
 				"mem_alloc_start":       mem_alloc,
 				"mem_total_alloc_start": mem_total_alloc,
