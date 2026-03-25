@@ -1158,6 +1158,16 @@ type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
 func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+	app := map[string]any{}
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
+	if err != nil {
+		return fmt.Errorf("find app failed: %w", err)
+	}
+	if len(*_app) > 0 {
+		app = (*_app)
+	}
+	// fmt.Printf("App for db %q: %v\n", targetDBName, app)
 	targetTables := []string{
 		"table",
 		"translate_table",
@@ -1166,16 +1176,13 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 	}
 	dialect := GetDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
-
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
 			log.Printf("No seed data for %q → skipping", tableName)
 			continue
 		}
-
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
-
 		for _, row := range rows {
 			// Prepare the common named params that almost every row has
 			params := map[string]any{
@@ -1186,12 +1193,15 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				"created_at": now,
 				"updated_at": now, // always refresh updated_at
 			}
-
 			// Add table-specific keys
 			if tableName == "translate_table_field" || tableName == "table_schema" {
 				params["field"] = row["field"]
 			}
-
+			if tableName == "table" || tableName == "translate_table" || tableName == "translate_table_field" {
+				//fmt.Printf("Processing %s.APP:%d\n", tableName, app["app_id"])
+				row["app_id"] = app["app_id"]    // add app_id to the row for insert/update
+				params["app_id"] = app["app_id"] // for table_schema and translate_table_field, we also need app_id in params for the where clause
+			}
 			// Decide PK / unique key for existence check & where clause
 			var whereClause string
 			var whereClause2 string
@@ -1208,7 +1218,6 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				_chk_params = []any{targetDBName, row["table"]}
 				logKey = fmt.Sprintf("%v", row["table"])
 			}
-
 			// 1. Check if row exists
 			var exists bool
 			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
@@ -1221,12 +1230,10 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			} else {
 				exists = false
 			}
-
 			if exists {
 				// 2a. UPDATE – only changeable fields
 				updateParts := []string{`"updated_at" = :updated_at`}
 				updateParams := map[string]any{"updated_at": now}
-
 				for k, v := range row {
 					// Skip identity columns and already handled fields
 					if k == "db" || k == "table" || k == "field" || k == "created_at" || k == "updated_at" {
@@ -1235,25 +1242,20 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 					updateParams[k] = v
 				}
-
 				updateQuery := fmt.Sprintf(`
 					UPDATE %s
 					SET %s
 					WHERE %s
 				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
-
 				// Merge where params into update params
 				for k, v := range params {
 					updateParams[k] = v
 				}
-
 				_, err := dbCon.ExecuteNamedQuery(updateQuery, updateParams)
 				if err != nil {
 					return fmt.Errorf("update failed %s (%s): %w", tableName, logKey, err)
 				}
-
 				//fmt.Printf("  updated  %-40s  (%d row(s))\n", logKey, affected)
-
 			} else {
 				// 2b. INSERT – all fields from the row + ensure timestamps
 				cols := []string{}
@@ -1267,7 +1269,6 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 						params[k] = row[k]
 					}
 				}
-
 				// Guarantee timestamps if missing in the seed map
 				if _, has := row["created_at"]; !has {
 					cols = append(cols, `"created_at"`)
@@ -1279,7 +1280,6 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					names = append(names, ":updated_at")
 					params["updated_at"] = now
 				}
-
 				insertQuery := fmt.Sprintf(`
 					INSERT INTO %s (%s)
 					VALUES (%s)
@@ -1289,12 +1289,10 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				if err != nil {
 					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
 				}
-
 				//fmt.Printf("  inserted %-40s\n", logKey)
 			}
 		}
 	}
-
 	fmt.Println("\nSeed data load completed successfully.")
 	return nil
 }
@@ -1518,7 +1516,6 @@ func LoadOrSyncMenusFromConfig(
 			if err != nil {
 				return fmt.Errorf("insert menu %q: %w", menuName, err)
 			}
-
 			// Get the inserted ID (sqlite/mysql/postgres compatible way)
 			lastID := LastInsertId
 			if lastID == 0 {
@@ -1532,9 +1529,7 @@ func LoadOrSyncMenusFromConfig(
 			} else {
 				menu["menu_id"] = int(lastID)
 			}
-
 			fmt.Printf("Created menu %q → ID %d\n", menuName, menu["menu_id"])
-
 		} else {
 			fmt.Printf("Menu %q already exists → ID %d\n", menuName, menu["menu_id"])
 			// update existing menu if needed (e.g., active status, icon, order, config)
@@ -1571,23 +1566,19 @@ func LoadOrSyncMenusFromConfig(
 				}
 			}
 		}
-
 		// 3. Link tables (menu_table entries)
 		tablesAny, hasTables := menuCfg["tables"]
 		if !hasTables {
 			continue
 		}
-
 		tables, ok := tablesAny.([]any)
 		if !ok {
 			continue
 		}
-
 		for _, tItem := range tables {
 			var tblName string
 			var linkActive bool = true
 			var requiresRLA bool = false
-
 			switch v := tItem.(type) {
 			case string:
 				tblName = v
@@ -1598,11 +1589,9 @@ func LoadOrSyncMenusFromConfig(
 			default:
 				continue
 			}
-
 			if tblName == "" {
 				continue
 			}
-
 			// Find table metadata record
 			var tblMeta map[string]any
 			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`
@@ -1652,7 +1641,6 @@ func LoadOrSyncMenusFromConfig(
 				if err != nil {
 					return fmt.Errorf("insert menu_table %q → %q: %w", menuName, tblName, err)
 				}
-
 				fmt.Printf("  Linked table %q (active=%v, rla=%v)\n", tblName, linkActive, requiresRLA)
 			} else {
 				fmt.Printf("  Link already exists for table %q\n", tblName)
