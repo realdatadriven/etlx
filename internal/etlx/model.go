@@ -856,6 +856,9 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 			for k, v := range colDef {
 				if strings.HasPrefix(k, "form_") {
 					form_field[strings.TrimPrefix(k, "form_")] = v
+					if k == "size" {
+						form_field[strings.TrimPrefix(k, "form_")] = v
+					}
 				}
 			}
 			form_fields[colName] = form_field
@@ -1003,11 +1006,11 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				"order":         fieldOrder,
 				"autoincrement": autoincrement,
 				"required":      !nullable,
-				"sizexs":        12,
+				"size":          12,
 				"sizesm":        12,
 				"sizemd":        12,
 				"sizelg":        12,
-				"sizexg":        12,
+				// "sizexg":        12,
 			}
 			// Apply form_* overrides
 			for k, v := range colDef {
@@ -1015,8 +1018,8 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 					if strings.TrimPrefix(k, "form_") == "size" {
 						// special handling for form_size → sizexs, sizesm, sizemd, sizelg, sizexg
 						formField["sizelg"] = v
-						formField["sizexg"] = v
-						continue
+						formField["size"] = v
+						// continue
 					}
 					formField[strings.TrimPrefix(k, "form_")] = v
 				}
