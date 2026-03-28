@@ -829,7 +829,6 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 			// ──────────────────────────────────────────────
 			// extract column properties with safe type assertions
 			// ──────────────────────────────────────────────
-
 			//colType := getString(colDef, "type", "unknown")
 			colComment := getString(colDef, "comment", "")
 			//pk := getBool(colDef, "pk", false)
@@ -848,7 +847,7 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 				"order":         fieldOrder, // to maintain the order of fields in the form
 				"autoincrement": autoincrement,
 				"required":      !nullable,
-				"sizexs":        12,
+				"size":          12,
 				"sizesm":        12,
 				"sizemd":        12,
 				"sizelg":        12,
