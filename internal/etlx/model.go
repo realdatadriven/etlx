@@ -403,7 +403,6 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		start, end = dialect.GetCreateTable(tableName)
 		schema.WriteString(start)
 	}
-
 	var columnDefs []string
 	var foreignKeyConstraints []string
 	var primaryKeyColumns []string
@@ -433,9 +432,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		nullable := dialect.GetNullable(field)
 		unique := dialect.GetUnique(field)
 		defaultValue := dialect.GetDefaultValue(field)
-
 		columnDef := fmt.Sprintf("    %s %s%s%s%s%s%s", name, columnType, primaryKey, autoincrement, nullable, unique, defaultValue)
-
 		if comment, ok := field["comment"].(string); ok && comment != "" {
 			if dialect.SupportsInlineColumnComment() {
 				columnDef += dialect.GetColumnComment("", "", comment) // Inline comment, table/column name not needed here
@@ -444,12 +441,10 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			}
 		}
 		columnDefs = append(columnDefs, columnDef)
-
 		// Collect primary key columns for a combined PK constraint
 		if pk, ok := field["pk"].(bool); ok && pk && primaryKey == "" {
 			primaryKeyColumns = append(primaryKeyColumns, name)
 		}
-
 		// Handle foreign keys
 		if fkRef, ok := field["fk"].(string); ok && fkRef != "" {
 			// fkRef format: "referenced_table.referenced_column"
@@ -461,28 +456,23 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			}
 		}
 	}
-
 	// Add combined primary key constraint if any
 	if len(primaryKeyColumns) > 0 {
 		columnDefs = append(columnDefs, fmt.Sprintf("    PRIMARY KEY (%s)", strings.Join(primaryKeyColumns, ", ")))
 	}
-
 	// Add foreign key constraints
 	columnDefs = append(columnDefs, foreignKeyConstraints...)
-
 	schema.WriteString(strings.Join(columnDefs, ",\n") + "\n)")
-
+	schema.WriteString(end + ";\n")
 	// Add table-level comments and other post-creation statements
 	if tableComment != "" && dialect.SupportsTableComment() {
-		schema.WriteString(dialect.GetTableComment(tableName, tableComment))
+		schema.WriteString(dialect.GetTableComment(dialect.GetTableName(tableName), tableComment))
 	}
-
 	// Append any collected post-create SQL (e.g., column comments for Postgres)
 	for _, sql := range postCreateTableSQL {
 		schema.WriteString("\n" + sql)
 	}
-
-	return schema.String() + end + ";\n"
+	return schema.String()
 }
 
 // ColumnDefinition represents the structure of a column from the YAML schema.
@@ -1215,7 +1205,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				_chk_params = []any{targetDBName, row["table"], row["field"]}
 				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
 			} else {
-				whereClause = `db = :db AND "table" = :table AND excluded = false`
+				whereClause = `db = ? AND "table" = ? AND excluded = false`
 				whereClause2 = `db = :db AND "table" = :table AND excluded = false`
 				_chk_params = []any{targetDBName, row["table"]}
 				logKey = fmt.Sprintf("%v", row["table"])
@@ -1226,6 +1216,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			// fmt.Println("checkQuery:", checkQuery, _chk_params)
 			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil && err != sql.ErrNoRows {
+				fmt.Println("Existence check failed:", checkQuery, _chk_params)
 				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
 			} else if len(*res) > 0 {
 				exists = true
@@ -1350,7 +1341,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 			// fmt.Println("checkQuery:", checkQuery, _chk_params)
 			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil {
-				return fmt.Errorf("existence check failed %s (%s): %w", tableName, logKey, err)
+				return fmt.Errorf("Existence check failed %s (%s): %w", tableName, logKey, err)
 			} else if len(*res) > 0 {
 				exists = true
 			} else {
@@ -1466,9 +1457,25 @@ func LoadOrSyncMenusFromConfig(
 		}
 	}
 	app = (*_app)
+	// get list conf[__order] if exists to process menus in order
+	menuOrderAny, hasMenuOrder := conf["__order"]
+	var menuOrder []string
+	if hasMenuOrder {
+		if menuOrderAny, ok := menuOrderAny.([]string); ok {
+			menuOrder = menuOrderAny
+		}
+	} else {
+		// fallback: get keys in any order
+		for menuName := range conf {
+			if menuName != "__order" {
+				menuOrder = append(menuOrder, menuName)
+			}
+		}
+	}
+
 	// 2. Process each menu section
-	for menuName, _menuCfg := range conf {
-		menuCfg, ok := _menuCfg.(map[string]any)
+	for _, menuName := range menuOrder {
+		menuCfg, ok := conf[menuName].(map[string]any)
 		if !ok {
 			continue
 		}

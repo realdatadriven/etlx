@@ -40,13 +40,40 @@ func New(driverName string, dsn string) (*DB, error) {
 	defer cancel()
 	db, err := sqlx.ConnectContext(ctx, driverName, dsn)
 	if err != nil {
-		return nil, err
+		// check if error is due to db not existing create it
+		fmt.Println(driverName, err)
+		// when err match `postgres pq: database "DB_NAME" does not exist (3D000)`
+		if strings.Contains(err.Error(), "does not exist") && strings.Contains(err.Error(), "pq:") {
+			// get the db name from the error message
+			re := regexp.MustCompile(`database "([^"]+)" does not exist`)
+			matches := re.FindStringSubmatch(err.Error())
+			if len(matches) > 1 {
+				newDBName := matches[1]
+				// replace dsn newDBName with postgres and create the new db
+				newDSN, err := ReplaceDBName(dsn, "postgres")
+				db2, err := sqlx.ConnectContext(ctx, driverName, newDSN)
+				fmt.Printf(newDSN, "CREATE DATABASE %s\n", newDBName)
+				// Create the database
+				_, err = db2.ExecContext(ctx, fmt.Sprintf(`CREATE DATABASE "%s"`, newDBName))
+				if err != nil {
+					fmt.Println("CREATE DATABASE failed:", driverName, err)
+					return nil, err
+				} else {
+					db, err = sqlx.ConnectContext(ctx, driverName, dsn)
+					if err != nil {
+						return nil, err
+					}
+				}
+			}
+		} else {
+			return nil, err
+		}
 	}
 	db.SetMaxOpenConns(25)
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(5 * time.Minute)
 	db.SetConnMaxLifetime(2 * time.Hour)
-	fmt.Println(driverName)
+	// fmt.Println(driverName)
 	switch driverName {
 	case "sqlite3", "sqlite":
 		db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
