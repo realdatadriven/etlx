@@ -79,7 +79,8 @@ WHERE date_field = '{YYYY-MM-DD}'
 ```
 
 <!-- CREATE -->
-```sql create_sales_table_instead
+```sql
+-- create_sales_table_instead
 CREATE TABLE TGT.<table> AS
 SELECT *
 FROM SRC.<table>
