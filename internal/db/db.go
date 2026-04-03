@@ -51,7 +51,7 @@ func New(driverName string, dsn string) (*DB, error) {
 				// replace dsn newDBName with postgres and create the new db
 				newDSN, err := ReplaceDBName(dsn, "postgres")
 				db2, err := sqlx.ConnectContext(ctx, driverName, newDSN)
-				fmt.Printf(newDSN, "CREATE DATABASE %s\n", newDBName)
+				//fmt.Printf(newDSN, "CREATE DATABASE %s\n", newDBName)
 				// Create the database
 				_, err = db2.ExecContext(ctx, fmt.Sprintf(`CREATE DATABASE "%s"`, newDBName))
 				if err != nil {
@@ -63,6 +63,8 @@ func New(driverName string, dsn string) (*DB, error) {
 						return nil, err
 					}
 				}
+			} else {
+
 			}
 		} else {
 			return nil, err
@@ -964,34 +966,26 @@ func hasDecimalPlace(v interface{}) (bool, error) {
 
 // ReplaceDBName replaces the database name in a DSN for multiple drivers.
 // Supports: sqlite, postgres, mysql, mssql
-// Now also handles PostgreSQL key=value style: user=... dbname=... host=...
 func ReplaceDBNameV2(dsn, newDBName string) (string, error) {
 	if dsn == "" {
 		return "", fmt.Errorf("dsn cannot be empty")
 	}
-
 	// Split driver and connection string
 	parts := strings.SplitN(dsn, ":", 2)
 	if len(parts) != 2 {
 		return "", fmt.Errorf("invalid dsn format, expected 'driver:connection_string'")
 	}
-
 	driver := strings.ToLower(strings.TrimSpace(parts[0]))
 	connStr := strings.TrimSpace(parts[1])
-
 	switch driver {
 	case "sqlite", "sqlite3":
 		return "sqlite:" + replaceSQLiteDB(connStr, newDBName), nil
-
 	case "postgres", "postgresql":
 		return "postgres:" + replacePostgresDB(connStr, newDBName), nil
-
 	case "mysql":
 		return "mysql:" + replaceMySQLDB(connStr, newDBName), nil
-
 	case "mssql", "sqlserver":
 		return "mssql:" + replaceMSSQLDB(connStr, newDBName), nil
-
 	default:
 		return "", fmt.Errorf("unsupported driver: %s (supported: sqlite, postgres, mysql, mssql)", driver)
 	}
@@ -1014,13 +1008,11 @@ func replaceSQLiteDB(connStr, newDBName string) string {
 			return filepath.Join(dir, newDBName+ext)
 		}
 	}
-
 	// Simple file path
 	ext := filepath.Ext(connStr)
 	if ext == "" {
 		ext = ".db"
 	}
-
 	dir := filepath.Dir(connStr)
 	if dir == "." {
 		return newDBName + ext
@@ -1043,14 +1035,12 @@ func replacePostgresDB(connStr, newDBName string) string {
 			return u.String()
 		}
 	}
-
 	// 2. Key=Value style (the one you requested)
 	// This regex handles dbname=xxx or database=xxx, even with spaces around =
 	re := regexp.MustCompile(`(?i)(dbname|database)\s*=\s*([^ ;]+)`)
 	if re.MatchString(connStr) {
 		return re.ReplaceAllString(connStr, "dbname="+newDBName)
 	}
-
 	// Fallback: if no dbname found, append it
 	if !strings.Contains(connStr, "dbname=") && !strings.Contains(connStr, "database=") {
 		if connStr != "" {
@@ -1058,7 +1048,6 @@ func replacePostgresDB(connStr, newDBName string) string {
 		}
 		return connStr + "dbname=" + newDBName
 	}
-
 	return connStr
 }
 
@@ -1084,7 +1073,6 @@ func replaceMSSQLDB(connStr, newDBName string) string {
 			return u.String()
 		}
 	}
-
 	// Key=value format
 	re := regexp.MustCompile(`(?i)(database|initial catalog)\s*=\s*([^;]+)`)
 	return re.ReplaceAllString(connStr, "database="+newDBName)

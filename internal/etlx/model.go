@@ -1280,7 +1280,19 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				// fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
-					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
+					if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
+						_, err2 := PGNextSequenceValue(dbCon, tableName, tableName+"_id")
+						if err2 != nil {
+							return fmt.Errorf("Err tring to increment pg id: %w", err2)
+						} else {
+							_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
+							if err != nil {
+								return fmt.Errorf("insert %s failed after resetting sequence: %w", tableName, err)
+							}
+						}
+					} else {
+						return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
+					}
 				}
 				//fmt.Printf("  inserted %-40s\n", logKey)
 			}
@@ -1398,7 +1410,19 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 				// fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {
-					return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
+					if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
+						_, err2 := PGNextSequenceValue(dbCon, tableName, tableName+"_id")
+						if err2 != nil {
+							return fmt.Errorf("Err tring to increment pg id: %w", err2)
+						} else {
+							_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
+							if err != nil {
+								return fmt.Errorf("insert %s failed after resetting sequence: %w", tableName, err)
+							}
+						}
+					} else {
+						return fmt.Errorf("insert failed %s (%s): %w", tableName, logKey, err)
+					}
 				}
 				//fmt.Printf("  inserted %-40s\n", logKey)
 			}
@@ -1407,6 +1431,12 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 
 	fmt.Println("\nSeed data load completed successfully.")
 	return nil
+}
+
+func PGNextSequenceValue(dbCon db.DBInterface, tableName string, idColumn string) (int, error) {
+	_sql := fmt.Sprintf(`SELECT SETVAL(PG_GET_SERIAL_SEQUENCE('%s', '%s'), NEXTVAL(PG_GET_SERIAL_SEQUENCE('%s', '%s')), FALSE)`, tableName, idColumn, tableName, idColumn)
+	//fmt.Println("PG_GET_SERIAL_SEQUENCE:", _sql)
+	return dbCon.ExecuteQuery(_sql)
 }
 
 // InterfaceConf represents the parsed cs_app structure
@@ -1418,6 +1448,7 @@ func LoadOrSyncMenusFromConfig(
 	conf InterfaceConf,
 	dbName string, // e.g. "ADMIN"
 	appUserID int, // usually 1
+	version string, // e.g. "1.0.0"
 	desc string, // optional app description
 ) error {
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
@@ -1435,11 +1466,14 @@ func LoadOrSyncMenusFromConfig(
 		if desc == "" {
 			desc = fmt.Sprintf("Auto-created app for db %q", dbName)
 		}
+		if version == "" {
+			version = "1.0.0"
+		}
 		appData := map[string]any{
 			"app":        dbName,
 			"app_desc":   desc,
 			"db":         dbName,
-			"version":    "1.0.0",
+			"version":    version,
 			"user_id":    appUserID,
 			"active":     true,
 			"created_at": now,
@@ -1448,12 +1482,24 @@ func LoadOrSyncMenusFromConfig(
 		}
 		_, err := dbCon.ExecuteNamedQuery(insertAppSQL, appData)
 		if err != nil {
-			return fmt.Errorf("create app failed: %w", err)
-		} else {
-			_app, _, err = dbCon.QuerySingleRow(sql, []any{dbName}...)
-			if err != nil {
-				return fmt.Errorf("find app failed: %w", err)
+			// fmt.Printf("Error inserting app record: %v, %s, %v\n", err, insertAppSQL, appData)
+			if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
+				_, err2 := PGNextSequenceValue(dbCon, "app", "app_id")
+				if err2 != nil {
+					return fmt.Errorf("Err tring to increment pg id: %w", err2)
+				} else {
+					_, err := dbCon.ExecuteNamedQuery(insertAppSQL, appData)
+					if err != nil {
+						return fmt.Errorf("insert app failed after resetting sequence: %w", err)
+					}
+				}
+			} else {
+				return fmt.Errorf("create app failed: %w", err)
 			}
+		}
+		_app, _, err = dbCon.QuerySingleRow(sql, []any{dbName}...)
+		if err != nil {
+			return fmt.Errorf("find app failed: %w", err)
 		}
 	}
 	app = (*_app)
@@ -1528,7 +1574,19 @@ func LoadOrSyncMenusFromConfig(
 			}
 			LastInsertId, err := dbCon.ExecuteQueryPGInsertWithLastInsertId(sql, _data)
 			if err != nil {
-				return fmt.Errorf("insert menu %q: %w", menuName, err)
+				if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
+					_, err2 := PGNextSequenceValue(dbCon, "menu", "menu_id")
+					if err2 != nil {
+						return fmt.Errorf("Err tring to increment pg id: %w", err2)
+					} else {
+						LastInsertId, err = dbCon.ExecuteQueryPGInsertWithLastInsertId(sql, _data)
+						if err != nil {
+							return fmt.Errorf("insert menu failed after resetting sequence: %w", err)
+						}
+					}
+				} else {
+					return fmt.Errorf("insert menu %q: %w", menuName, err)
+				}
 			}
 			// Get the inserted ID (sqlite/mysql/postgres compatible way)
 			lastID := LastInsertId
@@ -1653,7 +1711,19 @@ func LoadOrSyncMenusFromConfig(
 				}
 				_, err = dbCon.ExecuteNamedQuery(sql, _data)
 				if err != nil {
-					return fmt.Errorf("insert menu_table %q → %q: %w", menuName, tblName, err)
+					if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
+						_, err2 := PGNextSequenceValue(dbCon, "menu_table", "menu_table_id")
+						if err2 != nil {
+							return fmt.Errorf("Err tring to increment pg id: %w", err2)
+						} else {
+							_, err = dbCon.ExecuteNamedQuery(sql, _data)
+							if err != nil {
+								return fmt.Errorf("insert menu_table failed after resetting sequence: %w", err)
+							}
+						}
+					} else {
+						return fmt.Errorf("insert menu_table %q → %q: %w", menuName, tblName, err)
+					}
 				}
 				fmt.Printf("  Linked table %q (active=%v, rla=%v)\n", tblName, linkActive, requiresRLA)
 			} else {
@@ -2137,7 +2207,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"num_gc_start":          num_gc,
 		}
 		app_desc, _ := metadata["description"].(string)
-		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc)
+		version, _ := metadata["version"].(string)
+		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc, version)
 		if err != nil {
 			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
 			_log2["success"] = false
