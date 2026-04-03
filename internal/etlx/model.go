@@ -1459,10 +1459,15 @@ func LoadOrSyncMenusFromConfig(
 	app = (*_app)
 	// get list conf[__order] if exists to process menus in order
 	menuOrderAny, hasMenuOrder := conf["__order"]
+	// fmt.Println("MENU ORDERS:", conf["__order"])
 	var menuOrder []string
 	if hasMenuOrder {
-		if menuOrderAny, ok := menuOrderAny.([]string); ok {
-			menuOrder = menuOrderAny
+		if menuOrderAny, ok := menuOrderAny.([]any); ok {
+			for _, v := range menuOrderAny {
+				if s, ok := v.(string); ok {
+					menuOrder = append(menuOrder, s)
+				}
+			}
 		}
 	} else {
 		// fallback: get keys in any order
@@ -1472,7 +1477,7 @@ func LoadOrSyncMenusFromConfig(
 			}
 		}
 	}
-
+	//fmt.Println("MENU ORDERS:", menuOrder, menuOrderAny)
 	// 2. Process each menu section
 	for _, menuName := range menuOrder {
 		menuCfg, ok := conf[menuName].(map[string]any)
@@ -1777,16 +1782,21 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			return nil, fmt.Errorf("%s err no database defined", key)
 		}
 	}
-	conn, okCon := metadata["connection"].(string)
-	if !okCon {
-		conn, okCon = metadata["conn"].(string)
-		if !okCon {
-			return nil, fmt.Errorf("%s err no connection defined", key)
-		}
-	}
 	adminConn, okAdminCon := metadata["admin_connection"].(string)
 	if !okAdminCon {
 		adminConn, _ = metadata["admin_conn"].(string)
+	}
+	conn, okCon := metadata["connection"].(string)
+	if !okCon {
+		conn, okCon = metadata["conn"].(string)
+		if database != "" && conn == "" && adminConn != "" {
+			// conn will be the admin with the database name replaced
+			conn, _ = db.ReplaceDBNameV2(etlx.ReplaceEnvVariable(adminConn), database)
+			// fmt.Println("CONN FROM ADMIN CON:", conn, adminConn)
+			okCon = true
+		} else if !okCon {
+			return nil, fmt.Errorf("%s err no connection defined", key)
+		}
 	}
 	create_all, _ := metadata["create_all"].(string)
 	drop_all, _ := metadata["drop_all"].(string)

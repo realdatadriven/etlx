@@ -35,6 +35,10 @@ func ReplaceDBName(dsn, dbname string) (string, error) {
 	return db.ReplaceDBName(dsn, dbname)
 }
 
+func ReplaceDBNameV2(dsn, dbname string) (string, error) {
+	return db.ReplaceDBNameV2(dsn, dbname)
+}
+
 type DuckLakeParseResult = etlxlib.DuckLakeParseResult
 type DuckLakeOccurrence = etlxlib.DuckLakeOccurrence
 type DuckLakeParser = etlxlib.DuckLakeParser

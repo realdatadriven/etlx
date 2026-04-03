@@ -31,7 +31,6 @@ var defaultTimeoutODBC = 15 * time.Minute
 var defaultTimeoutDuckDB = 15 * time.Minute
 
 type DB struct {
-	//*sqlx.DB
 	*sqlx.DB
 }
 
@@ -140,7 +139,7 @@ func adjustQuery(driver, query string) string {
 	case "mysql":
 		// Replace double quotes " with backticks ` for MySQL
 		return strings.ReplaceAll(query, `"`, "`")
-	case "mssql":
+	case "mssql", "sqlserver":
 		return strings.ReplaceAll(query, `"`, "")
 	}
 	// SQLite uses ? placeholders, so no changes needed
@@ -215,7 +214,7 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 	fmt.Println(u)*/
 	//var newDB DBInterface
 	//fmt.Println(_database)
-	_not_embed_dbs := []interface{}{"postgres", "postgresql", "pg", "pgql", "mysql"}
+	_not_embed_dbs := []interface{}{"postgres", "postgresql", "pg", "pgql", "mysql", "mysql8", "mssql", "sqlserver"}
 	_embed_dbs := []interface{}{"sqlite", "sqlite3", "duckdb", "ducklake"}
 	_embed_dbs_ext := []interface{}{".db", ".duckdb", ".ddb", ".sqlite", ".ducklake"}
 	switch _database.(type) {
@@ -961,4 +960,132 @@ func hasDecimalPlace(v interface{}) (bool, error) {
 		return true, nil
 	}
 	return false, nil
+}
+
+// ReplaceDBName replaces the database name in a DSN for multiple drivers.
+// Supports: sqlite, postgres, mysql, mssql
+// Now also handles PostgreSQL key=value style: user=... dbname=... host=...
+func ReplaceDBNameV2(dsn, newDBName string) (string, error) {
+	if dsn == "" {
+		return "", fmt.Errorf("dsn cannot be empty")
+	}
+
+	// Split driver and connection string
+	parts := strings.SplitN(dsn, ":", 2)
+	if len(parts) != 2 {
+		return "", fmt.Errorf("invalid dsn format, expected 'driver:connection_string'")
+	}
+
+	driver := strings.ToLower(strings.TrimSpace(parts[0]))
+	connStr := strings.TrimSpace(parts[1])
+
+	switch driver {
+	case "sqlite", "sqlite3":
+		return "sqlite:" + replaceSQLiteDB(connStr, newDBName), nil
+
+	case "postgres", "postgresql":
+		return "postgres:" + replacePostgresDB(connStr, newDBName), nil
+
+	case "mysql":
+		return "mysql:" + replaceMySQLDB(connStr, newDBName), nil
+
+	case "mssql", "sqlserver":
+		return "mssql:" + replaceMSSQLDB(connStr, newDBName), nil
+
+	default:
+		return "", fmt.Errorf("unsupported driver: %s (supported: sqlite, postgres, mysql, mssql)", driver)
+	}
+}
+
+// ==================== SQLite ====================
+func replaceSQLiteDB(connStr, newDBName string) string {
+	// Handle file: URI
+	if strings.HasPrefix(connStr, "file:") {
+		u, err := url.Parse(connStr)
+		if err == nil {
+			dir := filepath.Dir(u.Path)
+			ext := filepath.Ext(u.Path)
+			if ext == "" {
+				ext = ".db"
+			}
+			if dir == "." || dir == "/" {
+				return newDBName + ext
+			}
+			return filepath.Join(dir, newDBName+ext)
+		}
+	}
+
+	// Simple file path
+	ext := filepath.Ext(connStr)
+	if ext == "" {
+		ext = ".db"
+	}
+
+	dir := filepath.Dir(connStr)
+	if dir == "." {
+		return newDBName + ext
+	}
+	return filepath.Join(dir, newDBName+ext)
+}
+
+// ==================== PostgreSQL ====================
+// Now supports BOTH formats:
+// 1. postgres://user:pass@host:5432/olddb?sslmode=disable
+// 2. user=postgres password=1234 dbname=ADMIN host=localhost port=5432 sslmode=disable
+func replacePostgresDB(connStr, newDBName string) string {
+	// 1. URL style (postgres:// or //)
+	if strings.Contains(connStr, "://") || strings.HasPrefix(connStr, "//") {
+		if !strings.HasPrefix(connStr, "postgres://") && !strings.HasPrefix(connStr, "postgresql://") {
+			connStr = "postgres://" + strings.TrimPrefix(connStr, "//")
+		}
+		if u, err := url.Parse(connStr); err == nil {
+			u.Path = "/" + strings.Trim(newDBName, "/")
+			return u.String()
+		}
+	}
+
+	// 2. Key=Value style (the one you requested)
+	// This regex handles dbname=xxx or database=xxx, even with spaces around =
+	re := regexp.MustCompile(`(?i)(dbname|database)\s*=\s*([^ ;]+)`)
+	if re.MatchString(connStr) {
+		return re.ReplaceAllString(connStr, "dbname="+newDBName)
+	}
+
+	// Fallback: if no dbname found, append it
+	if !strings.Contains(connStr, "dbname=") && !strings.Contains(connStr, "database=") {
+		if connStr != "" {
+			connStr += " "
+		}
+		return connStr + "dbname=" + newDBName
+	}
+
+	return connStr
+}
+
+// ==================== MySQL ====================
+func replaceMySQLDB(connStr, newDBName string) string {
+	if idx := strings.LastIndex(connStr, "/"); idx != -1 {
+		rest := connStr[idx+1:]
+		if queryIdx := strings.Index(rest, "?"); queryIdx != -1 {
+			return connStr[:idx+1] + newDBName + rest[queryIdx:]
+		}
+		return connStr[:idx+1] + newDBName
+	}
+	return connStr + "/" + newDBName
+}
+
+// ==================== MSSQL ====================
+func replaceMSSQLDB(connStr, newDBName string) string {
+	if strings.Contains(connStr, "://") {
+		if u, err := url.Parse(connStr); err == nil {
+			q := u.Query()
+			q.Set("database", newDBName)
+			u.RawQuery = q.Encode()
+			return u.String()
+		}
+	}
+
+	// Key=value format
+	re := regexp.MustCompile(`(?i)(database|initial catalog)\s*=\s*([^;]+)`)
+	return re.ReplaceAllString(connStr, "database="+newDBName)
 }
