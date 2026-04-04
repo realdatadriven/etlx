@@ -1235,11 +1235,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 					updateParams[k] = v
 				}
-				updateQuery := fmt.Sprintf(`
-					UPDATE %s
-					SET %s
-					WHERE %s
-				`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
+				updateQuery := fmt.Sprintf(`UPDATE %s SET %s WHERE %s`, dialect.GetTableName(tableName), strings.Join(updateParts, ", "), whereClause2)
 				// Merge where params into update params
 				for k, v := range params {
 					updateParams[k] = v
@@ -1273,10 +1269,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 					names = append(names, ":updated_at")
 					params["updated_at"] = now
 				}
-				insertQuery := fmt.Sprintf(`
-					INSERT INTO %s (%s)
-					VALUES (%s)
-				`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
+				insertQuery := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, dialect.GetTableName(tableName), strings.Join(cols, ", "), strings.Join(names, ", "))
 				// fmt.Println(insertQuery, params)
 				_, err := dbCon.ExecuteNamedQuery(insertQuery, params)
 				if err != nil {

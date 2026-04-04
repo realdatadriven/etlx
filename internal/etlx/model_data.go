@@ -194,10 +194,26 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 	if processLogs[0]["ref"] == nil {
 		processLogs[0]["ref"] = dtRef
 	}
+	database, okDb := metadata["database"].(string)
+	if !okDb {
+		database, okDb = metadata["name"].(string)
+		if !okDb {
+			return nil, fmt.Errorf("%s err no database defined", key)
+		}
+	}
+	adminConn, okAdminCon := metadata["admin_connection"].(string)
+	if !okAdminCon {
+		adminConn, _ = metadata["admin_conn"].(string)
+	}
 	conn, okCon := metadata["connection"].(string)
 	if !okCon {
 		conn, okCon = metadata["conn"].(string)
-		if !okCon {
+		if database != "" && conn == "" && adminConn != "" {
+			// conn will be the admin with the database name replaced
+			conn, _ = db.ReplaceDBNameV2(etlx.ReplaceEnvVariable(adminConn), database)
+			// fmt.Println("CONN FROM ADMIN CON:", conn, adminConn)
+			okCon = true
+		} else if !okCon {
 			return nil, fmt.Errorf("%s err no connection defined", key)
 		}
 	}
