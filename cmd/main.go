@@ -278,4 +278,11 @@ func main() {
 			//}
 		}
 	}
+	//
+	mdData, err := etlxlib.QueryETLXMD("")
+	if err != nil {
+		fmt.Println("QueryETLXMD: ", err)
+	}
+	flow := etlxlib.GenerateMermaidFlowchart(mdData["node_est"].([]map[string]any), mdData["edge_est"].([]map[string]any))
+	fmt.Println("GenerateMermaidFlowchart: ", flow)
 }

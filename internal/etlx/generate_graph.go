@@ -1,7 +1,5 @@
 package etlxlib
 
-package main
-
 import (
 	"fmt"
 	"strconv"
@@ -9,7 +7,7 @@ import (
 )
 
 // GenerateMermaidFlowchart generates an enhanced Mermaid flowchart with animations and click callbacks
-func GenerateMermaidFlowchart(nodes []map[string]any, edges []map[string]any) string {
+func (etlx *ETLX) GenerateMermaidFlowchart(nodes []map[string]any, edges []map[string]any) string {
 	var mmd strings.Builder
 
 	mmd.WriteString(`---
@@ -44,10 +42,10 @@ flowchart LR
 		}
 
 		first := children[0]
-		parentTitle, _ := getString(first, "parent_title")
-		parentRunsAs, _ := getString(first, "parent_runs_as")
-		parentDescription, _ := getString(first, "parent_description")
-		parentName, _ := getString(first, "parent_name")
+		parentTitle, _ := getString_(first, "parent_title")
+		parentRunsAs, _ := getString_(first, "parent_runs_as")
+		parentDescription, _ := getString_(first, "parent_description")
+		parentName, _ := getString_(first, "parent_name")
 
 		mmd.WriteString(fmt.Sprintf("\t%% %s %s\n", parentName, parentDescription))
 		mmd.WriteString(fmt.Sprintf("\tsubgraph %v[\"%s (%s)\"]\n", parent, parentTitle, parentRunsAs))
@@ -57,9 +55,9 @@ flowchart LR
 			key := fmt.Sprintf("%v_%v", parent, sectionID)
 
 			if !added[key] {
-				name, _ := getString(child, "name")
-				description, _ := getString(child, "description")
-				title, _ := getString(child, "title")
+				name, _ := getString_(child, "name")
+				description, _ := getString_(child, "description")
+				title, _ := getString_(child, "title")
 
 				mmd.WriteString(fmt.Sprintf("\t\t%% %s - %s\n", name, description))
 				mmd.WriteString(fmt.Sprintf("\t\t%s[\"%s\"]\n", key, title))
@@ -89,15 +87,15 @@ flowchart LR
 
 		// Click callback with all four IDs
 		callbackStr := fmt.Sprintf("%v|%v|%v|%v",
-			getAny(row, "parent_id"),
-			getAny(row, "section_id"),
-			getAny(row, "depends_on_parent_id"),
-			getAny(row, "depends_on_section_id"))
+			getAny_(row, "parent_id"),
+			getAny_(row, "section_id"),
+			getAny_(row, "depends_on_parent_id"),
+			getAny_(row, "depends_on_section_id"))
 
 		mmd.WriteString(fmt.Sprintf("\tclick %s callback \"%s\"\n", fromKey, callbackStr))
 
 		// Success styling on the target node
-		if success, ok := getBool(row, "success"); ok {
+		if success, ok := getBool_(row, "success"); ok {
 			if success {
 				mmd.WriteString(fmt.Sprintf("\tstyle %s fill:#0f0,stroke:#333,stroke-width:2px\n", toKey))
 			} else {
@@ -121,23 +119,23 @@ func filterByParentID(nodes []map[string]any, parentID any) []map[string]any {
 	return result
 }
 
-func getString(m map[string]any, key string) (string, bool) {
+func getString_(m map[string]any, key string) (string, bool) {
 	if v, ok := m[key]; ok && v != nil {
 		return fmt.Sprintf("%v", v), true
 	}
 	return "", false
 }
 
-// getAny returns the value as string (useful for callback)
-func getAny(m map[string]any, key string) string {
+// getAny_ returns the value as string (useful for callback)
+func getAny_(m map[string]any, key string) string {
 	if v, ok := m[key]; ok && v != nil {
 		return fmt.Sprintf("%v", v)
 	}
 	return ""
 }
 
-// getBool safely extracts boolean value
-func getBool(m map[string]any, key string) (bool, bool) {
+// getBool_ safely extracts boolean value
+func getBool_(m map[string]any, key string) (bool, bool) {
 	if v, ok := m[key]; ok && v != nil {
 		switch val := v.(type) {
 		case bool:
@@ -154,46 +152,34 @@ func getBool(m map[string]any, key string) (bool, bool) {
 }
 
 // run query using INSTALL markdown FROM community on the md config
-func (etlx *ETLX) QueryETLXMD(params map[string]any) (map[string]any, error) {
+func (etlx *ETLX) QueryETLXMD(md string) (map[string]any, error) {
 	_conf := etlx.md
-	fname, err := etlxlib.TempFIle("", _conf, "config.*.md")
+	if md != "" {
+		_conf = md
+	}
+	fname, err := etlx.TempFIle("", _conf, "config.*.md")
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("%v", err),
-		}
+		return nil, err
 	}
 	fmt.Println(fname)
 	// get duckdb conn
 	conn, err := etlx.GetDB("duckdb:")
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("%v", err),
-		}
+		return nil, err
 	}
 	defer conn.Close()
 	// install markdown and yaml from community
 	_, err = conn.ExecuteQuery("INSTALL markdown FROM community")
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("%v", err),
-		}
+		return nil, err
 	}
 	_, err = conn.ExecuteQuery("INSTALL yaml FROM community")
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("%v", err),
-		}
+		return nil, err
 	}
 	_, err = conn.ExecuteQuery("LOAD markdown;LOAD yaml")
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("%v", err),
-		}
+		return nil, err
 	}
 	query := `CREATE OR REPLACE TABLE markdown_sections AS 
 WITH A AS (
@@ -274,21 +260,15 @@ LEFT OUTER JOIN C AS Parent ON Parent.section_id = C.parent_id
 LEFT OUTER JOIN Q ON Q.section_id = C.section_id
 /*LEFT OUTER JOIN D ON D.section_id = C.section_id*/
 order by C.row;`
-	query = etlxlib.ReplaceFileTablePlaceholder("file", query, fname)
+	query = etlx.ReplaceFileTablePlaceholder("file", query, fname)
 	_, err = conn.ExecuteQuery(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("Create: %v", err),
-		}
+		return nil, err
 	}
 	query = `SELECT * FROM markdown_sections`
 	md_data, _, err := conn.QueryMultiRows(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("NODES Query: %v", err),
-		}
+		return nil, err
 	}
 	query = `CREATE OR REPLACE TABLE edges AS
 SELECT A.*, A.section_id, A.parent_id, B.row as depends_on_row, B.section_id as depends_on_section_id, B.parent_id as depends_on_parent_id, A.parent_runs_as
@@ -301,10 +281,7 @@ LEFT OUTER JOIN markdown_sections AS B ON
 WHERE B.section_id IS NOT NULL`
 	_, err = conn.ExecuteQuery(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("Create: %v", err),
-		}
+		return nil, err
 	}
 	query = `WITH NODES AS (
     SELECT DISTINCT row, section_id, parent_id 
@@ -322,18 +299,12 @@ JOIN markdown_sections P ON N.parent_id = P.section_id
 ORDER BY N.row ASC;`
 	nodes, _, err := conn.QueryMultiRows(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("NODES Query: %v", err),
-		}
+		return nil, err
 	}
 	query = `SELECT * FROM edges`
 	edges, _, err := conn.QueryMultiRows(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("EDGES Query: %v", err),
-		}
+		return nil, err
 	}
 	query = ` CREATE OR REPLACE TABLE edges_est AS
 SELECT DISTINCT A.row, A.section_id, A.parent_id, B.row as depends_on_row, B.section_id as depends_on_section_id, B.parent_id as depends_on_parent_id, A.parent_runs_as
@@ -355,18 +326,12 @@ WHERE B.section_id IS NOT NULL
 ORDER BY A.row ASC`
 	_, err = conn.ExecuteQuery(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("Create: %v", err),
-		}
+		return nil, err
 	}
 	query = `SELECT * FROM edges_est`
 	edges_est, _, err := conn.QueryMultiRows(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("EDGES EST Query: %v", err),
-		}
+		return nil, err
 	}
 	query = `WITH NODES AS (
     SELECT DISTINCT row, section_id, parent_id 
@@ -384,19 +349,13 @@ JOIN markdown_sections P ON N.parent_id = P.section_id
 ORDER BY N.row ASC;`
 	nodes_est, _, err := conn.QueryMultiRows(query, []any{}...)
 	if err != nil {
-		return map[string]any{
-			"success": false,
-			"msg":     fmt.Sprintf("NODES EST Query: %v", err),
-		}
+		return nil, err
 	}
-	msg, _ := app.i18n.T("success", map[string]any{})
 	return map[string]any{
-		"success":   true,
-		"msg":       msg,
 		"md_data":   *md_data,
 		"nodes":     *nodes,
 		"edges":     *edges,
 		"nodes_est": *nodes_est,
 		"edges_est": *edges_est,
-	}
+	}, nil
 }
