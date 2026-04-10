@@ -16,7 +16,7 @@ import (
 	"github.com/Masterminds/sprig/v3"
 )
 
-// parseSlice converts an interface{} into a []string safely
+// parseSlice converts an any into a []string safely
 func parseSlice(value any) []string {
 	if value == nil {
 		return nil

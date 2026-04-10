@@ -51,7 +51,7 @@ drop_sql: DROP TABLE IF EXISTS "DB"."<table>"
 clean_sql: DELETE FROM "DB"."<table>" WHERE "ref_date" = '{YYYY-MM}'
 rows_sql: SELECT COUNT(*) AS "nrows" FROM "DB"."<table>" WHERE "ref_date" = '{YYYY-MM}'
 file: "https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_{YYYY-MM}.parquet"
-active: true
+active: false
 ```
 
 ```sql

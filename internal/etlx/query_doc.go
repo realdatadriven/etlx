@@ -82,11 +82,11 @@ func (q *QueryDoc) GetQueryParts() map[string]Field {
 	return q.QueryParts
 }
 
-func (q *QueryDoc) GetQueryPartsAsMap() map[string]map[string]interface{} {
-	result := map[string]map[string]interface{}{}
+func (q *QueryDoc) GetQueryPartsAsMap() map[string]map[string]any {
+	result := map[string]map[string]any{}
 	for key, f := range q.QueryParts {
 		// Assuming `Field` has some properties, let's say Name and Value
-		result[key] = map[string]interface{}{
+		result[key] = map[string]any{
 			"name":     f.Name,
 			"desc":     f.Desc,
 			"cte":      f.CTE,
@@ -154,7 +154,7 @@ func (q *QueryDoc) replaceFieldPlaceholders(sqlClause string, queryParts map[str
 }
 
 // replaceFieldPlaceholders replaces @Field placeholders with the corresponding field's Select part
-func (q *QueryDoc) replaceFieldPlaceholdersMap(sqlClause string, queryParts *map[string]map[string]interface{}) string {
+func (q *QueryDoc) replaceFieldPlaceholdersMap(sqlClause string, queryParts *map[string]map[string]any) string {
 	// Define the regex to find @FieldName pattern
 	regex := regexp.MustCompile(`@\w+`)
 	// Find all matches in the clause
@@ -258,8 +258,8 @@ func (q *QueryDoc) GetQuerySQLFromMap() string {
 	return fmt.Sprintf("%s%s%s%s%s%s%s%s%s", query.CTE, query.Select, query.From, query.Join, query.Where, query.GroupBy, query.Window, query.OrderBy, query.Having)
 }
 
-// SetMap takes a map[string]interface{} and sets the corresponding fields in the Field struct
-func (f *Field) SetMap(fieldMap map[string]interface{}) error {
+// SetMap takes a map[string]any and sets the corresponding fields in the Field struct
+func (f *Field) SetMap(fieldMap map[string]any) error {
 	for key, value := range fieldMap {
 		switch key {
 		case "name":
@@ -355,11 +355,11 @@ func (f *Field) SetMap(fieldMap map[string]interface{}) error {
 }
 
 // SetQueryPartsFromMap sets the QueryParts of QueryDoc using a map of field names to field properties
-func (q *QueryDoc) SetQueryPartsFromMap(fieldMap map[string]interface{}) error {
+func (q *QueryDoc) SetQueryPartsFromMap(fieldMap map[string]any) error {
 	for fieldName, fieldData := range fieldMap {
-		//fmt.Println(fieldName, fieldData.(map[string]interface{}))
+		//fmt.Println(fieldName, fieldData.(map[string]any))
 		var field Field
-		err := field.SetMap(fieldData.(map[string]interface{}))
+		err := field.SetMap(fieldData.(map[string]any))
 		if err != nil {
 			return err
 		}
@@ -401,7 +401,7 @@ func hasPlaceholders(s string) bool {
 	pattern := regexp.MustCompile(`YY|AA|MM|DD`)
 	return pattern.MatchString(s)
 }
-func (q *QueryDoc) setQueryDate(query string, dateRef interface{}) string {
+func (q *QueryDoc) setQueryDate(query string, dateRef any) string {
 	patt := regexp.MustCompile(`(["]?\w+["]?\.\w+\s?=\s?'\{.*?\}'|["]?\w+["]?\s?=\s?'\{.*?\}')`)
 	matches := patt.FindAllString(query, -1)
 	if len(matches) == 0 {

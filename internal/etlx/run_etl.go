@@ -560,7 +560,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	}
 }
 
-func (app *ETLX) Contains(slice []string, element interface{}) bool {
+func (app *ETLX) Contains(slice []string, element any) bool {
 	for _, v := range slice {
 		if v == element {
 			return true
@@ -569,7 +569,7 @@ func (app *ETLX) Contains(slice []string, element interface{}) bool {
 	return false
 }
 
-func (app *ETLX) containsAny(slice []interface{}, element interface{}) bool {
+func (app *ETLX) containsAny(slice []any, element any) bool {
 	for _, v := range slice {
 		if v == element {
 			return true

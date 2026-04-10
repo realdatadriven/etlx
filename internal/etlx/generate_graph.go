@@ -8,6 +8,7 @@ import (
 
 // GenerateMermaidFlowchart generates an enhanced Mermaid flowchart with animations and click callbacks
 func (etlx *ETLX) GenerateMermaidFlowchart(nodes []map[string]any, edges []map[string]any) string {
+	fmt.Println("NODES:", len(nodes), "EDGES:", len(edges))
 	var mmd strings.Builder
 
 	mmd.WriteString(`---
@@ -47,7 +48,7 @@ flowchart LR
 		parentDescription, _ := getString_(first, "parent_description")
 		parentName, _ := getString_(first, "parent_name")
 
-		mmd.WriteString(fmt.Sprintf("\t%% %s %s\n", parentName, parentDescription))
+		mmd.WriteString(fmt.Sprintf("\t%%%% %s %s\n", parentName, parentDescription))
 		mmd.WriteString(fmt.Sprintf("\tsubgraph %v[\"%s (%s)\"]\n", parent, parentTitle, parentRunsAs))
 
 		for _, child := range children {
@@ -59,7 +60,7 @@ flowchart LR
 				description, _ := getString_(child, "description")
 				title, _ := getString_(child, "title")
 
-				mmd.WriteString(fmt.Sprintf("\t\t%% %s - %s\n", name, description))
+				mmd.WriteString(fmt.Sprintf("\t\t%%%% %s - %s\n", name, description))
 				mmd.WriteString(fmt.Sprintf("\t\t%s[\"%s\"]\n", key, title))
 				added[key] = true
 			}
@@ -152,8 +153,8 @@ func getBool_(m map[string]any, key string) (bool, bool) {
 }
 
 // run query using INSTALL markdown FROM community on the md config
-func (etlx *ETLX) QueryETLXMD(md string) (map[string]any, error) {
-	_conf := etlx.md
+func (etlx *ETLX) QueryETLXMD(md string) (map[string][]map[string]any, error) {
+	_conf := etlx.MD
 	if md != "" {
 		_conf = md
 	}
@@ -161,7 +162,7 @@ func (etlx *ETLX) QueryETLXMD(md string) (map[string]any, error) {
 	if err != nil {
 		return nil, err
 	}
-	fmt.Println(fname)
+	// fmt.Println(fname)
 	// get duckdb conn
 	conn, err := etlx.GetDB("duckdb:")
 	if err != nil {
@@ -272,7 +273,7 @@ order by C.row;`
 	}
 	query = `WITH D AS (
     select C.*, UNNEST(C.others).language as language, UNNEST(C.others).code as code, UNNEST(C.others).info_string as info_string
-    from markdown_sections
+    from markdown_sections C
 )
 SELECT C.* 
 	, D.language, D.code, D.info_string
@@ -291,7 +292,7 @@ ORDER BY C.row;`
 	query = `CREATE OR REPLACE TABLE edges AS
 SELECT A.*, A.section_id, A.parent_id, B.row as depends_on_row, B.section_id as depends_on_section_id, B.parent_id as depends_on_parent_id, A.parent_runs_as
 FROM markdown_sections AS A
-LEFT OUTER JOIN markdown_sections AS B ON 
+LEFT OUTER JOIN markdown_sections AS B ON
     A.metadata_depends_on::VARCHAR LIKE ('%' || B.parent_title::VARCHAR || '.' || B.title::VARCHAR || '%') 
     OR INSTR(A.metadata_depends_on::VARCHAR, B.parent_title::VARCHAR || '.' || B.title::VARCHAR) > 0
     OR A.metadata_depends_on::VARCHAR LIKE ('%' || B.parent_metadata_name::VARCHAR || '.' || B.metadata_name::VARCHAR || '%')
@@ -369,7 +370,7 @@ ORDER BY N.row ASC;`
 	if err != nil {
 		return nil, err
 	}
-	return map[string]any{
+	return map[string][]map[string]any{
 		"md_data":          *md_data,
 		"md_data_expanded": *md_data_expanded,
 		"nodes":            *nodes,

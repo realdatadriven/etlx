@@ -15,21 +15,21 @@ type DuckDB struct {
 	*sql.DB
 }
 
-// ScanRowToMap converts a single row into a map[string]interface{}.
-func ScanRowToMap(rows *sql.Rows) (map[string]interface{}, error) {
+// ScanRowToMap converts a single row into a map[string]any.
+func ScanRowToMap(rows *sql.Rows) (map[string]any, error) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
-	values := make([]interface{}, len(columns))
-	valuePointers := make([]interface{}, len(columns))
+	values := make([]any, len(columns))
+	valuePointers := make([]any, len(columns))
 	for i := range values {
 		valuePointers[i] = &values[i]
 	}
 	if err := rows.Scan(valuePointers...); err != nil {
 		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
-	rowMap := make(map[string]interface{})
+	rowMap := make(map[string]any)
 	for i, colName := range columns {
 		rowMap[colName] = values[i]
 	}
@@ -65,7 +65,7 @@ func (db *DuckDB) New(dsn string) (*DuckDB, error) {
 	return &DuckDB{_db}, nil
 }
 
-func (db *DuckDB) ExecuteQuery(query string, data ...interface{}) (int, error) {
+func (db *DuckDB) ExecuteQuery(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
 	result, err := db.ExecContext(ctx, query, data...)
@@ -79,7 +79,7 @@ func (db *DuckDB) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	return int(id), err
 }
 
-func (db *DuckDB) ExecuteQueryRowsAffected(query string, data ...interface{}) (int64, error) {
+func (db *DuckDB) ExecuteQueryRowsAffected(query string, data ...any) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
 	result, err := db.ExecContext(ctx, query, data...)
@@ -93,15 +93,15 @@ func (db *DuckDB) ExecuteQueryRowsAffected(query string, data ...interface{}) (i
 	return id, err
 }
 
-func (db *DuckDB) AllTables(params map[string]interface{}, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *DuckDB) AllTables(params map[string]any, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	_query := `SELECT table_name as name FROM information_schema.tables`
 	_query = `SHOW TABLES`
 	// fmt.Println(_query)
-	return db.QueryMultiRows(_query, []interface{}{}...)
+	return db.QueryMultiRows(_query, []any{}...)
 }
 
-func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbName string, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
-	user_id := int(params["user"].(map[string]interface{})["user_id"].(float64))
+func (db *DuckDB) TableSchema(params map[string]any, table string, dbName string, extra_conf map[string]any) (*[]map[string]any, bool, error) {
+	user_id := int(params["user"].(map[string]any)["user_id"].(float64))
 	/*_query := fmt.Sprintf(`SELECT ROW_NUMBER() OVER () - 1 AS cid
 		, column_name AS name
 		, data_type AS type
@@ -122,9 +122,9 @@ func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbNam
 		AND table_name = '%s';`, table, table)*/
 	_query := fmt.Sprintf(`PRAGMA table_info("%s")`, table)
 	//fmt.Println(table, _query)
-	_aux_data := []map[string]interface{}{}
-	_aux_data_fk := map[string]interface{}{}
-	res, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+	_aux_data := []map[string]any{}
+	_aux_data_fk := map[string]any{}
+	res, _, err := db.QueryMultiRows(_query, []any{}...)
 	if err != nil {
 		return nil, false, err
 	}
@@ -152,13 +152,13 @@ func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbNam
 		on_delete,
 		'NONE' AS match
 	FROM  foreign_keys;`, table)
-	res_fk, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+	res_fk, _, err := db.QueryMultiRows(_query, []any{}...)
 	if err != nil {
 		return nil, false, err
 	}
 	for _, row := range *res_fk {
 		// fmt.Println(row)
-		_aux_data_fk[row["from"].(string)] = map[string]interface{}{
+		_aux_data_fk[row["from"].(string)] = map[string]any{
 			"referred_table":  row["table"].(string),
 			"referred_column": row["to"].(string),
 		}
@@ -169,8 +169,8 @@ func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbNam
 		var referred_column string
 		if _, exists := _aux_data_fk[row["name"].(string)]; exists {
 			fk = true
-			referred_table = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_table"].(string)
-			referred_column = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_column"].(string)
+			referred_table = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_table"].(string)
+			referred_column = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_column"].(string)
 		}
 		pk := false
 		if _pk, ok := row["pk"].(bool); ok {
@@ -188,7 +188,7 @@ func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbNam
 				nullable = true
 			}
 		}
-		_aux_row := map[string]interface{}{
+		_aux_row := map[string]any{
 			"db":              dbName,
 			"table":           table,
 			"field":           row["name"].(string),
@@ -213,10 +213,10 @@ func (db *DuckDB) TableSchema(params map[string]interface{}, table string, dbNam
 	return &_aux_data, true, nil
 }
 
-func (db *DuckDB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]interface{}, []string, bool, error) {
+func (db *DuckDB) QueryMultiRowsWithCols(query string, params ...any) (*[]map[string]any, []string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		return nil, nil, false, err
@@ -236,10 +236,10 @@ func (db *DuckDB) QueryMultiRowsWithCols(query string, params ...interface{}) (*
 	return &result, columns, true, err
 }
 
-func (db *DuckDB) QueryMultiRows(query string, params ...interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *DuckDB) QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		//fmt.Println(1, err)
@@ -247,7 +247,7 @@ func (db *DuckDB) QueryMultiRows(query string, params ...interface{}) (*[]map[st
 	}
 	defer rows.Close()
 	//for rows.Next() {
-	//	row := map[string]interface{}{}
+	//	row := map[string]any{}
 	for rows.Next() {
 		row, err := ScanRowToMap(rows)
 		if err != nil {
@@ -263,14 +263,14 @@ func (db *DuckDB) QueryMultiRows(query string, params ...interface{}) (*[]map[st
 	return &result, true, err
 }
 
-func (db *DuckDB) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+func (db *DuckDB) QueryRows(ctx context.Context, query string, params ...any) (*sql.Rows, error) {
 	return db.QueryContext(ctx, query, params...)
 }
 
-func (db *DuckDB) QuerySingleRow(query string, params ...interface{}) (*map[string]interface{}, bool, error) {
+func (db *DuckDB) QuerySingleRow(query string, params ...any) (*map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		return nil, false, err
@@ -285,15 +285,15 @@ func (db *DuckDB) QuerySingleRow(query string, params ...interface{}) (*map[stri
 	return &result, true, err
 }
 
-func (db *DuckDB) ExecuteNamedQuery(query string, data map[string]interface{}) (int, error) {
+func (db *DuckDB) ExecuteNamedQuery(query string, data map[string]any) (int, error) {
 	return 0, fmt.Errorf("not implemented yet %s", "_")
 }
 
-func (db *DuckDB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...interface{}) (int, error) {
+func (db *DuckDB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...any) (int, error) {
 	return 0, fmt.Errorf("not implemented yet %s", "_")
 }
 
-func (db *DuckDB) FromParams(params map[string]interface{}, extra_conf map[string]interface{}) (*DB, string, string, error) {
+func (db *DuckDB) FromParams(params map[string]any, extra_conf map[string]any) (*DB, string, string, error) {
 	return nil, "", "", fmt.Errorf("not implemented yet %s", "_")
 }
 
@@ -301,23 +301,23 @@ func (db *DuckDB) GetDriverName() string {
 	return "duckdb"
 }
 
-func (db *DuckDB) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {
+func (db *DuckDB) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	return nil, false, fmt.Errorf("not implemented yet %s", "_")
 }
 
-func (db *DuckDB) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
+func (db *DuckDB) Query2CSV(query string, csv_path string, params ...any) (bool, error) {
 	return false, fmt.Errorf("not implemented yet %s", "_")
 }
 
-func (db *DuckDB) IsEmpty(value interface{}) bool {
+func (db *DuckDB) IsEmpty(value any) bool {
 	switch v := value.(type) {
 	case nil:
 		return true
 	case string:
 		return len(v) == 0
-	case []interface{}:
+	case []any:
 		return len(v) == 0
-	case map[interface{}]interface{}:
+	case map[any]any:
 		return len(v) == 0
 	default:
 		return false

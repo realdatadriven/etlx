@@ -1,0 +1,42 @@
+---
+config:
+  look: handDrawn
+  theme: neutral
+---
+flowchart LR
+        %% NODES
+        %% EXTRACT_LOAD "Extracts and Loads the data sets to the local analitical database\n"
+        subgraph extract_load["EXTRACT_LOAD (ETL)"]
+                %% TRIP_DATA - Example extrating trip data from web to a local database
+                extract_load_trip_data["TRIP_DATA"]
+                %% ZONES - Taxi Zone Lookup Table
+                extract_load_zones["ZONES"]
+        end
+
+        %% TRANSFORM Transforms the inputs into to desrable outputs
+        subgraph transform["TRANSFORM (ETL)"]
+                %% MostPopularRoutes - "Most Popular Routes - Identify the most common pickup-dropoff route combinations to understand travel patterns.\n"
+                transform_mostpopularroutes["MostPopularRoutes"]
+        end
+
+        %%  Runs some queries to check quality / validate.
+        subgraph quality_check["QUALITY_CHECK (DATA_QUALITY)"]
+                %% Rule0001 - Check if the payment_type has only the values 0=Flex Fare, 1=Credit card, 2=Cash, 3=No charge, 4=Dispute, 5=Unknown, 6=Voided trip.
+                quality_check_rule0001["Rule0001"]
+                %% Rule0002 - Check if there is any trip with distance less than or equal to zero.
+                quality_check_rule0002["Rule0002"]
+        end
+
+        %% EDGES
+        extract_load_trip_data q0@--> transform_mostpopularroutes
+        q0@{ animate: true }
+        click extract_load_trip_data callback "transform|mostpopularroutes|extract_load|trip_data"
+        extract_load_zones q1@--> transform_mostpopularroutes
+        q1@{ animate: true }
+        click extract_load_zones callback "transform|mostpopularroutes|extract_load|zones"
+        extract_load_trip_data q2@--> quality_check_rule0001
+        q2@{ animate: true }
+        click extract_load_trip_data callback "quality_check|rule0001|extract_load|trip_data"
+        extract_load_trip_data q3@--> quality_check_rule0002
+        q3@{ animate: true }
+        click extract_load_trip_data callback "quality_check|rule0002|extract_load|trip_data"

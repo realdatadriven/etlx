@@ -183,7 +183,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Copy successful", key, itemKey, _type)
 		case "compress":
 			compression, hasType := params["compression"].(string)
-			files, hasFiles := params["files"].([]any) // slice of interface{}
+			files, hasFiles := params["files"].([]any) // slice of any
 			output, hasOutput := params["output"].(string)
 			if !hasType || !hasFiles || !hasOutput {
 				_log2["success"] = false
@@ -228,7 +228,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 		case "decompress":
 			compression, hasType := params["compression"].(string)
-			input, hasInput := params["input"].(string) // slice of interface{}
+			input, hasInput := params["input"].(string) // slice of any
 			output, hasOutput := params["output"].(string)
 			if !hasType || !hasInput || !hasOutput {
 				_log2["success"] = false

@@ -198,7 +198,7 @@ func ReplaceDBName(dsn string, newDBName string) (string, error) {
 }
 
 func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB, string, string, error) {
-	var _database interface{}
+	var _database any
 	if !db.IsEmpty(params["db"]) {
 		_database = params["db"]
 	} else if !db.IsEmpty(params["data"].(map[string]any)["db"]) {
@@ -216,9 +216,9 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 	fmt.Println(u)*/
 	//var newDB DBInterface
 	//fmt.Println(_database)
-	_not_embed_dbs := []interface{}{"postgres", "postgresql", "pg", "pgql", "mysql", "mysql8", "mssql", "sqlserver"}
-	_embed_dbs := []interface{}{"sqlite", "sqlite3", "duckdb", "ducklake"}
-	_embed_dbs_ext := []interface{}{".db", ".duckdb", ".ddb", ".sqlite", ".ducklake"}
+	_not_embed_dbs := []any{"postgres", "postgresql", "pg", "pgql", "mysql", "mysql8", "mssql", "sqlserver"}
+	_embed_dbs := []any{"sqlite", "sqlite3", "duckdb", "ducklake"}
+	_embed_dbs_ext := []any{".db", ".duckdb", ".ddb", ".sqlite", ".ducklake"}
 	switch _database.(type) {
 	case nil:
 		//return true
@@ -238,9 +238,9 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 			if filepath.Base(_dsn) == fileName || dirName == "" {
 				_dsn = fmt.Sprintf("database/%s", fileName)
 			}
-			_embed_dbs_ext := []interface{}{".duckdb", ".ddb", ".ducklake"}
+			_embed_dbs_ext := []any{".duckdb", ".ddb", ".ducklake"}
 			if fileExt == "" {
-				_embed_dbs := []interface{}{"sqlite", "sqlite3"}
+				_embed_dbs := []any{"sqlite", "sqlite3"}
 				if _driver == "duckdb" {
 					_dsn = fmt.Sprintf("database/%s.duckdb", fileName)
 				} else if contains(_embed_dbs, _driver) {
@@ -263,14 +263,14 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 		}
 		newDB, err := New(_driver, _dsn)
 		return newDB, _driver, _database.(string), err
-	case []interface{}:
-		//fmt.Println("IS []interface{}:", _database)
-		return nil, "", "", errors.New("database conf is of type []interface{}")
-	case map[interface{}]interface{}:
+	case []any:
+		//fmt.Println("IS []any:", _database)
+		return nil, "", "", errors.New("database conf is of type []any")
+	case map[any]any:
 		/*_driver := _database["drivername"].(string)
 		_dsn := _database["database"].(string)
-		fmt.Println("IS map[interface{}]interface{}:", _database, _driver, _dsn)*/
-		return nil, "", "", errors.New("database conf is of type map[interface{}]interface{}")
+		fmt.Println("IS map[any]any:", _database, _driver, _dsn)*/
+		return nil, "", "", errors.New("database conf is of type map[any]any")
 	case map[string]any:
 		_aux := _database.(map[string]any)
 		_driver := ""
@@ -302,9 +302,9 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 			if filepath.Base(_dsn) == fileName || dirName == "" {
 				_dsn = fmt.Sprintf("database/%s", fileName)
 			}
-			_embed_dbs_ext := []interface{}{".duckdb", ".ddb"}
+			_embed_dbs_ext := []any{".duckdb", ".ddb"}
 			if fileExt == "" {
-				_embed_dbs := []interface{}{"sqlite", "sqlite3"}
+				_embed_dbs := []any{"sqlite", "sqlite3"}
 				if _driver == "duckdb" {
 					_dsn = fmt.Sprintf("database/%s.duckdb", fileName)
 				} else if contains(_embed_dbs, _driver) {
@@ -328,9 +328,9 @@ func (db *DB) FromParams(params map[string]any, extra_conf map[string]any) (*DB,
 		}
 		newDB, err := New(_driver, _dsn)
 		return newDB, _driver, _db, err
-	case interface{}:
-		//fmt.Println("IS interface{}:", _database)
-		return nil, "", "", errors.New("database conf is of type interface{}")
+	case any:
+		//fmt.Println("IS any:", _database)
+		return nil, "", "", errors.New("database conf is of type any")
 	default:
 		newDB, err := New(extra_conf["driverName"].(string), extra_conf["dsn"].(string))
 		_database := filepath.Base(extra_conf["dsn"].(string))
@@ -346,23 +346,23 @@ func (db *DB) GetDriverName() string {
 
 func (db *DB) AllTables(params map[string]any, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	_driver := db.GetDriverName()
-	_sqlites_drivers := []interface{}{"sqlite", "sqlite3"}
-	_pg_drivers := []interface{}{"pg", "postgres"}
-	_ddb_drivers := []interface{}{"ddb", "duckdb"}
-	_mysql_drivers := []interface{}{"mysql", "mysql8"}
+	_sqlites_drivers := []any{"sqlite", "sqlite3"}
+	_pg_drivers := []any{"pg", "postgres"}
+	_ddb_drivers := []any{"ddb", "duckdb"}
+	_mysql_drivers := []any{"mysql", "mysql8"}
 	if contains(_sqlites_drivers, _driver) {
 		_query := `SELECT name FROM sqlite_master WHERE type='table'`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	} else if contains(_pg_drivers, _driver) {
 		_query := `SELECT table_name::varchar as name FROM information_schema.tables WHERE table_schema = 'public';`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	} else if contains(_ddb_drivers, _driver) {
 		_query := `SELECT table_name as name FROM information_schema.tables`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	} else if contains(_mysql_drivers, _driver) {
 		_query := `SHOW TABLES`
 		_query = `SELECT TABLE_NAME as name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'your_database_name';`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	}
 	return nil, false, fmt.Errorf("could not handle driver %s", _driver)
 }
@@ -370,20 +370,20 @@ func (db *DB) AllTables(params map[string]any, extra_conf map[string]any) (*[]ma
 func (db *DB) TableSchema(params map[string]any, table string, dbName string, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	_driver := db.GetDriverName()
 	user_id := int(params["user"].(map[string]any)["user_id"].(float64))
-	_sqlites_drivers := []interface{}{"sqlite", "sqlite3"}
-	_pg_drivers := []interface{}{"pg", "postgres"}
-	_ddb_drivers := []interface{}{"ddb", "duckdb"}
-	_mysql_drivers := []interface{}{"mysql", "mysql8"}
+	_sqlites_drivers := []any{"sqlite", "sqlite3"}
+	_pg_drivers := []any{"pg", "postgres"}
+	_ddb_drivers := []any{"ddb", "duckdb"}
+	_mysql_drivers := []any{"mysql", "mysql8"}
 	if contains(_sqlites_drivers, _driver) {
 		_query := "PRAGMA table_info('" + table + "');"
 		_aux_data := []map[string]any{}
 		_aux_data_fk := map[string]any{}
-		res, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		res, _, err := db.QueryMultiRows(_query, []any{}...)
 		if err != nil {
 			return nil, false, err
 		}
 		_query = "PRAGMA foreign_key_list('" + table + "');"
-		res_fk, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		res_fk, _, err := db.QueryMultiRows(_query, []any{}...)
 		if err != nil {
 			return nil, false, err
 		}
@@ -446,7 +446,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 		}
 		return &_aux_data, true, nil
 	} else if contains(_pg_drivers, _driver) {
-		user_id := int(params["user"].(map[string]interface{})["user_id"].(float64))
+		user_id := int(params["user"].(map[string]any)["user_id"].(float64))
 		_query := fmt.Sprintf(`SELECT 
 			c.ordinal_position - 1 AS cid,
 			c.column_name AS name,
@@ -468,9 +468,9 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 		ORDER BY c.ordinal_position;
 		`, table, table)
 		//fmt.Println(table, _query)
-		_aux_data := []map[string]interface{}{}
-		_aux_data_fk := map[string]interface{}{}
-		res, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		_aux_data := []map[string]any{}
+		_aux_data_fk := map[string]any{}
+		res, _, err := db.QueryMultiRows(_query, []any{}...)
 		if err != nil {
 			return nil, false, err
 		}
@@ -506,13 +506,13 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 			on_delete,
 			'NONE' AS match
 		FROM foreign_keys;`, table)
-		res_fk, _, err := db.QueryMultiRows(_query, []interface{}{}...)
+		res_fk, _, err := db.QueryMultiRows(_query, []any{}...)
 		if err != nil {
 			return nil, false, err
 		}
 		for _, row := range *res_fk {
 			// fmt.Println(row)
-			_aux_data_fk[row["from"].(string)] = map[string]interface{}{
+			_aux_data_fk[row["from"].(string)] = map[string]any{
 				"referred_table":  row["table"].(string),
 				"referred_column": row["to"].(string),
 			}
@@ -525,8 +525,8 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 			var referred_column string
 			if _, exists := _aux_data_fk[row["name"].(string)]; exists {
 				fk = true
-				referred_table = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_table"].(string)
-				referred_column = _aux_data_fk[row["name"].(string)].(map[string]interface{})["referred_column"].(string)
+				referred_table = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_table"].(string)
+				referred_column = _aux_data_fk[row["name"].(string)].(map[string]any)["referred_column"].(string)
 			}
 			pk := false
 			if _pk, ok := row["pk"].(bool); ok {
@@ -545,7 +545,7 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 				}
 			}
 			field_order += 1
-			_aux_row := map[string]interface{}{
+			_aux_row := map[string]any{
 				"db":              dbName,
 				"table":           table,
 				"field":           row["name"].(string),
@@ -571,16 +571,16 @@ func (db *DB) TableSchema(params map[string]any, table string, dbName string, ex
 		return &_aux_data, true, nil
 	} else if contains(_ddb_drivers, _driver) {
 		_query := `SELECT table_name as name FROM information_schema.tables`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	} else if contains(_mysql_drivers, _driver) {
 		_query := `SHOW TABLES`
 		_query = `SELECT TABLE_NAME as name FROM information_schema.TABLES WHERE TABLE_SCHEMA = 'your_database_name';`
-		return db.QueryMultiRows(_query, []interface{}{}...)
+		return db.QueryMultiRows(_query, []any{}...)
 	}
 	return nil, false, fmt.Errorf("could not handle driver %s", _driver)
 }
 
-func (db *DB) ExecuteQuery(query string, data ...interface{}) (int, error) {
+func (db *DB) ExecuteQuery(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	query = adjustQuery(db.DriverName(), query)
@@ -599,7 +599,7 @@ func (db *DB) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	return int(id), nil
 }
 
-func (db *DB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...interface{}) (int, error) {
+func (db *DB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	query = adjustQuery(db.DriverName(), query)
@@ -619,7 +619,7 @@ func (db *DB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...interfa
 	return int(id), nil
 }
 
-func (db *DB) ExecuteQueryRowsAffected(query string, data ...interface{}) (int64, error) {
+func (db *DB) ExecuteQueryRowsAffected(query string, data ...any) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
 	query = adjustQuery(db.DriverName(), query)
@@ -653,7 +653,7 @@ func (db *DB) ExecuteNamedQuery(query string, data map[string]any) (int, error) 
 	return int(id), nil
 }
 
-func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string]any, bool, error) {
+func (db *DB) QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	var result []map[string]any
@@ -685,12 +685,12 @@ func (db *DB) QueryMultiRows(query string, params ...interface{}) (*[]map[string
 	return &result, true, nil
 }
 
-func (db *DB) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+func (db *DB) QueryRows(ctx context.Context, query string, params ...any) (*sql.Rows, error) {
 	query = adjustQuery(db.DriverName(), query)
 	return db.QueryContext(ctx, query, params...)
 }
 
-func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]any, []string, bool, error) {
+func (db *DB) QueryMultiRowsWithCols(query string, params ...any) (*[]map[string]any, []string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	var result []map[string]any
@@ -720,7 +720,7 @@ func (db *DB) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]ma
 	return &result, columns, true, nil
 }
 
-func (db *DB) QuerySingleRow(query string, params ...interface{}) (*map[string]any, bool, error) {
+func (db *DB) QuerySingleRow(query string, params ...any) (*map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	result := map[string]any{}
@@ -746,15 +746,15 @@ func (db *DB) QuerySingleRow(query string, params ...interface{}) (*map[string]a
 	return &result, true, nil
 }
 
-func (db *DB) IsEmpty(value interface{}) bool {
+func (db *DB) IsEmpty(value any) bool {
 	switch v := value.(type) {
 	case nil:
 		return true
 	case string:
 		return len(v) == 0
-	case []interface{}:
+	case []any:
 		return len(v) == 0
-	case map[interface{}]interface{}:
+	case map[any]any:
 		return len(v) == 0
 	default:
 		return false
@@ -851,7 +851,7 @@ func ParsePostgresConnString(connStr string) (map[string]string, error) {
 	return result, nil
 }
 
-func (db *DB) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
+func (db *DB) Query2CSV(query string, csv_path string, params ...any) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	rows, err := db.QueryContext(ctx, query, params...)
@@ -924,7 +924,7 @@ func (db *DB) Query2CSV(query string, csv_path string, params ...interface{}) (b
 	return true, nil
 }
 
-func contains(slice []interface{}, element interface{}) bool {
+func contains(slice []any, element any) bool {
 	for _, v := range slice {
 		if v == element {
 			return true
@@ -950,7 +950,7 @@ func convertToUTF8(isoStr string) (string, error) {
 	return string(utf8Bytes), nil
 }
 
-func hasDecimalPlace(v interface{}) (bool, error) {
+func hasDecimalPlace(v any) (bool, error) {
 	// Try to cast v to float64
 	floatVal, ok := v.(float64)
 	if !ok {

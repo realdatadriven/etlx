@@ -53,7 +53,7 @@ func (db *ODBC) New(dsn string) (*ODBC, error) {
 	return &ODBC{_db}, nil
 }
 
-func (db *ODBC) ExecuteQuery(query string, data ...interface{}) (int, error) {
+func (db *ODBC) ExecuteQuery(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	result, err := db.ExecContext(ctx, query, data...)
@@ -67,7 +67,7 @@ func (db *ODBC) ExecuteQuery(query string, data ...interface{}) (int, error) {
 	return int(id), err
 }
 
-func (db *ODBC) ExecuteQueryRowsAffected(query string, data ...interface{}) (int64, error) {
+func (db *ODBC) ExecuteQueryRowsAffected(query string, data ...any) (int64, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	result, err := db.ExecContext(ctx, query, data...)
@@ -81,10 +81,10 @@ func (db *ODBC) ExecuteQueryRowsAffected(query string, data ...interface{}) (int
 	return id, err
 }
 
-func (db *ODBC) QueryMultiRows(query string, params ...interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *ODBC) QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		return nil, false, err
@@ -100,14 +100,14 @@ func (db *ODBC) QueryMultiRows(query string, params ...interface{}) (*[]map[stri
 	return &result, true, err
 }
 
-func (db *ODBC) QueryRows(ctx context.Context, query string, params ...interface{}) (*sql.Rows, error) {
+func (db *ODBC) QueryRows(ctx context.Context, query string, params ...any) (*sql.Rows, error) {
 	return db.QueryContext(ctx, query, params...)
 }
 
-func (db *ODBC) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]map[string]interface{}, []string, bool, error) {
+func (db *ODBC) QueryMultiRowsWithCols(query string, params ...any) (*[]map[string]any, []string, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
-	var result []map[string]interface{}
+	var result []map[string]any
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		return nil, nil, false, err
@@ -127,24 +127,24 @@ func (db *ODBC) QueryMultiRowsWithCols(query string, params ...interface{}) (*[]
 	return &result, columns, true, err
 }
 
-func (db *ODBC) AllTables(params map[string]interface{}, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *ODBC) AllTables(params map[string]any, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	// Logic to get all tables for DuckDB
 	return nil, false, nil
 }
 
-func (db *ODBC) TableSchema(params map[string]interface{}, table string, dbName string, extra_conf map[string]interface{}) (*[]map[string]interface{}, bool, error) {
+func (db *ODBC) TableSchema(params map[string]any, table string, dbName string, extra_conf map[string]any) (*[]map[string]any, bool, error) {
 	return nil, false, nil
 }
 
-func (db *ODBC) ExecuteNamedQuery(query string, data map[string]interface{}) (int, error) {
+func (db *ODBC) ExecuteNamedQuery(query string, data map[string]any) (int, error) {
 	return 0, fmt.Errorf("not suported yet %s", "_")
 }
 
-func (db *ODBC) ExecuteQueryPGInsertWithLastInsertId(query string, data ...interface{}) (int, error) {
+func (db *ODBC) ExecuteQueryPGInsertWithLastInsertId(query string, data ...any) (int, error) {
 	return 0, fmt.Errorf("not suported %s", "_")
 }
 
-func (db *ODBC) Query2CSV(query string, csv_path string, params ...interface{}) (bool, error) {
+func (db *ODBC) Query2CSV(query string, csv_path string, params ...any) (bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
 	rows, err := db.QueryContext(ctx, query, params...)
@@ -217,10 +217,10 @@ func (db *ODBC) Query2CSV(query string, csv_path string, params ...interface{}) 
 	return true, nil
 }
 
-func (db *ODBC) QuerySingleRow(query string, params ...interface{}) (*map[string]interface{}, bool, error) {
+func (db *ODBC) QuerySingleRow(query string, params ...any) (*map[string]any, bool, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutODBC)
 	defer cancel()
-	result := map[string]interface{}{}
+	result := map[string]any{}
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
 		return nil, false, err
@@ -235,7 +235,7 @@ func (db *ODBC) QuerySingleRow(query string, params ...interface{}) (*map[string
 	return &result, true, err
 }
 
-func (db *ODBC) FromParams(params map[string]interface{}, extra_conf map[string]interface{}) (*DB, string, string, error) {
+func (db *ODBC) FromParams(params map[string]any, extra_conf map[string]any) (*DB, string, string, error) {
 	return nil, "", "", fmt.Errorf("not implemented yet %s", "_")
 }
 
@@ -243,19 +243,19 @@ func (db *ODBC) GetDriverName() string {
 	return "odbc"
 }
 
-func (db *ODBC) GetUserByNameOrEmail(email string) (map[string]interface{}, bool, error) {
+func (db *ODBC) GetUserByNameOrEmail(email string) (map[string]any, bool, error) {
 	return nil, false, fmt.Errorf("not implemented yet %s", "_")
 }
 
-func (db *ODBC) IsEmpty(value interface{}) bool {
+func (db *ODBC) IsEmpty(value any) bool {
 	switch v := value.(type) {
 	case nil:
 		return true
 	case string:
 		return len(v) == 0
-	case []interface{}:
+	case []any:
 		return len(v) == 0
-	case map[interface{}]interface{}:
+	case map[any]any:
 		return len(v) == 0
 	default:
 		return false

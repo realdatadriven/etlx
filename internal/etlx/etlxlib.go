@@ -21,7 +21,7 @@ import (
 
 type ETLX struct {
 	Config           map[string]any
-	md               string
+	MD               string
 	autoLogsDisabled bool
 	MetadataOrder    bool
 }
@@ -106,9 +106,11 @@ func (etlx *ETLX) ConfigFromFile(filePath string) error {
 	} else {
 		data = []byte(addAutoLoggs(string(data)))
 	}
+	//fmt.Println(string(data))
+	etlx.MD = string(data)
 	// Parse the Markdown content into an AST
 	reader := text.NewReader(data)
-	return etlx.ParseMarkdownToConfig(reader, mdText)
+	return etlx.ParseMarkdownToConfig(reader, string(data))
 }
 
 func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
@@ -117,14 +119,14 @@ func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
 	if err != nil {
 		return fmt.Errorf("failed convert the Notebook JSON content to MDText: %w", err)
 	}
-	etlx.md = mdText
+	etlx.MD = mdText
 	reader := text.NewReader([]byte(addAutoLoggs(mdText)))
 	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 
 func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 	// Parse the Markdown content into an AST
-	etlx.md = mdText
+	etlx.MD = mdText
 	reader := text.NewReader([]byte(mdText))
 	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
@@ -365,6 +367,8 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 		return fmt.Errorf("err converting from json: %s", err)
 	}
 	etlx.Config = config
+	//etlx.MD = content
+	//fmt.Println("MD CONTENT:", etlx.MD)
 	return nil
 }
 
@@ -541,7 +545,7 @@ func (etlx *ETLX) RuntimeMemStats() (float64, float64, float64, uint32) {
 }
 
 // setQueryDate formats the query string by inserting the given date reference in place of placeholders
-func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef interface{}) string {
+func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef any) string {
 	patt := regexp.MustCompile(`(["]?\w+["]?\.\w+\s?=\s?'\{.*?\}'|["]?\w+["]?\s?=\s?'\{.*?\}')`)
 	matches := patt.FindAllString(query, -1)
 	if len(matches) == 0 {

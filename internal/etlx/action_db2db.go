@@ -13,20 +13,20 @@ import (
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
-func ScanRowToMap(rows *sql.Rows) (map[string]interface{}, error) {
+func ScanRowToMap(rows *sql.Rows) (map[string]any, error) {
 	columns, err := rows.Columns()
 	if err != nil {
 		return nil, fmt.Errorf("failed to get columns: %w", err)
 	}
-	values := make([]interface{}, len(columns))
-	valuePointers := make([]interface{}, len(columns))
+	values := make([]any, len(columns))
+	valuePointers := make([]any, len(columns))
 	for i := range values {
 		valuePointers[i] = &values[i]
 	}
 	if err := rows.Scan(valuePointers...); err != nil {
 		return nil, fmt.Errorf("failed to scan row: %w", err)
 	}
-	rowMap := make(map[string]interface{})
+	rowMap := make(map[string]any)
 	for i, colName := range columns {
 		rowMap[colName] = values[i]
 	}
