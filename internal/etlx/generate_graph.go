@@ -8,9 +8,8 @@ import (
 
 // GenerateMermaidFlowchart generates an enhanced Mermaid flowchart with animations and click callbacks
 func (etlx *ETLX) GenerateMermaidFlowchart(nodes []map[string]any, edges []map[string]any) string {
-	fmt.Println("NODES:", len(nodes), "EDGES:", len(edges))
+	//fmt.Println("NODES:", len(nodes), "EDGES:", len(edges))
 	var mmd strings.Builder
-
 	mmd.WriteString(`---
 config:
   look: handDrawn
@@ -18,7 +17,6 @@ config:
 ---
 flowchart LR
 `)
-
 	// Collect unique parent_ids
 	parents := make(map[any]bool)
 	for _, row := range nodes {
@@ -26,75 +24,58 @@ flowchart LR
 			parents[pid] = true
 		}
 	}
-
 	parentList := make([]any, 0, len(parents))
 	for p := range parents {
 		parentList = append(parentList, p)
 	}
-
 	mmd.WriteString("\t%% NODES\n")
-
 	added := make(map[string]bool)
-
 	for _, parent := range parentList {
 		children := filterByParentID(nodes, parent)
 		if len(children) == 0 {
 			continue
 		}
-
 		first := children[0]
 		parentTitle, _ := getString_(first, "parent_title")
 		parentRunsAs, _ := getString_(first, "parent_runs_as")
 		parentDescription, _ := getString_(first, "parent_description")
 		parentName, _ := getString_(first, "parent_name")
-
 		mmd.WriteString(fmt.Sprintf("\t%%%% %s %s\n", parentName, parentDescription))
 		mmd.WriteString(fmt.Sprintf("\tsubgraph %v[\"%s (%s)\"]\n", parent, parentTitle, parentRunsAs))
-
 		for _, child := range children {
 			sectionID := child["section_id"]
 			key := fmt.Sprintf("%v_%v", parent, sectionID)
-
 			if !added[key] {
 				name, _ := getString_(child, "name")
 				description, _ := getString_(child, "description")
 				title, _ := getString_(child, "title")
-
 				mmd.WriteString(fmt.Sprintf("\t\t%%%% %s - %s\n", name, description))
 				mmd.WriteString(fmt.Sprintf("\t\t%s[\"%s\"]\n", key, title))
 				added[key] = true
 			}
 		}
-
 		mmd.WriteString("\tend\n\n")
 	}
-
 	// === EDGES with animations, click callbacks and success styling ===
 	mmd.WriteString("\t%% EDGES\n")
 	for i, row := range edges {
 		toKey := fmt.Sprintf("%v_%v",
 			row["parent_id"],
 			row["section_id"])
-
 		fromKey := fmt.Sprintf("%v_%v",
 			row["depends_on_parent_id"],
 			row["depends_on_section_id"])
-
 		// Animated edge:   from  q0@-->  to
 		mmd.WriteString(fmt.Sprintf("\t%s q%d@--> %s\n", fromKey, i, toKey))
-
 		// Animation config
 		mmd.WriteString(fmt.Sprintf("\tq%d@{ animate: true }\n", i))
-
 		// Click callback with all four IDs
 		callbackStr := fmt.Sprintf("%v|%v|%v|%v",
 			getAny_(row, "parent_id"),
 			getAny_(row, "section_id"),
 			getAny_(row, "depends_on_parent_id"),
 			getAny_(row, "depends_on_section_id"))
-
 		mmd.WriteString(fmt.Sprintf("\tclick %s callback \"%s\"\n", fromKey, callbackStr))
-
 		// Success styling on the target node
 		if success, ok := getBool_(row, "success"); ok {
 			if success {
@@ -104,7 +85,6 @@ flowchart LR
 			}
 		}
 	}
-
 	return mmd.String()
 }
 
