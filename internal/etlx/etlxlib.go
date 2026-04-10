@@ -21,6 +21,7 @@ import (
 
 type ETLX struct {
 	Config           map[string]any
+	md:              string
 	autoLogsDisabled bool
 	MetadataOrder    bool
 }
@@ -116,12 +117,14 @@ func (etlx *ETLX) ConfigFromIpynbJSON(ipynbJSON string) error {
 	if err != nil {
 		return fmt.Errorf("failed convert the Notebook JSON content to MDText: %w", err)
 	}
+	etlx.md = mdText
 	reader := text.NewReader([]byte(addAutoLoggs(mdText)))
 	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
 
 func (etlx *ETLX) ConfigFromMDText(mdText string) error {
 	// Parse the Markdown content into an AST
+	etlx.md = mdText
 	reader := text.NewReader([]byte(mdText))
 	return etlx.ParseMarkdownToConfig(reader, mdText)
 }
