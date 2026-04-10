@@ -270,6 +270,24 @@ order by C.row;`
 	if err != nil {
 		return nil, err
 	}
+	query = `WITH D AS (
+    select C.*, UNNEST(C.others).language as language, UNNEST(C.others).code as code, UNNEST(C.others).info_string as info_string
+    from markdown_sections
+)
+SELECT C.* 
+	, D.language, D.code, D.info_string
+    , case
+        when D.language = 'sql' and trim(replace(regexp_extract(D.code, '(?m)^--\\s*([A-Za-z0-9_]+)', 0), '--', '')) != ''
+            then trim(replace(regexp_extract(D.code, '(?m)^--\\s*([A-Za-z0-9_]+)', 0), '--', ''))
+        else trim(replace(D.info_string, D.language, ''))
+    end AS "name"
+FROM markdown_sections C
+LEFT OUTER JOIN D ON D.section_id = C.section_id
+ORDER BY C.row;`
+	md_data_expanded, _, err := conn.QueryMultiRows(query, []any{}...)
+	if err != nil {
+		return nil, err
+	}
 	query = `CREATE OR REPLACE TABLE edges AS
 SELECT A.*, A.section_id, A.parent_id, B.row as depends_on_row, B.section_id as depends_on_section_id, B.parent_id as depends_on_parent_id, A.parent_runs_as
 FROM markdown_sections AS A
@@ -352,10 +370,11 @@ ORDER BY N.row ASC;`
 		return nil, err
 	}
 	return map[string]any{
-		"md_data":   *md_data,
-		"nodes":     *nodes,
-		"edges":     *edges,
-		"nodes_est": *nodes_est,
-		"edges_est": *edges_est,
+		"md_data":          *md_data,
+		"md_data_expanded": *md_data_expanded,
+		"nodes":            *nodes,
+		"edges":            *edges,
+		"nodes_est":        *nodes_est,
+		"edges_est":        *edges_est,
 	}, nil
 }
