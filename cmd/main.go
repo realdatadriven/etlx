@@ -284,6 +284,7 @@ func main() {
 	mdData, err := etlxlib.QueryETLXMD("")
 	if err != nil {
 		fmt.Println("QueryETLXMD: ", err)
+		return
 	}
 	nodes, ok := mdData["nodes"]
 	if !ok {
