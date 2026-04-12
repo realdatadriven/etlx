@@ -1,8 +1,7 @@
 ---
 name: ETLX
-logs:
-  - conn: 'sqlite:database/sqlite_ex.db'
-    table: etlx_logs
+main_conn: 'sqlite:database/sqlite_ex.db'
+logs_table: etlx_logs
 author: realdatadriven
 version: 1.0.0
 ---
