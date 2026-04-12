@@ -1,7 +1,13 @@
 ---
 name: ETLX
-main_conn: 'sqlite:database/sqlite_ex.db'
+main_conn: 'sqlite3:database/sqlite_ex.db'
 logs_table: etlx_logs
+logs_query: |
+    select * 
+    from "etlx_logs" 
+    where ref = '${date_ref}' 
+        and "name" like '%Main%' 
+    order by "sart_at" desc
 author: realdatadriven
 version: 1.0.0
 ---
