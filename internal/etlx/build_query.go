@@ -37,7 +37,7 @@ func (etlx *ETLX) QueryBuilder(conf map[string]any, keys ...string) (string, map
 	query_parts := map[string]any{}
 	_fields_order := []string{}
 	for key2, value := range fields {
-		if key2 == "metadata" || key2 == "__order" || key2 == "order" {
+		if key2 == "metadata" || key2 == "__order" || key2 == "__frontmatter" || key2 == "order" {
 			continue
 		}
 		_field := value.(map[string]any)

@@ -156,8 +156,6 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
 func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) error {
-	parser := goldmark.DefaultParser()
-	root := parser.Parse(reader) // Initialize the result map and a levels map
 	config := make(map[string]any)
 	config["__order"] = []string{}
 	_aux := NewDuckLakeParser().FindDuckLakeStrings(string(content))
@@ -190,9 +188,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 	} else if err := data.Decode(&meta); err != nil {
 		fmt.Println("Error decoding frontmatter:", err)
 	}
-	//fmt.Println("FRONTMATTER:", meta)
+	// fmt.Println("FRONTMATTER:", meta)
 	config["__frontmatter"] = meta
 	//order := make(map[string][]string)          // Track the order of keys for each top-level section
+	//parser := goldmark.DefaultParser()
+	root := md.Parser().Parse(reader)
 	// Walk through the AST
 	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {
 		if entering {
@@ -890,7 +890,7 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	order, okOrder := data["__order"].([]any)
 	if okOrder {
 		for _, key2 := range order {
-			if key2 == "metadata" || key2 == "__order" || key2 == "order" {
+			if key2 == "metadata" || key2 == "__order" || key2 == "__frontmatter" || key2 == "order" {
 				continue
 			}
 			if _, isMap := data[key2.(string)].(map[string]any); !isMap {
@@ -904,7 +904,7 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 		}
 	} else {
 		for key2, value := range data {
-			if key2 == "metadata" || key2 == "__order" || key2 == "order" {
+			if key2 == "metadata" || key2 == "__frontmatter" || key2 == "order" {
 				continue
 			}
 			if _, isMap := value.(map[string]any); !isMap {

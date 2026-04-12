@@ -422,7 +422,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		if !ok {
 			continue
 		}
-		if fieldName == "__order" {
+		if fieldName == "__order" || fieldName == "__frontmatter" {
 			continue
 		}
 		name := dialect.GetColumnName(fieldName)
@@ -506,7 +506,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 	}*/
 	for colName, _col := range columns {
 		// fmt.Println(colName, _col)
-		if colName == "__order" || colName == "metadata" {
+		if colName == "__order" || colName == "metadata" || colName == "__frontmatter" {
 			continue
 		}
 		col, ok := _col.(map[string]any) // Type assertion for column definition

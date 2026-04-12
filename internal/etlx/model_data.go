@@ -67,7 +67,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	if exists {
 		updateParts := []string{}
 		for k := range data {
-			if k == "__order" || k == "created_at" {
+			if k == "__order" || k == "__frontmatter" || k == "created_at" {
 				continue
 			}
 			updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
@@ -81,7 +81,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 		cols := []string{}
 		names := []string{}
 		for k := range data {
-			if k == "__order" {
+			if k == "__order" || k == "__frontmatter" {
 				continue
 			}
 			cols = append(cols, dialect.GetColumnName(k))

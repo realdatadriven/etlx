@@ -107,7 +107,7 @@ func main() {
 	} else if len(__order) > 0 {
 		//fmt.Print("LEVEL 1 H:", __order)
 		for _, key := range __order {
-			if key == "metadata" || key == "__order" || key == "order" {
+			if key == "metadata" || key == "__order" || key == "__frontmatter" || key == "order" {
 				continue
 			}
 			//if !etlxlib.Contains(_keys, any(key)) {

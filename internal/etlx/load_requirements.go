@@ -221,7 +221,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			}
 		} else {
 			for newConfKey, value := range etl.Config {
-				if newConfKey == "metadata" || newConfKey == "__order" || newConfKey == "order" {
+				if newConfKey == "metadata" || newConfKey == "__order" || newConfKey == "__frontmatter" || newConfKey == "order" {
 					continue
 				}
 				if _, ok := etlx.Config[newConfKey]; !ok {

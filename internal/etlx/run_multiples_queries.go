@@ -89,7 +89,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		}
 	}
 	for _, itemKey := range order {
-		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
+		if itemKey == "metadata" || itemKey == "__order" || itemKey == "__frontmatter" || itemKey == "order" {
 			continue
 		}
 		item := data[itemKey]
