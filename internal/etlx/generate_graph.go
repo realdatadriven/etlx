@@ -305,7 +305,7 @@ ORDER BY N.row ASC;`
 	if err != nil {
 		return nil, err
 	}
-	query = ` CREATE OR REPLACE TABLE edges_est AS
+	query = `CREATE OR REPLACE TABLE edges_est AS
 SELECT DISTINCT A.row, A.section_id, A.parent_id, B.row as depends_on_row, B.section_id as depends_on_section_id, B.parent_id as depends_on_parent_id, A.parent_runs_as
 FROM markdown_sections AS A
 LEFT OUTER JOIN markdown_sections AS B ON
