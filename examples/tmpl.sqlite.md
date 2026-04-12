@@ -1,3 +1,12 @@
+---
+name: ETLX
+logs:
+  - conn: 'sqlite:database/sqlite_ex.db'
+    table: etlx_logs
+author: realdatadriven
+version: 1.0.0
+---
+
 # etlx config: EXTRACT_LOAD example (NYC Yellow Taxi — Jan 2024)
 
 This document shows a practical example of extending the `etlx` config model with **metadata keys** usefull for data governance, using the NYC Yellow Taxi January 2024 Parquet file hosted at `https://d37ci6vzurychx.cloudfront.net/trip-data/yellow_tripdata_2024-01.parquet`.

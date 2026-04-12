@@ -279,7 +279,7 @@ func main() {
 		}
 	}
 	// GENERATE GRAPH NODES AND EDGES MERMAID FLOWCHART
-	fmt.Println("Generating Mermaid flowchart...")
+	fmt.Println("Generating Graph Nodes and Edges | Mermaid flowchart...")
 	// fmt.Println(etlxlib.MD)
 	mdData, err := etlxlib.QueryETLXMD("")
 	if err != nil {
@@ -311,5 +311,10 @@ func main() {
 		}
 	}
 	flow := etlxlib.GenerateMermaidFlowchart(nodes, edges)
-	fmt.Println("GenerateMermaidFlowchart: ", flow)
+	f, err := etlxlib.TempFIle("", flow, "flowchart.*.mmd")
+	//if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+	fmt.Println("Mermaid Flowchart:\n", f)
+	//}
+
+	// fmt.Println("GenerateMermaidFlowchart: ", flow)
 }

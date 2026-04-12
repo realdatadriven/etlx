@@ -15,7 +15,9 @@ import (
 	goyaml "github.com/goccy/go-yaml"
 	"github.com/yuin/goldmark"
 	"github.com/yuin/goldmark/ast"
+	goldmarkparser "github.com/yuin/goldmark/parser"
 	"github.com/yuin/goldmark/text"
+	"go.abhg.dev/goldmark/frontmatter" // ← important import
 	"gopkg.in/yaml.v3"
 )
 
@@ -154,7 +156,6 @@ func (etlx *ETLX) TracebackHeaders(node ast.Node, source []byte) []string {
 
 // ParseMarkdownToConfig parses a Markdown file into a structured nested map
 func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) error {
-	// Initialize the Markdown parser
 	parser := goldmark.DefaultParser()
 	root := parser.Parse(reader) // Initialize the result map and a levels map
 	config := make(map[string]any)
@@ -169,6 +170,28 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 		}
 	}
 	levels := make(map[int]map[string]any) // Track the current section for each heading level
+	// get YAML Frontmatter if exists and put it in the config under __frontmatter key
+	//frontmatter := make(map[string]any)
+	// Create goldmark with frontmatter support
+	md := goldmark.New(
+		goldmark.WithExtensions(&frontmatter.Extender{}),
+		// You can add other extensions here, e.g. extension.GFM
+	)
+	ctx := goldmarkparser.NewContext()
+	var buf bytes.Buffer
+	if err := md.Convert([]byte(content), &buf, goldmarkparser.WithContext(ctx)); err != nil {
+		fmt.Println("Error converting the md with frontmatter:", err)
+	}
+	var meta map[string]any
+	// Extract frontmatter as map[string]any
+	data := frontmatter.Get(ctx)
+	if data == nil {
+		fmt.Println("No frontmatter found")
+	} else if err := data.Decode(&meta); err != nil {
+		fmt.Println("Error decoding frontmatter:", err)
+	}
+	//fmt.Println("FRONTMATTER:", meta)
+	config["__frontmatter"] = meta
 	//order := make(map[string][]string)          // Track the order of keys for each top-level section
 	// Walk through the AST
 	err := ast.Walk(root, func(node ast.Node, entering bool) (ast.WalkStatus, error) {

@@ -33,6 +33,7 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10501.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10501.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10501.0 // indirect
+	go.abhg.dev/goldmark/frontmatter v0.3.0 // indirect
 )
 
 require (
