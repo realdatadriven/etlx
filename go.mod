@@ -10,7 +10,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/config v1.32.14
 	github.com/aws/aws-sdk-go-v2/credentials v1.19.14
 	github.com/aws/aws-sdk-go-v2/service/s3 v1.99.0
-	github.com/duckdb/duckdb-go/v2 v2.10501.0
+	github.com/duckdb/duckdb-go/v2 v2.10502.0
 	github.com/goccy/go-yaml v1.19.2
 	github.com/jlaffaye/ftp v0.2.0
 	github.com/jmoiron/sqlx v1.4.0
@@ -26,14 +26,15 @@ require (
 	gopkg.in/yaml.v3 v3.0.1
 )
 
+require go.abhg.dev/goldmark/frontmatter v0.3.0
+
 require (
 	github.com/aws/aws-sdk-go-v2/service/signin v1.0.9 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10501.0 // indirect
-	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10501.0 // indirect
-	go.abhg.dev/goldmark/frontmatter v0.3.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/darwin-amd64 v0.10502.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/darwin-arm64 v0.10502.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10502.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10502.0 // indirect
+	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10502.0 // indirect
 )
 
 require (
@@ -55,7 +56,7 @@ require (
 	github.com/aws/aws-sdk-go-v2/service/ssooidc v1.35.19 // indirect
 	github.com/aws/aws-sdk-go-v2/service/sts v1.41.10 // indirect
 	github.com/aws/smithy-go v1.24.3 // indirect
-	github.com/duckdb/duckdb-go-bindings v0.10501.0 // indirect
+	github.com/duckdb/duckdb-go-bindings v0.10502.0 // indirect
 	github.com/go-viper/mapstructure/v2 v2.5.0 // indirect
 	github.com/goccy/go-json v0.10.6 // indirect
 	github.com/golang-sql/civil v0.0.0-20220223132316-b832511892a9 // indirect

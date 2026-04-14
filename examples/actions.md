@@ -240,7 +240,7 @@ name: MSSQL_EXTRACT
 description: "Example extrating from mssql sqlite3 file"
 connection: "duckdb:"
 database: MSSQL_EXTRACT.db
-active: false
+active: true
 ```
 
 ## MSSQL_EXTRACT
