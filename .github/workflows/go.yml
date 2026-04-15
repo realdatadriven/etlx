@@ -18,7 +18,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25'
+          go-version: '1.26'
       - name: Build Linux Binaries
         run: |
           mkdir -p dist
@@ -40,7 +40,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25'
+          go-version: '1.26'
 
       - name: Setup MSBuild (for Visual Studio environment)
         uses: microsoft/setup-msbuild@v2
@@ -102,7 +102,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25'
+          go-version: '1.26'
 
       - name: Setup MSBuild (for Visual Studio environment)
         uses: microsoft/setup-msbuild@v2
@@ -135,7 +135,7 @@ jobs:
       - name: Setup Go
         uses: actions/setup-go@v4
         with:
-          go-version: '1.25'
+          go-version: '1.26'
 
       # Step 3: Install UnixODBC
       - name: Install UnixODBC

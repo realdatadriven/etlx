@@ -319,7 +319,7 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 type MSSQLDialect struct{ BaseDialect }
 
 func (ms *MSSQLDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
-	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NULL BEGING CREATE TABLE [%s] ( `, tableName, tableName), ` END `
+	return fmt.Sprintf(`IF OBJECT_ID('%s', 'U') IS NULL BEGIN CREATE TABLE [%s] ( `, tableName, tableName), fmt.Sprintf(` END; SET IDENTITY_INSERT [%s] ON `, tableName)
 }
 
 func (ms *MSSQLDialect) GetCreateTable(tableName string) (string, string) {
@@ -365,6 +365,25 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	default:
 		return sqlType
 	}
+}
+
+func (b *MSSQLDialect) GetDefaultValue(field map[string]any) string {
+	if defaultVal, ok := field["default"]; ok {
+		switch v := defaultVal.(type) {
+		case bool:
+			dflt := 0
+			if v {
+				dflt = 1
+			}
+			return fmt.Sprintf(" DEFAULT %d", dflt)
+		case string:
+			// Basic escaping for single quotes
+			return fmt.Sprintf(" DEFAULT '%s'", strings.ReplaceAll(v, "'", "''"))
+		case int, float64:
+			return fmt.Sprintf(" DEFAULT %v", v)
+		}
+	}
+	return ""
 }
 
 // GetDialect returns the appropriate SQLDialect implementation.
@@ -533,6 +552,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		allSchemaColumnNames = append(allSchemaColumnNames, colName)
 	}
 
+	// dbCon.ExecuteQuery(fmt.Sprintf("SET IDENTITY_INSERT [%s] ON;", dialect.GetTableName(tableName)), []any{}...)
 	for i, _row := range data {
 		row, ok := _row.(map[string]any) // Type assertion for data row
 		if !ok {
@@ -590,7 +610,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 			return fmt.Errorf("failed to insert row %d into %s: %w", i, tableName, err)
 		}
 	}
-
+	// dbCon.ExecuteQuery(fmt.Sprintf("SET IDENTITY_INSERT [%s] OFF;", dialect.GetTableName(tableName)), []any{}...)
 	return nil
 }
 
@@ -1151,7 +1171,7 @@ type SeedData map[string]any
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
 func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
 	app := map[string]any{}
-	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
 	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
@@ -1212,7 +1232,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			}
 			// 1. Check if row exists
 			var exists bool
-			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
+			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s --  LIMIT 1`, dialect.GetTableName(tableName), whereClause)
 			// fmt.Println("checkQuery:", checkQuery, _chk_params)
 			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil && err != sql.ErrNoRows {
@@ -1297,7 +1317,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 
 func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
 	app := map[string]any{}
-	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
 	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
@@ -1342,7 +1362,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 			logKey = fmt.Sprintf("%v", row["table"])
 			// 1. Check if row exists
 			var exists bool
-			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s LIMIT 1`, dialect.GetTableName(tableName), whereClause)
+			checkQuery := fmt.Sprintf(`SELECT * FROM %s WHERE %s --  LIMIT 1`, dialect.GetTableName(tableName), whereClause)
 			// fmt.Println("checkQuery:", checkQuery, _chk_params)
 			res, _, err := dbCon.QueryMultiRows(checkQuery, _chk_params...)
 			if err != nil {
@@ -1447,7 +1467,7 @@ func LoadOrSyncMenusFromConfig(
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 	// 1. Find the main app record (assuming one app per db)
 	app := map[string]any{}
-	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false LIMIT 1`
+	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
 	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
@@ -1535,7 +1555,7 @@ func LoadOrSyncMenusFromConfig(
 		order := getFloat64(menuCfg, "menu_order", 999)
 		config := getString(menuCfg, "menu_config", "")
 		menu := map[string]any{}
-		sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1`
+		sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false --  LIMIT 1`
 		_menu, _, err := dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
 		if err != nil {
 			return fmt.Errorf("check menu %q: %w", menuName, err)
@@ -1585,7 +1605,7 @@ func LoadOrSyncMenusFromConfig(
 			lastID := LastInsertId
 			if lastID == 0 {
 				// fallback: query again
-				sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false LIMIT 1`
+				sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false --  LIMIT 1`
 				_menu, _, err = dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
 				if err != nil {
 					return fmt.Errorf("retrieve new menu_id for %q: %w", menuName, err)
@@ -1659,7 +1679,7 @@ func LoadOrSyncMenusFromConfig(
 			}
 			// Find table metadata record
 			var tblMeta map[string]any
-			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false LIMIT 1`
+			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false --  LIMIT 1`
 			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName}...)
 			if err != nil {
 				return fmt.Errorf("find table %q: %w", tblName, err)
@@ -1671,7 +1691,7 @@ func LoadOrSyncMenusFromConfig(
 			tblMeta = (*_tblMeta)
 			// Check if link already exists
 			var exists bool
-			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? AND excluded = false LIMIT 1 `
+			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? AND excluded = false --  LIMIT 1 `
 			_res, _, err := dbCon.QuerySingleRow(sql, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
 			if err != nil {
 				return fmt.Errorf("check menu_table link: %w", err)
@@ -2016,7 +2036,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"num_gc_start":          num_gc,
 			}
 			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
+			fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			_, err := dbConn.ExecuteQuery(createTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["end_at"] = time.Now()

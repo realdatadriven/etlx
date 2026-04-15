@@ -35,12 +35,13 @@ type DB struct {
 }
 
 func New(driverName string, dsn string) (*DB, error) {
+	// fmt.Println(driverName, dsn)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	db, err := sqlx.ConnectContext(ctx, driverName, dsn)
 	if err != nil {
 		// check if error is due to db not existing create it
-		fmt.Println(driverName, err)
+		//fmt.Println(driverName, err)
 		// when err match `postgres pq: database "DB_NAME" does not exist (3D000)`
 		if strings.Contains(err.Error(), "does not exist") && strings.Contains(err.Error(), "pq:") {
 			// get the db name from the error message
@@ -65,6 +66,29 @@ func New(driverName string, dsn string) (*DB, error) {
 				}
 			} else {
 
+			}
+			// mssql
+		} else if strings.Contains(err.Error(), "Cannot open database") && strings.Contains(err.Error(), "mssql:") {
+			re := regexp.MustCompile(`Cannot open database "([^"]+)" that was requested by the login`)
+			matches := re.FindStringSubmatch(err.Error())
+			fmt.Println(err, matches)
+			if len(matches) > 1 {
+				newDBName := matches[1]
+				// replace dsn newDBName with postgres and create the new db
+				newDSN, err := ReplaceDBNameV2(dsn, "master")
+				db2, err := sqlx.ConnectContext(ctx, driverName, newDSN)
+				fmt.Printf("%s CREATE DATABASE %s\n", newDSN, newDBName)
+				// Create the database
+				_, err = db2.ExecContext(ctx, fmt.Sprintf(`CREATE DATABASE "%s"`, newDBName))
+				if err != nil {
+					fmt.Println("CREATE DATABASE failed:", driverName, err)
+					return nil, err
+				} else {
+					db, err = sqlx.ConnectContext(ctx, driverName, dsn)
+					if err != nil {
+						return nil, err
+					}
+				}
 			}
 		} else {
 			return nil, err
@@ -184,12 +208,17 @@ func ReplaceDBName(dsn string, newDBName string) (string, error) {
 				// Replace the dbname with the new database name
 				parts[i] = fmt.Sprintf("dbname=%s", newDBName)
 				break
+			} else if strings.HasPrefix(part, "database=") {
+				// Replace the dbname with the new database name
+				parts[i] = fmt.Sprintf("database=%s", newDBName)
+				break
 			}
 		}
 		// Join the parts back into a DSN string
 		return strings.Join(parts, " "), nil
 	}
 	// If the DSN is a URL, use query parameters to replace the dbname
+	// instead check patterns like
 	q := u.Query()
 	q.Set("dbname", newDBName)
 	u.RawQuery = q.Encode()
@@ -979,13 +1008,13 @@ func ReplaceDBNameV2(dsn, newDBName string) (string, error) {
 	connStr := strings.TrimSpace(parts[1])
 	switch driver {
 	case "sqlite", "sqlite3":
-		return "sqlite:" + replaceSQLiteDB(connStr, newDBName), nil
+		return driver + ":" + replaceSQLiteDB(connStr, newDBName), nil
 	case "postgres", "postgresql":
-		return "postgres:" + replacePostgresDB(connStr, newDBName), nil
+		return driver + ":" + replacePostgresDB(connStr, newDBName), nil
 	case "mysql":
-		return "mysql:" + replaceMySQLDB(connStr, newDBName), nil
+		return driver + ":" + replaceMySQLDB(connStr, newDBName), nil
 	case "mssql", "sqlserver":
-		return "mssql:" + replaceMSSQLDB(connStr, newDBName), nil
+		return driver + ":" + replaceMSSQLDB(connStr, newDBName), nil
 	default:
 		return "", fmt.Errorf("unsupported driver: %s (supported: sqlite, postgres, mysql, mssql)", driver)
 	}
