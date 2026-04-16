@@ -26,7 +26,7 @@ Powered by [**DuckDB**](https://duckdb.org), but **not locked to it**.
 - ✔ Pipelines are written in **Markdown + YAML + SQL**
 - ✔ The pipeline **is the documentation**
 - ✔ Runs on **DuckDB, PostgreSQL, SQLite, MySQL, SQL Server, ODBC**
-- ✔ One specification for **ETL / ELT, data quality, report generation and automation, scripts execution, ...**
+- ✔ One specification for **ETL / ELT / Reverse ETL, data quality, report generation and automation, scripts execution, ...**
 - ✔ Fully **auditable & reproducible** by design
 - ✔ Available as a **CLI and embeddable Go library**
 
@@ -40,7 +40,7 @@ Powered by [**DuckDB**](https://duckdb.org), but **not locked to it**.
 # INPUTS
 ```yaml
 name: INPUTS
-description: this defines a ETL / ELT block where every level two block with proper metadata (yaml) is treated as a step in the workflow
+description: this defines a ETL / ELT / Reverse ETL block where every level two block with proper metadata (yaml) is treated as a step in the workflow
 runs_as: ETL # the runs_as defines how the block shoud be treated
 active: true # active if missing the is consider active, if false this block and all its child are ignored
 ```
