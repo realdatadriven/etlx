@@ -65,6 +65,10 @@ func (db *DuckDB) New(dsn string) (*DuckDB, error) {
 	return &DuckDB{_db}, nil
 }
 
+func (db *DuckDB) BeginT() (*sql.Tx, error) {
+	return db.Begin()
+}
+
 func (db *DuckDB) ExecuteQuery(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()

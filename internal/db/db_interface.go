@@ -6,6 +6,7 @@ import (
 )
 
 type DBInterface interface {
+	BeginT() (*sql.Tx, error)
 	ExecuteQuery(query string, data ...any) (int, error)
 	Query2CSV(query string, csv_path string, params ...any) (bool, error)
 	QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error)

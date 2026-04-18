@@ -31,6 +31,8 @@ type SQLDialect interface {
 	SupportsInlineColumnComment() bool
 	SupportsTableComment() bool
 	DropTableIfExists(tableName string) string
+	DataTypeConversion(row map[string]any) map[string]any
+	GetBooleanValue(value bool) any
 }
 
 // BaseDialect provides common implementations for SQLDialect interface.
@@ -123,18 +125,25 @@ func (b *BaseDialect) GetTableComment(tableName, comment string) string         
 func (b *BaseDialect) SupportsInlineColumnComment() bool                             { return false }
 func (b *BaseDialect) SupportsTableComment() bool                                    { return false }
 
+func (b *BaseDialect) DataTypeConversion(row map[string]any) map[string]any {
+	return row
+}
+func (b *BaseDialect) GetBooleanValue(value bool) any {
+	return value
+}
+
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
 
-func (ms *PostgresDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
+func (p *PostgresDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
 	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
 }
 
-func (ms *PostgresDialect) GetCreateTable(tableName string) (string, string) {
+func (p *PostgresDialect) GetCreateTable(tableName string) (string, string) {
 	return fmt.Sprintf(`CREATE TABLE "%s" (`, tableName), ``
 }
 
-func (ms *PostgresDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+func (p *PostgresDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
 	// PostgreSQL does not support CREATE OR REPLACE TABLE, so we can simulate it with DROP + CREATE
 	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s"; CREATE TABLE "%s" (`, tableName, tableName), ``
 }
@@ -194,6 +203,14 @@ func (p *PostgresDialect) GetTableComment(tableName, comment string) string {
 }
 
 func (p *PostgresDialect) SupportsTableComment() bool { return true }
+
+func (p *PostgresDialect) DataTypeConversion(row map[string]any) map[string]any {
+	return row
+}
+
+func (p *PostgresDialect) GetBooleanValue(value bool) any {
+	return value
+}
 
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
@@ -259,6 +276,14 @@ func (m *MySQLDialect) GetTableComment(tableName, comment string) string {
 func (m *MySQLDialect) SupportsInlineColumnComment() bool { return true }
 func (m *MySQLDialect) SupportsTableComment() bool        { return true }
 
+func (m *MySQLDialect) DataTypeConversion(row map[string]any) map[string]any {
+	return row
+}
+
+func (m *MySQLDialect) GetBooleanValue(value bool) any {
+	return value
+}
+
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
 
@@ -315,6 +340,14 @@ func (s *SQLiteDialect) GetAutoIncrement(field map[string]any) string {
 	return ""
 }
 
+func (s *SQLiteDialect) DataTypeConversion(row map[string]any) map[string]any {
+	return row
+}
+
+func (s *SQLiteDialect) GetBooleanValue(value bool) any {
+	return value
+}
+
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
 type MSSQLDialect struct{ BaseDialect }
 
@@ -367,7 +400,7 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	}
 }
 
-func (b *MSSQLDialect) GetDefaultValue(field map[string]any) string {
+func (ms *MSSQLDialect) GetDefaultValue(field map[string]any) string {
 	if defaultVal, ok := field["default"]; ok {
 		switch v := defaultVal.(type) {
 		case bool:
@@ -384,6 +417,31 @@ func (b *MSSQLDialect) GetDefaultValue(field map[string]any) string {
 		}
 	}
 	return ""
+}
+
+func (ms *MSSQLDialect) DataTypeConversion(row map[string]any) map[string]any {
+	converted := make(map[string]any)
+	for k, v := range row {
+		switch val := v.(type) {
+		case bool:
+			if v.(bool) {
+				converted[k] = 1
+			} else {
+				converted[k] = 0
+			}
+		default:
+			converted[k] = val
+		}
+	}
+	return converted
+}
+
+func (ms *MSSQLDialect) GetBooleanValue(value bool) any {
+	if value {
+		return 1
+	} else {
+		return 0
+	}
 }
 
 // GetDialect returns the appropriate SQLDialect implementation.
@@ -489,6 +547,9 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	}
 	// Append any collected post-create SQL (e.g., column comments for Postgres)
 	for _, sql := range postCreateTableSQL {
+		if sql == "" {
+			continue
+		}
 		schema.WriteString("\n" + sql)
 	}
 	return schema.String()
@@ -532,7 +593,6 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		if !ok {
 			return fmt.Errorf("column (%s) definition is not a valid map[string]any", colName)
 		}
-
 		info := schemaColInfo{}
 		if colName == "created_at" {
 			info.isCreatedAt = true
@@ -551,25 +611,45 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		schemaColumnMap[colName] = info
 		allSchemaColumnNames = append(allSchemaColumnNames, colName)
 	}
-
-	// dbCon.ExecuteQuery(fmt.Sprintf("SET IDENTITY_INSERT [%s] ON;", dialect.GetTableName(tableName)), []any{}...)
+	/*/ Start a transaction
+	tx, err := dbCon.BeginT()
+	if err != nil {
+		log.Fatalf("Error starting transaction: %v", err)
+	}
+	defer func() {
+		if r := recover(); r != nil {
+			tx.Rollback()
+			log.Fatalf("Transaction rolled back due to panic: %v", r)
+		} else if err != nil {
+			tx.Rollback()
+			log.Printf("Transaction rolled back due to error: %v", err)
+		}
+	}()*/
+	if dbCon.GetDriverName() == "sqlserver" || dbCon.GetDriverName() == "mssql" {
+		sql := fmt.Sprintf("SET IDENTITY_INSERT [%s] ON;", tableName)
+		fmt.Printf("Executing SQL to enable IDENTITY_INSERT for MSSQL: %s\n", sql)
+		_, err := dbCon.ExecuteQuery(sql, []any{}...) // tx.Exec(sql) //
+		if err != nil {
+			fmt.Printf("failed to set IDENTITY_INSERT ON for table %s (%s): %v", tableName, sql, err)
+			// return fmt.Errorf("failed to set IDENTITY_INSERT ON for table %s (%s): %w", tableName, sql, err)
+		}
+	}
 	for i, _row := range data {
 		row, ok := _row.(map[string]any) // Type assertion for data row
 		if !ok {
 			return fmt.Errorf("row %d is not a valid map[string]any", i)
 		}
+		row = dialect.DataTypeConversion(row) // Convert data types as needed for the specific SQL dialect
 		insertCols := []string{}
 		insertVals := []string{} // For named parameters, e.g., ":colName"
 		insertMap := make(map[string]any)
 		now := time.Now() // Get current time once per row for consistency
-
 		for _, colName := range allSchemaColumnNames {
 			colInfo, existsInSchema := schemaColumnMap[colName]
 			if !existsInSchema {
 				// This should ideally not happen if allSchemaColumnNames is derived from schemaColumnMap
 				continue
 			}
-
 			if val, ok := row[colName]; ok {
 				// Value exists in the data row, use it
 				insertCols = append(insertCols, dialect.GetColumnName(colName))
@@ -596,13 +676,11 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 				// If it's nullable and not provided, it will be omitted from the INSERT, allowing DB default/NULL
 			}
 		}
-
 		// Construct the INSERT statement
 		if len(insertCols) == 0 {
 			return fmt.Errorf("row %d: no columns to insert", i)
 		}
-		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)",
-			dialect.GetTableName(tableName), strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
+		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", dialect.GetTableName(tableName), strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
 		// fmt.Println(query)
 		// Execute the insert using NamedExec for safety and convenience
 		_, err := dbCon.ExecuteNamedQuery(query, insertMap)
@@ -622,14 +700,12 @@ func generateDropTableSQL(driver, tableName string) string {
 // METADATA
 func generateSeedData(parsedTables map[string]any, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
-
 	data := map[string]any{
 		"table":                 []map[string]any{},
 		"translate_table":       []map[string]any{},
 		"translate_table_field": []map[string]any{},
 		"table_schema":          []map[string]any{},
 	}
-
 	for tableName, tableDef := range parsedTables {
 		// fmt.Println(1, tableName, tableDef)
 		commentAny, hasComment := tableDef.(map[string]any)["comment"]
@@ -666,14 +742,12 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 			"excluded":          false,
 		}
 		data["translate_table"] = append(data["translate_table"].([]map[string]any), translateTableRow)
-
 		// 3+4) columns → translate_table_field + table_schema
 		columnsAny, hasColumns := tableDef.(map[string]any)["columns"]
 		//fmt.Println(2, tableName, comment, columnsAny)
 		if !hasColumns {
 			continue
 		}
-
 		columns, ok := columnsAny.(map[string]any)
 		if !ok {
 			continue
@@ -699,11 +773,9 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 				continue
 			}
 			fieldOrder++
-
 			// ──────────────────────────────────────────────
 			// extract column properties with safe type assertions
 			// ──────────────────────────────────────────────
-
 			colType := getString(colDef, "type", "unknown")
 			colComment := getString(colDef, "comment", "")
 			colTooltip, _ := colDef["tooltip"]
@@ -722,7 +794,6 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 					referredColumn = parts[1]
 				}
 			}
-
 			// ──────────────────────────────────────────────
 			// translate_table_field row
 			// ──────────────────────────────────────────────
@@ -740,7 +811,6 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 				"excluded":          false,
 			}
 			data["translate_table_field"] = append(data["translate_table_field"].([]map[string]any), ttfRow)
-
 			// ──────────────────────────────────────────────
 			// table_schema row
 			// ──────────────────────────────────────────────
@@ -1170,9 +1240,10 @@ type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
 func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
-	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
-	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName, dialect.GetBooleanValue(false)}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
 	}
@@ -1186,7 +1257,6 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 		"translate_table_field",
 		"table_schema",
 	}
-	dialect := GetDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
@@ -1196,6 +1266,10 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 		}
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
 		for _, row := range rows {
+			if _, ok := row["excluded"]; !ok {
+				row["excluded"] = false
+			}
+			row = dialect.DataTypeConversion(row)
 			// Prepare the common named params that almost every row has
 			params := map[string]any{
 				"db":         targetDBName,
@@ -1220,14 +1294,14 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			var logKey string
 			_chk_params := []any{}
 			if tableName == "translate_table_field" || tableName == "table_schema" {
-				whereClause = `db = ? AND "table" = ? AND field = ? AND excluded = false`
-				whereClause2 = `db = :db AND "table" = :table AND field = :field AND excluded = false`
-				_chk_params = []any{targetDBName, row["table"], row["field"]}
+				whereClause = fmt.Sprintf(`db = ? AND %s = ? AND %s = ? AND excluded = ?`, dialect.GetColumnName("table"), dialect.GetColumnName("field"))
+				whereClause2 = fmt.Sprintf(`db = :db AND %s = :table AND %s = :field AND excluded = :excluded`, dialect.GetColumnName("table"), dialect.GetColumnName("field"))
+				_chk_params = []any{targetDBName, row["table"], row["field"], dialect.GetBooleanValue(false)}
 				logKey = fmt.Sprintf("%v.%v", row["table"], row["field"])
 			} else {
-				whereClause = `db = ? AND "table" = ? AND excluded = false`
-				whereClause2 = `db = :db AND "table" = :table AND excluded = false`
-				_chk_params = []any{targetDBName, row["table"]}
+				whereClause = fmt.Sprintf(`db = ? AND %s = ? AND excluded = ?`, dialect.GetColumnName("table"))
+				whereClause2 = fmt.Sprintf(`db = :db AND %s = :table AND excluded = :excluded`, dialect.GetColumnName("table"))
+				_chk_params = []any{targetDBName, row["table"], dialect.GetBooleanValue(false)}
 				logKey = fmt.Sprintf("%v", row["table"])
 			}
 			// 1. Check if row exists
@@ -1316,9 +1390,10 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 }
 
 func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
-	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
-	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName}...)
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(_sql, []any{targetDBName, dialect.GetBooleanValue(false)}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
 	}
@@ -1330,7 +1405,6 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 		"custom_form",
 		"custom_table",
 	}
-	dialect := GetDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
@@ -1340,6 +1414,10 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 		}
 		fmt.Printf("\n→ Processing %q (%d rows)\n", tableName, len(rows))
 		for _, row := range rows {
+			if _, ok := row["excluded"]; !ok {
+				row["excluded"] = false
+			}
+			row = dialect.DataTypeConversion(row)
 			// Prepare the common named params that almost every row has
 			params := map[string]any{
 				"db":         targetDBName,
@@ -1356,9 +1434,9 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 			var whereClause2 string
 			var logKey string
 			_chk_params := []any{}
-			whereClause = `db = ? AND "table" = ? AND excluded = false`
-			whereClause2 = `db = :db AND "table" = :table AND excluded = false`
-			_chk_params = []any{targetDBName, row["table"]}
+			whereClause = fmt.Sprintf(`db = ? AND %s = ? AND excluded = ?`, dialect.GetColumnName("table"))
+			whereClause2 = fmt.Sprintf(`db = :db AND %s = :table AND excluded = :excluded`, dialect.GetColumnName("table"))
+			_chk_params = []any{targetDBName, row["table"], dialect.GetBooleanValue(false)}
 			logKey = fmt.Sprintf("%v", row["table"])
 			// 1. Check if row exists
 			var exists bool
@@ -1464,11 +1542,12 @@ func LoadOrSyncMenusFromConfig(
 	version string, // e.g. "1.0.0"
 	desc string, // optional app description
 ) error {
+	dialect := GetDialect(dbCon.GetDriverName())
 	now := time.Now().UTC().Format("2006-01-02 15:04:05")
 	// 1. Find the main app record (assuming one app per db)
 	app := map[string]any{}
-	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = false --  LIMIT 1`
-	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName}...)
+	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
+	_app, _, err := dbCon.QuerySingleRow(sql, []any{dbName, dialect.GetBooleanValue(false)}...)
 	if err != nil {
 		return fmt.Errorf("find app failed: %w", err)
 	}
@@ -1493,6 +1572,7 @@ func LoadOrSyncMenusFromConfig(
 			"updated_at": now,
 			"excluded":   false,
 		}
+		appData = dialect.DataTypeConversion(appData)
 		_, err := dbCon.ExecuteNamedQuery(insertAppSQL, appData)
 		if err != nil {
 			// fmt.Printf("Error inserting app record: %v, %s, %v\n", err, insertAppSQL, appData)
@@ -1555,8 +1635,8 @@ func LoadOrSyncMenusFromConfig(
 		order := getFloat64(menuCfg, "menu_order", 999)
 		config := getString(menuCfg, "menu_config", "")
 		menu := map[string]any{}
-		sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false --  LIMIT 1`
-		_menu, _, err := dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
+		sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = ? --  LIMIT 1`
+		_menu, _, err := dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"], dialect.GetBooleanValue(false)}...)
 		if err != nil {
 			return fmt.Errorf("check menu %q: %w", menuName, err)
 		}
@@ -1585,6 +1665,7 @@ func LoadOrSyncMenusFromConfig(
 				"updated_at":  now,
 				"excluded":    false,
 			}
+			_data = dialect.DataTypeConversion(_data)
 			LastInsertId, err := dbCon.ExecuteQueryPGInsertWithLastInsertId(sql, _data)
 			if err != nil {
 				if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
@@ -1605,8 +1686,8 @@ func LoadOrSyncMenusFromConfig(
 			lastID := LastInsertId
 			if lastID == 0 {
 				// fallback: query again
-				sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = false --  LIMIT 1`
-				_menu, _, err = dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"]}...)
+				sql = `SELECT menu_id FROM menu WHERE menu = ? AND app_id = ? AND excluded = ? --  LIMIT 1`
+				_menu, _, err = dbCon.QuerySingleRow(sql, []any{menuName, app["app_id"], dialect.GetBooleanValue(false)}...)
 				if err != nil {
 					return fmt.Errorf("retrieve new menu_id for %q: %w", menuName, err)
 				}
@@ -1637,6 +1718,7 @@ func LoadOrSyncMenusFromConfig(
 			updateParts = append(updateParts, `active = :active`)
 			updateParams["active"] = active
 			updateParams["updated_at"] = now
+			updateParams = dialect.DataTypeConversion(updateParams)
 			if len(updateParts) > 0 {
 				updateQuery := fmt.Sprintf(`
 					UPDATE menu
@@ -1679,8 +1761,8 @@ func LoadOrSyncMenusFromConfig(
 			}
 			// Find table metadata record
 			var tblMeta map[string]any
-			sql = `SELECT table_id FROM "table"  WHERE "table" = ? AND db = ? AND excluded = false --  LIMIT 1`
-			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName}...)
+			sql = fmt.Sprintf(`SELECT table_id FROM %s WHERE %s = ? AND db = ? AND excluded = ? --  LIMIT 1`, dialect.GetTableName("table"), dialect.GetColumnName("table"))
+			_tblMeta, _, err := dbCon.QuerySingleRow(sql, []any{tblName, dbName, dialect.GetBooleanValue(false)}...)
 			if err != nil {
 				return fmt.Errorf("find table %q: %w", tblName, err)
 			}
@@ -1691,8 +1773,8 @@ func LoadOrSyncMenusFromConfig(
 			tblMeta = (*_tblMeta)
 			// Check if link already exists
 			var exists bool
-			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? AND excluded = false --  LIMIT 1 `
-			_res, _, err := dbCon.QuerySingleRow(sql, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"]}...)
+			sql = `SELECT * FROM menu_table  WHERE menu_id = ?  AND table_id = ? AND app_id = ? AND excluded = ? --  LIMIT 1 `
+			_res, _, err := dbCon.QuerySingleRow(sql, []any{menu["menu_id"], tblMeta["table_id"], app["app_id"], dialect.GetBooleanValue(false)}...)
 			if err != nil {
 				return fmt.Errorf("check menu_table link: %w", err)
 			}
@@ -1722,6 +1804,7 @@ func LoadOrSyncMenusFromConfig(
 					"updated_at":   now,
 					"excluded":     false,
 				}
+				_data = dialect.DataTypeConversion(_data)
 				_, err = dbCon.ExecuteNamedQuery(sql, _data)
 				if err != nil {
 					if strings.Contains(err.Error(), "duplicate key value violates unique constraint") && dbCon.GetDriverName() == "postgres" {
@@ -1757,6 +1840,7 @@ func LoadOrSyncMenusFromConfig(
 					updateParts = append(updateParts, `requires_rla = :requires_rla`)
 					updateParams["requires_rla"] = requiresRLA
 				}
+				updateParams = dialect.DataTypeConversion(updateParams)
 				if len(updateParts) > 0 {
 					updateQuery := fmt.Sprintf(`
 						UPDATE menu_table
@@ -2036,7 +2120,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"num_gc_start":          num_gc,
 			}
 			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-			fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
+			//fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			_, err := dbConn.ExecuteQuery(createTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["end_at"] = time.Now()

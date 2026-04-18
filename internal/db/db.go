@@ -125,6 +125,10 @@ func New(driverName string, dsn string) (*DB, error) {
 	return &DB{db}, nil
 }
 
+func (db *DB) BeginT() (*sql.Tx, error) {
+	return db.Begin()
+}
+
 func (db *DB) New(driverName string, dsn string) (*DB, error) {
 	return New(driverName, dsn)
 }
