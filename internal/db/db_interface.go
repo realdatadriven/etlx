@@ -3,10 +3,12 @@ package db
 import (
 	"context"
 	"database/sql"
+
+	"github.com/jmoiron/sqlx"
 )
 
 type DBInterface interface {
-	BeginT() (*sql.Tx, error)
+	BeginT() (*sqlx.Tx, error)
 	ExecuteQuery(query string, data ...any) (int, error)
 	Query2CSV(query string, csv_path string, params ...any) (bool, error)
 	QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error)

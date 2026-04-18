@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"time"
 
+	"github.com/jmoiron/sqlx"
 	"github.com/realdatadriven/etlx/internal/env"
 
 	_ "github.com/duckdb/duckdb-go/v2"
@@ -65,8 +66,8 @@ func (db *DuckDB) New(dsn string) (*DuckDB, error) {
 	return &DuckDB{_db}, nil
 }
 
-func (db *DuckDB) BeginT() (*sql.Tx, error) {
-	return db.Begin()
+func (db *DuckDB) BeginT() (*sqlx.Tx, error) {
+	return nil, fmt.Errorf("Not suported for %s", "DuckDB")
 }
 
 func (db *DuckDB) ExecuteQuery(query string, data ...any) (int, error) {

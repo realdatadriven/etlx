@@ -628,7 +628,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 	if dbCon.GetDriverName() == "sqlserver" || dbCon.GetDriverName() == "mssql" {
 		sql := fmt.Sprintf("SET IDENTITY_INSERT [%s] ON;", tableName)
 		fmt.Printf("Executing SQL to enable IDENTITY_INSERT for MSSQL: %s\n", sql)
-		_, err := dbCon.ExecuteQuery(sql, []any{}...) // tx.Exec(sql) //
+		_, err := dbCon.ExecuteQuery(sql, []any{}...) //tx.ExecContext(context.Background(), sql) //
 		if err != nil {
 			fmt.Printf("failed to set IDENTITY_INSERT ON for table %s (%s): %v", tableName, sql, err)
 			// return fmt.Errorf("failed to set IDENTITY_INSERT ON for table %s (%s): %w", tableName, sql, err)
@@ -638,6 +638,9 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		row, ok := _row.(map[string]any) // Type assertion for data row
 		if !ok {
 			return fmt.Errorf("row %d is not a valid map[string]any", i)
+		}
+		if _, ok := row["excluded"]; !ok {
+			row["excluded"] = false
 		}
 		row = dialect.DataTypeConversion(row) // Convert data types as needed for the specific SQL dialect
 		insertCols := []string{}
@@ -683,7 +686,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		query := fmt.Sprintf("INSERT INTO %s (%s) VALUES (%s)", dialect.GetTableName(tableName), strings.Join(insertCols, ", "), strings.Join(insertVals, ", "))
 		// fmt.Println(query)
 		// Execute the insert using NamedExec for safety and convenience
-		_, err := dbCon.ExecuteNamedQuery(query, insertMap)
+		_, err := dbCon.ExecuteNamedQuery(query, insertMap) // tx.NamedExecContext(context.Background(), query, insertMap) //
 		if err != nil {
 			return fmt.Errorf("failed to insert row %d into %s: %w", i, tableName, err)
 		}
