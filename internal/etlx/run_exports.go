@@ -746,18 +746,18 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					startColIndex := int(strings.ToUpper(col)[0] - 'A')
 					switch _type {
 					case "value":
-						isRangMap = false
-						rangeMap = map[string]any{}
+						isRangMap := false
+						rangeMap := map[string]any{}
 						if _range == "" {
-							_aux, ok := detail["range"].(map[string]any{})
+							_aux, ok := detail["range"].(map[string]any)
 							if ok {
 								rangeMap = _aux
 							}
 						}
 						if isRangMap {
-							_val = map[string]any{}
+							_val := map[string]any{}
 							if len((*rows)) > 0 {
-								_val := (*rows)[0]
+								_val = (*rows)[0]
 							}
 							for fld, rng := range rangeMap {
 								startRow, col, err := getStartOfRange(rng.(string))
