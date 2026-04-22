@@ -746,22 +746,54 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					startColIndex := int(strings.ToUpper(col)[0] - 'A')
 					switch _type {
 					case "value":
-						// cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
-						// fmt.Println(columnIndexToName(startColIndex))
-						cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
-						if err != nil {
-							fmt.Printf("failed to set columns: %s\n", err)
+						isRangMap = false
+						rangeMap = map[string]any{}
+						if _range == "" {
+							_aux, ok := detail["range"].(map[string]any{})
+							if ok {
+								rangeMap = _aux
+							}
 						}
-						if len((*rows)) > 0 {
-							_val := (*rows)[0]
-							key, okKey := detail["key"].(string)
-							if okKey {
-								file.SetCellValue(sheet, cell, _val[key])
-							} else {
-								file.SetCellValue(sheet, cell, _val["value"])
+						if isRangMap {
+							_val = map[string]any{}
+							if len((*rows)) > 0 {
+								_val := (*rows)[0]
+							}
+							for fld, rng := range rangeMap {
+								startRow, col, err := getStartOfRange(rng.(string))
+								if err != nil {
+									fmt.Printf("Error for '%s': %v\n", rng, err)
+									startRow, col = 1, "A"
+								}
+								startColIndex := int(strings.ToUpper(col)[0] - 'A')
+								cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
+								if err != nil {
+									fmt.Printf("failed to set columns: %s\n", err)
+								}
+								if _, ok := _val[fld]; ok {
+									file.SetCellValue(sheet, cell, _val[fld])
+								} else {
+									file.SetCellValue(sheet, cell, nil)
+								}
 							}
 						} else {
-							file.SetCellValue(sheet, cell, nil)
+							// cell, err := excelize.JoinCellName(string(rune('A'+startColIndex)), startRow)
+							// fmt.Println(columnIndexToName(startColIndex))
+							cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), startRow)
+							if err != nil {
+								fmt.Printf("failed to set columns: %s\n", err)
+							}
+							if len((*rows)) > 0 {
+								_val := (*rows)[0]
+								key, okKey := detail["key"].(string)
+								if okKey {
+									file.SetCellValue(sheet, cell, _val[key])
+								} else {
+									file.SetCellValue(sheet, cell, _val["value"])
+								}
+							} else {
+								file.SetCellValue(sheet, cell, nil)
+							}
 						}
 					case "formula":
 						if okFormula && formula != "" {
