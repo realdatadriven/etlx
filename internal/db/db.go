@@ -23,6 +23,7 @@ import (
 	_ "github.com/lib/pq"
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/microsoft/go-mssqldb"
+	_ "github.com/obaydullahmhs/go-db2"
 )
 
 // const defaultTimeout = 3 * time.Second
