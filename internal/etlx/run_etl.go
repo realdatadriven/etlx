@@ -501,7 +501,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				_params = []any{}
 				_sql = query
 			}
-			_, err := conn.ExecuteQuery(_sql, _params)
+			_, err = conn.ExecuteQuery(_sql, _params)
 			if err != nil {
 				return err
 			}
@@ -553,12 +553,13 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 					return err
 				}
 			} else {
+				//_, err := conn.ExecuteQuery(query)
 				_sql, _params, err := etlx.NamedToPositional(query, etlx.Params)
 				if err != nil {
 					_params = []any{}
 					_sql = query
 				}
-				_, err := conn.ExecuteQuery(_sql, _params)
+				_, err = conn.ExecuteQuery(_sql, _params)
 				if err != nil {
 					//fmt.Println(query, err)
 					return err
