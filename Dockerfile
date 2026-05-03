@@ -1,7 +1,7 @@
 # ============================================
 # 🛠️ Stage 1: Build etlx from Source
 # ============================================
-FROM golang:1.25 AS builder
+FROM golang:1.26 AS builder
 
 WORKDIR /app
 
@@ -72,8 +72,8 @@ CMD []
 # 📝 Usage Instructions
 #docker build --no-cache -t  etlx:latest .
 #docker run -v ./.env:/app/.env:ro -v ./config.md:/app/config.md:ro -v ./database:/app/database etlx:latest --config /app/config.md
-#podman tag etlx:latest docker.io/realdatadriven/etlx:latest
-#podman tag etlx:latest docker.io/realdatadriven/etlx:v1.4.16
-#podman login docker.io
-#podman push docker.io/realdatadriven/etlx:latest
-#podman push docker.io/realdatadriven/etlx:v1.4.16
+#docker tag etlx:latest docker.io/realdatadriven/etlx:latest
+#docker tag etlx:latest docker.io/realdatadriven/etlx:v1.152.1
+#docker login docker.io
+#docker push docker.io/realdatadriven/etlx:latest
+#docker push docker.io/realdatadriven/etlx:v1.152.1
