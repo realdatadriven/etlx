@@ -71,6 +71,21 @@ func columnIndexToName(n int) string {
 	return name
 }
 
+func columnIndexToNameV2(col int) (string, error) {
+	cell, err := excelize.CoordinatesToCellName(col, 1)
+	if err != nil {
+		return "", err
+	}
+	re := regexp.MustCompile(`^([A-Z]+)(\d+)$`)
+	matches := re.FindStringSubmatch(cell)
+	if matches == nil {
+		return "", fmt.Errorf("invalid cell reference format (expected format: A1, B2, etc.)")
+	}
+	return matches[1], nil
+}
+
+
+
 func isEmpty(s string) bool {
 	return len(s) == 0
 }
@@ -92,6 +107,7 @@ func clearEntireSheetContent(f *excelize.File, sheetName string) {
 		}
 	}
 }
+
 
 // parseCellReference parses a cell reference like "A2" and returns column and row
 func parseCellReference(cellRef string) (col string, row int, err error) {
