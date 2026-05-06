@@ -84,8 +84,6 @@ func columnIndexToNameV2(col int) (string, error) {
 	return matches[1], nil
 }
 
-
-
 func isEmpty(s string) bool {
 	return len(s) == 0
 }
@@ -107,7 +105,6 @@ func clearEntireSheetContent(f *excelize.File, sheetName string) {
 		}
 	}
 }
-
 
 // parseCellReference parses a cell reference like "A2" and returns column and row
 func parseCellReference(cellRef string) (col string, row int, err error) {
@@ -833,14 +830,21 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						}
 						// Write data rows
 						for _, value := range *rows {
-							for colIdx, colName := range columns {
+							rowValues := []any{}
+							for _, colName := range columns { // colIdx, colName := range columns
+								rowValues = append(rowValues, value[colName])
 								//cell, err := excelize.JoinCellName(string(rune('A'+startColIndex+colIdx)), rowIdx)
-								cell, err := excelize.JoinCellName(columnIndexToName(startColIndex+colIdx), rowIdx)
+								/*cell, err := excelize.JoinCellName(columnIndexToName(startColIndex+colIdx), rowIdx)
 								if err != nil {
 									fmt.Printf("failed to set columns: %s\n", err)
 								}
-								file.SetCellValue(sheet, cell, value[colName])
+								file.SetCellValue(sheet, cell, value[colName])*/
 							}
+							cell, err := excelize.JoinCellName(columnIndexToName(startColIndex), rowIdx)
+							if err != nil {
+								fmt.Printf("failed to set columns: %s\n", err)
+							}
+							file.SetSheetRow(sheet, cell, &rowValues)
 							rowIdx++
 						}
 						// Create Excel table if `table` is specified
