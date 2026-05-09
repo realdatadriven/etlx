@@ -705,6 +705,7 @@ func generateDropTableSQL(driver, tableName string) string {
 
 // METADATA
 func generateSeedData(parsedTables map[string]any, order []string, dbName string) map[string]any {
+	//fmt.Println(order)
 	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
 	data := map[string]any{
 		"table":                 []map[string]any{},
@@ -737,7 +738,6 @@ func generateSeedData(parsedTables map[string]any, order []string, dbName string
 			"excluded":   false,
 		}
 		data["table"] = append(data["table"].([]map[string]any), tableRow)
-
 		// 2) translate_table row (english default)
 		translateTableRow := map[string]any{
 			"table_org_desc":    comment,
@@ -847,7 +847,6 @@ func generateSeedData(parsedTables map[string]any, order []string, dbName string
 			data["table_schema"] = append(data["table_schema"].([]map[string]any), schemaRow)
 		}
 	}
-
 	return data
 }
 
@@ -2010,6 +2009,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	}
 	defer dbConn.Close()
 	// fmt.Println("CONN:", conn)
+	order_orders := []string{}
 	order := []string{}
 	__order, okOrder := data["__order"].([]any)
 	if !okOrder {
@@ -2104,6 +2104,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			if !ok {
 				continue
 			}
+			order_orders = append(order_orders, table)
 			_tables[table] = itemMetadata // just to keep track of tables for potential future use
 			comment, _ := itemMetadata.(map[string]any)["comment"].(string)
 			driver := dbConn.GetDriverName()
@@ -2278,7 +2279,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateSeedData(_tables, order, database)
+		_data := generateSeedData(_tables, order_orders, database)
 		err = UpsertSeedDataNamed(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
