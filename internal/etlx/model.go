@@ -177,8 +177,12 @@ func (p *PostgresDialect) GetColumnType(field map[string]any) string {
 		return "TEXT"
 	case "DATETIME":
 		return "TIMESTAMP"
+	case "DATE":
+		return "DATE"
 	case "BOOLEAN":
 		return "BOOLEAN"
+	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
+		return "DOUBLE PRECISION"
 	default:
 		return sqlType
 	}
@@ -251,10 +255,14 @@ func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 		return "TEXT" // Default to TEXT if length not specified for VARCHAR
 	case "TEXT", "LONGTEXT":
 		return "TEXT"
+	case "DATE":
+		return "DATE"
 	case "DATETIME":
 		return "DATETIME"
 	case "BOOLEAN":
 		return "TINYINT(1)"
+	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
+		return "DOUBLE"
 	default:
 		return sqlType
 	}
@@ -318,13 +326,20 @@ func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
 	case "INTEGER":
 		return "INTEGER"
 	case "VARCHAR":
-		return "TEXT"
+		if length, ok := field["length"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
+		return "VARCHAR(255)"
 	case "TEXT":
 		return "TEXT"
+	case "DATE":
+		return "DATE"
 	case "DATETIME":
-		return "TEXT"
+		return "DATETIME"
 	case "BOOLEAN":
-		return "INTEGER"
+		return "BOOLEAN"
+	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
+		return "REAL"
 	default:
 		return sqlType
 	}
@@ -393,8 +408,15 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 		return "NVARCHAR(MAX)"
 	case "DATETIME":
 		return "DATETIME"
+	case "DATE":
+		return "DATE"
 	case "BOOLEAN":
 		return "BIT"
+	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
+		if length, ok := field["length"].(int); ok {
+			return fmt.Sprintf("NUMERIC(%d)", length)
+		}
+		return "FLOAT"
 	default:
 		return sqlType
 	}
