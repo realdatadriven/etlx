@@ -40,3 +40,4 @@ logs.*.json
 *nyc*
 --public/
 examples/saas_model.md
+*.exe
