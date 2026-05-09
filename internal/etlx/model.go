@@ -539,8 +539,10 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	}
 	// Add foreign key constraints
 	columnDefs = append(columnDefs, foreignKeyConstraints...)
-	schema.WriteString(strings.Join(columnDefs, ",\n") + "\n)")
-	schema.WriteString(end + ";\n")
+	schema.WriteString(strings.Join(columnDefs, ",\n"))
+	schema.WriteString("\n)")
+	schema.WriteString(end)
+	schema.WriteString(";\n")
 	// Add table-level comments and other post-creation statements
 	if tableComment != "" && dialect.SupportsTableComment() {
 		schema.WriteString(dialect.GetTableComment(dialect.GetTableName(tableName), tableComment))
@@ -550,7 +552,8 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 		if sql == "" {
 			continue
 		}
-		schema.WriteString("\n" + sql)
+		schema.WriteString("\n")
+		schema.WriteString(sql)
 	}
 	return schema.String()
 }
@@ -701,7 +704,7 @@ func generateDropTableSQL(driver, tableName string) string {
 }
 
 // METADATA
-func generateSeedData(parsedTables map[string]any, dbName string) map[string]any {
+func generateSeedData(parsedTables map[string]any, order []string, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
 	data := map[string]any{
 		"table":                 []map[string]any{},
@@ -709,7 +712,11 @@ func generateSeedData(parsedTables map[string]any, dbName string) map[string]any
 		"translate_table_field": []map[string]any{},
 		"table_schema":          []map[string]any{},
 	}
-	for tableName, tableDef := range parsedTables {
+	for _, tableName := range order {
+		tableDef, exists := parsedTables[tableName]
+		if !exists {
+			continue
+		}
 		// fmt.Println(1, tableName, tableDef)
 		commentAny, hasComment := tableDef.(map[string]any)["comment"]
 		comment := ""
@@ -1421,6 +1428,9 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 				row["excluded"] = false
 			}
 			row = dialect.DataTypeConversion(row)
+			if row["table"].(string) == "user_role" {
+				// fmt.Println(row["table"], row["config"])
+			}
 			// Prepare the common named params that almost every row has
 			params := map[string]any{
 				"db":         targetDBName,
@@ -2268,7 +2278,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateSeedData(_tables, database)
+		_data := generateSeedData(_tables, order, database)
 		err = UpsertSeedDataNamed(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
