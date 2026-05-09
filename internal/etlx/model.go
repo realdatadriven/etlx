@@ -998,14 +998,15 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 // ──────────────────────────────────────────────
 // order []map[string]any{} by key order
 
-func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string]any {
+func generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339)
 	data := map[string]any{
 		"custom_table": []map[string]any{},
 		"custom_form":  []map[string]any{},
 	}
-	for tableName, tableDefAny := range parsedTables {
-		tableDef, ok := tableDefAny.(map[string]any)
+	//for tableName, tableDefAny := range parsedTables {
+	for _, tableName := range tables_order {
+		tableDef, ok := parsedTables[tableName].(map[string]any)
 		if !ok {
 			continue
 		}
@@ -1033,12 +1034,8 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 		// ──────────────────────────────────────────────
 		// columns + order
 		// ──────────────────────────────────────────────
-		columnsAny, hasColumns := tableDef["columns"]
+		columns, hasColumns := tableDef["columns"].(map[string]any)
 		if !hasColumns {
-			continue
-		}
-		columns, ok := columnsAny.(map[string]any)
-		if !ok {
 			continue
 		}
 		// Get field order (most important part)
@@ -1061,6 +1058,7 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				}
 			}
 		}
+
 		// ──────────────────────────────────────────────
 		// Build ordered fields for form & table
 		// ──────────────────────────────────────────────
@@ -1076,6 +1074,11 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 			if !ok {
 				continue
 			}
+			// Common properties
+			pk := getBool(colDef, "pk", false)
+			if pk {
+				continue // skip primary key fields from form/table config (optional, depends on your needs)
+			}
 			fieldOrder++
 			_order, ok := colDef["order"].(float64)
 			// fmt.Printf("1 - CONF ORDER: %v, type: %T\n", colDef["order"], colDef["order"])
@@ -1083,10 +1086,10 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				//fmt.Printf("2 - CONF ORDER: %v\n", _order)
 				fieldOrder = int(_order)
 			}
-			// Common properties
 			colComment := getString(colDef, "comment", colName)
 			autoincrement := getBool(colDef, "autoincrement", false)
 			nullable := getBool(colDef, "nullable", true)
+
 			// ─── Form field ───
 			formField := map[string]any{
 				"name":          colName,
@@ -1100,6 +1103,36 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 				"sizemd":        12,
 				"sizelg":        12,
 				// "sizexg":        12,
+			}
+			// ─── Foreign key reference ───
+			fkRef := getString(colDef, "fk", "")
+			var referredTable, referredColumn string
+			fk := fkRef != ""
+			if fk {
+				parts := strings.Split(fkRef, ".")
+				if len(parts) == 2 {
+					referredTable = parts[0]
+					referredColumn = parts[1]
+					// fmt.Println(1, "FK:", tableName, referredTable, referredColumn)
+					refTable, ok := parsedTables[referredTable].(map[string]any)
+					if ok {
+						// fmt.Println(2, "FK Table Metadata:", tableName, referredTable, referredColumn)
+						refTableCols, ok := refTable["columns"].(map[string]any)
+						if ok {
+							//fmt.Println(3, "FK Table Columns:", tableName, referredTable, referredColumn)
+							refTableFieldsOrder, hasOrder := refTableCols["__order"].([]any)
+							if hasOrder {
+								if len(refTableFieldsOrder) > 1 {
+									formField["name"] = refTableFieldsOrder[1]
+									formField["name_org"] = colName
+									formField["ref_table"] = referredTable
+									formField["ref_field"] = referredColumn
+									formField["fk"] = true
+								}
+							}
+						}
+					}
+				}
 			}
 			// Apply form_* overrides
 			for k, v := range colDef {
@@ -1116,7 +1149,7 @@ func generateCustomDataV2(parsedTables map[string]any, dbName string) map[string
 			formFieldsOrdered = append(formFieldsOrdered, formField)
 			// ─── Table field ───
 			tableField := map[string]any{
-				"name":    colName,
+				"name":    formField["name"], // keep same name as form field by default
 				"label":   colComment,
 				"display": false,
 				"order":   fieldOrder,
@@ -2009,7 +2042,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	}
 	defer dbConn.Close()
 	// fmt.Println("CONN:", conn)
-	order_orders := []string{}
+	tables_order := []string{}
 	order := []string{}
 	__order, okOrder := data["__order"].([]any)
 	if !okOrder {
@@ -2104,7 +2137,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			if !ok {
 				continue
 			}
-			order_orders = append(order_orders, table)
+			tables_order = append(tables_order, table)
 			_tables[table] = itemMetadata // just to keep track of tables for potential future use
 			comment, _ := itemMetadata.(map[string]any)["comment"].(string)
 			driver := dbConn.GetDriverName()
@@ -2279,7 +2312,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateSeedData(_tables, order_orders, database)
+		_data := generateSeedData(_tables, tables_order, database)
 		err = UpsertSeedDataNamed(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
@@ -2356,7 +2389,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateCustomDataV2(_tables, database)
+		_data := generateCustomDataV2(_tables, tables_order, database)
 		err = UpsertCustomFT(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting custom data: %s\n", key, err)
