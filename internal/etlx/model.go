@@ -1127,7 +1127,7 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 									formField["name_org"] = colName
 									formField["ref_table"] = referredTable
 									formField["ref_field"] = referredColumn
-									formField["fk"] = true
+									formField["autocomplete"] = true
 								}
 							}
 						}
