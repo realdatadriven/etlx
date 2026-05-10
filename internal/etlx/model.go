@@ -1019,6 +1019,15 @@ func generateCustomData(parsedTables map[string]any, dbName string) map[string]a
 // Main function – modified to preserve field order in config JSON
 // ──────────────────────────────────────────────
 // order []map[string]any{} by key order
+func filterAny(slice []any, fn func(any) bool) []any {
+	filtered := []any{}
+	for _, element := range slice {
+		if fn(element) {
+			filtered = append(filtered, element)
+		}
+	}
+	return filtered
+}
 
 func generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339)
@@ -1086,6 +1095,7 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 		// ──────────────────────────────────────────────
 		var formFieldsOrdered []map[string]any
 		var tableFieldsOrdered []map[string]any
+		fkAdded := []any{}
 		fieldOrder := 0
 		for _, colName := range fieldsByOrder {
 			colDefAny, exists := columns[colName]
@@ -1145,7 +1155,16 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 							refTableFieldsOrder, hasOrder := refTableCols["__order"].([]any)
 							if hasOrder {
 								if len(refTableFieldsOrder) > 1 {
-									formField["name"] = refTableFieldsOrder[1]
+									fkAdded = append(fkAdded, referredColumn)
+									fkName := refTableFieldsOrder[1]
+									acorr := filterAny(fkAdded, func(item any) bool {
+										return item.(string) == referredColumn
+									})
+									if len(acorr) > 1 {
+										fkName = fmt.Sprintf("%s%d", fkName, len(acorr))
+										//fmt.Println("FK Ref Repeats:", tableName, colName, fkName)
+									}
+									formField["name"] = fkName
 									formField["name_org"] = colName
 									formField["ref_table"] = referredTable
 									formField["ref_field"] = referredColumn
