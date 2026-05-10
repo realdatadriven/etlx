@@ -1029,6 +1029,16 @@ func filterAny(slice []any, fn func(any) bool) []any {
 	return filtered
 }
 
+func filterMapAny(slice []map[string]any, fn func(map[string]any) bool) []map[string]any {
+	filtered := []map[string]any{}
+	for _, element := range slice {
+		if fn(element) {
+			filtered = append(filtered, element)
+		}
+	}
+	return filtered
+}
+
 func generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
 	now := time.Now().UTC().Format(time.RFC3339)
 	data := map[string]any{
@@ -1122,6 +1132,10 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 			autoincrement := getBool(colDef, "autoincrement", false)
 			nullable := getBool(colDef, "nullable", true)
 
+			// ─── Foreign key reference ───
+			fkRef := getString(colDef, "fk", "")
+			var referredTable, referredColumn string
+			fk := fkRef != ""
 			// ─── Form field ───
 			formField := map[string]any{
 				"name":          colName,
@@ -1134,12 +1148,10 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				"sizesm":        12,
 				"sizemd":        12,
 				"sizelg":        12,
+				"pk":            pk,
+				"fk":            fk,
 				// "sizexg":        12,
 			}
-			// ─── Foreign key reference ───
-			fkRef := getString(colDef, "fk", "")
-			var referredTable, referredColumn string
-			fk := fkRef != ""
 			if fk {
 				parts := strings.Split(fkRef, ".")
 				if len(parts) == 2 {
@@ -1194,6 +1206,8 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				"label":   colComment,
 				"display": false,
 				"order":   fieldOrder,
+				"pk":      pk,
+				"fk":      fk,
 			}
 			// Apply table_* overrides
 			for k, v := range colDef {
@@ -1202,6 +1216,48 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				}
 			}
 			tableFieldsOrdered = append(tableFieldsOrdered, tableField)
+		}
+		// RESET display
+		xcluded := "created_at,updated_at,excluded,app_id,user_id"
+		formWithDisplay := filterMapAny(formFieldsOrdered, func(r map[string]any) bool {
+			display := false
+			if val, ok := r["display"].(bool); ok && val {
+				display = val
+			}
+			return display
+		})
+		if len(formWithDisplay) == 0 {
+			for r := range formFieldsOrdered {
+				pk, _ := formFieldsOrdered[r]["pk"].(bool)
+				name, _ := formFieldsOrdered[r]["name"].(string)
+				if pk {
+					continue
+				}
+				if strings.Contains(xcluded, name) {
+					continue
+				}
+				formFieldsOrdered[r]["display"] = true
+			}
+		}
+		tableWithDisplay := filterMapAny(tableFieldsOrdered, func(r map[string]any) bool {
+			display := false
+			if val, ok := r["display"].(bool); ok && val {
+				display = val
+			}
+			return display
+		})
+		if len(tableWithDisplay) == 0 {
+			for r := range tableFieldsOrdered {
+				pk, _ := tableFieldsOrdered[r]["pk"].(bool)
+				name, _ := formFieldsOrdered[r]["name"].(string)
+				if pk {
+					continue
+				}
+				if strings.Contains(xcluded, name) {
+					continue
+				}
+				tableFieldsOrdered[r]["display"] = true
+			}
 		}
 		// ──────────────────────────────────────────────
 		// Build config JSON manually → preserve field order
