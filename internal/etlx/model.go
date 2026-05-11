@@ -1732,7 +1732,7 @@ func LoadOrSyncMenusFromConfig(
 				return fmt.Errorf("create app failed: %w", err)
 			}
 		}
-		_app, _, err = dbCon.QuerySingleRow(sql, []any{dbName}...)
+		_app, _, err = dbCon.QuerySingleRow(sql, []any{dbName, dialect.GetBooleanValue(false)}...)
 		if err != nil {
 			return fmt.Errorf("find app failed: %w", err)
 		}
