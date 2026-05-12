@@ -258,6 +258,16 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			order = append(order, itemKey.(string))
 		}
 	}
+	dialect := GetDialect(dbConn.GetDriverName())
+	app := map[string]any{}
+	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
+	_app, _, err := dbConn.QuerySingleRow(_sql, []any{database, dialect.GetBooleanValue(false)}...)
+	if err != nil {
+		return fmt.Errorf("find app failed: %w", err)
+	}
+	if len(*_app) > 0 {
+		app = (*_app)
+	}
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
@@ -311,6 +321,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		// each key in data
 		fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
 		nowPattern := regexp.MustCompile(`^Now\(\)$`)
+		appPatterm := regexp.MustCompile(`^appId\(\)$`) 
 		for colName, input := range data {
 			// switch type of _data to string or map
 			switch v := input.(type) {
@@ -330,6 +341,10 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
 				if len(matchesNow) == 1 {
 					data[colName] = time.Now() //.Format("2006-01-02 15:04:05")
+				}
+				matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
+				if len(matchesApp) == 1 {
+					data[colName] = app["app_id"]
 				}
 			case map[string]any:
 				// do nothing
