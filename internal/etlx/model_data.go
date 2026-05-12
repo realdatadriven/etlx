@@ -258,21 +258,38 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			order = append(order, itemKey.(string))
 		}
 	}
-	dialect := GetDialect(dbConn.GetDriverName())
+	adminDb, err := etlx.GetDB(adminConn)
+	if err != nil {
+		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+		_log2["mem_alloc_end"] = mem_alloc
+		_log2["mem_total_alloc_end"] = mem_total_alloc
+		_log2["mem_sys_end"] = mem_sys
+		_log2["num_gc_end"] = num_gc
+		_log2["success"] = false
+		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
+		_log2["end_at"] = time.Now()
+		_log2["duration"] = time.Since(start3).Seconds()
+		processLogs = append(processLogs, _log2)
+		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
+	} else {
+		defer adminDb.Close()
+	}
+	dialect := GetDialect(adminDb.GetDriverName())
 	app := map[string]any{}
-	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
-	_app, _, err := dbConn.QuerySingleRow(_sql, []any{database, dialect.GetBooleanValue(false)}...)
+	_sql := `SELECT * FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
+	_app, _, err := adminDb.QuerySingleRow(_sql, []any{database, dialect.GetBooleanValue(false)}...)
 	if err != nil {
 		return nil, fmt.Errorf("find app failed: %w", err)
 	}
 	if len(*_app) > 0 {
 		app = (*_app)
+		// fmt.Println(app)
 	}
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
 		}
-		// // fmt.Println("ITEM KEY:", itemKey)
+		// fmt.Println("ITEM KEY:", itemKey)
 		item := data[itemKey]
 		if _, isMap := item.(map[string]any); !isMap {
 			continue
@@ -363,7 +380,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["num_gc_end"] = num_gc
 		if err != nil {
 			_log2["success"] = false
-			_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
+			_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 			processLogs = append(processLogs, _log2)
 		} else {
 			_log2["success"] = true
