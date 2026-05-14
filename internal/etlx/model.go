@@ -1003,17 +1003,17 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				continue // skip primary key fields from form/table config (optional, depends on your needs)
 			}
 			fieldOrder++
+			formOrder := fieldOrder
 			_order, dfltOrderOk := colDef["order"]
 			_form_order, formOrderOk := colDef["form_order"]
 			if formOrderOk {
-				fieldOrder = toInt(_form_order)
+				formOrder = toInt(_form_order)
 			} else if dfltOrderOk {
-				fieldOrder = toInt(_order)
+				formOrder = toInt(_order)
 			}
 			colComment := getString(colDef, "comment", colName)
 			autoincrement := getBool(colDef, "autoincrement", false)
 			nullable := getBool(colDef, "nullable", true)
-
 			// ─── Foreign key reference ───
 			fkRef := getString(colDef, "fk", "")
 			var referredTable, referredColumn string
@@ -1023,7 +1023,7 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				"name":          colName,
 				"label":         colComment,
 				"display":       false,
-				"order":         fieldOrder,
+				"order":         formOrder,
 				"autoincrement": autoincrement,
 				"required":      !nullable,
 				"size":          12,
@@ -1071,6 +1071,9 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 			}
 			// Apply form_* overrides
 			for k, v := range colDef {
+				if strings.HasSuffix(k, "_order") {
+					continue // skip order keys for now, we handle them separately
+				}
 				if strings.HasPrefix(k, "form_") {
 					if strings.TrimPrefix(k, "form_") == "size" {
 						// special handling for form_size → sizexs, sizesm, sizemd, sizelg, sizexg
@@ -1084,22 +1087,26 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 			formFieldsOrdered = append(formFieldsOrdered, formField)
 
 			// ─── Table field ───
+			tableOrder := fieldOrder
 			_table_order, tableOrderOk := colDef["table_order"]
 			if tableOrderOk {
-				fieldOrder = toInt(_table_order)
+				tableOrder = toInt(_table_order)
 			} else if dfltOrderOk {
-				fieldOrder = toInt(_order)
+				tableOrder = toInt(_order)
 			}
 			tableField := map[string]any{
 				"name":    formField["name"], // keep same name as form field by default
 				"label":   colComment,
 				"display": false,
-				"order":   fieldOrder,
+				"order":   tableOrder,
 				"pk":      pk,
 				"fk":      fk,
 			}
 			// Apply table_* overrides
 			for k, v := range colDef {
+				if strings.HasSuffix(k, "_order") {
+					continue // skip order keys for now, we handle them separately
+				}
 				if strings.HasPrefix(k, "table_") {
 					tableField[strings.TrimPrefix(k, "table_")] = v
 				}
