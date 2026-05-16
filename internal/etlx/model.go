@@ -330,7 +330,7 @@ func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("VARCHAR(%d)", length)
 		}
-		return "VARCHAR(255)"
+		return "VARCHAR"
 	case "TEXT":
 		return "TEXT"
 	case "DATE":
