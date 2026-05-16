@@ -414,10 +414,10 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 	case "BOOLEAN":
 		return "BIT"
 	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
-		if length, ok := field["length"].(int); ok {
-			return fmt.Sprintf("NUMERIC(%d)", length)
+		if length, ok := field["length"]; ok {
+			return fmt.Sprintf("DECIMAL(%v)", length)
 		}
-		return "FLOAT"
+		return "DECIMAL"
 	default:
 		return sqlType
 	}
