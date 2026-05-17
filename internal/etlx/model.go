@@ -1049,11 +1049,17 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 				"fk":            fk,
 				// "sizexg":        12,
 			}
+			//isRefToSameTable := false
 			if fk {
 				parts := strings.Split(fkRef, ".")
 				if len(parts) == 2 {
 					referredTable = parts[0]
 					referredColumn = parts[1]
+					if referredTable == tableName {
+						//isRefToSameTable = true
+						fmt.Println("SAME REF", referredTable)
+						fkAdded = append(fkAdded, referredColumn, tableName)
+					}
 					// fmt.Println(1, "FK:", tableName, referredTable, referredColumn)
 					refTable, ok := parsedTables[referredTable].(map[string]any)
 					if ok {
@@ -1078,6 +1084,7 @@ func generateCustomDataV2(parsedTables map[string]any, tables_order []string, db
 									formField["ref_table"] = referredTable
 									formField["ref_field"] = referredColumn
 									formField["autocomplete"] = true
+									formField["referred_pk"] = referredColumn
 								}
 							}
 						}
