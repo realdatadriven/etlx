@@ -173,6 +173,9 @@ func (p *PostgresDialect) GetColumnType(field map[string]any) string {
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("VARCHAR(%d)", length)
 		}
+		if length, ok := field["len"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
 		return "TEXT" // Default to TEXT if length not specified for VARCHAR
 	case "TEXT":
 		return "TEXT"
@@ -253,6 +256,9 @@ func (m *MySQLDialect) GetColumnType(field map[string]any) string {
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("VARCHAR(%d)", length)
 		}
+		if length, ok := field["len"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
 		return "TEXT" // Default to TEXT if length not specified for VARCHAR
 	case "TEXT", "LONGTEXT":
 		return "TEXT"
@@ -330,6 +336,9 @@ func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("VARCHAR(%d)", length)
 		}
+		if length, ok := field["len"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
 		return "VARCHAR"
 	case "TEXT":
 		return "TEXT"
@@ -404,6 +413,9 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 		if length, ok := field["length"].(int); ok {
 			return fmt.Sprintf("NVARCHAR(%d)", length)
 		}
+		if length, ok := field["len"].(int); ok {
+			return fmt.Sprintf("NVARCHAR(%d)", length)
+		}
 		return "NVARCHAR(MAX)"
 	case "TEXT":
 		return "NVARCHAR(MAX)"
@@ -415,6 +427,9 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
 		return "BIT"
 	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
 		if length, ok := field["length"]; ok {
+			return fmt.Sprintf("DECIMAL(%v)", length)
+		}
+		if length, ok := field["len"]; ok {
 			return fmt.Sprintf("DECIMAL(%v)", length)
 		}
 		return "DECIMAL"
