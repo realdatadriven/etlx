@@ -742,7 +742,7 @@ func generateDropTableSQL(driver, tableName string) string {
 }
 
 // METADATA
-func generateSeedData(parsedTables map[string]any, order []string, dbName string) map[string]any {
+func generateSeedData(parsedTables map[string]any, order []string, dbName string) (map[string]any, string) {
 	//fmt.Println(order)
 	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
 	data := map[string]any{
@@ -885,7 +885,7 @@ func generateSeedData(parsedTables map[string]any, order []string, dbName string
 			data["table_schema"] = append(data["table_schema"].([]map[string]any), schemaRow)
 		}
 	}
-	return data
+	return data, now
 }
 
 // ──────────────────────────────────────────────
@@ -1296,7 +1296,7 @@ func getAny(m map[string]any, key string, fallback any) any {
 type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
-func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string, updatedAt string) error {
 	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
 	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -1440,6 +1440,20 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 				}
 				//fmt.Printf("  inserted %-40s\n", logKey)
 			}
+		}
+	}
+	for _, tableName := range targetTables {
+		// cleanup: remove any rows from the target DB that were not updated
+		sql := fmt.Sprintf(`DELETE FROM %s WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table"), dialect.GetTableName("table"))
+		deleteParams := []any{targetDBName, dialect.GetBooleanValue(false), tableName, updatedAt}
+		_, err = dbCon.ExecuteQuery(sql, deleteParams...)
+		if err != nil {
+			return fmt.Errorf("cleanup failed %s (%s): %w", "table", targetDBName, err)
+		}
+		sql = fmt.Sprintf(`DELETE FROM %s WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table_schema"), dialect.GetTableName("table"))
+		_, err = dbCon.ExecuteQuery(sql, deleteParams...)
+		if err != nil {
+			return fmt.Errorf("cleanup failed %s (%s): %w", "table_schema", targetDBName, err)
 		}
 	}
 	fmt.Println("\nSeed data load completed successfully.")
@@ -2327,8 +2341,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateSeedData(_tables, tables_order, database)
-		err = UpsertSeedDataNamed(adminDb, _data, database)
+		_data, dt_iu := generateSeedData(_tables, tables_order, database)
+		err = UpsertSeedDataNamed(adminDb, _data, database, dt_iu)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
 			_log2["success"] = false
