@@ -742,9 +742,9 @@ func generateDropTableSQL(driver, tableName string) string {
 }
 
 // METADATA
-func generateSeedData(parsedTables map[string]any, order []string, dbName string) (map[string]any, string) {
+func generateSeedData(parsedTables map[string]any, order []string, dbName string) (map[string]any, time.Time) {
 	//fmt.Println(order)
-	now := time.Now().UTC().Format(time.RFC3339) // or use your preferred format
+	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") //time.Now() //.UTC().Format(time.RFC3339) // or use your preferred format
 	data := map[string]any{
 		"table":                 []map[string]any{},
 		"translate_table":       []map[string]any{},
@@ -936,7 +936,7 @@ func toInt(v any) int {
 }
 
 func generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
-	now := time.Now().UTC().Format(time.RFC3339)
+	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") //time.Now() //.UTC().Format(time.RFC3339)
 	data := map[string]any{
 		"custom_table": []map[string]any{},
 		"custom_form":  []map[string]any{},
@@ -1296,7 +1296,7 @@ func getAny(m map[string]any, key string, fallback any) any {
 type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
-func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string, updatedAt string) error {
+func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string, tables_order []string, updatedAt time.Time) error {
 	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
 	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -1314,7 +1314,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 		"translate_table_field",
 		"table_schema",
 	}
-	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
+	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
@@ -1442,18 +1442,34 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 			}
 		}
 	}
-	for _, tableName := range targetTables {
+	for _, tableName := range tables_order {
 		// cleanup: remove any rows from the target DB that were not updated
 		sql := fmt.Sprintf(`DELETE FROM %s WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table"), dialect.GetTableName("table"))
 		deleteParams := []any{targetDBName, dialect.GetBooleanValue(false), tableName, updatedAt}
-		_, err = dbCon.ExecuteQuery(sql, deleteParams...)
+		/*affectedRows, err := dbCon.ExecuteQuery(sql, deleteParams...)
 		if err != nil {
 			return fmt.Errorf("cleanup failed %s (%s): %w", "table", targetDBName, err)
-		}
+		} else {
+			//fmt.Printf("  cleanup %s: %d row(s) deleted\n", tableName, affectedRows)
+		}*/
 		sql = fmt.Sprintf(`DELETE FROM %s WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table_schema"), dialect.GetTableName("table"))
-		_, err = dbCon.ExecuteQuery(sql, deleteParams...)
+		fmt.Println(targetDBName, tableName, updatedAt, sql)
+		_, err := dbCon.ExecuteQuery(sql, deleteParams...)
 		if err != nil {
-			return fmt.Errorf("cleanup failed %s (%s): %w", "table_schema", targetDBName, err)
+			if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
+				deleteParams = []any{dialect.GetBooleanValue(false), targetDBName, dialect.GetBooleanValue(false), tableName, updatedAt}
+				sql = fmt.Sprintf(`UPDATE %s SET excluded = ? WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table_schema"), dialect.GetTableName("table"))
+				_, err = dbCon.ExecuteQuery(sql, deleteParams...)
+				if err != nil {
+					return fmt.Errorf("cleanup failed (mark excluded) %s (%s): %s %w", "table_schema", targetDBName, tableName, err)
+				} else {
+					//fmt.Printf("  cleanup (mark excluded) %s -> %s -> %s: %d row(s) updated\n", targetDBName, "table_schema", tableName, affectedRows)
+				}
+			} else {
+				return fmt.Errorf("cleanup failed %s (%s): %s %w", "table_schema", targetDBName, tableName, err)
+			}
+		} else {
+			//fmt.Printf("  cleanup %s -> %s -> %s: %d row(s) deleted\n", targetDBName, "table_schema", tableName, affectedRows)
 		}
 	}
 	fmt.Println("\nSeed data load completed successfully.")
@@ -1476,7 +1492,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 		"custom_form",
 		"custom_table",
 	}
-	now := time.Now().UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
+	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
@@ -1617,7 +1633,7 @@ func LoadOrSyncMenusFromConfig(
 	desc string, // optional app description
 ) error {
 	dialect := GetDialect(dbCon.GetDriverName())
-	now := time.Now().UTC().Format("2006-01-02 15:04:05")
+	now := time.Now() // .UTC().Format("2006-01-02 15:04:05")
 	// 1. Find the main app record (assuming one app per db)
 	app := map[string]any{}
 	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -2342,7 +2358,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"num_gc_start":          num_gc,
 		}
 		_data, dt_iu := generateSeedData(_tables, tables_order, database)
-		err = UpsertSeedDataNamed(adminDb, _data, database, dt_iu)
+		err = UpsertSeedDataNamed(adminDb, _data, database, tables_order, dt_iu)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
 			_log2["success"] = false
