@@ -1453,7 +1453,7 @@ func (etlx *ETLX) UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targe
 			//fmt.Printf("  cleanup %s: %d row(s) deleted\n", tableName, affectedRows)
 		}*/
 		sql = fmt.Sprintf(`DELETE FROM %s WHERE db = ? AND excluded = ? AND %s = ? AND updated_at < ?`, dialect.GetTableName("table_schema"), dialect.GetTableName("table"))
-		fmt.Println(targetDBName, tableName, updatedAt, sql)
+		// fmt.Println(targetDBName, tableName, updatedAt, sql)
 		_, err := dbCon.ExecuteQuery(sql, deleteParams...)
 		if err != nil {
 			if strings.Contains(err.Error(), "FOREIGN KEY constraint failed") {
