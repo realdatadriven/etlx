@@ -40,7 +40,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"process": process,
@@ -63,8 +63,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
 				})
@@ -81,8 +81,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"],
-				"key":         key, "item_key": itemKey, "start_at": time.Now(),
-				"end_at":  time.Now(),
+				"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
 				"msg":     "Missing metadata in item",
 			})
@@ -95,8 +95,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
 				})
@@ -110,8 +110,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"key":         key, "item_key": itemKey, "start_at": time.Now(),
-				"end_at":  time.Now(),
+				"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
 				"msg":     "Missing Action Type",
 			})
@@ -122,8 +122,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"key":         key, "item_key": itemKey, "start_at": time.Now(),
-				"end_at":  time.Now(),
+				"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
 				"msg":     "Missing Action Params",
 			})
@@ -143,7 +143,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		if processLogs[0]["ref"] == nil {
 			processLogs[0]["ref"] = dtRef
 		}
-		start3 := time.Now()
+		start3 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
 			"process":     process,
@@ -468,7 +468,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)
 		}
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		mem_alloc_end, mem_total_alloc_end, mem_sys_end, num_gc_end := etlx.RuntimeMemStats()
 		_log2["mem_alloc_end"] = mem_alloc_end
@@ -493,7 +493,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		"name":        key,
 		"description": mainDescription,
 		"key":         key, "start_at": processLogs[0]["start_at"],
-		"end_at":                time.Now(),
+		"end_at":                time.Now().In(etlx.TimeZone),
 		"duration":              time.Since(start).Seconds(),
 		"ref":                   processLogs[0]["ref"],
 		"mem_alloc_start":       processLogs[0]["mem_alloc_start"],

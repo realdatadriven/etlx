@@ -13,7 +13,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	processLogs = append(processLogs, map[string]any{
 		"name":     key,
 		"start_at": start,
@@ -28,8 +28,8 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
+					"start_at":    time.Now().In(etlx.TimeZone),
+					"end_at":      time.Now().In(etlx.TimeZone),
 					"success":     true,
 					"msg":         "Deactivated",
 				})
@@ -43,8 +43,8 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			processLogs = append(processLogs, map[string]any{
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
+				"start_at":    time.Now().In(etlx.TimeZone),
+				"end_at":      time.Now().In(etlx.TimeZone),
 				"success":     true,
 				"msg":         "Missing metadata in item",
 			})
@@ -56,15 +56,15 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				processLogs = append(processLogs, map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"start_at":    time.Now(),
-					"end_at":      time.Now(),
+					"start_at":    time.Now().In(etlx.TimeZone),
+					"end_at":      time.Now().In(etlx.TimeZone),
 					"success":     true,
 					"msg":         "Deactivated",
 				})
 				return nil
 			}
 		}
-		start3 := time.Now()
+		start3 := time.Now().In(etlx.TimeZone)
 		_log2 := map[string]any{
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
 			"description": itemMetadata["description"].(string),
@@ -87,7 +87,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s ERR: connecting to %s in : %s", key, itemKey, conn, err)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				return nil
@@ -95,12 +95,12 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			defer dbConn.Close()
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s -> %s CONN: Connectinon to %s successfull", key, itemKey, conn)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
-				start3 := time.Now()
+				start3 := time.Now().In(etlx.TimeZone)
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -110,12 +110,12 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s Before error: %s", key, itemKey, err)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
@@ -126,7 +126,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				return nil
@@ -143,7 +143,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 					if err != nil {
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("Error parsing config string: %s", err)
-						_log2["end_at"] = time.Now()
+						_log2["end_at"] = time.Now().In(etlx.TimeZone)
 						_log2["duration"] = time.Since(start3).Seconds()
 						processLogs = append(processLogs, _log2)
 						return nil
@@ -151,7 +151,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				} else {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to get md conf string query: %s column %s", key, itemKey, query, column)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 					return nil
@@ -159,14 +159,14 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			} else {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to execute get md conf query: %s", key, itemKey, err)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				return nil
 			}
 			// QUERIES TO RUN AT THE END
 			if okAfter {
-				start3 := time.Now()
+				start3 := time.Now().In(etlx.TimeZone)
 				_log2 := map[string]any{
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -176,12 +176,12 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s After error: %s", key, itemKey, err)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s -> %s After ", key, itemKey)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
@@ -192,14 +192,14 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("Error parsing config: %s -> %s", path, err)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
 				}
 			} else {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("file doesn't exists: %s", path)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				return nil
@@ -233,7 +233,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		}
 		_log2["success"] = true
 		_log2["msg"] = "Successfully loaded!"
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil
@@ -251,7 +251,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		"name":        key,
 		"description": mainDescription,
 		"start_at":    processLogs[0]["start_at"],
-		"end_at":      time.Now(),
+		"end_at":      time.Now().In(etlx.TimeZone),
 		"duration":    time.Since(start).Seconds(),
 	}
 	return processLogs, nil

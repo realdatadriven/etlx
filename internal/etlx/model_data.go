@@ -139,7 +139,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"process": process,
@@ -172,8 +172,8 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				"name":        fmt.Sprintf("KEY %s", key),
 				"description": metadata["description"].(string),
 				"key":         key,
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
+				"start_at":    time.Now().In(etlx.TimeZone),
+				"end_at":      time.Now().In(etlx.TimeZone),
 				"success":     true,
 				"msg":         "Deactivated",
 			})
@@ -217,7 +217,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			return nil, fmt.Errorf("%s err no connection defined", key)
 		}
 	}
-	start3 := time.Now()
+	start3 := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 := map[string]any{
 		"process":               process,
@@ -240,7 +240,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 	if err != nil {
 		_log2["success"] = false
 		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
@@ -267,7 +267,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["num_gc_end"] = num_gc
 		_log2["success"] = false
 		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
@@ -314,7 +314,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		if !ok {
 			continue
 		}
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
@@ -357,7 +357,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				}
 				matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
 				if len(matchesNow) == 1 {
-					data[colName] = time.Now() //.Format("2006-01-02 15:04:05")
+					data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
 				}
 				matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
 				if len(matchesApp) == 1 {
@@ -372,7 +372,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		// insert into table dbConn, table, data
 		_, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		_log2["mem_alloc_end"] = mem_alloc
 		_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -396,7 +396,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		"description":           metadata["description"].(string),
 		"key":                   key,
 		"start_at":              processLogs[0]["start_at"],
-		"end_at":                time.Now(),
+		"end_at":                time.Now().In(etlx.TimeZone),
 		"duration":              time.Since(start).Seconds(),
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,

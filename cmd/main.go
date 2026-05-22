@@ -34,7 +34,7 @@ func main() {
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
-	etlxlib := &etlx.ETLX{Config: config, Params: map[string]any{}}
+	etlxlib := &etlx.ETLX{Config: config, Params: map[string]any{}, TimeZone: time.Local}
 	etlxlib.MetadataOrder = true
 	err := etlxlib.ConfigFromFile(*filePath)
 	if err != nil {

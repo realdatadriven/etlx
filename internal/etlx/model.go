@@ -606,7 +606,7 @@ type ColumnDefinition struct {
 // InsertData inserts a slice of data rows into the specified table.
 // It automatically handles default values for 'created_at', 'updated_at', and 'excluded'
 // if they are defined in the schema but not present in the data row.
-func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, data []any) error {
+func (etlx *ETLX) InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, data []any) error {
 	// Map schema column names to their properties for quick lookup
 	type schemaColInfo struct {
 		isCreatedAt bool
@@ -687,7 +687,7 @@ func InsertData(dbCon db.DBInterface, tableName string, columns map[string]any, 
 		insertCols := []string{}
 		insertVals := []string{} // For named parameters, e.g., ":colName"
 		insertMap := make(map[string]any)
-		now := time.Now() // Get current time once per row for consistency
+		now := time.Now().In(etlx.TimeZone) // Get current time once per row for consistency
 		for _, colName := range allSchemaColumnNames {
 			colInfo, existsInSchema := schemaColumnMap[colName]
 			if !existsInSchema {
@@ -742,9 +742,9 @@ func generateDropTableSQL(driver, tableName string) string {
 }
 
 // METADATA
-func generateSeedData(parsedTables map[string]any, order []string, dbName string) (map[string]any, time.Time) {
+func (etlx *ETLX) generateSeedData(parsedTables map[string]any, order []string, dbName string) (map[string]any, time.Time) {
 	//fmt.Println(order)
-	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") //time.Now() //.UTC().Format(time.RFC3339) // or use your preferred format
+	now := time.Now().In(etlx.TimeZone) // .UTC().Format("2006-01-02 15:04:05") //time.Now().In(etlx.TimeZone) //.UTC().Format(time.RFC3339) // or use your preferred format
 	data := map[string]any{
 		"table":                 []map[string]any{},
 		"translate_table":       []map[string]any{},
@@ -935,8 +935,8 @@ func toInt(v any) int {
 	}
 }
 
-func generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
-	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") //time.Now() //.UTC().Format(time.RFC3339)
+func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order []string, dbName string) map[string]any {
+	now := time.Now().In(etlx.TimeZone) // .UTC().Format("2006-01-02 15:04:05") //time.Now().In(etlx.TimeZone) //.UTC().Format(time.RFC3339)
 	data := map[string]any{
 		"custom_table": []map[string]any{},
 		"custom_form":  []map[string]any{},
@@ -1296,7 +1296,7 @@ func getAny(m map[string]any, key string, fallback any) any {
 type SeedData map[string]any
 
 // UpsertSeedDataNamed uses named parameters (:name style) + select → update/insert
-func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string, tables_order []string, updatedAt time.Time) error {
+func (etlx *ETLX) UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName string, tables_order []string, updatedAt time.Time) error {
 	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
 	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -1314,7 +1314,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 		"translate_table_field",
 		"table_schema",
 	}
-	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
+	now := time.Now().In(etlx.TimeZone) // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
@@ -1476,7 +1476,7 @@ func UpsertSeedDataNamed(dbCon db.DBInterface, seed SeedData, targetDBName strin
 	return nil
 }
 
-func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
+func (etlx *ETLX) UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) error {
 	dialect := GetDialect(dbCon.GetDriverName())
 	app := map[string]any{}
 	_sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -1492,7 +1492,7 @@ func UpsertCustomFT(dbCon db.DBInterface, seed SeedData, targetDBName string) er
 		"custom_form",
 		"custom_table",
 	}
-	now := time.Now() // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
+	now := time.Now().In(etlx.TimeZone) // .UTC().Format("2006-01-02 15:04:05") // ← adjust to your DB's datetime format
 	for _, tableName := range targetTables {
 		rows, ok := seed[tableName].([]map[string]any)
 		if !ok || len(rows) == 0 {
@@ -1624,7 +1624,7 @@ func PGNextSequenceValue(dbCon db.DBInterface, tableName string, idColumn string
 type InterfaceConf map[string]any
 
 // LoadOrSyncMenusFromConfig creates/updates menus and menu_table links
-func LoadOrSyncMenusFromConfig(
+func (etlx *ETLX) LoadOrSyncMenusFromConfig(
 	dbCon db.DBInterface,
 	conf InterfaceConf,
 	dbName string, // e.g. "ADMIN"
@@ -1633,7 +1633,7 @@ func LoadOrSyncMenusFromConfig(
 	desc string, // optional app description
 ) error {
 	dialect := GetDialect(dbCon.GetDriverName())
-	now := time.Now() // .UTC().Format("2006-01-02 15:04:05")
+	now := time.Now().In(etlx.TimeZone) // .UTC().Format("2006-01-02 15:04:05")
 	// 1. Find the main app record (assuming one app per db)
 	app := map[string]any{}
 	sql := `SELECT app_id FROM app WHERE db = ? AND excluded = ? --  LIMIT 1`
@@ -1976,7 +1976,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"process":               process,
@@ -2010,8 +2010,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"name":        fmt.Sprintf("KEY %s", key),
 				"description": metadata["description"].(string),
 				"key":         key,
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
+				"start_at":    time.Now().In(etlx.TimeZone),
+				"end_at":      time.Now().In(etlx.TimeZone),
 				"success":     true,
 				"msg":         "Deactivated",
 			})
@@ -2057,7 +2057,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	}
 	create_all, _ := metadata["create_all"].(string)
 	drop_all, _ := metadata["drop_all"].(string)
-	start3 := time.Now()
+	start3 := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 := map[string]any{
 		"process":               process,
@@ -2080,7 +2080,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	if err != nil {
 		_log2["success"] = false
 		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
@@ -2121,7 +2121,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			}
 			//driver := dbConn.GetDriverName()
 			// fmt.Printf("Dropping table %s (if exists) with driver %s\n", table, driver)
-			start3 = time.Now()
+			start3 = time.Now().In(etlx.TimeZone)
 			desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 			if !okDesc {
 				desc = fmt.Sprintf("%s->%s", key, itemKey)
@@ -2150,7 +2150,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s dropped or did not exist", key, table)
 			}
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			_log2["mem_alloc_end"] = mem_alloc
 			_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2192,7 +2192,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				// fmt.Println("COLUMNS NOT FOUND")
 				continue
 			}
-			start3 = time.Now()
+			start3 = time.Now().In(etlx.TimeZone)
 			desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 			if !okDesc {
 				desc = fmt.Sprintf("%s->%s", key, itemKey)
@@ -2215,7 +2215,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			//fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			_, err := dbConn.ExecuteQuery(createTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			_log2["mem_alloc_end"] = mem_alloc
 			_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2233,7 +2233,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				// ADD DATA
 				dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
 				if okData {
-					start3 = time.Now()
+					start3 = time.Now().In(etlx.TimeZone)
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log2 = map[string]any{
 						"process":               process,
@@ -2248,7 +2248,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 						"mem_sys_start":         mem_sys,
 						"num_gc_start":          num_gc,
 					}
-					err = InsertData(dbConn, table, columns, dataRows)
+					err = etlx.InsertData(dbConn, table, columns, dataRows)
 					if err != nil {
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
@@ -2259,7 +2259,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 						_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
 					}
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 					_log2["mem_alloc_end"] = mem_alloc
 					_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2275,7 +2275,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	var adminDb db.DBInterface
 	if adminConn == "" {
 		// adminDb = dbConn
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":               process,
@@ -2298,7 +2298,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		if err != nil {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
@@ -2307,7 +2307,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		}
 	} else {
 		//fmt.Println("ADMIN CONN:", adminConn)
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":               process,
@@ -2330,7 +2330,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["num_gc_end"] = num_gc
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
@@ -2342,7 +2342,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	updateTableMetadataSQL, _ := metadata["update_table_metadata"].(bool)
 	if drop_all == "" && updateTableMetadataSQL {
 		// fmt.Println("UPDATE TABLE METADATA", updateTableMetadataSQL)
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":               process,
@@ -2357,8 +2357,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data, dt_iu := generateSeedData(_tables, tables_order, database)
-		err = UpsertSeedDataNamed(adminDb, _data, database, tables_order, dt_iu)
+		_data, dt_iu := etlx.generateSeedData(_tables, tables_order, database)
+		err = etlx.UpsertSeedDataNamed(adminDb, _data, database, tables_order, dt_iu)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting seed data: %s\n", key, err)
 			_log2["success"] = false
@@ -2369,7 +2369,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["msg"] = fmt.Sprintf("%s: seed data upserted successfully", key)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		_log2["mem_alloc_end"] = mem_alloc
 		_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2380,7 +2380,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	cs_app, ok := metadata["cs_app"].(map[string]any)
 	if drop_all == "" && ok && updateTableMetadataSQL {
 		// fmt.Println("LOADING/SYNCING MENUS FROM CONFIG", cs_app)
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":               process,
@@ -2397,7 +2397,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		}
 		app_desc, _ := metadata["description"].(string)
 		version, _ := metadata["version"].(string)
-		err = LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc, version)
+		err = etlx.LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc, version)
 		if err != nil {
 			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
 			_log2["success"] = false
@@ -2408,7 +2408,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		_log2["mem_alloc_end"] = mem_alloc
 		_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2419,7 +2419,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 	// CUSTOM DATA
 	if drop_all == "" && updateTableMetadataSQL {
 		// fmt.Println("UPDATE TABLE METADATA", updateTableMetadataSQL)
-		start3 = time.Now()
+		start3 = time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":               process,
@@ -2434,8 +2434,8 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data := generateCustomDataV2(_tables, tables_order, database)
-		err = UpsertCustomFT(adminDb, _data, database)
+		_data := etlx.generateCustomDataV2(_tables, tables_order, database)
+		err = etlx.UpsertCustomFT(adminDb, _data, database)
 		if err != nil {
 			fmt.Printf("%s ERR: upserting custom data: %s\n", key, err)
 			_log2["success"] = false
@@ -2446,7 +2446,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["msg"] = fmt.Sprintf("%s: custom data upserted successfully", key)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		_log2["mem_alloc_end"] = mem_alloc
 		_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -2461,7 +2461,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		"description":           metadata["description"].(string),
 		"key":                   key,
 		"start_at":              processLogs[0]["start_at"],
-		"end_at":                time.Now(),
+		"end_at":                time.Now().In(etlx.TimeZone),
 		"duration":              time.Since(start).Seconds(),
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,

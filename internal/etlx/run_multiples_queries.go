@@ -16,7 +16,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	//fmt.Println(key, dateRef)
 	var processData []map[string]any
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	processLogs = append(processLogs, map[string]any{
 		"process": process,
@@ -49,8 +49,8 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				"name":        fmt.Sprintf("KEY %s", key),
 				"description": metadata["description"].(string),
 				"key":         key,
-				"start_at":    time.Now(),
-				"end_at":      time.Now(),
+				"start_at":    time.Now().In(etlx.TimeZone),
+				"end_at":      time.Now().In(etlx.TimeZone),
 				"success":     true,
 				"msg":         "Deactivated",
 			})
@@ -146,7 +146,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	if !okCon {
 		return nil, nil, fmt.Errorf("%s err no connection defined", key)
 	}
-	start3 := time.Now()
+	start3 := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 := map[string]any{
 		"process":     process,
@@ -168,7 +168,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	if err != nil {
 		_log2["success"] = false
 		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
-		_log2["end_at"] = time.Now()
+		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		return nil, nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
@@ -176,12 +176,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	defer dbConn.Close()
 	_log2["success"] = true
 	_log2["msg"] = fmt.Sprintf("%s CONN: connection to %s successfull", key, conn)
-	_log2["end_at"] = time.Now()
+	_log2["end_at"] = time.Now().In(etlx.TimeZone)
 	_log2["duration"] = time.Since(start3).Seconds()
 	processLogs = append(processLogs, _log2)
 	//  QUERIES TO RUN AT beginning
 	if okBefore {
-		start3 := time.Now()
+		start3 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":     process,
@@ -199,12 +199,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		if err != nil {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s Before error: %s", key, err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s Before ", key)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		_log2["mem_alloc_end"] = mem_alloc
@@ -220,7 +220,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	sql := strings.Join(queries, unionKey)
 	// fmt.Println(key, sql)
-	start3 = time.Now()
+	start3 = time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 	_log2 = map[string]any{
 		"process":     process,
@@ -247,7 +247,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		if err != nil {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			//return fmt.Errorf("%s", _log2["msg"])
@@ -255,7 +255,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		} else if !cond {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed the condition %s was not met!", key, "", condition)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			if okCondMsg && condMsg != "" {
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
@@ -282,14 +282,14 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				if regex_err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s ERR: fallback regex matching the error failed to compile: %s", key, regex_err)
-					_log2["end_at"] = time.Now()
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 				} else if re.MatchString(string(err.Error())) {
 					err = etlx.ExecuteQuery(dbConn, errSQL, data, "", "", dateRef)
 					if err != nil {
 						_log2["success"] = false
 						_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
-						_log2["end_at"] = time.Now()
+						_log2["end_at"] = time.Now().In(etlx.TimeZone)
 						_log2["duration"] = time.Since(start3).Seconds()
 					} else {
 						_err_by_pass = true
@@ -300,12 +300,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				//return nil, fmt.Errorf("%s ERR: main: %s", key, err)
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: main: %s", key, err)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s main ", key)
-				_log2["end_at"] = time.Now()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -316,7 +316,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s main ", key)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["mem_alloc_end"] = mem_alloc
@@ -331,13 +331,13 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		if err != nil {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s After error: %s", key, err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			processData = *rows
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s After ", key)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		_log2["mem_alloc_end"] = mem_alloc
@@ -348,7 +348,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	}
 	//  QUERIES TO RUN AT THE END
 	if okAfter {
-		start3 := time.Now()
+		start3 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2 = map[string]any{
 			"process":     process,
@@ -365,12 +365,12 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		if err != nil {
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s After error: %s", key, err)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s After ", key)
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()

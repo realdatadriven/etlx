@@ -27,6 +27,7 @@ type ETLX struct {
 	MD               string
 	autoLogsDisabled bool
 	MetadataOrder    bool
+	TimeZone         *time.Location
 }
 
 func addAutoLoggs(md string) string {
@@ -622,7 +623,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef any) string {
 			frmtFinal = etlx.GetGODateFormat(frmtFinal)
 			var procc string
 			if regexp.MustCompile(`\b(?:STAMP|TSTAMP|TS)\b`).MatchString(m) {
-				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, time.Now().Format(frmtFinal))
+				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, time.Now().In(etlx.TimeZone).Format(frmtFinal))
 				//fmt.Println("TIMESTAMP FORMAT", m, frmtFinal, procc)
 			} else {
 				if dates, ok := dateRef.([]time.Time); ok {
@@ -651,7 +652,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef any) string {
 				frmtFinal = strings.ReplaceAll(frmtFinal, "}", "")
 				frmtFinal = etlx.GetGODateFormat(frmtFinal)
 				//fmt.Println(m, frmtFinal)
-				now := time.Now()
+				now := time.Now().In(etlx.TimeZone)
 				var procc string
 				procc = regexp.MustCompile(patt.String()).ReplaceAllString(m, now.Format(frmtFinal))
 				patt = regexp.MustCompile(regexp.QuoteMeta(m))
@@ -772,7 +773,7 @@ func (etlx *ETLX) ProcessETL(config map[string]any, runner RunnerFunc) error {
 	mainConn := metadata["connection"].(string)
 	description := metadata["description"].(string)
 	fmt.Printf("Starting ETL process: %s\n", description)
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	for key, value := range etl {
 		if key == "metadata" {
 			continue
@@ -887,7 +888,7 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	}
 	// description := metadata["description"].(string)
 	// fmt.Printf("Starting %s process: %s\n", key, description)
-	// start := time.Now()
+	// start := time.Now().In(etlx.TimeZone)
 	order, okOrder := data["__order"].([]any)
 	if okOrder {
 		for _, key2 := range order {

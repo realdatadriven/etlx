@@ -598,7 +598,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	}
 	// fmt.Println(key, dateRef)
 	var processLogs []map[string]any
-	start := time.Now()
+	start := time.Now().In(etlx.TimeZone)
 	processLogs = append(processLogs, map[string]any{
 		"process":  process,
 		"name":     key,
@@ -616,8 +616,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
 				})
@@ -636,8 +636,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
-				"key":         key, "item_key": itemKey, "start_at": time.Now(),
-				"end_at":  time.Now(),
+				"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
 				"msg":     "Missing metadata in item",
 			})
@@ -650,8 +650,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
 				})
@@ -667,8 +667,8 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Excluded from the process",
 				})
@@ -683,15 +683,15 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
-					"key":         key, "item_key": itemKey, "start_at": time.Now(),
-					"end_at":  time.Now(),
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Excluded from the process",
 				})
 				return nil
 			}
 		}
-		start2 := time.Now()
+		start2 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log1 := map[string]any{
 			"process":     process,
@@ -738,15 +738,15 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						"process":     process,
 						"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
 						"description": itemMetadata["description"].(string),
-						"key":         key, "item_key": itemKey, "start_at": time.Now(),
-						"end_at":  time.Now(),
+						"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+						"end_at":  time.Now().In(etlx.TimeZone),
 						"success": true,
 						"msg":     fmt.Sprintf("STEP %s Excluded from the process", step),
 					})
 					continue
 				}
 			}
-			start3 := time.Now()
+			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2 := map[string]any{
 				"process":     process,
@@ -807,7 +807,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				processLogs[0]["ref"] = dtRef
 			}
 			// CONNECTION
-			start4 := time.Now()
+			start4 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log3 := map[string]any{
 				"process":     process,
@@ -822,7 +822,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3["success"] = false
 				_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
-				_log3["end_at"] = time.Now()
+				_log3["end_at"] = time.Now().In(etlx.TimeZone)
 				_log3["duration"] = time.Since(start4).Seconds()
 				_log3["mem_alloc_end"] = mem_alloc
 				_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -836,7 +836,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log3["success"] = true
 			_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CONN: connection to %s successfull", key, step, itemKey, conn)
-			_log3["end_at"] = time.Now()
+			_log3["end_at"] = time.Now().In(etlx.TimeZone)
 			_log3["duration"] = time.Since(start4).Seconds()
 			_log3["mem_alloc_end"] = mem_alloc
 			_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -867,7 +867,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			// Process before SQL
 			if okBefore && beforeSQL != nil {
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -889,7 +889,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR Before: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
-							_log3["end_at"] = time.Now()
+							_log3["end_at"] = time.Now().In(etlx.TimeZone)
 							_log3["duration"] = time.Since(start4).Seconds()
 							_log3["mem_alloc_end"] = mem_alloc
 							_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -901,7 +901,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
-								_log3["end_at"] = time.Now()
+								_log3["end_at"] = time.Now().In(etlx.TimeZone)
 								_log3["duration"] = time.Since(start4).Seconds()
 								_log3["mem_alloc_end"] = mem_alloc
 								_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -920,7 +920,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log3["success"] = false
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
-						_log3["end_at"] = time.Now()
+						_log3["end_at"] = time.Now().In(etlx.TimeZone)
 						_log3["duration"] = time.Since(start4).Seconds()
 						_log3["mem_alloc_end"] = mem_alloc
 						_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -934,7 +934,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Before", key, step, itemKey)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -953,7 +953,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, err)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -966,7 +966,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed the condition %s was not met!", key, step, itemKey, condition)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -991,7 +991,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						//fmt.Println(2, validation)
 						for _, valid := range validation.([]any) {
 							_valid := valid.(map[string]any)
-							start4 := time.Now()
+							start4 := time.Now().In(etlx.TimeZone)
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							_log3 = map[string]any{
 								"process":     process,
@@ -1031,7 +1031,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								if len(*res) > 0 && _valid["type"].(string) == "trow_if_not_empty" {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
-									_log3["end_at"] = time.Now()
+									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
 									processLogs = append(processLogs, _log3)
@@ -1039,7 +1039,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								} else if len(*res) == 0 && _valid["type"].(string) == "trow_if_empty" {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
-									_log3["end_at"] = time.Now()
+									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
 									processLogs = append(processLogs, _log3)
@@ -1047,7 +1047,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								} else {
 									_log3["success"] = true
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s Validation Succefully", key, step, itemKey)
-									_log3["end_at"] = time.Now()
+									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 								}
 							}
@@ -1059,7 +1059,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						}
 					}
 				}
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -1092,7 +1092,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
-								_log3["end_at"] = time.Now()
+								_log3["end_at"] = time.Now().In(etlx.TimeZone)
 								_log3["duration"] = time.Since(start4).Seconds()
 								_log3["mem_alloc_end"] = mem_alloc
 								_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1104,7 +1104,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								if err != nil {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
-									_log3["end_at"] = time.Now()
+									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 									_log3["mem_alloc_end"] = mem_alloc
 									_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1119,7 +1119,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: main: %s", key, step, itemKey, err)
-							_log3["end_at"] = time.Now()
+							_log3["end_at"] = time.Now().In(etlx.TimeZone)
 							_log3["duration"] = time.Since(start4).Seconds()
 							_log3["mem_alloc_end"] = mem_alloc
 							_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1131,7 +1131,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log3["success"] = true
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s main", key, step, itemKey)
-						_log3["end_at"] = time.Now()
+						_log3["end_at"] = time.Now().In(etlx.TimeZone)
 						_log3["duration"] = time.Since(start4).Seconds()
 						_log3["mem_alloc_end"] = mem_alloc
 						_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1142,7 +1142,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s MAIN: Skiped do to validation error: %s", key, step, itemKey, validErr)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1153,7 +1153,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			// Process CLEAN SQL
 			if clean.(bool) && okClean {
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -1168,7 +1168,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: CLEAN: %s", key, step, itemKey, err)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1179,7 +1179,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s CLEAN", key, step, itemKey)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1190,7 +1190,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			// Process DROP SQL
 			if drop.(bool) && okDrop {
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -1205,7 +1205,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: DROP: %s", key, step, itemKey, err)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1216,7 +1216,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s DROP", key, step, itemKey)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1227,7 +1227,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			// Process ROWS SQL
 			if rows.(bool) && okRows {
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -1247,7 +1247,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = false
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: ROWS: %s", key, step, itemKey, err)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1268,7 +1268,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ROWS", key, step, itemKey)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["rows"] = _nrows
 					_log3["mem_alloc_end"] = mem_alloc
@@ -1280,7 +1280,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			// Process after SQL
 			if okAfter && afterSQL != nil {
-				start4 = time.Now()
+				start4 = time.Now().In(etlx.TimeZone)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log3 = map[string]any{
 					"process":     process,
@@ -1301,7 +1301,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 							_log3["success"] = false
 							_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR After: fallback regex matching the error failed to compile: %s", key, step, itemKey, err)
-							_log3["end_at"] = time.Now()
+							_log3["end_at"] = time.Now().In(etlx.TimeZone)
 							_log3["duration"] = time.Since(start4).Seconds()
 							_log3["mem_alloc_end"] = mem_alloc
 							_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1313,7 +1313,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 								_log3["success"] = false
 								_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
-								_log3["end_at"] = time.Now()
+								_log3["end_at"] = time.Now().In(etlx.TimeZone)
 								_log3["duration"] = time.Since(start4).Seconds()
 								_log3["mem_alloc_end"] = mem_alloc
 								_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1332,7 +1332,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log3["success"] = false
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s ERR: After: %s", key, step, itemKey, err)
-						_log3["end_at"] = time.Now()
+						_log3["end_at"] = time.Now().In(etlx.TimeZone)
 						_log3["duration"] = time.Since(start4).Seconds()
 						_log3["mem_alloc_end"] = mem_alloc
 						_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1343,7 +1343,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 					_log3["success"] = true
 					_log3["msg"] = fmt.Sprintf("%s -> %s -> %s After", key, step, itemKey)
-					_log3["end_at"] = time.Now()
+					_log3["end_at"] = time.Now().In(etlx.TimeZone)
 					_log3["duration"] = time.Since(start4).Seconds()
 					_log3["mem_alloc_end"] = mem_alloc
 					_log3["mem_total_alloc_end"] = mem_total_alloc
@@ -1352,12 +1352,12 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				}
 				//processLogs = append(processLogs, _log3)
 			}
-			_log2["end_at"] = time.Now()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log3)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log1["end_at"] = time.Now()
+		_log1["end_at"] = time.Now().In(etlx.TimeZone)
 		_log1["duration"] = time.Since(start2).Seconds()
 		_log1["mem_alloc_end"] = mem_alloc
 		_log1["mem_total_alloc_end"] = mem_total_alloc
@@ -1383,7 +1383,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		"description":           mainDescription,
 		"key":                   key,
 		"start_at":              processLogs[0]["start_at"],
-		"end_at":                time.Now(),
+		"end_at":                time.Now().In(etlx.TimeZone),
 		"duration":              time.Since(start).Seconds(),
 		"mem_alloc_start":       mem_alloc,
 		"mem_total_alloc_start": mem_total_alloc,
