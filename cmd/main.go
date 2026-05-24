@@ -83,7 +83,7 @@ func main() {
 	}
 	logs := []map[string]any{}
 	//_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "MODEL"}
-	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "MODEL_DATA", "CSDATA"}
+	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "C7MODEL", "MODEL_DATA", "CSDATA", "C7DATA", "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW"}
 	__order, ok := etlxlib.Config["__order"].([]string)
 	hasOrderedKeys := false
 	if !ok {
@@ -259,6 +259,20 @@ func main() {
 					case "MODEL_DATA", "CSDATA":
 						//fmt.Printf("%s AS %s START:\n", key, runs_as)
 						_logs, err := etlxlib.RunMODEL_DATA(dateRef, nil, extraConf, key)
+						if err != nil {
+							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+						} else {
+							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+								if err != nil {
+									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+								}
+							}
+							logs = append(logs, _logs...)
+						}
+					case "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW":
+						fmt.Printf("%s AS %s START:\n", key, runs_as)
+						_logs, err := etlxlib.RunWORKFLOW(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
 						} else {

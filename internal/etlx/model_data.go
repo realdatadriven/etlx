@@ -43,6 +43,7 @@ func ResolveFileContentSafe(filename string, allowedDir string) (string, error) 
 func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string, data map[string]any) (any, error) {
 	var whereClause string
 	var whereClause2 string
+	var err error
 	_chk_params := []any{}
 	if cond != "" {
 		whereClause = cond
@@ -64,6 +65,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	} else {
 		exists = false
 	}
+	var insertId int
 	if exists {
 		updateParts := []string{}
 		for k := range data {
@@ -73,7 +75,7 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 			updateParts = append(updateParts, fmt.Sprintf(`%s = :%s`, dialect.GetColumnName(k), k))
 		}
 		updateQuery := fmt.Sprintf(`UPDATE %s SET %s %s`, dialect.GetTableName(table), strings.Join(updateParts, ", "), whereClause)
-		_, err := dbCon.ExecuteNamedQuery(updateQuery, data)
+		insertId, err = dbCon.ExecuteNamedQuery(updateQuery, data)
 		if err != nil {
 			return nil, fmt.Errorf("update failed %s: %w,\n query: %s,\n data: %v", table, err, updateQuery, data)
 		}
@@ -88,12 +90,12 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 			names = append(names, ":"+k)
 		}
 		insertQuery := fmt.Sprintf(`INSERT INTO %s (%s) VALUES (%s)`, dialect.GetTableName(table), strings.Join(cols, ", "), strings.Join(names, ", "))
-		_, err := dbCon.ExecuteNamedQuery(insertQuery, data)
+		insertId, err = dbCon.ExecuteNamedQuery(insertQuery, data)
 		if err != nil {
 			return nil, fmt.Errorf("insert failed %s: %w", table, err)
 		}
 	}
-	return nil, nil
+	return insertId, nil
 }
 
 // NamedToPositional converts named parameters (:name) to positional (?)
