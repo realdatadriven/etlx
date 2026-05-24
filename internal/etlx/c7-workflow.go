@@ -9,6 +9,44 @@ import (
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
+func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key string) map[string]any {
+	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
+	nowPattern := regexp.MustCompile(`^Now\(\)$`)
+	appPatterm := regexp.MustCompile(`^appId\(\)$`)
+	var err error
+	for colName, input := range _data {
+		// switch type of _data to string or map
+		switch v := input.(type) {
+		case string:
+			matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matches) != 2 {
+				// pass
+			} else {
+				filename := strings.TrimSpace(matches[1])
+				if filename != "" {
+					_data[colName], err = ResolveFileContentSafe(filename, "")
+					if err != nil {
+						fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
+					}
+				}
+			}
+			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesNow) == 1 {
+				_data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
+			}
+			matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesApp) == 1 {
+				_data[colName] = app["app_id"]
+			}
+		case map[string]any:
+			// do nothing
+		default:
+			//println(table, colName, v)
+		}
+	}
+	return _data
+}
+
 func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "WORKFLOW"
 	process := "WORKFLOW"
@@ -194,6 +232,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_data["email_template"] = metadata["email"]
 	}
 	// insert or update workflow table with the metadata info, and get the workflow_id
+	_data = etlx.ResolveModelStringDataFunc(_data, app, key)
 	workflow_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert/update workflow: %w", err)
@@ -301,43 +340,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-		// each key in data
-		fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
-		nowPattern := regexp.MustCompile(`^Now\(\)$`)
-		appPatterm := regexp.MustCompile(`^appId\(\)$`)
-		for colName, input := range _data {
-			// switch type of _data to string or map
-			switch v := input.(type) {
-			case string:
-				matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matches) != 2 {
-					// pass
-				} else {
-					filename := strings.TrimSpace(matches[1])
-					if filename != "" {
-						_data[colName], err = ResolveFileContentSafe(filename, "")
-						if err != nil {
-							fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
-						}
-					}
-				}
-				matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matchesNow) == 1 {
-					_data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
-				}
-				matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matchesApp) == 1 {
-					_data[colName] = app["app_id"]
-				}
-			case map[string]any:
-				// do nothing
-			default:
-				//println(table, colName, v)
-			}
-		}
-		// insert into table dbConn, table, data
+		_data = etlx.ResolveModelStringDataFunc(_data, app, key)
 		insert_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -459,6 +462,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_id = :workflow_id and workflow_step_id = :workflow_step_id and field = :field and excluded = :excluded`
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -484,30 +488,15 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 					workflow_step_responsible, ok = itemMetadata.(map[string]any)["step_responsible"].([]any)
 					if !ok {
 						workflow_step_responsible, ok = itemMetadata.(map[string]any)["responsible"].([]any)
+						if !ok {
+							workflow_step_responsible, ok = itemMetadata.(map[string]any)["responsibles"].([]any)
+						}
 					}
 				}
 				if workflow_step_responsible == nil || !ok {
 					fmt.Printf("%s ERR: workflow_step_responsible not found for %s", key, insert_id)
 				} else {
 					table = "workflow_step_responsible"
-					/*
-						table: workflow_step_responsible
-						comment: "Step Responsible"
-						tooltip: "Defines the responsible users for each workflow step"
-						columns:
-							workflow_step_responsible_id: { type: integer, pk: true, autoincrement: true, comment: "Workflow Step Responsible ID", tooltip: "Unique identifier of the assignment" }
-							email:                        { type: varchar, len: 100, comment: "Email", tooltip: "Email associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 1 }
-							first_name:                   { type: varchar, len: 50, nullable: false, comment: "First Name", form_display: true, table_display: true, form_size_desc: 3, order: 2 }
-							last_name:                    { type: varchar, len: 50, comment: "Last Name", form_display: true, table_display: true, form_size_desc: 3, order: 3 }
-							department_id:                { type: integer, comment: "Department ID", tooltip: "Identifier of the department responsible for the step", form_display: true, table_display: true, form_size_desc: 4, order: 5 }
-							role:                         { type: varchar, len: 100, comment: "Role", tooltip: "Role associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 6 }
-							workflow_step_id:             { type: integer, nullable: false, fk: "workflow_step.workflow_step_id", comment: "Workflow Step ID", tooltip: "Identifier of the step associated with the assignment", table_display: true, form_size_desc: 4, order: 7 }
-							active:                       { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the assignment is active", form_display: true, table_display: true, form_size_desc: 2, order: 4 }
-							responsible_email_template    { type: text, comment: "Email Template", form_display: true, form_long_text: true, form_code: html}
-							user_id:                      { type: integer, comment: "User ID", tooltip: "Identifier of the user responsible for the step" }
-							created_at:                   { type: datetime, comment: "Created AT", tooltip: "Date and time when the assignment was created" }
-							updated_at:                   { type: datetime, comment: "Updated AT", tooltip: "Date and time when the option was last updated" }
-					*/
 					for _, responsible := range workflow_step_responsible {
 						if _, isMap := responsible.(map[string]any); !isMap {
 							continue
@@ -521,7 +510,8 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"last_name":     resp["last_name"],
 							"department_id": resp["department_id"],
 							"role":          resp["role"],
-							"user_id":       resp["user_id"],
+							"user_id":       app["user_id"],
+							"excluded":      false,
 						}
 						if _, ok := resp["active"]; ok {
 							_data["active"] = resp["active"]
@@ -555,6 +545,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -575,36 +566,21 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 					}
 				}
 				// SUBSCRIBERS
-				workflow_step_subscribers, ok := itemMetadata.(map[string]any)["workflow_step_subscribers"].([]any)
+				workflow_step_subscriber, ok := itemMetadata.(map[string]any)["workflow_step_subscriber"].([]any)
 				if !ok {
-					workflow_step_subscribers, ok = itemMetadata.(map[string]any)["step_subscribers"].([]any)
+					workflow_step_subscriber, ok = itemMetadata.(map[string]any)["step_subscriber"].([]any)
 					if !ok {
-						workflow_step_subscribers, ok = itemMetadata.(map[string]any)["subscribers"].([]any)
+						workflow_step_subscriber, ok = itemMetadata.(map[string]any)["subscriber"].([]any)
+						if !ok {
+							workflow_step_subscriber, ok = itemMetadata.(map[string]any)["subscribers"].([]any)
+						}
 					}
 				}
-				if workflow_step_subscribers == nil || !ok {
-					fmt.Printf("%s ERR: workflow_step_subscribers not found for %s", key, insert_id)
+				if workflow_step_subscriber == nil || !ok {
+					fmt.Printf("%s ERR: workflow_step_subscriber not found for %s", key, insert_id)
 				} else {
-					table = "workflow_step_subscribers"
-					/*table: workflow_step_subscriber
-					comment: "Step Subscriber"
-					tooltip: "Tracks interested parties and stakeholders for workflow steps"
-					columns:
-						workflow_step_subscriber_id: { type: integer, pk: true, autoincrement: true, comment: "Workflow Step Subscriber ID", tooltip: "Unique identifier of the subscription" }
-						email:                       { type: varchar, len: 100, comment: "Email", tooltip: "Email associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 1 }
-						first_name:                  { type: varchar, len: 50, nullable: false, comment: "First Name", form_display: true, table_display: true, form_size_desc: 3, order: 2 }
-						last_name:                   { type: varchar, len: 50, comment: "Last Name", form_display: true, table_display: true, form_size_desc: 3, order: 3 }
-						subscriber_type:             { type: varchar, len: 50, comment: "Subscriber Type", tooltip: "Type of subscriber (responsible, observer, stakeholder, etc.)", form_display: true, table_display: true, form_size_desc: 3, order: 5 }
-						notify_on_start:             { type: boolean, default: true, comment: "Notify On Start", tooltip: "Send notification when step starts", form_display: true, table_display: true, form_size_desc: 3, order: 6}
-						notify_on_complete:          { type: boolean, default: true, comment: "Notify On Complete", tooltip: "Send notification when step completes", form_display: true, table_display: true, form_size_desc: 3, order: 7}
-						notify_on_escalation:        { type: boolean, default: false, comment: "Notify On Escalation", tooltip: "Send notification on SLA escalation", form_display: true, table_display: true, form_size_desc: 3, order: 8}
-						workflow_step_id:            { type: integer, nullable: false, fk: "workflow_step.workflow_step_id", comment: "Workflow Step ID", tooltip: "Identifier of the workflow step", form_display: true, table_display: true, form_size_desc: 4, order: 9 }
-						subscriber_email_template    { type: text, comment: "Email Template", form_display: true, form_long_text: true, form_code: html}
-						active:                      { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the assignment is active", form_display: true, table_display: true, form_size_desc: 2, order: 4 }
-						user_id:                     { type: integer, nullable: false, comment: "User ID", tooltip: "Identifier of the user interested in the step" }
-						created_at:                  { type: datetime, comment: "Created AT", tooltip: "Date and time when the subscription was created" }
-						updated_at:                  { type: datetime, comment: "Updated AT", tooltip: "Date and time when the subscription was last updated" }*/
-					for _, subscriber := range workflow_step_subscribers {
+					table = "workflow_step_subscriber"
+					for _, subscriber := range workflow_step_subscriber {
 						if _, isMap := subscriber.(map[string]any); !isMap {
 							continue
 						}
@@ -615,8 +591,10 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"first_name":       sub["first_name"],
 							"last_name":        sub["last_name"],
 							"active":           sub["active"],
-							"user_id":          sub["user_id"],
+							"user_id":          app["user_id"],
+							"excluded":         false,
 						}
+
 						if _, ok := sub["active"]; ok {
 							_data["active"] = sub["active"]
 						} else {
@@ -633,21 +611,22 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							_data["notify_on_start"] = sub["notify_on_start"]
 						} else if _, ok := sub["on_start"]; !ok {
 							_data["notify_on_start"] = sub["on_start"]
-						}
-						if _, ok := sub["notify_on_start"]; !ok {
-							_data["notify_on_start"] = sub["notify_on_start"]
-						} else if _, ok := sub["on_start"]; !ok {
-							_data["notify_on_start"] = sub["on_start"]
+						} else if _, ok := sub["start"]; !ok {
+							_data["notify_on_start"] = sub["start"]
 						}
 						if _, ok := sub["notify_on_complete"]; !ok {
 							_data["notify_on_complete"] = sub["notify_on_complete"]
 						} else if _, ok := sub["on_complete"]; !ok {
 							_data["notify_on_complete"] = sub["on_complete"]
+						} else if _, ok := sub["complete"]; !ok {
+							_data["notify_on_complete"] = sub["complete"]
 						}
 						if _, ok := sub["notify_on_escalation"]; !ok {
 							_data["notify_on_escalation"] = sub["notify_on_escalation"]
 						} else if _, ok := sub["on_escalation"]; !ok {
 							_data["notify_on_escalation"] = sub["on_escalation"]
+						} else if _, ok := sub["escalation"]; !ok {
+							_data["notify_on_escalation"] = sub["escalation"]
 						}
 						start3 = time.Now().In(etlx.TimeZone)
 						desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
@@ -669,6 +648,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -694,7 +674,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 
 			}
 		}
-		fmt.Println(table, _log2["msg"])
+		// fmt.Println(table, _log2["msg"])
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
