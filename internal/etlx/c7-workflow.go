@@ -165,46 +165,17 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		app = (*_app)
 		// fmt.Println(app)
 	}
-	// MAIN / ROOT SEC IS THE WORKFLOW UPDATES workflow table
-	// tbale: workflow
-	/*## WORKFLOW
-	```yaml
-	table: workflow
-	comment: "Workflow"
-	tooltip: "Defines workflow processes"
-	columns:
-	  workflow_id:       { type: integer, pk: true, autoincrement: true, comment: "Workflow ID", tooltip: "Unique identifier of the workflow" }
-	  workflow:          { type: varchar, len: 200, unique: true, nullable: false, comment: "Workflow", tooltip: "Name of the workflow", form_display: true, table_display: true, form_size_desc: 6, form_order: 1 }
-	  workflow_desc:     { type: text, comment: "Workflow Desc", tooltip: "Description of the workflow", form_display: true, table_display: true, form_long_text: true, form_order: 5 }
-	  order:             { type: integer, comment: "Order", form_display: true, table_display: true, form_size_desc: 2, form_order: 2 }
-	  version:           { type: varchar, len: 200, default: 'v1.0.0', comment: "Version", tooltip: "Version number of the workflow", form_display: true, table_display: true, form_size_desc: 2, form_order: 3 }
-	  active:            { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the workflow is active", form_display: true, table_display: true, form_size_desc: 2, form_order: 4 }
-	  schedule:          { type: varchar, len: 200, comment: "Cron Schedule", tooltip: "Cron Representation of when it runs, if so", form_display: true, table_display: true, form_size_desc: 4, form_order: 8 }
-	  steps_orientation: { type: varchar, len: 200, comment: "Step Orientation", tooltip: "Vertical / Horizontal", form_display: true, table_display: true, form_size_desc: 4, form_order: 9 }
-	  workflow_icon:     { type: varchar, len: 200, comment: "Icon", tooltip: "Workflow Icon - Hero Icon", form_display: true, table_display: true, form_size_desc: 4, form_order: 10 }
-	  email_template:    { type: text, comment: "Email Template", tooltip: "Email", form_display: true, form_long_text: true, form_code: html, form_order: 11 }
-	  user_id:           { type: integer, comment: "User ID", tooltip: "Identifier of the user responsible for the workflow" }
-	  app_id:            { type: integer, comment: "App ID", tooltip: "Identifier of the application context" }
-	  created_at:        { type: datetime, comment: "Created AT", tooltip: "Date and time when the workflow was created" }
-	  updated_at:        { type: datetime, comment: "Updated AT", tooltip: "Date and time when the workflow was last updated" }
-	  excluded:          { type: boolean, default: false, comment: "Excluded", tooltip: "Indicates whether the workflow is excluded from active use" }
-	*/
-	/* -- data structure example
-	   name: WORKFLOW_1
-	   table: workflow
-	   runs_as: WORKFLOW
-	   description: Exemple of a workflow
-	   icon: rectangle-group
-	   order: 1
-	   version: v1.0.0
-	   orientation: vertical*/
 	table, ok := metadata["table"].(string)
 	if !ok {
 		table = "workflow"
 	}
 	cond := "WHERE workflow = :workflow AND excluded = false"
+	name, ok := metadata["name"]
+	if !ok {
+		name = key
+	}
 	_data := map[string]any{
-		"workflow":          key,
+		"workflow":          name,
 		"workflow_desc":     metadata["description"],
 		"workflow_icon":     metadata["icon"],
 		"order":             metadata["order"],
@@ -229,7 +200,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 	}
 	if workflow_id == nil || workflow_id == 0 {
 		sql := fmt.Sprintf(`SELECT * FROM %s WHERE workflow = ? AND excluded = false`, dialect.GetTableName(table))
-		workflow, _, err := dbConn.QuerySingleRow(sql, []any{key}...)
+		workflow, _, err := dbConn.QuerySingleRow(sql, []any{name}...)
 		if err != nil {
 			return nil, fmt.Errorf("failed to query workflow: %w", err)
 		}
@@ -238,7 +209,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		}
 		workflow_id = (*workflow)["workflow_id"]
 	}
-	fmt.Printf("Workflow: %s ID: %v Generated\n", key, workflow_id)
+	fmt.Printf("Workflow: %s ID: %v Generated\n", name, workflow_id)
 	// ITENS CAN BE THE STEP, DEPENDECIES, SLA, ETC
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
@@ -269,6 +240,10 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		if !ok {
 			cond = fmt.Sprintf(`WHERE workflow_id = :workflow_id and %s = :%s and excluded = :excluded`, table, table)
 		}
+		name, ok = itemMetadata.(map[string]any)["name"]
+		if !ok {
+			name = itemKey
+		}
 		_data := map[string]any{
 			"workflow_id": workflow_id,
 			"excluded":    false,
@@ -280,40 +255,8 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 
 		}
 		if table == "workflow_step" {
-			/***
-			-- workflow step table schema
-				table: workflow_step
-				comment: "Workflow Step"
-				tooltip: "Defines the steps of a workflow"
-				columns:
-					workflow_step_id:    { type: integer, pk: true, autoincrement: true, comment: "Workflow Step ID", tooltip: "Unique identifier of the workflow step" }
-					step:                { type: varchar, len: 200, nullable: false, comment: "Step", tooltip: "Name of the step", form_display: true, table_display: true, form_size_desc: 4, form_order: 1 }
-					step_desc:           { type: text, comment: "Step Desc", tooltip: "Description of the step", form_display: true, form_long_text: true, form_order: 6 }
-					step_order:          { type: integer, comment: "Step Order", tooltip: "Order of execution of the step", form_display: true, table_display: true, form_size_desc: 2, form_order: 2 }
-					workflow_id:         { type: integer, nullable: false, fk: "workflow.workflow_id", comment: "Workflow ID", tooltip: "Identifier of the workflow to which the step belongs", form_display: true, table_display: true, form_size_desc: 4, form_order: 7 }
-					step_icon:           { type: varchar, len: 200, comment: "Icon", tooltip: "Step Icon", form_display: true, table_display: true, form_size_desc: 2, form_order: 3 }
-					step_color:          { type: varchar, len: 200, comment: "Color", tooltip: "Step Color", form_display: true, table_display: true, form_size_desc: 2, form_order: 4 }
-					active:              { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the step is active", form_display: true, form_size_desc: 2, form_order: 5 }
-					step_email_template: { type: text, comment: "Email Template", tooltip: "Email", form_display: true, form_code: html, form_long_text: true, form_order: 8 }
-					document_template:   { type: text, comment: "Doc Template", tooltip: "In case the step is suposed to generate some kind of document, here will be the template, and it will be a gostatus templat tha has access to all the data from the previous step, current date, user, and the processes itself", form_display: true, form_code: html, form_long_text: true, form_order: 9 }
-					api:                 { type: varchar, len: 255, comment: "Trigers API", tooltip: "API that is called", form_display: true, table_display: false, form_size_desc: 8, form_order: 7 }
-					user_id:             { type: integer, comment: "User ID", tooltip: "Identifier of the user responsible for the step definition" }
-					app_id:              { type: integer, comment: "App ID", tooltip: "Identifier of the application context" }
-					created_at:          { type: datetime, comment: "Created AT", tooltip: "Date and time when the step was created" }
-					updated_at:          { type: datetime, comment: "Updated AT", tooltip: "Date and time when the step was last updated" }
-					excluded:            { type: boolean, default: false, comment: "E
-				-- workflow step data
-				name: STEP_1
-				table: workflow_step
-				description: Step 1
-				order: 1
-				icon: plus
-				color: green
-				active: true
-				workflow_step_schema:
-					- field1: {label: field 1, data_type_desc: text, input_type_desc: radio, nullable: false, size_desc: 3, options: '["A", "B", "C"]'}**/
 			cond = `WHERE workflow_id = :workflow_id and step = :step and excluded = :excluded`
-			_data["step"] = itemKey
+			_data["step"] = name
 			_data["step_desc"] = itemMetadata.(map[string]any)["description"]
 			_data["step_order"] = itemMetadata.(map[string]any)["order"]
 			_data["step_icon"] = itemMetadata.(map[string]any)["icon"]
@@ -414,15 +357,16 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			if table == "workflow_step" {
 				if insert_id == any(nil) || insert_id == 0 {
 					sql := fmt.Sprintf(`SELECT * FROM %s WHERE step = ? AND excluded = false`, dialect.GetTableName(table))
-					step, _, err := dbConn.QuerySingleRow(sql, []any{itemKey}...)
+					step, _, err := dbConn.QuerySingleRow(sql, []any{name}...)
 					if err != nil {
-						return nil, fmt.Errorf("failed to query step %s: %w", itemKey, err)
+						return nil, fmt.Errorf("failed to query step %s: %w", name, err)
 					}
 					if len(*step) == 0 {
-						return nil, fmt.Errorf("workflow not found after insert/update")
+						return nil, fmt.Errorf("workflow step %s not found after insert/update", name)
 					}
 					insert_id = (*step)["workflow_step_id"]
 				}
+				// SCHEMA
 				workflow_step_schema, ok := itemMetadata.(map[string]any)["workflow_step_schema"].([]any)
 				if !ok {
 					workflow_step_schema, ok = itemMetadata.(map[string]any)["step_schema"].([]any)
@@ -434,37 +378,6 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 					fmt.Printf("%s ERR: workflow_step_schema not found for %s", key, insert_id)
 				} else {
 					table = "workflow_step_schema"
-					// parse workflow_step_schema and insert into workflow_step_field table
-					/** -- workflow step schema table def
-										table: workflow_step_schema
-										comment: "Step Schema"
-										tooltip: "Defines the data structure required for each step of a workflow"
-										columns:
-											workflow_step_schema_id: { type: integer, pk: true, autoincrement: true, comment: "Workflow Step Schema ID", tooltip: "Unique identifier of the schema field" }
-											workflow_id:             { type: integer, nullable: false, fk: "workflow.workflow_id", comment: "Workflow ID", tooltip: "Identifier of the workflow associated with the field", form_display: true, table_display: true, form_size_desc: 6 }
-											workflow_step_id:        { type: integer, nullable: false, fk: "workflow_step.workflow_step_id", comment: "Workflow Step ID", tooltip: "Identifier of the step where the field is collected", form_display: true, table_display: true, form_size_desc: 6 }
-											field:                   { type: varchar, len: 200, nullable: false, comment: "Field", tooltip: "Technical identifier of the field", form_display: true, table_display: true, form_size_desc: 4 }
-											label:                   { type: varchar, len: 200, nullable: false, comment: "Label", tooltip: "Display name of the field", form_display: true, table_display: true, form_size_desc: 4 }
-											data_type:               { type: varchar, fk: "data_type.data_type", nullable: false, comment: "Data Type", tooltip: "Type of data stored in the field", form_display: true, table_display: true, form_size_desc: 4 }
-											nullable:                { type: boolean, default: true, comment: "Nullable", tooltip: "Indicates whether the field can be empty", form_display: true, table_display: true, form_size_desc: 3 }
-											default_value:           { type: varchar, len: 200, comment: "Default Value", tooltip: "Default value assigned to the field", form_display: true, table_display: false, form_size_desc: 3 }
-											validation_rule:         { type: varchar, len: 200, comment: "Validation Rule", tooltip: "Regex validation rule for the field", form_display: true, table_display: flase, form_size_desc: 3 }
-											order_index:             { type: integer, comment: "Order Index", tooltip: "Position of the field within the step", form_display: true, table_display: true, form_size_desc: 3}
-											format:                  { type: varchar, len: 200, comment: "Format", tooltip: "Format intl.Format", form_display: true, form_size_desc: 4 }
-											size:                    { type: integer, fk: "size.size", comment: "Size", tooltip: "1 - 12 size that will be shown in form", form_display: true, form_size_desc: 2 }
-											elipsis:                 { type: integer, comment: "Elipsis", tooltip: "Text elipsis", form_display: true, form_size_desc: 2 }
-											input_type:              { type: varchar, fk: "input_type.input_type", comment: "Options Input Type", tooltip: "Combobox,Checkbox or Radio", form_display: true, table_display: true, form_size_desc: 2 }
-											active:                  { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the field is active" , form_display: true, table_display: true, form_size_desc: 2 }
-											options:                 { type: text, comment: "Options", tooltip: "JSON Array of string or array of objects{label,value}", form_display: true, form_long_text: true, form_size_desc: 12 }
-											user_id:                 { type: integer, comment: "User ID", tooltip: "Identifier of the user responsible for the field definition" }
-											app_id:                  { type: integer, comment: "App ID", tooltip: "Identifier of the application context" }
-											created_at:              { type: datetime, comment: "Created AT", tooltip: "Date and time when the field was created" }
-											updated_at:              { type: datetime, comment: "Updated AT", tooltip: "Date and time when the field was last updated" }
-											excluded:                { type: boolean, default: false, comment: "Excluded", tooltip: "Indicates whether the field is excluded from active use" }
-
-										---workflow_step_schema example
-										workflow_step_schema:
-					  						- {field: field1, label: field 1, data_type: text, input_type: radio, nullable: false, size_desc: 3, options: '["A", "B", "C"]'}*/
 					for order, _field := range workflow_step_schema {
 						if _, isMap := _field.(map[string]any); !isMap {
 							continue
@@ -565,6 +478,220 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 						}
 					}
 				}
+				// RESPONSIBLE
+				workflow_step_responsible, ok := itemMetadata.(map[string]any)["workflow_step_responsible"].([]any)
+				if !ok {
+					workflow_step_responsible, ok = itemMetadata.(map[string]any)["step_responsible"].([]any)
+					if !ok {
+						workflow_step_responsible, ok = itemMetadata.(map[string]any)["responsible"].([]any)
+					}
+				}
+				if workflow_step_responsible == nil || !ok {
+					fmt.Printf("%s ERR: workflow_step_responsible not found for %s", key, insert_id)
+				} else {
+					table = "workflow_step_responsible"
+					/*
+						table: workflow_step_responsible
+						comment: "Step Responsible"
+						tooltip: "Defines the responsible users for each workflow step"
+						columns:
+							workflow_step_responsible_id: { type: integer, pk: true, autoincrement: true, comment: "Workflow Step Responsible ID", tooltip: "Unique identifier of the assignment" }
+							email:                        { type: varchar, len: 100, comment: "Email", tooltip: "Email associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 1 }
+							first_name:                   { type: varchar, len: 50, nullable: false, comment: "First Name", form_display: true, table_display: true, form_size_desc: 3, order: 2 }
+							last_name:                    { type: varchar, len: 50, comment: "Last Name", form_display: true, table_display: true, form_size_desc: 3, order: 3 }
+							department_id:                { type: integer, comment: "Department ID", tooltip: "Identifier of the department responsible for the step", form_display: true, table_display: true, form_size_desc: 4, order: 5 }
+							role:                         { type: varchar, len: 100, comment: "Role", tooltip: "Role associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 6 }
+							workflow_step_id:             { type: integer, nullable: false, fk: "workflow_step.workflow_step_id", comment: "Workflow Step ID", tooltip: "Identifier of the step associated with the assignment", table_display: true, form_size_desc: 4, order: 7 }
+							active:                       { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the assignment is active", form_display: true, table_display: true, form_size_desc: 2, order: 4 }
+							responsible_email_template    { type: text, comment: "Email Template", form_display: true, form_long_text: true, form_code: html}
+							user_id:                      { type: integer, comment: "User ID", tooltip: "Identifier of the user responsible for the step" }
+							created_at:                   { type: datetime, comment: "Created AT", tooltip: "Date and time when the assignment was created" }
+							updated_at:                   { type: datetime, comment: "Updated AT", tooltip: "Date and time when the option was last updated" }
+					*/
+					for _, responsible := range workflow_step_responsible {
+						if _, isMap := responsible.(map[string]any); !isMap {
+							continue
+						}
+						resp := responsible.(map[string]any)
+						_data = map[string]any{
+							"workflow_step_id": insert_id,
+							//"workflow_id":      workflow_id,
+							"email":         resp["email"],
+							"first_name":    resp["first_name"],
+							"last_name":     resp["last_name"],
+							"department_id": resp["department_id"],
+							"role":          resp["role"],
+							"user_id":       resp["user_id"],
+						}
+						if _, ok := resp["active"]; ok {
+							_data["active"] = resp["active"]
+						} else {
+							_data["active"] = true
+						}
+						if _, ok := resp["email_template"]; ok {
+							_data["responsible_email_template"] = resp["email_template"]
+						} else if _, ok := resp["resp_email_template"]; ok {
+							_data["responsible_email_template"] = resp["resp_email_template"]
+						} else if _, ok := resp["responsible_email_template"]; ok {
+							_data["responsible_email_template"] = resp["responsible_email_template"]
+						}
+						start3 = time.Now().In(etlx.TimeZone)
+						desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
+						if !okDesc {
+							desc = fmt.Sprintf("%s->%s->%s", key, itemKey, resp["email"])
+						}
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+						_log2 = map[string]any{
+							"process":               process,
+							"name":                  fmt.Sprintf("%s->%s->%s", key, itemKey, resp["email"]),
+							"description":           desc,
+							"key":                   key,
+							"item_key":              itemKey,
+							"start_at":              start3,
+							"ref":                   dtRef,
+							"mem_alloc_start":       mem_alloc,
+							"mem_total_alloc_start": mem_total_alloc,
+							"mem_sys_start":         mem_sys,
+							"num_gc_start":          num_gc,
+						}
+						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+						_log2["end_at"] = time.Now().In(etlx.TimeZone)
+						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
+							processLogs = append(processLogs, _log2)
+						} else {
+							_log2["success"] = true
+							_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
+							processLogs = append(processLogs, _log2)
+						}
+					}
+				}
+				// SUBSCRIBERS
+				workflow_step_subscribers, ok := itemMetadata.(map[string]any)["workflow_step_subscribers"].([]any)
+				if !ok {
+					workflow_step_subscribers, ok = itemMetadata.(map[string]any)["step_subscribers"].([]any)
+					if !ok {
+						workflow_step_subscribers, ok = itemMetadata.(map[string]any)["subscribers"].([]any)
+					}
+				}
+				if workflow_step_subscribers == nil || !ok {
+					fmt.Printf("%s ERR: workflow_step_subscribers not found for %s", key, insert_id)
+				} else {
+					table = "workflow_step_subscribers"
+					/*table: workflow_step_subscriber
+					comment: "Step Subscriber"
+					tooltip: "Tracks interested parties and stakeholders for workflow steps"
+					columns:
+						workflow_step_subscriber_id: { type: integer, pk: true, autoincrement: true, comment: "Workflow Step Subscriber ID", tooltip: "Unique identifier of the subscription" }
+						email:                       { type: varchar, len: 100, comment: "Email", tooltip: "Email associated with the responsibility", form_display: true, table_display: true, form_size_desc: 4, order: 1 }
+						first_name:                  { type: varchar, len: 50, nullable: false, comment: "First Name", form_display: true, table_display: true, form_size_desc: 3, order: 2 }
+						last_name:                   { type: varchar, len: 50, comment: "Last Name", form_display: true, table_display: true, form_size_desc: 3, order: 3 }
+						subscriber_type:             { type: varchar, len: 50, comment: "Subscriber Type", tooltip: "Type of subscriber (responsible, observer, stakeholder, etc.)", form_display: true, table_display: true, form_size_desc: 3, order: 5 }
+						notify_on_start:             { type: boolean, default: true, comment: "Notify On Start", tooltip: "Send notification when step starts", form_display: true, table_display: true, form_size_desc: 3, order: 6}
+						notify_on_complete:          { type: boolean, default: true, comment: "Notify On Complete", tooltip: "Send notification when step completes", form_display: true, table_display: true, form_size_desc: 3, order: 7}
+						notify_on_escalation:        { type: boolean, default: false, comment: "Notify On Escalation", tooltip: "Send notification on SLA escalation", form_display: true, table_display: true, form_size_desc: 3, order: 8}
+						workflow_step_id:            { type: integer, nullable: false, fk: "workflow_step.workflow_step_id", comment: "Workflow Step ID", tooltip: "Identifier of the workflow step", form_display: true, table_display: true, form_size_desc: 4, order: 9 }
+						subscriber_email_template    { type: text, comment: "Email Template", form_display: true, form_long_text: true, form_code: html}
+						active:                      { type: boolean, default: true, comment: "Active", tooltip: "Indicates whether the assignment is active", form_display: true, table_display: true, form_size_desc: 2, order: 4 }
+						user_id:                     { type: integer, nullable: false, comment: "User ID", tooltip: "Identifier of the user interested in the step" }
+						created_at:                  { type: datetime, comment: "Created AT", tooltip: "Date and time when the subscription was created" }
+						updated_at:                  { type: datetime, comment: "Updated AT", tooltip: "Date and time when the subscription was last updated" }*/
+					for _, subscriber := range workflow_step_subscribers {
+						if _, isMap := subscriber.(map[string]any); !isMap {
+							continue
+						}
+						sub := subscriber.(map[string]any)
+						_data = map[string]any{
+							"workflow_step_id": insert_id,
+							"email":            sub["email"],
+							"first_name":       sub["first_name"],
+							"last_name":        sub["last_name"],
+							"active":           sub["active"],
+							"user_id":          sub["user_id"],
+						}
+						if _, ok := sub["active"]; ok {
+							_data["active"] = sub["active"]
+						} else {
+							_data["active"] = true
+						}
+						if _, ok := sub["subscriber_email_template"]; ok {
+							_data["subscriber_email_template"] = sub["subscriber_email_template"]
+						} else if _, ok := sub["sub_email_template"]; ok {
+							_data["subscriber_email_template"] = sub["sub_email_template"]
+						} else if _, ok := sub["email_template"]; ok {
+							_data["subscriber_email_template"] = sub["email_template"]
+						}
+						if _, ok := sub["notify_on_start"]; !ok {
+							_data["notify_on_start"] = sub["notify_on_start"]
+						} else if _, ok := sub["on_start"]; !ok {
+							_data["notify_on_start"] = sub["on_start"]
+						}
+						if _, ok := sub["notify_on_start"]; !ok {
+							_data["notify_on_start"] = sub["notify_on_start"]
+						} else if _, ok := sub["on_start"]; !ok {
+							_data["notify_on_start"] = sub["on_start"]
+						}
+						if _, ok := sub["notify_on_complete"]; !ok {
+							_data["notify_on_complete"] = sub["notify_on_complete"]
+						} else if _, ok := sub["on_complete"]; !ok {
+							_data["notify_on_complete"] = sub["on_complete"]
+						}
+						if _, ok := sub["notify_on_escalation"]; !ok {
+							_data["notify_on_escalation"] = sub["notify_on_escalation"]
+						} else if _, ok := sub["on_escalation"]; !ok {
+							_data["notify_on_escalation"] = sub["on_escalation"]
+						}
+						start3 = time.Now().In(etlx.TimeZone)
+						desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
+						if !okDesc {
+							desc = fmt.Sprintf("%s->%s->%s", key, itemKey, sub["email"])
+						}
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+						_log2 = map[string]any{
+							"process":               process,
+							"name":                  fmt.Sprintf("%s->%s->%s", key, itemKey, sub["email"]),
+							"description":           desc,
+							"key":                   key,
+							"item_key":              itemKey,
+							"start_at":              start3,
+							"ref":                   dtRef,
+							"mem_alloc_start":       mem_alloc,
+							"mem_total_alloc_start": mem_total_alloc,
+							"mem_sys_start":         mem_sys,
+							"num_gc_start":          num_gc,
+						}
+						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+						_log2["end_at"] = time.Now().In(etlx.TimeZone)
+						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
+							processLogs = append(processLogs, _log2)
+						} else {
+							_log2["success"] = true
+							_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
+							processLogs = append(processLogs, _log2)
+						}
+					}
+				}
+				// DEPENDECIES
+
+				// SLA
+
 			}
 		}
 		fmt.Println(table, _log2["msg"])
