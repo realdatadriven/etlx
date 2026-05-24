@@ -243,7 +243,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "MODEL", "CSMODEL":
+					case "MODEL", "CSMODEL", "C7MODEL":
 						_logs, err := etlxlib.RunMODEL(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
@@ -256,7 +256,7 @@ func main() {
 							}
 							logs = append(logs, _logs...)
 						}
-					case "MODEL_DATA", "CSDATA":
+					case "MODEL_DATA", "CSDATA", "C7DATA":
 						//fmt.Printf("%s AS %s START:\n", key, runs_as)
 						_logs, err := etlxlib.RunMODEL_DATA(dateRef, nil, extraConf, key)
 						if err != nil {
