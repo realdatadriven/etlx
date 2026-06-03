@@ -88,6 +88,117 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 			}
 		}
 		driver = "duckdb"
+	case "quack":
+		// Handle quack driver specific logic
+		// to create expects dsn in the format quack:path/to/db.duckdb?token=value&name=value
+		filepath, params, err := etlx.ParseQuackFileDSN(_dsn)
+		if err == nil {
+			host, ok := params["host"]
+			if !ok {
+				host = "localhost"
+			}
+			port, ok := params["port"]
+			if !ok {
+				port = "9494"
+			}
+			token, ok := params["token"]
+			if !ok {
+				token, ok = params["TOKEN"]
+				if !ok {
+					return nil, fmt.Errorf("%s DSN missing token parameter", driver)
+				}
+			}
+			// allow_other_hostname 
+			allowOtherHostnames, ok := params["allow_other_hostnames"]
+			if !ok {
+				allowOtherHostnames = "false"
+			}
+			disableSSL, ok := params["disable_ssl"]
+			if !ok {
+				disableSSL, ok = params["DISABLE_SSL"]
+				if !ok {
+					disableSSL = "false"
+				}
+			}
+			dbConn, err = db.NewDuckDB(filepath)
+			if err != nil {
+				return nil, fmt.Errorf("%s Conn: %s", driver, err)
+			}
+			_, err = dbConn.ExecuteQuery("INSTALL quack", []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s INSTALL quack: %s", driver, err)
+			}
+			// CHECK IF PORT IS OPEN BEFORE TRYING TO SERVE IF PORT IS OPEN CHANCES ARE THAT THE INSTANCE IS ALREADY SERVING, IN THAT CASE JUST ATTACH
+			if !etlx.IsPortOpen(host, port) {				
+				sql := fmt.Sprintf("CALL quack_serve('quack:%s:%s', token => '%s', allow_other_hostname => %s, disable_ssl => %s);", host, port, token, allowOtherHostnames, disableSSL)
+				_, err = dbConn.ExecuteQuery(sql, []any{}...)
+				if err != nil {
+					return nil, fmt.Errorf("%s Error setting up QUACK: %s", driver, err)
+				}
+			}
+			name, ok2 := params["name"]
+			if !ok2 {
+				name = "remote"
+			}
+			sql = fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
+			_, err = dbConn.ExecuteQuery(sql, []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s Error setting up QUACK: %s", driver, err)
+			}
+			sql = fmt.Sprintf("USE %s", name)
+			_, err = dbConn.ExecuteQuery(sql, []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s Error using QUACK: %s", driver, err)
+			}
+		} else {
+			// to connect to a remote duckdb instance with quack, the dsn should be in the format quack:host:port?token=value&name=value
+			host, port, params, err := etlx.ParseQuackDSN(_dsn)
+			if err != nil {
+				return nil, fmt.Errorf("%s ParseQuackDSN: %s", driver, err)
+			}
+			if host == "" {
+				host = "localhost"
+			}
+			if port == "" {
+				port = "9494"
+			}
+			token, ok := params["token"]
+			if !ok {
+				token, ok = params["TOKEN"]
+				if !ok {
+					return nil, fmt.Errorf("%s DSN missing token parameter", driver)
+				}
+			}
+			name, ok2 := params["name"]
+			if !ok2 {
+				name = "remote"
+			}
+			disableSSL, ok := params["disable_ssl"]
+			if !ok {
+				disableSSL, ok = params["DISABLE_SSL"]
+				if !ok {
+					disableSSL = "false"
+				}
+			}
+			dbConn, err = db.NewDuckDB("")
+			if err != nil {
+				return nil, fmt.Errorf("%s Conn: %s", driver, err)
+			}
+			_, err = dbConn.ExecuteQuery("INSTALL quack", []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s INSTALL quack: %s", driver, err)
+			}
+			sql := fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
+			_, err = dbConn.ExecuteQuery(sql, []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s Error setting up QUACK: %s", driver, err)
+			}
+			sql = fmt.Sprintf("USE %s", name)
+			_, err = dbConn.ExecuteQuery(sql, []any{}...)
+			if err != nil {
+				return nil, fmt.Errorf("%s Error using QUACK: %s", driver, err)
+			}
+		}
 	case "odbc":
 		/*dbConn, err = db.NewODBC(_dsn)
 		if err != nil {
