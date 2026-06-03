@@ -140,7 +140,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 			if !ok2 {
 				name = "remote"
 			}
-			sql = fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
+			sql := fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
 			_, err = dbConn.ExecuteQuery(sql, []any{}...)
 			if err != nil {
 				return nil, fmt.Errorf("%s Error setting up QUACK: %s", driver, err)
