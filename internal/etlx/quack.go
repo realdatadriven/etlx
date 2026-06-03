@@ -2,8 +2,10 @@ package etlxlib
 
 import (
 	"fmt"
+	"net"
 	"regexp"
 	"strings"
+	"time"
 )
 
 // Handle quack driver specific logic
@@ -74,5 +76,11 @@ func (etlx *ETLX) ParseQuackFileDSN(dsn string) (string, map[string]string, erro
 
 // check if port is open
 func (etlx *ETLX) IsPortOpen(host string, port string) bool {
-	return false
+	address := fmt.Sprintf("%s:%s", host, port)
+	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
+	if err != nil {
+		return false
+	}
+	conn.Close()
+	return true
 }

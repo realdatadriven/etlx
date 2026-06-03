@@ -129,7 +129,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 				return nil, fmt.Errorf("%s INSTALL quack: %s", driver, err)
 			}
 			// CHECK IF PORT IS OPEN BEFORE TRYING TO SERVE IF PORT IS OPEN CHANCES ARE THAT THE INSTANCE IS ALREADY SERVING, IN THAT CASE JUST ATTACH
-			if !etlx.IsPortOpen(host, port) {				
+			if !etlx.IsPortOpen(host, port) && (host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "0.0.0.0") {				
 				sql := fmt.Sprintf("CALL quack_serve('quack:%s:%s', token => '%s', allow_other_hostname => %s, disable_ssl => %s);", host, port, token, allowOtherHostnames, disableSSL)
 				_, err = dbConn.ExecuteQuery(sql, []any{}...)
 				if err != nil {
