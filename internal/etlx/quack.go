@@ -76,7 +76,7 @@ func (etlx *ETLX) ParseQuackFileDSN(dsn string) (string, map[string]string, erro
 
 // check if port is open
 func (etlx *ETLX) IsPortOpen(host string, port string) bool {
-	address := fmt.Sprintf("%s:%s", host, port)
+	address := net.JoinHostPort(host, port)
 	conn, err := net.DialTimeout("tcp", address, 3*time.Second)
 	if err != nil {
 		return false
