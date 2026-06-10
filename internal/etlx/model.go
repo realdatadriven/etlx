@@ -220,6 +220,74 @@ func (p *PostgresDialect) GetBooleanValue(value bool) any {
 	return value
 }
 
+// DuckDBDialect implements SQLDialect for DuckDB.
+type DuckDBDialect struct{ BaseDialect }
+
+func (d *DuckDBDialect) GetCreateTableIfNotExists(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE IF NOT EXISTS "%s" (`, tableName), ``
+}
+
+func (d *DuckDBDialect) GetCreateTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE TABLE "%s" (`, tableName), ``
+}
+
+func (d *DuckDBDialect) GetCreateOrReplaceTable(tableName string) (string, string) {
+	return fmt.Sprintf(`CREATE OR REPLACE TABLE "%s" (`, tableName), ``
+}
+
+func (d *DuckDBDialect) DropTableIfExists(tableName string) string {
+	return fmt.Sprintf(`DROP TABLE IF EXISTS "%s";`, tableName)
+}
+
+func (d *DuckDBDialect) GetTableName(tableName string) string {
+	return fmt.Sprintf(`"%s"`, tableName)
+}
+
+func (d *DuckDBDialect) GetColumnName(fieldName string) string {
+	return fmt.Sprintf(`"%s"`, fieldName)
+}
+
+func (d *DuckDBDialect) GetColumnType(field map[string]any) string {
+	sqlType := field["type"].(string)
+	switch strings.ToUpper(sqlType) {
+	case "INTEGER":
+		if autoincrement, ok := field["autoincrement"].(bool); ok && autoincrement {
+			return "INTEGER AUTO_INCREMENT"
+		}
+		return "INTEGER"
+	case "VARCHAR", "STRING":
+		if length, ok := field["length"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
+		if length, ok := field["len"].(int); ok {
+			return fmt.Sprintf("VARCHAR(%d)", length)
+		}
+		return "TEXT" // Default to TEXT if length not specified for VARCHAR
+	case "TEXT", "LONGTEXT":
+		return "TEXT"
+	case "DATE":
+		return "DATE"
+	case "DATETIME":
+		return "DATETIME"
+	case "BOOLEAN", "BIT", "TYNINT":
+		return "BOOLEAN"
+	case "DECIMAL", "FLOAT", "NUMERIC", "REAL":
+		return "DOUBLE"
+	default:
+		return sqlType
+	}
+}
+
+func (d *DuckDBDialect) GetColumnComment(tableName, columnName, comment string) string {
+	return fmt.Sprintf("COMMENT ON COLUMN %s.%s IS '%s';", tableName, columnName, strings.ReplaceAll(comment, "'", "''"))
+}
+
+func (d *DuckDBDialect) GetTableComment(tableName, comment string) string {
+	return fmt.Sprintf("COMMENT ON TABLE %s IS '%s';", tableName, strings.ReplaceAll(comment, "'", "''"))
+}
+
+func (d *DuckDBDialect) SupportsTableComment() bool { return true }
+
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
@@ -485,6 +553,8 @@ func (ms *MSSQLDialect) GetBooleanValue(value bool) any {
 // GetDialect returns the appropriate SQLDialect implementation.
 func GetDialect(driver string) SQLDialect {
 	switch driver {
+	case "duckdb", "ddb", "quack":
+		return &DuckDBDialect{}
 	case "postgres", "pg":
 		return &PostgresDialect{}
 	case "mysql", "mariadb":
