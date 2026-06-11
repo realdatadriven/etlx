@@ -21,7 +21,7 @@ type SQLDialect interface {
 	GetCreateTableIfNotExists(tableName string) (string, string)
 	GetTableName(tableName string) string
 	GetColumnName(fieldName string) string
-	GetColumnType(field map[string]any) string
+	GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string
 	GetPrimaryKey(field map[string]any) string
 	GetAutoIncrement(field map[string]any) string
 	GetNullable(field map[string]any) string
@@ -63,7 +63,7 @@ func (b *BaseDialect) GetTableName(tableName string) string {
 	return tableName
 }
 
-func (b *BaseDialect) GetColumnType(field map[string]any) string {
+func (b *BaseDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
@@ -161,7 +161,7 @@ func (p *PostgresDialect) GetColumnName(fieldName string) string {
 	return fmt.Sprintf(`"%s"`, fieldName)
 }
 
-func (p *PostgresDialect) GetColumnType(field map[string]any) string {
+func (p *PostgresDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
@@ -247,12 +247,20 @@ func (d *DuckDBDialect) GetColumnName(fieldName string) string {
 	return fmt.Sprintf(`"%s"`, fieldName)
 }
 
-func (d *DuckDBDialect) GetColumnType(field map[string]any) string {
+func (d *DuckDBDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
 		if autoincrement, ok := field["autoincrement"].(bool); ok && autoincrement {
-			return "INTEGER AUTO_INCREMENT"
+			// GetColumnType(field map[string]any)
+			if dbCon != nil {
+				create_seq := fmt.Sprintf(`CREATE SEQUENCE IF NOT EXISTS "%s_%s_seq" START WITH 1 INCREMENT BY 1;`, table, field["name"].(string))
+				_, err := dbCon.ExecuteQuery(create_seq, []any{}...)
+				if err != nil {
+					fmt.Println("Err creating SEQUENCE:", err)
+				}
+				return fmt.Sprintf(`INTEGER PRIMARY KEY DEFAULT NEXTVAL('%s_%s_seq')`, table, field["name"].(string))
+			}
 		}
 		return "INTEGER"
 	case "VARCHAR", "STRING":
@@ -312,7 +320,7 @@ func (m *MySQLDialect) GetTableName(tableName string) string {
 	return fmt.Sprintf("`%s`", tableName)
 }
 
-func (m *MySQLDialect) GetColumnType(field map[string]any) string {
+func (m *MySQLDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
@@ -395,7 +403,7 @@ func (s *SQLiteDialect) GetColumnName(fieldName string) string {
 	return fmt.Sprintf(`"%s"`, fieldName)
 }
 
-func (s *SQLiteDialect) GetColumnType(field map[string]any) string {
+func (s *SQLiteDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
@@ -469,7 +477,7 @@ func (ms *MSSQLDialect) GetColumnName(fieldName string) string {
 	return fmt.Sprintf(`[%s]`, fieldName)
 }
 
-func (ms *MSSQLDialect) GetColumnType(field map[string]any) string {
+func (ms *MSSQLDialect) GetColumnType(field map[string]any, table string, dbCon db.DBInterface) string {
 	sqlType := field["type"].(string)
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
@@ -573,7 +581,7 @@ func (etlx *ETLX) GetDialect(driver string) SQLDialect {
 }
 
 // Generates CREATE TABLE SQL statements with comments, adapting to SQL dialects
-func generateCreateTableSQL(driver, tableName, tableComment, createAll string, fields map[string]any) string {
+func generateCreateTableSQL(driver, tableName, tableComment, createAll string, fields map[string]any, dbCon db.DBInterface) string {
 	dialect := GetDialect(driver)
 	var start, end string
 	var schema strings.Builder
@@ -611,7 +619,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			continue
 		}
 		name := dialect.GetColumnName(fieldName)
-		columnType := dialect.GetColumnType(field)
+		columnType := dialect.GetColumnType(field, tableName, dbCon)
 		primaryKey := dialect.GetPrimaryKey(field)
 		autoincrement := dialect.GetAutoIncrement(field)
 		nullable := dialect.GetNullable(field)
@@ -643,6 +651,9 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	}
 	// Add combined primary key constraint if any
 	if len(primaryKeyColumns) > 0 {
+		if driver == "duckdb" || driver == "quack" {
+			// DuckDB does not support inline PRIMARY KEY constraints, so we add it as a table-level constraint
+		}
 		columnDefs = append(columnDefs, fmt.Sprintf("    PRIMARY KEY (%s)", strings.Join(primaryKeyColumns, ", ")))
 	}
 	// Add foreign key constraints
@@ -2281,7 +2292,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"mem_sys_start":         mem_sys,
 				"num_gc_start":          num_gc,
 			}
-			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
+			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns, dbConn)
 			//fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			_, err := dbConn.ExecuteQuery(createTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
