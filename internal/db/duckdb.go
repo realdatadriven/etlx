@@ -5,6 +5,7 @@ import (
 	"database/sql"
 	"fmt"
 	"os"
+	"regexp"
 	"time"
 
 	"github.com/jmoiron/sqlx"
@@ -321,12 +322,58 @@ func (db *DuckDB) QuerySingleRow(query string, params ...any) (*map[string]any, 
 	return &result, true, err
 }
 
+func NamedToPositional(sql string, data map[string]any) (string, []any, error) {
+	// Find all :param occurrences
+	re := regexp.MustCompile(`:([a-zA-Z_][a-zA-Z0-9_]*)`)
+	matches := re.FindAllStringSubmatch(sql, -1)
+	if len(matches) == 0 {
+		return sql, nil, nil
+	}
+	// Collect unique parameter names in order of appearance
+	seen := make(map[string]bool)
+	var paramOrder []string
+	for _, match := range matches {
+		name := match[1]
+		if !seen[name] {
+			seen[name] = true
+			paramOrder = append(paramOrder, name)
+		}
+	}
+	// Check for missing values
+	var args []any
+	for _, name := range paramOrder {
+		val, ok := data[name]
+		if !ok {
+			return "", nil, fmt.Errorf("missing value for parameter: %s", name)
+		}
+		args = append(args, val)
+	}
+	// Replace :name → ?
+	result := re.ReplaceAllStringFunc(sql, func(s string) string {
+		// We could also do a map lookup here, but simpler to just replace with ?
+		return "?"
+	})
+	return result, args, nil
+}
+
 func (db *DuckDB) ExecuteNamedQuery(query string, data map[string]any) (int, error) {
-	return 0, fmt.Errorf("not implemented yet %s", "_")
+	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
+	defer cancel()
+	_positionalQuery, args, err := NamedToPositional(query, data)
+	if err != nil {
+		return 0, fmt.Errorf("failed to convert named query to positional: %w", err)
+	}
+	// fmt.Println(_positionalQuery, args)
+	result, err := db.ExecContext(ctx, _positionalQuery, args...)
+	if err != nil {
+		return 0, err
+	}
+	id, err := result.LastInsertId()
+	return int(id), nil
 }
 
 func (db *DuckDB) ExecuteQueryPGInsertWithLastInsertId(query string, data ...any) (int, error) {
-	return 0, fmt.Errorf("not implemented yet %s", "_")
+	return db.ExecuteNamedQuery(query, data[0].(map[string]any))
 }
 
 func (db *DuckDB) FromParams(params map[string]any, extra_conf map[string]any) (*DB, string, string, error) {
