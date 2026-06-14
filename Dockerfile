@@ -73,7 +73,7 @@ CMD []
 #docker build --no-cache -t  etlx:latest .
 #docker run -v ./.env:/app/.env:ro -v ./config.md:/app/config.md:ro -v ./database:/app/database etlx:latest --config /app/config.md
 #docker tag etlx:latest docker.io/realdatadriven/etlx:latest
-#docker tag etlx:latest docker.io/realdatadriven/etlx:v1.152.1
+#docker tag etlx:latest docker.io/realdatadriven/etlx:v1.153.2
 #docker login docker.io
 #docker push docker.io/realdatadriven/etlx:latest
-#docker push docker.io/realdatadriven/etlx:v1.152.1
+#docker push docker.io/realdatadriven/etlx:v1.153.2
