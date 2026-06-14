@@ -4,7 +4,6 @@ import (
 	"context"
 	"database/sql"
 	"fmt"
-	"os"
 	"regexp"
 	"time"
 
@@ -40,7 +39,17 @@ func ScanRowToMap(rows *sql.Rows) (map[string]any, error) {
 }
 
 func NewDuckDB(dsn string) (*DuckDB, error) {
-	//fmt.Printf("db DRIVER: %s DSN: %s\n", driverName, dsn)
+	/*if os.Getenv("ETLX_DUCKDB_OPTIONS") != "" {
+		_extra_opts := os.Getenv("ETLX_DUCKDB_OPTIONS")
+		if !strings.HasPrefix(_extra_opts, "?") {
+			_extra_opts = "?" + _extra_opts
+		}
+		if dsn == "" {
+			dsn = ":memory:"
+		}
+		dsn = fmt.Sprintf("%s%s", dsn, _extra_opts)
+	}
+	fmt.Printf("DSN: %s\n", dsn)*/
 	db, err := sql.Open("duckdb", dsn)
 	if err != nil {
 		return nil, err
@@ -51,7 +60,7 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(defaultTimeoutDuckDB)
 	db.SetConnMaxLifetime(2 * time.Hour)
-	if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" {
+	/*if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" {
 		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES"))
 		if err != nil {
 			return nil, fmt.Errorf("failed to set allowed directories from ETLX_DUCKDB_ALLOWED_DIRECTORIES: %w", err)
@@ -80,7 +89,7 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		if err != nil {
 			return nil, fmt.Errorf("failed to set security configs from ETLX_DUCKDB_SECURITY_CONFIGS: %w", err)
 		}
-	}
+	}*/
 	return &DuckDB{db}, nil
 }
 
