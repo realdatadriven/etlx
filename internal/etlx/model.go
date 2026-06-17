@@ -514,7 +514,11 @@ func (s *SQLiteDialect) GetBooleanValue(value bool) any {
 }
 
 func (s *SQLiteDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
-	return fmt.Sprintf(`PRAGMA table_info("%s");`, tableName)
+	sql := fmt.Sprintf(`SELECT p.name AS column_name
+	FROM sqlite_master m
+	JOIN pragma_table_info(m.name) p
+	WHERE m.type = '%s' AND p.pk > 1;`, tableName)
+	return sql
 }
 
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
