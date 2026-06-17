@@ -99,74 +99,94 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 }
 
 func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any) error {
-	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
-	nowPattern := regexp.MustCompile(`^Now\(\)$`)
-	appPatterm := regexp.MustCompile(`^appId\(\)$`)
-	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
-	children, okChildren := data["children"].(map[string]any)
+	children, okChildren := data["children"]
 	if okChildren {
 		delete(data, "children")
 	}
+	dialect := etlx.GetDialect(dbConn.GetDriverName())
 	var err error
-	for colName, input := range data {
-		// switch type of _data to string or map
-		switch v := input.(type) {
-		case string:
-			matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-			if len(matches) != 2 {
-				// pass
-			} else {
-				filename := strings.TrimSpace(matches[1])
-				if filename != "" {
-					data[colName], err = ResolveFileContentSafe(filename, "")
-					if err != nil {
-						fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
-					}
-				}
-			}
-			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-			if len(matchesNow) == 1 {
-				data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
-			}
-			matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
-			if len(matchesApp) == 1 {
-				data[colName] = app["app_id"]
-			}
-			matchesParent := parentPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
-			if len(matchesParent) == 1 {
-				data[colName] = parent_id
-			}
-		case map[string]any:
-			// do nothing
-		default:
-			//println(table, colName, v)
-		}
-	}
-	// insert into table dbConn, table, data
+	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
-	if okChildren && toInt(insertId) > 0 {
-		if len(children) > 0 {
-			children["parent_id"] = insertId
-			if _, okTable := children["table"].(string); okTable {
-				table = children["table"].(string)
-			} else {
-				table = ""
+	if okChildren {
+		if insertId == any(nil) || insertId == 0 {
+			sql := fmt.Sprintf(`SELECT * FROM %s WHERE %s`, dialect.GetTableName(table), cond)
+			pkres, _, err := dbConn.QuerySingleRow(sql, []any{}...)
+			if err != nil {
+				return fmt.Errorf("failed to query for PK %s %s: %w", table, cond, err)
 			}
-			if _, ok := children["cond"].(string); ok {
-				cond = children["cond"].(string)
-			} else {
-				cond = ""
+			if len(*pkres) == 0 {
+				return fmt.Errorf("PK Query returned nil: %s %s", table, cond)
 			}
-			if _, okData := children["data"].(map[string]any); okData && table != "" {
-				err = etlx.LoadModelData(dbConn, children["data"].(map[string]any), app, table, key, cond, insertId)
-			} else if _, okData := children["data"].([]map[string]any); okData && table != "" {
-				for _, d := range children["data"].([]map[string]any) {
-					err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
-					if err != nil {
-						break
+			pksql := dialect.GetPrimaryKeyAutoIncrementQuery(table)
+			pk, _, err := dbConn.QuerySingleRow(pksql, []any{}...)
+			if err != nil {
+				return fmt.Errorf("failed to query for PK Field %s %s: %w", table, pksql, err)
+			}
+			if len(*pk) == 0 {
+				return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+			}
+			pkfield, ok := (*pk)["column_name"].(string)
+			if !ok {
+				return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+			}
+			insertId = (*pkres)[pkfield]
+		}
+		if toInt(insertId) == 0 {
+			return fmt.Errorf("Failed to add children because coulnt resolve PK: %s %s", table, cond)
+		}
+		switch val := children.(type) {
+		case map[string]any:
+			if len(val) > 0 {
+				val["parent_id"] = insertId
+				if _, okTable := val["table"].(string); okTable {
+					table = val["table"].(string)
+				} else {
+					table = ""
+				}
+				if _, ok := val["cond"].(string); ok {
+					cond = val["cond"].(string)
+				} else {
+					cond = ""
+				}
+				if _, okData := val["data"].(map[string]any); okData && table != "" {
+					err = etlx.LoadModelData(dbConn, val["data"].(map[string]any), app, table, key, cond, insertId)
+				} else if _, okData := val["data"].([]map[string]any); okData && table != "" {
+					for _, d := range val["data"].([]map[string]any) {
+						err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
+						if err != nil {
+							break
+						}
 					}
 				}
 			}
+		case []map[string]any:
+			if len(val) > 0 {
+				for _, child := range val {
+					child["parent_id"] = insertId
+					if _, okTable := child["table"].(string); okTable {
+						table = child["table"].(string)
+					} else {
+						table = ""
+					}
+					if _, ok := child["cond"].(string); ok {
+						cond = child["cond"].(string)
+					} else {
+						cond = ""
+					}
+					if _, okData := child["data"].(map[string]any); okData && table != "" {
+						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId)
+					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
+						for _, d := range child["data"].([]map[string]any) {
+							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
+							if err != nil {
+								break
+							}
+						}
+					}
+				}
+			}
+		default:
+			// pass
 		}
 	}
 	return err

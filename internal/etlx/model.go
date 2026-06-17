@@ -34,6 +34,7 @@ type SQLDialect interface {
 	DropTableIfExists(tableName string) string
 	DataTypeConversion(row map[string]any) map[string]any
 	GetBooleanValue(value bool) any
+	GetPrimaryKeyAutoIncrementQuery(tableName string) string
 }
 
 // BaseDialect provides common implementations for SQLDialect interface.
@@ -132,6 +133,10 @@ func (b *BaseDialect) DataTypeConversion(row map[string]any) map[string]any {
 func (b *BaseDialect) GetBooleanValue(value bool) any {
 	return value
 }
+func (b *BaseDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	// Default implementation - may be overridden by specific dialects
+	return ""
+}
 
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
@@ -218,6 +223,21 @@ func (p *PostgresDialect) DataTypeConversion(row map[string]any) map[string]any 
 
 func (p *PostgresDialect) GetBooleanValue(value bool) any {
 	return value
+}
+
+func (p *PostgresDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT a.attname AS column_name
+		FROM pg_class t
+		JOIN pg_attribute a ON a.attrelid = t.oid
+		JOIN pg_index i ON i.indrelid = t.oid
+		WHERE t.relname = '%s'
+		  AND i.indisprimary
+		  AND a.attnum > 0
+		  AND NOT a.attisdropped
+		ORDER BY a.attnum
+		LIMIT 1;
+	`, tableName)
 }
 
 // DuckDBDialect implements SQLDialect for DuckDB.
@@ -318,6 +338,16 @@ func (d *DuckDBDialect) DataTypeConversion(row map[string]any) map[string]any {
 	return converted
 }
 
+func (d *DuckDBDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT column_name
+		FROM information_schema.columns
+		WHERE table_name = '%s'
+		  AND is_identity = 'YES'
+		LIMIT 1;
+	`, tableName)
+}
+
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
@@ -397,6 +427,18 @@ func (m *MySQLDialect) GetBooleanValue(value bool) any {
 	return value
 }
 
+func (m *MySQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT column_name
+		FROM information_schema.columns
+		WHERE table_name = '%s'
+		  AND table_schema = DATABASE()
+		  AND column_key = 'PRI'
+		  AND extra LIKE '%%auto_increment%%'
+		LIMIT 1;
+	`, tableName)
+}
+
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
 
@@ -469,6 +511,10 @@ func (s *SQLiteDialect) DataTypeConversion(row map[string]any) map[string]any {
 
 func (s *SQLiteDialect) GetBooleanValue(value bool) any {
 	return value
+}
+
+func (s *SQLiteDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	return fmt.Sprintf(`PRAGMA table_info("%s");`, tableName)
 }
 
 // MSSQLDialect implements SQLDialect for Microsoft SQL Server.
@@ -578,6 +624,23 @@ func (ms *MSSQLDialect) GetBooleanValue(value bool) any {
 	} else {
 		return 0
 	}
+}
+
+func (ms *MSSQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT c.name AS column_name
+		FROM sys.tables t
+		JOIN sys.columns c ON c.object_id = t.object_id
+		WHERE t.name = '%s'
+		  AND c.is_identity = 1
+		  AND EXISTS (
+		    SELECT 1 FROM sys.indexes i
+		    JOIN sys.index_columns ic ON ic.index_id = i.index_id
+		    WHERE i.object_id = t.object_id
+		      AND ic.column_id = c.column_id
+		      AND i.is_primary_key = 1
+		  );
+	`, tableName)
 }
 
 // GetDialect returns the appropriate SQLDialect implementation.
