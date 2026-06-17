@@ -98,6 +98,75 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	return insertId, nil
 }
 
+func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string) error {
+	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
+	nowPattern := regexp.MustCompile(`^Now\(\)$`)
+	appPatterm := regexp.MustCompile(`^appId\(\)$`)
+	children, okChildren := data["children"].(map[string]any)
+	if okChildren {
+		delete(data, "children")
+	}
+	var err error
+	for colName, input := range data {
+		// switch type of _data to string or map
+		switch v := input.(type) {
+		case string:
+			matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matches) != 2 {
+				// pass
+			} else {
+				filename := strings.TrimSpace(matches[1])
+				if filename != "" {
+					data[colName], err = ResolveFileContentSafe(filename, "")
+					if err != nil {
+						fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
+					}
+				}
+			}
+			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesNow) == 1 {
+				data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
+			}
+			matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesApp) == 1 {
+				data[colName] = app["app_id"]
+			}
+		case map[string]any:
+			// do nothing
+		default:
+			//println(table, colName, v)
+		}
+	}
+	// insert into table dbConn, table, data
+	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
+	if okChildren {
+		if len(children) > 0 {
+			children["parent_id"] = insertId
+			if _, okTable := children["table"].(string); okTable {
+				table = children["table"].(string)
+			} else {
+				table = ""
+			}
+			if _, ok := children["cond"].(string); ok {
+				cond = children["cond"].(string)
+			} else {
+				cond = ""
+			}
+			if _, okData := children["data"].(map[string]any); okData && table != "" {
+				err = etlx.LoadModelData(dbConn, children["data"].(map[string]any), app, table, key, cond)
+			} else if _, okData := children["data"].([]map[string]any); okData && table != "" {
+				for _, d := range children["data"].([]map[string]any) {
+					err = etlx.LoadModelData(dbConn, d, app, table, key, cond)
+					if err != nil {
+						break
+					}
+				}
+			}
+		}
+	}
+	return err
+}
+
 // NamedToPositional converts named parameters (:name) to positional (?)
 // and returns ordered arguments slice
 func (etlx *ETLX) NamedToPositional(sql string, data map[string]any) (string, []any, error) {
@@ -338,41 +407,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 		// each key in data
-		fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
-		nowPattern := regexp.MustCompile(`^Now\(\)$`)
-		appPatterm := regexp.MustCompile(`^appId\(\)$`)
-		for colName, input := range data {
-			// switch type of _data to string or map
-			switch v := input.(type) {
-			case string:
-				matches := fileContentPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matches) != 2 {
-					// pass
-				} else {
-					filename := strings.TrimSpace(matches[1])
-					if filename != "" {
-						data[colName], err = ResolveFileContentSafe(filename, "")
-						if err != nil {
-							fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
-						}
-					}
-				}
-				matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matchesNow) == 1 {
-					data[colName] = time.Now().In(etlx.TimeZone) //.Format("2006-01-02 15:04:05")
-				}
-				matchesApp := appPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
-				if len(matchesApp) == 1 {
-					data[colName] = app["app_id"]
-				}
-			case map[string]any:
-				// do nothing
-			default:
-				//println(table, colName, v)
-			}
-		}
-		// insert into table dbConn, table, data
-		_, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
+		err := etlx.LoadModelData(dbConn, data, app, table, key, cond)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
