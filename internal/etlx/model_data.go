@@ -98,10 +98,11 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	return insertId, nil
 }
 
-func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string) error {
+func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any) error {
 	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
+	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
 	children, okChildren := data["children"].(map[string]any)
 	if okChildren {
 		delete(data, "children")
@@ -131,6 +132,10 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 			if len(matchesApp) == 1 {
 				data[colName] = app["app_id"]
 			}
+			matchesParent := parentPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesParent) == 1 {
+				data[colName] = parent_id
+			}
 		case map[string]any:
 			// do nothing
 		default:
@@ -139,7 +144,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 	}
 	// insert into table dbConn, table, data
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
-	if okChildren {
+	if okChildren && toInt(insertId) > 0 {
 		if len(children) > 0 {
 			children["parent_id"] = insertId
 			if _, okTable := children["table"].(string); okTable {
@@ -153,10 +158,10 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 				cond = ""
 			}
 			if _, okData := children["data"].(map[string]any); okData && table != "" {
-				err = etlx.LoadModelData(dbConn, children["data"].(map[string]any), app, table, key, cond)
+				err = etlx.LoadModelData(dbConn, children["data"].(map[string]any), app, table, key, cond, insertId)
 			} else if _, okData := children["data"].([]map[string]any); okData && table != "" {
 				for _, d := range children["data"].([]map[string]any) {
-					err = etlx.LoadModelData(dbConn, d, app, table, key, cond)
+					err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
 					if err != nil {
 						break
 					}
@@ -407,7 +412,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 		// each key in data
-		err := etlx.LoadModelData(dbConn, data, app, table, key, cond)
+		err := etlx.LoadModelData(dbConn, data, app, table, key, cond, nil)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
