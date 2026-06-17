@@ -111,30 +111,37 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id, ids)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 	if okChildren {
+		// fmt.Println("CHILDREN")
+		pksql := dialect.GetPrimaryKeyAutoIncrementQuery(table)
+		pk, _, err := dbConn.QuerySingleRow(pksql, []any{}...)
+		if err != nil {
+			return fmt.Errorf("failed to query for PK Field %s %s: %w", table, pksql, err)
+		}
+		if len(*pk) == 0 {
+			return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+		}
+		pkfield, ok := (*pk)["column_name"].(string)
+		if !ok {
+			return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+		}
 		if insertId == any(nil) || insertId == 0 {
-			sql := fmt.Sprintf(`SELECT * FROM %s WHERE %s`, dialect.GetTableName(table), cond)
-			pkres, _, err := dbConn.QuerySingleRow(sql, []any{}...)
+			sql := fmt.Sprintf(`SELECT * FROM %s %s`, dialect.GetTableName(table), cond)
+			query, args, err := etlx.NamedToPositional(sql, data)
+			// fmt.Println(sql, query, args)
+			if err != nil {
+				return err
+			}
+			pkres, _, err := dbConn.QuerySingleRow(query, args...)
 			if err != nil {
 				return fmt.Errorf("failed to query for PK %s %s: %w", table, cond, err)
 			}
 			if len(*pkres) == 0 {
 				return fmt.Errorf("PK Query returned nil: %s %s", table, cond)
 			}
-			pksql := dialect.GetPrimaryKeyAutoIncrementQuery(table)
-			pk, _, err := dbConn.QuerySingleRow(pksql, []any{}...)
-			if err != nil {
-				return fmt.Errorf("failed to query for PK Field %s %s: %w", table, pksql, err)
-			}
-			if len(*pk) == 0 {
-				return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
-			}
-			pkfield, ok := (*pk)["column_name"].(string)
-			if !ok {
-				return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
-			}
 			insertId = (*pkres)[pkfield]
-			ids[pkfield] = insertId
 		}
+		ids[pkfield] = insertId
+		// fmt.Println("PKs:", ids[pkfield])
 		if toInt(insertId) == 0 {
 			return fmt.Errorf("Failed to add children because coulnt resolve PK: %s %s", table, cond)
 		}

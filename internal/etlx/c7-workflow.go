@@ -47,8 +47,8 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 				_data[colName] = parent_id
 			}
 			for key, value := range ids {
-				spatt := fmt.Sprintf(`^%s\\(\\)$`, key)
-				fmt.Println(spatt, key, value, input)
+				spatt := fmt.Sprintf(`^%s\(\)$`, key)
+				//fmt.Println(1, spatt, key, value, input)
 				patterm, err := regexp.Compile(spatt)
 				if err != nil {
 					fmt.Println(spatt, "ERR", err)
@@ -57,6 +57,7 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 				matches := patterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
 				if len(matches) == 1 {
 					_data[colName] = value
+					//fmt.Println(2, spatt, key, value, input)
 				}
 			}
 		case map[string]any:

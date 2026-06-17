@@ -515,9 +515,12 @@ func (s *SQLiteDialect) GetBooleanValue(value bool) any {
 
 func (s *SQLiteDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
 	sql := fmt.Sprintf(`SELECT p.name AS column_name
-	FROM sqlite_master m
-	JOIN pragma_table_info(m.name) p
-	WHERE m.type = '%s' AND p.pk > 1;`, tableName)
+FROM sqlite_master m
+JOIN pragma_table_info(m.name) p
+WHERE m.type = 'table'
+	AND m.name = '%s'
+	AND UPPER(m.sql) LIKE '%%AUTOINCREMENT%%'
+	AND p.pk = 1;`, tableName)
 	return sql
 }
 
