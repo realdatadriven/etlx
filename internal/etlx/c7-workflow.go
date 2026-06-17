@@ -9,7 +9,7 @@ import (
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
-func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key string, parent_id any) map[string]any {
+func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key string, parent_id any, ids map[string]any) map[string]any {
 	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
@@ -42,6 +42,19 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 			matchesParent := parentPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
 			if len(matchesParent) == 1 {
 				_data[colName] = parent_id
+			}
+			for key, value := range ids {
+				spatt := fmt.Sprintf(`^%s\\(\\)$`, key)
+				fmt.Println(spatt, key, value, input)
+				patterm, err := regexp.Compile(spatt)
+				if err != nil {
+					fmt.Println(spatt, "ERR", err)
+					continue
+				}
+				matches := patterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
+				if len(matches) == 1 {
+					_data[colName] = value
+				}
 			}
 		case map[string]any:
 			// do nothing
@@ -237,7 +250,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_data["email_template"] = metadata["email"]
 	}
 	// insert or update workflow table with the metadata info, and get the workflow_id
-	_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil)
+	_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 	workflow_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 	if err != nil {
 		return nil, fmt.Errorf("failed to insert/update workflow: %w", err)
@@ -345,7 +358,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
-		_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil)
+		_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 		insert_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -467,7 +480,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_id = :workflow_id and workflow_step_id = :workflow_step_id and field = :field and excluded = :excluded`
-						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil)
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -550,7 +563,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
-						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil)
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
@@ -653,7 +666,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
-						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil)
+						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)

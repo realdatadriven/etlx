@@ -98,14 +98,17 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	return insertId, nil
 }
 
-func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any) error {
+func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any, ids map[string]any) error {
 	children, okChildren := data["children"]
 	if okChildren {
 		delete(data, "children")
 	}
+	if ids == nil {
+		ids = map[string]any{}
+	}
 	dialect := etlx.GetDialect(dbConn.GetDriverName())
 	var err error
-	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id)
+	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id, ids)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 	if okChildren {
 		if insertId == any(nil) || insertId == 0 {
@@ -130,6 +133,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 				return fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
 			}
 			insertId = (*pkres)[pkfield]
+			ids[pkfield] = insertId
 		}
 		if toInt(insertId) == 0 {
 			return fmt.Errorf("Failed to add children because coulnt resolve PK: %s %s", table, cond)
@@ -149,10 +153,10 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					cond = ""
 				}
 				if _, okData := val["data"].(map[string]any); okData && table != "" {
-					err = etlx.LoadModelData(dbConn, val["data"].(map[string]any), app, table, key, cond, insertId)
+					err = etlx.LoadModelData(dbConn, val["data"].(map[string]any), app, table, key, cond, insertId, ids)
 				} else if _, okData := val["data"].([]map[string]any); okData && table != "" {
 					for _, d := range val["data"].([]map[string]any) {
-						err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
+						err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
 						if err != nil {
 							break
 						}
