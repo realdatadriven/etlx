@@ -178,10 +178,10 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 						cond = ""
 					}
 					if _, okData := child["data"].(map[string]any); okData && table != "" {
-						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId)
+						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId, ids)
 					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
 						for _, d := range child["data"].([]map[string]any) {
-							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId)
+							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
 							if err != nil {
 								break
 							}
@@ -436,7 +436,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 		// each key in data
-		err := etlx.LoadModelData(dbConn, data, app, table, key, cond, nil)
+		err := etlx.LoadModelData(dbConn, data, app, table, key, cond, nil, nil)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()

@@ -14,6 +14,9 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
 	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
+	if ids == nil {
+		ids = map[string]any{}
+	}
 	var err error
 	for colName, input := range _data {
 		// switch type of _data to string or map
