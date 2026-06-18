@@ -55,7 +55,12 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	fmt.Printf("DSN: %s\n", dsn)*/
 	var db *sql.DB
 	var err error
-	if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" || os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS") != "" || os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION") != "" || os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS") != "" {
+	hasBootQueries := os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" || os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS") != "" || os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION") != "" || os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS") != ""
+	if hasBootQueries && false {
+		if dsn == "" {
+			dsn = ":memory:"
+		}
+		// fmt.Println("ETLX SECURY ENV:", dsn)
 		c, err := duckdb.NewConnector(dsn, func(execer driver.ExecerContext) error {
 			bootQueries := []string{}
 			if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" {
@@ -73,12 +78,14 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 			for _, query := range bootQueries {
 				_, err := execer.ExecContext(context.Background(), query, nil)
 				if err != nil {
+					fmt.Println("ERROR:", query, err)
 					return err
 				}
 			}
 			return nil
 		})
 		if err != nil {
+			fmt.Println("duckdb.NewConnector Err:", err)
 			return nil, err
 		}
 		defer c.Close()

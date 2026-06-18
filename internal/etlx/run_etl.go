@@ -430,14 +430,14 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 			if before != "" {
 				err = etlx.ExecuteQuery(conn, before, item, fname, "", dateRef)
 				if err != nil {
-					fmt.Printf("getDynamicQueriesIfAny Before error: %s", err)
+					fmt.Printf("getDynamicQueriesIfAny Before error: %s %s\n", before, err)
 				}
 			}
 			rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 			if after != "" {
 				err_ := etlx.ExecuteQuery(conn, after, item, fname, "", dateRef)
 				if err_ != nil {
-					fmt.Printf("getDynamicQueriesIfAny After error: %s", err)
+					fmt.Printf("getDynamicQueriesIfAny After error: %s %s\n", after, err)
 				}
 			}
 			if err != nil {
@@ -516,13 +516,13 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				if before != "" {
 					err = etlx.ExecuteQuery(conn, before, item, fname, "", dateRef)
 					if err != nil {
-						fmt.Printf("getDynamicQueriesIfAny Before error: %s", err)
+						fmt.Printf("getDynamicQueriesIfAny Before error:  %s %s\n", before, err)
 					}
 				}
 				//rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 				rows, _, err := etlx.Query(conn, query, item, fname, "", dateRef)
 				if err != nil {
-					fmt.Println("getDynamicQueriesIfAny:", name, err)
+					fmt.Println("getDynamicQueriesIfAny:", query, name, err)
 					// _queries = append(_queries, q)
 				} else if len(*rows) > 0 {
 					for _, value := range *rows {
@@ -535,7 +535,7 @@ func (etlx *ETLX) getDynamicQueriesIfAny(conn db.DBInterface, sqlData any, item 
 				if after != "" {
 					err = etlx.ExecuteQuery(conn, after, item, fname, "", dateRef)
 					if err != nil {
-						fmt.Printf("getDynamicQueriesIfAny After error: %s", err)
+						fmt.Printf("getDynamicQueriesIfAny After error: %s %s\n", after, err)
 					}
 				}
 			} else {
@@ -630,6 +630,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 			_, err = conn.ExecuteQuery(_sql, _params)
 			if err != nil {
+				fmt.Println("ERRORS:", _sql, _params, err)
 				return err
 			}
 		}
