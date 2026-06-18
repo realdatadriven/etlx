@@ -3,13 +3,16 @@ package db
 import (
 	"context"
 	"database/sql"
+	"database/sql/driver"
 	"fmt"
+	"os"
 	"regexp"
 	"time"
 
 	"github.com/jmoiron/sqlx"
 	"github.com/realdatadriven/etlx/internal/env"
 
+	"github.com/duckdb/duckdb-go/v2"
 	_ "github.com/duckdb/duckdb-go/v2"
 )
 
@@ -50,9 +53,42 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		dsn = fmt.Sprintf("%s%s", dsn, _extra_opts)
 	}
 	fmt.Printf("DSN: %s\n", dsn)*/
-	db, err := sql.Open("duckdb", dsn)
-	if err != nil {
-		return nil, err
+	var db *sql.DB
+	var err error
+	if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" || os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS") != "" || os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION") != "" || os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS") != "" {
+		c, err := duckdb.NewConnector(dsn, func(execer driver.ExecerContext) error {
+			bootQueries := []string{}
+			if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" {
+				bootQueries = append(bootQueries, os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES"))
+			}
+			if os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS") != "" {
+				bootQueries = append(bootQueries, os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS"))
+			}
+			if os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION") != "" {
+				bootQueries = append(bootQueries, os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION"))
+			}
+			if os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS") != "" {
+				bootQueries = append(bootQueries, os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS"))
+			}
+			for _, query := range bootQueries {
+				_, err := execer.ExecContext(context.Background(), query, nil)
+				if err != nil {
+					return err
+				}
+			}
+			return nil
+		})
+		if err != nil {
+			return nil, err
+		}
+		defer c.Close()
+		db = sql.OpenDB(c)
+		// defer db.Close()
+	} else {
+		db, err = sql.Open("duckdb", dsn)
+		if err != nil {
+			return nil, err
+		}
 	}
 	defaultTimeoutDuckDB = time.Duration(env.GetInt("DUCKDB_DFLT_TIMEOUT", 15)) * time.Minute
 	//fmt.Println(driverName, dsn)
@@ -60,36 +96,6 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(defaultTimeoutDuckDB)
 	db.SetConnMaxLifetime(2 * time.Hour)
-	/*if os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES") != "" {
-		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_ALLOWED_DIRECTORIES"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set allowed directories from ETLX_DUCKDB_ALLOWED_DIRECTORIES: %w", err)
-		}
-	}
-	if os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS") != "" {
-		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_EXTERNAL_ACCESS"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set external access from ETLX_DUCKDB_EXTERNAL_ACCESS: %w", err)
-		}
-	}
-	if os.Getenv("ETLX_DUCKDB_ALLOWED_CONFIGS") != "" {
-		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_ALLOWED_CONFIGS"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set allowed configs from ETLX_DUCKDB_ALLOWED_CONFIGS: %w", err)
-		}
-	}
-	if os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION") != "" {
-		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_LOCK_CONFIGURATION"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set lock configuration from ETLX_DUCKDB_LOCK_CONFIGURATION: %w", err)
-		}
-	}
-	if os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS") != "" {
-		_, err = db.ExecContext(context.Background(), os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS"))
-		if err != nil {
-			return nil, fmt.Errorf("failed to set security configs from ETLX_DUCKDB_SECURITY_CONFIGS: %w", err)
-		}
-	}*/
 	return &DuckDB{db}, nil
 }
 
