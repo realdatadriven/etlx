@@ -27,6 +27,8 @@ require (
 )
 
 require (
+	github.com/emersion/go-imap v1.2.1
+	github.com/emersion/go-message v0.18.2
 	github.com/obaydullahmhs/go-db2 v0.0.0-20251112174409-2887cfa0c252
 	go.abhg.dev/goldmark/frontmatter v0.3.0
 )
@@ -38,6 +40,7 @@ require (
 	github.com/duckdb/duckdb-go-bindings/lib/linux-amd64 v0.10504.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/linux-arm64 v0.10504.0 // indirect
 	github.com/duckdb/duckdb-go-bindings/lib/windows-amd64 v0.10504.0 // indirect
+	github.com/emersion/go-sasl v0.0.0-20200509203442-7bfe0ed36a21 // indirect
 )
 
 require (
