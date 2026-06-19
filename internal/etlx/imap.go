@@ -16,8 +16,12 @@ import (
 
 func returnAdresses(imapAdress []*imap.Address) string {
 	adress := ""
-	for _, adr := range imapAdress {
-		adress += ";" + adr.Address()
+	for i, adr := range imapAdress {
+		glue := ""
+		if i > 0 {
+			glue = ";"
+		}
+		adress += glue + adr.Address()
 	}
 	return adress
 }
@@ -48,17 +52,20 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any, item map[string]any, dateRef []
 	// Connect IMAP
 	c, err := client.DialTLS(fmt.Sprintf("%s:%s", host, port), nil)
 	if err != nil {
+		fmt.Println("client.DialTLS Err:", err)
 		return nil, err
 	}
 	defer c.Logout()
 	// Login
 	err = c.Login(username, password)
 	if err != nil {
+		fmt.Println("c.Login Err:", err)
 		return nil, err
 	}
 	// Select mailbox
 	_, err = c.Select(folder, false)
 	if err != nil {
+		fmt.Println("c.Select(folder, false) Err:", err)
 		return nil, err
 	}
 	// Build search
@@ -69,7 +76,8 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any, item map[string]any, dateRef []
 			case "from":
 				criteria.Header.Add("From", fmt.Sprint(value))
 			case "subject":
-				criteria.Header.Add("Subject", fmt.Sprint(value))
+				subj := etlx.SetQueryPlaceholders(fmt.Sprint(value), "", "", dateRef)
+				criteria.Header.Add("Subject", subj)
 			case "since":
 				d, err := time.ParseDuration(fmt.Sprint(value))
 				if err == nil {
@@ -85,8 +93,10 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any, item map[string]any, dateRef []
 	}
 	ids, err := c.Search(criteria)
 	if err != nil {
+		fmt.Println("c.Search(criteria) Err:", err)
 		return nil, err
 	}
+	// fmt.Println("Fine Till Search Criteria OK")
 	results := []map[string]any{}
 	for _, id := range ids {
 		seq := new(imap.SeqSet)

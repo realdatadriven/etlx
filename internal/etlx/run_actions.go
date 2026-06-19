@@ -468,7 +468,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		case "imap", "IMAP":
 			_, okHost := params["host"].(string)
 			_, okPass := params["password"].(string)
-			_, okPort := params["port"].(string)
+			_, okPort := params["port"]
 			_, okUser := params["username"].(string)
 			conn, okConn := params["conn"].(string)
 			sqls, okSQLs := params["sqls"].([]any)
@@ -488,6 +488,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params port", key, itemKey, _type)
 				valid = false
 			}
+			params["port"] = fmt.Sprintf("%v", params["port"])
 			if !okUser {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params user", key, itemKey, _type)
@@ -542,6 +543,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 					}
 				}
 			}
+			// fmt.Println("IMAP:", _log2["msg"])
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)
