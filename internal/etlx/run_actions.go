@@ -465,22 +465,42 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			//fmt.Println(_log2["msg"])
 		case "imap", "IMAP":
-			_, okSource := params["source"].(map[string]any)
-			_, okTarget := params["target"].(map[string]any)
-			if !okSource || !okTarget {
+			_, okHost := params["host"].(string)
+			_, okPass := params["password"].(string)
+			_, okPort := params["port"].(string)
+			_, okUser := params["username"].(string)
+			valid := true
+			if !okHost {
 				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB missing required params (source | target)", key, itemKey, _type)
-				break
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params host", key, itemKey, _type)
+				valid = false
 			}
-			results, err := etlx.ReadEmails(params, item, dateRef)
-			if err != nil {
+			if !okPass {
 				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails failed: %v", key, itemKey, _type, err)
-			} else {
-				_log2["success"] = true
-				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails successful", key, itemKey, _type)
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params password", key, itemKey, _type)
+				valid = false
 			}
-			fmt.Println(results)
+			if !okPort {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params port", key, itemKey, _type)
+				valid = false
+			}
+			if !okUser {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params user", key, itemKey, _type)
+				valid = false
+			}
+			if valid {
+				results, err := etlx.ReadEmails(params, item, dateRef)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails failed: %v", key, itemKey, _type, err)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails successful", key, itemKey, _type)
+				}
+				fmt.Println(results)
+			}
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)
