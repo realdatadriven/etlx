@@ -1,6 +1,7 @@
 package etlxlib
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"path"
@@ -469,6 +470,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			_, okPass := params["password"].(string)
 			_, okPort := params["port"].(string)
 			_, okUser := params["username"].(string)
+			conn, okConn := params["conn"].(string)
+			sqls, okSQLs := params["sqls"].([]any)
 			valid := true
 			if !okHost {
 				_log2["success"] = false
@@ -490,16 +493,54 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params user", key, itemKey, _type)
 				valid = false
 			}
+			if !okConn {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params conn", key, itemKey, _type)
+				valid = false
+			}
+			if !okSQLs {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params sqls", key, itemKey, _type)
+				valid = false
+			}
 			if valid {
 				results, err := etlx.ReadEmails(params, item, dateRef)
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails failed: %v", key, itemKey, _type, err)
 				} else {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails successful", key, itemKey, _type)
+					// fmt.Println(results)
+					jsonData, err := json.MarshalIndent(results, "", "  ")
+					if err != nil {
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Save to tem JSON failed: %v", key, itemKey, _type, err)
+					} else {
+						_file, err := etlx.TempFIle("", string(jsonData), "mails.*.json")
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Save to tem JSON failed: %v", key, itemKey, _type, err)
+						} else {
+							dbConn, err := etlx.GetDB(conn)
+							if err != nil {
+								_log2["success"] = false
+								_log2["msg"] = fmt.Sprintf("error connecting to source: %v %s", err, conn)
+							} else {
+								defer dbConn.Close()
+								fmt.Println(_file)
+								err = etlx.ExecuteQuery(dbConn, sqls, item, _file, "", dateRef)
+								if err != nil {
+									_log2["success"] = false
+									_log2["msg"] = fmt.Sprintf("error executing queries: %s", err)
+								} else {
+									_log2["success"] = true
+									_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails successful", key, itemKey, _type)
+									_log2["data"] = results
+								}
+
+							}
+						}
+					}
 				}
-				fmt.Println(results)
 			}
 		default:
 			_log2["success"] = false

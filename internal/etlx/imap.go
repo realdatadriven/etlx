@@ -166,10 +166,10 @@ func parseEmail(r io.Reader, dir string) (string, []string, error) {
 }
 
 /*
-## INVOICES
+## EMAILS
 ```yaml
-name: Invoices
-description: Extract InvoicesFrom Emails
+name: emails
+description: Extract Emails
 type: IMAP
 params:
     protocol: IMAP
@@ -186,18 +186,47 @@ params:
         since: 24h
         before: 24h
     conn: "duckdb:"
-    sql:
-        - ATTACH DB
-        - CREATE TABLE IF NOT EXISTS Invoices AS [[sql]]
-        - sql
+    sqls:
+        - ATTACH 'database/etl.db' AS DB (TYPE SQLITE)
+        - create_emails
+        - merge_into_emails
         - DETACH DB
 active: true
 ```
 
 ```sql
--- sql
-MERGE  ...
-```*/ /*
+-- create_emails
+CREATE TABLE IF NOT EXISTS DB.emails  (
+    id           BIGINT PRIMARY KEY,
+    subject      VARCHAR,
+    "from"       VARCHAR,
+    "to"         VARCHAR,
+    cc           VARCHAR,
+    bcc          VARCHAR,
+    date         TIMESTAMP,
+    body         TEXT,
+    attachments  VARCHAR
+);
+```
+
+```sql
+-- merge_into_emails
+MERGE INTO emails AS target
+USING (SELECT * FROM READ_JSON('<fname>')) AS source
+ON target.id = source.id
+WHEN MATCHED THEN UPDATE SET
+    subject      = source.subject,
+    "from"       = source."from",
+    "to"         = source."to",
+    cc           = source.cc,
+    bcc          = source.bcc,
+    date         = source.date,
+    body         = source.body,
+    attachments  = source.attachments
+WHEN NOT MATCHED THEN INSERT (id, subject, "from", "to", cc, bcc, date, body, attachments)
+VALUES(source.id, source.subject, source."from", source."to", source.cc, source.bcc, source.date, source.body, source.attachments);
+```
+*/ /*
 func main(){
 	cfg := map[string]any{
 		"protocol": "IMAP",
