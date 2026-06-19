@@ -884,10 +884,40 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
 			beforeSQL, okBefore := itemMetadata[step+"_before_sql"]
+			if !okBefore {
+				beforeSQL, okBefore = itemMetadata[step+"_before"]
+			}
+			if !okBefore {
+				beforeSQL, okBefore = itemMetadata[step+"_start"]
+			}
+			if !okBefore {
+				beforeSQL, okBefore = itemMetadata[step+"_startup"]
+			}
+			if !okBefore {
+				beforeSQL, okBefore = itemMetadata[step+"_setup"]
+			}
 			onBefErrPatt, okBefErrPatt := itemMetadata[step+"_before_on_err_match_patt"]
 			onBefErrSQL, okBefErrSQL := itemMetadata[step+"_before_on_err_match_sql"]
 			mainSQL, okMain := itemMetadata[step+"_sql"]
+			if !okMain {
+				mainSQL, okMain = itemMetadata[step+""]
+			}
+			if !okMain {
+				mainSQL, okMain = itemMetadata[step+"_query"]
+			}
+			if !okMain {
+				mainSQL, okMain = itemMetadata[step+"_main"]
+			}
 			afterSQL, okAfter := itemMetadata[step+"_after_sql"]
+			if !okAfter {
+				afterSQL, okAfter = itemMetadata[step+"_after"]
+			}
+			if !okBefore {
+				afterSQL, okAfter = itemMetadata[step+"_end"]
+			}
+			if !okBefore {
+				afterSQL, okAfter = itemMetadata[step+"_cleanup"]
+			}
 			onAfterErrPatt, okAfterErrPatt := itemMetadata[step+"_after_on_err_match_patt"]
 			onAfterErrSQL, okAfterErrSQL := itemMetadata[step+"_after_on_err_match_sql"]
 			validation, okValid := itemMetadata[step+"_validation"]
