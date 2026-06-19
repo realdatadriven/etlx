@@ -185,7 +185,18 @@ params:
         subject: Invoice
         since: 24h
         before: 24h
+    conn: "duckdb:"
+    sql:
+        - ATTACH DB
+        - CREATE TABLE IF NOT EXISTS Invoices AS [[sql]]
+        - sql
+        - DETACH DB
 active: true
+```
+
+```sql
+-- sql
+MERGE  ...
 ```*/ /*
 func main(){
 	cfg := map[string]any{
