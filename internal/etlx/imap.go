@@ -1,6 +1,7 @@
 package etlxlib
 
 import (
+	"encoding/json"
 	"fmt"
 	"io"
 	"os"
@@ -13,11 +14,19 @@ import (
 	"github.com/emersion/go-message/mail"
 )
 
-func (etlx *ETLX) ReadEmails(cfg map[string]any) ([]map[string]any, error) {
-	host := cfg["host"].(string)
-	port := cfg["port"].(int)
-	username := cfg["username"].(string)
-	password := cfg["password"].(string)
+func returnAdresses(imapAdress []*imap.Address) string {
+	adress := ""
+	for _, adr := range imapAdress {
+		adress += ";" + adr.Address()
+	}
+	return adress
+}
+
+func (etlx *ETLX) ReadEmails(cfg map[string]any, item map[string]any, dateRef []time.Time) ([]map[string]any, error) {
+	host := etlx.ReplaceEnvVariable(cfg["host"].(string))
+	port := etlx.ReplaceEnvVariable(cfg["port"].(string))
+	username := etlx.ReplaceEnvVariable(cfg["username"].(string))
+	password := etlx.ReplaceEnvVariable(cfg["password"].(string))
 	folder := "INBOX"
 	if v, ok := cfg["folder"].(string); ok {
 		folder = v
@@ -37,7 +46,7 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any) ([]map[string]any, error) {
 		}
 	}
 	// Connect IMAP
-	c, err := client.DialTLS(fmt.Sprintf("%s:%d", host, port), nil)
+	c, err := client.DialTLS(fmt.Sprintf("%s:%s", host, port), nil)
 	if err != nil {
 		return nil, err
 	}
@@ -91,6 +100,9 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any) ([]map[string]any, error) {
 				"id":          id,
 				"subject":     msg.Envelope.Subject,
 				"from":        msg.Envelope.From[0].Address(),
+				"to":          returnAdresses(msg.Envelope.To),
+				"cc":          returnAdresses(msg.Envelope.Cc),
+				"bcc":         returnAdresses(msg.Envelope.Bcc),
 				"date":        msg.Envelope.Date,
 				"body":        "",
 				"attachments": []string{},
@@ -101,7 +113,12 @@ func (etlx *ETLX) ReadEmails(cfg map[string]any) ([]map[string]any, error) {
 					text, files, err := parseEmail(body, attachmentPath)
 					if err == nil {
 						email["body"] = text
-						email["attachments"] = files
+						if len(files) > 0 {
+							filesJSON, _ := json.Marshal(files)
+							email["attachments"] = string(filesJSON)
+						} else {
+							email["attachments"] = nil
+						}
 					}
 				}
 			}
@@ -148,62 +165,50 @@ func parseEmail(r io.Reader, dir string) (string, []string, error) {
 	return body, files, nil
 }
 
-/*func main(){
+/*
+## INVOICES
+```yaml
+name: Invoices
+description: Extract InvoicesFrom Emails
+type: IMAP
+params:
+    protocol: IMAP
+    host: imap.gmail.com
+    port: 993
+    username: user@gmail.com
+    password: secret
+    folder: INBOX
+    download_att: true
+    attachment_path: ./downloads
+    search:
+        from: supplier@example.com
+        subject: Invoice
+        since: 24h
+        before: 24h
+active: true
+```*/ /*
+func main(){
 	cfg := map[string]any{
 		"protocol": "IMAP",
 		"host": "imap.gmail.com",
 		"port": 993,
 		"username": "user@gmail.com",
 		"password": "secret",
-		"folder":
-			"INBOX",
-
-
-		"download_att":
-			true,
-
-
-		"attachment_path":
-			"./downloads",
-
-
-
-		"search":
-			map[string]any{
-
-				"from":
-					"supplier@example.com",
-
-
-				"subject":
-					"Invoice",
-
-
-				"since":
-					"24h",
-			},
+		"folder": "INBOX",
+		"download_att": true,
+		"attachment_path": "./downloads",
+		"search": map[string]any{
+			"from": "supplier@example.com",
+			"subject": "Invoice",
+			"since": "24h",
+			"before": "24h",
+		},
 	}
-
-
-
-	emails, err :=
-		ReadEmails(cfg)
-
-
+	emails, err := ReadEmails(cfg)
 	if err != nil {
 		panic(err)
 	}
-
-
-
-	for _, email :=
-		range emails {
-
-		fmt.Printf(
-			"%+v\n\n",
-			email,
-		)
-
+	for _, email := range emails {
+		fmt.Printf("%+v\n\n", email)
 	}
-
 }*/

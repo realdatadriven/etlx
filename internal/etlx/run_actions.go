@@ -464,6 +464,23 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB successful", key, itemKey, _type)
 			}
 			//fmt.Println(_log2["msg"])
+		case "imap", "IMAP":
+			_, okSource := params["source"].(map[string]any)
+			_, okTarget := params["target"].(map[string]any)
+			if !okSource || !okTarget {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB missing required params (source | target)", key, itemKey, _type)
+				break
+			}
+			results, err := etlx.ReadEmails(params, item, dateRef)
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails failed: %v", key, itemKey, _type, err)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails successful", key, itemKey, _type)
+			}
+			fmt.Println(results)
 		default:
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Unsupported type", key, itemKey, _type)
