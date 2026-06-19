@@ -417,50 +417,94 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		}
 		cond, _ := itemMetadata.(map[string]any)["cond"].(string)
 		// fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, conn, itemMetadata.(map[string]any)["description"])
-		data, ok := itemMetadata.(map[string]any)["data"].(map[string]any)
+		data, ok := itemMetadata.(map[string]any)["data"] //.(map[string]any)
 		if !ok {
 			continue
 		}
-		start3 = time.Now().In(etlx.TimeZone)
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
 		}
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2 = map[string]any{
-			"process":               process,
-			"name":                  fmt.Sprintf("%s->%s", key, itemKey),
-			"description":           desc,
-			"key":                   key,
-			"item_key":              itemKey,
-			"start_at":              start3,
-			"ref":                   dtRef,
-			"mem_alloc_start":       mem_alloc,
-			"mem_total_alloc_start": mem_total_alloc,
-			"mem_sys_start":         mem_sys,
-			"num_gc_start":          num_gc,
+		switch val := data.(type) {
+		case map[string]any:
+			start3 = time.Now().In(etlx.TimeZone)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2 = map[string]any{
+				"process":               process,
+				"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+				"description":           desc,
+				"key":                   key,
+				"item_key":              itemKey,
+				"start_at":              start3,
+				"ref":                   dtRef,
+				"mem_alloc_start":       mem_alloc,
+				"mem_total_alloc_start": mem_total_alloc,
+				"mem_sys_start":         mem_sys,
+				"num_gc_start":          num_gc,
+			}
+			//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
+			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
+			// each key in data
+			err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
+			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+			_log2["end_at"] = time.Now().In(etlx.TimeZone)
+			_log2["duration"] = time.Since(start3).Seconds()
+			_log2["mem_alloc_end"] = mem_alloc
+			_log2["mem_total_alloc_end"] = mem_total_alloc
+			_log2["mem_sys_end"] = mem_sys
+			_log2["num_gc_end"] = num_gc
+			if err != nil {
+				_log2["success"] = false
+				_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
+				processLogs = append(processLogs, _log2)
+			} else {
+				_log2["success"] = true
+				_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
+				processLogs = append(processLogs, _log2)
+			}
+			fmt.Println(table, _log2["msg"])
+		case []map[string]any:
+			for _, val := range data.([]map[string]any) {
+				start3 = time.Now().In(etlx.TimeZone)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+				_log2 = map[string]any{
+					"process":               process,
+					"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+					"description":           desc,
+					"key":                   key,
+					"item_key":              itemKey,
+					"start_at":              start3,
+					"ref":                   dtRef,
+					"mem_alloc_start":       mem_alloc,
+					"mem_total_alloc_start": mem_total_alloc,
+					"mem_sys_start":         mem_sys,
+					"num_gc_start":          num_gc,
+				}
+				//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
+				// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
+				// each key in data
+				err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
+				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
+					processLogs = append(processLogs, _log2)
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
+					processLogs = append(processLogs, _log2)
+				}
+				fmt.Println(table, _log2["msg"])
+			}
+		default:
+			// pass
 		}
-		//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-		// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-		// each key in data
-		err := etlx.LoadModelData(dbConn, data, app, table, key, cond, nil, nil)
-		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-		_log2["end_at"] = time.Now().In(etlx.TimeZone)
-		_log2["duration"] = time.Since(start3).Seconds()
-		_log2["mem_alloc_end"] = mem_alloc
-		_log2["mem_total_alloc_end"] = mem_total_alloc
-		_log2["mem_sys_end"] = mem_sys
-		_log2["num_gc_end"] = num_gc
-		if err != nil {
-			_log2["success"] = false
-			_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
-			processLogs = append(processLogs, _log2)
-		} else {
-			_log2["success"] = true
-			_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
-			processLogs = append(processLogs, _log2)
-		}
-		fmt.Println(table, _log2["msg"])
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
