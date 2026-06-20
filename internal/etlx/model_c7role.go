@@ -12,11 +12,29 @@ func (etlx *ETLX) NamedQuerySingleRow(conn db.DBInterface, sql string, data map[
 	if err != nil {
 		return nil, err
 	}
-	_res, _, err := conn.QuerySingleRow(query, args)
+	_res, _, err := conn.QuerySingleRow(query, args...)
 	if err != nil {
+		fmt.Println(query, args, err)
 		return nil, err
 	}
 	return (*_res), nil
+}
+
+func (etlx *ETLX) MergeMapStringAny(first map[string]any, second map[string]any) map[string]any {
+	if first == nil {
+		first = map[string]any{}
+	}
+	for key, secondValue := range second {
+		/*firstValue, ok := first[key]
+		firstMap, firstIsMap := firstValue.(map[string]any)
+		secondMap, secondIsMap := secondValue.(map[string]any)
+		if ok && firstIsMap && secondIsMap {
+			// first[key] = MergeMapStringAny(firstMap, secondMap)
+			continue
+		}*/
+		first[key] = secondValue
+	}
+	return first
 }
 
 func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
@@ -196,7 +214,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		if len(*_roleData) == 0 {
 			ins_sql := `insert into role (role, role_desc, created_at, updated_at, excluded) values (:role, :role_desc, :created_at, :updated_at, :excluded)`
 			roleData = map[string]any{"role": role, "role_desc": desc, "created_at": start3, "updated_at": start3, "excluded": dialect.GetBooleanValue(false)}
-			insertId, err := adminDb.ExecuteNamedQuery(ins_sql, roleData)
+			insertId, err := adminDb.ExecuteNamedQuery(ins_sql, dialect.DataTypeConversion(roleData))
 			if err != nil {
 				return nil, err
 			}
@@ -215,7 +233,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 			if _dbDesc != desc && desc != "" {
 				roleData["role_desc"] = desc
 				ins_sql := `update role set role_desc = :role_desc where role_id = :role_id`
-				_, err := adminDb.ExecuteNamedQuery(ins_sql, roleData)
+				_, err := adminDb.ExecuteNamedQuery(ins_sql, dialect.DataTypeConversion(roleData))
 				if err != nil {
 					return nil, err
 				}
@@ -228,139 +246,176 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		}
 		// fmt.Println("APPS", apps)
 		_data := roleData
+		//fmt.Println("ROLE:", _data)
 		_data["user_id"] = 1
-		for a, _app := range apps.([]any) {
-			for app, _menu := range _app.(map[string]any) {
-				fmt.Println(a, app, _menu)
+		// role_app
+		for _, _app := range apps.([]any) {
+			for app, _menus := range _app.(map[string]any) {
+				fmt.Println(1, app, _menus)
+				if app == "__order" {
+					continue
+				}
 				_data["app"] = app
 				role_app := map[string]any{}
-				sql := `select * from role_app where role_id = :role_id app_id in (select app_id from app where app = :app)`
+				sql := `select * from role_app where role_id = :role_id and app_id in (select app_id from app where app = :app)`
+				sql = `select role_app.*, app.db from role_app join app on app.app_id = role_app.app_id where role_app.role_id = :role_id and app.app = :app`
 				_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 				if err != nil {
-					return nil, fmt.Errorf("find role failed: %w", err)
+					return nil, fmt.Errorf("find app_role failed: %w", err)
 				} else if len(_res) > 0 {
 					role_app = _res
-					_data["app_id"] = role_app["app_id"]
+					//_data["app_id"] = role_app["app_id"]
+					_data = etlx.MergeMapStringAny(_data, _res)
 				} else {
-					sql := `select app_id from app where app = :app`
+					sql := `select * from app where app = :app`
 					_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 					if err != nil {
 						return nil, fmt.Errorf("find app failed: %w", err)
 					} else if len(_res) > 0 {
-						_data["app_id"] = _res["app_id"]
+						// _data["app_id"] = _res["app_id"]
+						_data = etlx.MergeMapStringAny(_data, _res)
 						role_app = _data
 					} else {
 						return nil, fmt.Errorf("find app failed: %s", app)
 					}
 				}
-				for m, _menu := range _menu.([]any) {
+				role_app_id, ok := role_app["role_app_id"]
+				_data["excluded"] = dialect.GetBooleanValue(false)
+				_data["access"] = dialect.GetBooleanValue(true)
+				if !ok {
+					sql := `insert into role_app (app_id, role_id, access, user_id, created_at, updated_at, excluded) values (:app_id, :role_id, :access, :user_id, :created_at, :updated_at, :excluded)`
+					insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+					if err != nil {
+						return nil, err
+					}
+					role_app["role_app_id"] = insertId
+				} else {
+					sql := `update role_app set app_id = :app_id, role_id = :role_id, create = :create, read = :read, update = :update, delete = :delete, updated_at = :updated_at, excluded = :excluded where role_app_id = :role_app_id`
+					_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+					if err != nil {
+						return nil, err
+					}
+					_data["role_app_id"] = role_app_id
+				}
+				// role_app_menu
+				for _, _menu := range _menus.([]any) {
 					for menu, _tables := range _menu.(map[string]any) {
-						fmt.Println(m, menu, _tables)
+						if menu == "__order" {
+							continue
+						}
+						fmt.Println(2, menu, _tables)
 						_data["menu"] = menu
 						role_app_menu := map[string]any{}
-						sql = `select * from role_app_menu where role_id = :role_id app_id = :app_id, and menu_id in (select menu_id from menu where menu = :menu)`
+						sql = `select * from role_app_menu where role_id = :role_id and app_id = :app_id and menu_id in (select menu_id from menu where menu = :menu)`
 						_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 						if err != nil {
 							return nil, fmt.Errorf("find role failed: %w", err)
 						} else if len(_res) > 0 {
 							role_app_menu = _res
-							_data["menu_id"] = role_app_menu["menu_id"]
+							// _data["menu_id"] = role_app_menu["menu_id"]
+							_data = etlx.MergeMapStringAny(_data, role_app_menu)
 						} else {
-							sql := `select menu_id from menu where menu = :menu`
+							sql := `select * from menu where menu = :menu and app_id = :app_id`
 							_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 							if err != nil {
-								return nil, fmt.Errorf("find app failed: %w", err)
+								return nil, fmt.Errorf("find menu failed: %s -> %s %w", app, menu, err)
 							} else if len(_res) > 0 {
 								_data["menu_id"] = _res["menu_id"]
 								role_app_menu = _data
 							} else {
-								return nil, fmt.Errorf("find app failed: %s", app)
+								return nil, fmt.Errorf("find menu failed: %s -> %s", app, menu)
+							}
+						}
+						role_app_menu_id, ok := role_app_menu["role_app_menu_id"]
+						_data["excluded"] = dialect.GetBooleanValue(false)
+						_data["access"] = dialect.GetBooleanValue(true)
+						if !ok {
+							sql := `insert into role_app_menu (role_id, app_id, menu_id, access, user_id, created_at, updated_at, excluded) values (:role_id, :app_id, :menu_id, :access, :user_id, :created_at, :updated_at, :excluded)`
+							insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+							if err != nil {
+								return nil, err
+							}
+							role_app["role_app_menu_id"] = insertId
+						} else {
+							sql := `update role_app_menu set role_id = :role_id, app_id = :app_id, menu_id = :menu_id, table_id = :table_id, create = :create, read = :read, update = :update, delete = :delete, updated_at = :updated_at, excluded = :excluded where role_app_menu_id = :role_app_menu_id`
+							_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+							if err != nil {
+								return nil, err
+							}
+							_data["role_app_menu_id"] = role_app_menu_id
+						}
+						// role_app_menu_table
+						for t, _tbl := range _tables.([]any) {
+							var _table map[string]any
+							switch tbl := _tbl.(type) {
+							case map[string]any:
+								_table = tbl
+							case string:
+								_table = map[string]any{"table": tbl, "create": true, "read": true, "update": true, "delete": true, "share": true}
+							default:
+								// pass
+							}
+							table, ok := _table["table"].(string)
+							if !ok {
+								continue
+							}
+							crudActs := []string{}
+							for _, act := range []string{"create", "read", "update", "delete", "share"} {
+								auxVal, _ := _table[act].(bool)
+								_data[act] = dialect.GetBooleanValue(auxVal)
+								crudActs = append(crudActs, dialect.GetColumnName(act))
+							}
+							fmt.Println(crudActs, data)
+							_rlas, _ := _table["rlas"].([]any)
+							if table == "__order" {
+								continue
+							}
+							fmt.Println(t, table, _rlas)
+							_data["table"] = table
+							role_app_menu_table := map[string]any{}
+							dialectTbl := dialect.GetTableName("table")
+							sql = fmt.Sprintf(`select * from role_app_menu_table where role_id = :role_id and app_id = :app_id and menu_id = :menu_id and table_id in (select table_id from %s where %s = :table)`, dialectTbl, dialectTbl)
+							_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
+							if err != nil {
+								return nil, fmt.Errorf("find role failed: %w", err)
+							} else if len(_res) > 0 {
+								role_app_menu_table = _res
+								// _data["table_id"] = role_app_menu_table["table_id"]
+								_data = etlx.MergeMapStringAny(_data, role_app_menu_table)
+							} else {
+								sql := fmt.Sprintf(`select * from %s where %s = :table and db = :db`, dialectTbl, dialectTbl)
+								_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
+								if err != nil {
+									return nil, fmt.Errorf("find table failed: %s -> %s -> %s %w", app, menu, table, err)
+								} else if len(_res) > 0 {
+									_data["table_id"] = _res["table_id"]
+									role_app_menu_table = _data
+								} else {
+									return nil, fmt.Errorf("find table failed: %s -> %s -> %s", app, menu, table)
+								}
+							}
+							role_app_menu_table_id, ok := role_app_menu_table["role_app_menu_table_id"]
+							_data["excluded"] = dialect.GetBooleanValue(false)
+							if !ok {
+								sql := fmt.Sprintf(`insert into role_app_menu_table (role_id, app_id, menu_id, %s[1], %s[2], %s[3], %s[4], %s[5], user_id, created_at, updated_at, excluded) values (:role_id, :app_id, :menu_id, :create, :read, :update, :delete, :share, :user_id, :created_at, :updated_at, :excluded)`, crudActs)
+								insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+								if err != nil {
+									return nil, err
+								}
+								role_app["role_app_menu_table_id"] = insertId
+							} else {
+								sql := fmt.Sprintf(`update role_app_menu_table set role_id = :role_id, app_id = :app_id, menu_id = :menu_id, table_id = :table_id, %s[1] = :create, %s[2] = :read, %s[3] = :update, %s[4] = :delete, %s[5] = :share, updated_at = :updated_at, excluded = :excluded where role_app_menu_table_id = :role_app_menu_table_id`, crudActs)
+								_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+								if err != nil {
+									return nil, err
+								}
+								_data["role_app_menu_table_id"] = role_app_menu_table_id
 							}
 						}
 					}
 				}
 			}
 		}
-		/*switch val := apps.(type) {
-		case map[string]any:
-			start3 = time.Now().In(etlx.TimeZone)
-			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-			_log2 = map[string]any{
-				"process":               process,
-				"name":                  fmt.Sprintf("%s->%s", key, itemKey),
-				"description":           desc,
-				"key":                   key,
-				"item_key":              itemKey,
-				"start_at":              start3,
-				"ref":                   dtRef,
-				"mem_alloc_start":       mem_alloc,
-				"mem_total_alloc_start": mem_total_alloc,
-				"mem_sys_start":         mem_sys,
-				"num_gc_start":          num_gc,
-			}
-			//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-			// each key in data
-			err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
-			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-			_log2["end_at"] = time.Now().In(etlx.TimeZone)
-			_log2["duration"] = time.Since(start3).Seconds()
-			_log2["mem_alloc_end"] = mem_alloc
-			_log2["mem_total_alloc_end"] = mem_total_alloc
-			_log2["mem_sys_end"] = mem_sys
-			_log2["num_gc_end"] = num_gc
-			if err != nil {
-				_log2["success"] = false
-				_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
-				processLogs = append(processLogs, _log2)
-			} else {
-				_log2["success"] = true
-				_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
-				processLogs = append(processLogs, _log2)
-			}
-			fmt.Println(table, _log2["msg"])
-		case []map[string]any:
-			for _, val := range data.([]map[string]any) {
-				start3 = time.Now().In(etlx.TimeZone)
-				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-				_log2 = map[string]any{
-					"process":               process,
-					"name":                  fmt.Sprintf("%s->%s", key, itemKey),
-					"description":           desc,
-					"key":                   key,
-					"item_key":              itemKey,
-					"start_at":              start3,
-					"ref":                   dtRef,
-					"mem_alloc_start":       mem_alloc,
-					"mem_total_alloc_start": mem_total_alloc,
-					"mem_sys_start":         mem_sys,
-					"num_gc_start":          num_gc,
-				}
-				//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
-				// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-				// each key in data
-				err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
-				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-				_log2["end_at"] = time.Now().In(etlx.TimeZone)
-				_log2["duration"] = time.Since(start3).Seconds()
-				_log2["mem_alloc_end"] = mem_alloc
-				_log2["mem_total_alloc_end"] = mem_total_alloc
-				_log2["mem_sys_end"] = mem_sys
-				_log2["num_gc_end"] = num_gc
-				if err != nil {
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
-					processLogs = append(processLogs, _log2)
-				} else {
-					_log2["success"] = true
-					_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
-					processLogs = append(processLogs, _log2)
-				}
-				fmt.Println(table, _log2["msg"])
-			}
-		default:
-			// pass
-		}*/
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
