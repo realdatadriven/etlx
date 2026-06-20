@@ -240,18 +240,18 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 			}
 		}
 		// fmt.Printf("Processing item %s (table: %s) with driver %s (comment: %s)\n", itemKey, table, conn, itemMetadata.(map[string]any)["description"])
-		apps, ok := itemMetadata.(map[string]any)["apps"] //.(map[string]any)
+		access, ok := itemMetadata.(map[string]any)["access"] //.(map[string]any)
 		if !ok {
 			continue
 		}
-		// fmt.Println("APPS", apps)
+		// fmt.Println("ACCESS", access)
 		_data := roleData
 		//fmt.Println("ROLE:", _data)
 		_data["user_id"] = 1
 		// role_app
-		for _, _app := range apps.([]any) {
+		for _, _app := range access.([]any) {
 			for app, _menus := range _app.(map[string]any) {
-				fmt.Println(1, app, _menus)
+				// fmt.Println(1, app, _menus)
 				if app == "__order" {
 					continue
 				}
@@ -283,6 +283,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 				_data["excluded"] = dialect.GetBooleanValue(false)
 				_data["access"] = dialect.GetBooleanValue(true)
 				if !ok {
+					_data["created_at"] = time.Now().In(etlx.TimeZone)
+					_data["updated_at"] = time.Now().In(etlx.TimeZone)
 					sql := `insert into role_app (app_id, role_id, access, user_id, created_at, updated_at, excluded) values (:app_id, :role_id, :access, :user_id, :created_at, :updated_at, :excluded)`
 					insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 					if err != nil {
@@ -290,7 +292,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 					}
 					role_app["role_app_id"] = insertId
 				} else {
-					sql := `update role_app set app_id = :app_id, role_id = :role_id, create = :create, read = :read, update = :update, delete = :delete, updated_at = :updated_at, excluded = :excluded where role_app_id = :role_app_id`
+					_data["updated_at"] = time.Now().In(etlx.TimeZone)
+					sql := `update role_app set access = :access, updated_at = :updated_at, excluded = :excluded where role_app_id = :role_app_id`
 					_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 					if err != nil {
 						return nil, err
@@ -303,7 +306,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 						if menu == "__order" {
 							continue
 						}
-						fmt.Println(2, menu, _tables)
+						// fmt.Println(2, menu, _tables)
 						_data["menu"] = menu
 						role_app_menu := map[string]any{}
 						sql = `select * from role_app_menu where role_id = :role_id and app_id = :app_id and menu_id in (select menu_id from menu where menu = :menu)`
@@ -330,6 +333,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 						_data["excluded"] = dialect.GetBooleanValue(false)
 						_data["access"] = dialect.GetBooleanValue(true)
 						if !ok {
+							_data["created_at"] = time.Now().In(etlx.TimeZone)
+							_data["updated_at"] = time.Now().In(etlx.TimeZone)
 							sql := `insert into role_app_menu (role_id, app_id, menu_id, access, user_id, created_at, updated_at, excluded) values (:role_id, :app_id, :menu_id, :access, :user_id, :created_at, :updated_at, :excluded)`
 							insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 							if err != nil {
@@ -337,7 +342,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							}
 							role_app["role_app_menu_id"] = insertId
 						} else {
-							sql := `update role_app_menu set role_id = :role_id, app_id = :app_id, menu_id = :menu_id, table_id = :table_id, create = :create, read = :read, update = :update, delete = :delete, updated_at = :updated_at, excluded = :excluded where role_app_menu_id = :role_app_menu_id`
+							_data["updated_at"] = time.Now().In(etlx.TimeZone)
+							sql := `update role_app_menu set access = :access, updated_at = :updated_at, excluded = :excluded where role_app_menu_id = :role_app_menu_id`
 							_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 							if err != nil {
 								return nil, err
@@ -359,14 +365,14 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							if !ok {
 								continue
 							}
-							crudActs := []string{}
+							crudActs := []any{}
 							for _, act := range []string{"create", "read", "update", "delete", "share"} {
 								auxVal, _ := _table[act].(bool)
 								_data[act] = dialect.GetBooleanValue(auxVal)
 								crudActs = append(crudActs, dialect.GetColumnName(act))
 							}
-							fmt.Println(crudActs, data)
-							_rlas, _ := _table["rlas"].([]any)
+							// fmt.Println(crudActs, data)
+							_rlas, _ := _table["rla"].([]any)
 							if table == "__order" {
 								continue
 							}
@@ -382,6 +388,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 								role_app_menu_table = _res
 								// _data["table_id"] = role_app_menu_table["table_id"]
 								_data = etlx.MergeMapStringAny(_data, role_app_menu_table)
+								_data["updated_at"] = time.Now().In(etlx.TimeZone)
 							} else {
 								sql := fmt.Sprintf(`select * from %s where %s = :table and db = :db`, dialectTbl, dialectTbl)
 								_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
@@ -389,6 +396,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 									return nil, fmt.Errorf("find table failed: %s -> %s -> %s %w", app, menu, table, err)
 								} else if len(_res) > 0 {
 									_data["table_id"] = _res["table_id"]
+									_data["created_at"] = time.Now().In(etlx.TimeZone)
+									_data["updated_at"] = time.Now().In(etlx.TimeZone)
 									role_app_menu_table = _data
 								} else {
 									return nil, fmt.Errorf("find table failed: %s -> %s -> %s", app, menu, table)
@@ -397,14 +406,14 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							role_app_menu_table_id, ok := role_app_menu_table["role_app_menu_table_id"]
 							_data["excluded"] = dialect.GetBooleanValue(false)
 							if !ok {
-								sql := fmt.Sprintf(`insert into role_app_menu_table (role_id, app_id, menu_id, %s[1], %s[2], %s[3], %s[4], %s[5], user_id, created_at, updated_at, excluded) values (:role_id, :app_id, :menu_id, :create, :read, :update, :delete, :share, :user_id, :created_at, :updated_at, :excluded)`, crudActs)
+								sql := fmt.Sprintf(`insert into role_app_menu_table (role_id, app_id, menu_id, table_id, %s, %s, %s, %s, %s, user_id, created_at, updated_at, excluded) values (:role_id, :app_id, :menu_id, :table_id, :create, :read, :update, :delete, :share, :user_id, :created_at, :updated_at, :excluded)`, crudActs...)
 								insertId, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 								if err != nil {
 									return nil, err
 								}
 								role_app["role_app_menu_table_id"] = insertId
 							} else {
-								sql := fmt.Sprintf(`update role_app_menu_table set role_id = :role_id, app_id = :app_id, menu_id = :menu_id, table_id = :table_id, %s[1] = :create, %s[2] = :read, %s[3] = :update, %s[4] = :delete, %s[5] = :share, updated_at = :updated_at, excluded = :excluded where role_app_menu_table_id = :role_app_menu_table_id`, crudActs)
+								sql := fmt.Sprintf(`update role_app_menu_table set table_id = :table_id, %s = :create, %s = :read, %s = :update, %s = :delete, %s = :share, updated_at = :updated_at, excluded = :excluded where role_app_menu_table_id = :role_app_menu_table_id`, crudActs...)
 								_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 								if err != nil {
 									return nil, err
@@ -412,6 +421,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 								_data["role_app_menu_table_id"] = role_app_menu_table_id
 							}
 						}
+						//*/
 					}
 				}
 			}
