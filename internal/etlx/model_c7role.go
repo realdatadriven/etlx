@@ -2,6 +2,7 @@ package etlxlib
 
 import (
 	"fmt"
+	"strings"
 	"time"
 
 	"github.com/realdatadriven/etlx/internal/db"
@@ -209,7 +210,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		_sql := `select * from role where role = ?`
 		_roleData, _, err := adminDb.QuerySingleRow(_sql, []any{role, dialect.GetBooleanValue(false)}...)
 		if err != nil {
-			return nil, fmt.Errorf("find role failed: %w", err)
+			return nil, fmt.Errorf("find role failed: %s", err)
 		}
 		if len(*_roleData) == 0 {
 			ins_sql := `insert into role (role, role_desc, created_at, updated_at, excluded) values (:role, :role_desc, :created_at, :updated_at, :excluded)`
@@ -223,7 +224,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 			} else {
 				_roleData, _, err := adminDb.QuerySingleRow(_sql, []any{role, dialect.GetBooleanValue(false)}...)
 				if err != nil {
-					return nil, fmt.Errorf("find role failed: %w", err)
+					return nil, fmt.Errorf("find role failed: %s", err)
 				}
 				roleData = *_roleData
 			}
@@ -248,6 +249,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		_data := roleData
 		//fmt.Println("ROLE:", _data)
 		_data["user_id"] = 1
+		tablesPKFields := map[string]any{}
 		// role_app
 		for _, _app := range access.([]any) {
 			for app, _menus := range _app.(map[string]any) {
@@ -261,7 +263,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 				sql = `select role_app.*, app.db from role_app join app on app.app_id = role_app.app_id where role_app.role_id = :role_id and app.app = :app`
 				_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 				if err != nil {
-					return nil, fmt.Errorf("find app_role failed: %w", err)
+					return nil, fmt.Errorf("find app_role failed: %s", err)
 				} else if len(_res) > 0 {
 					role_app = _res
 					//_data["app_id"] = role_app["app_id"]
@@ -270,7 +272,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 					sql := `select * from app where app = :app`
 					_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 					if err != nil {
-						return nil, fmt.Errorf("find app failed: %w", err)
+						return nil, fmt.Errorf("find app failed: %s", err)
 					} else if len(_res) > 0 {
 						// _data["app_id"] = _res["app_id"]
 						_data = etlx.MergeMapStringAny(_data, _res)
@@ -312,7 +314,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 						sql = `select * from role_app_menu where role_id = :role_id and app_id = :app_id and menu_id in (select menu_id from menu where menu = :menu)`
 						_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 						if err != nil {
-							return nil, fmt.Errorf("find role failed: %w", err)
+							return nil, fmt.Errorf("find role failed: %s", err)
 						} else if len(_res) > 0 {
 							role_app_menu = _res
 							// _data["menu_id"] = role_app_menu["menu_id"]
@@ -321,7 +323,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							sql := `select * from menu where menu = :menu and app_id = :app_id`
 							_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 							if err != nil {
-								return nil, fmt.Errorf("find menu failed: %s -> %s %w", app, menu, err)
+								return nil, fmt.Errorf("find menu failed: %s -> %s %s", app, menu, err)
 							} else if len(_res) > 0 {
 								_data["menu_id"] = _res["menu_id"]
 								role_app_menu = _data
@@ -351,7 +353,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							_data["role_app_menu_id"] = role_app_menu_id
 						}
 						// role_app_menu_table
-						for t, _tbl := range _tables.([]any) {
+						for _, _tbl := range _tables.([]any) {
 							var _table map[string]any
 							switch tbl := _tbl.(type) {
 							case map[string]any:
@@ -366,7 +368,8 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 								continue
 							}
 							crudActs := []any{}
-							for _, act := range []string{"create", "read", "update", "delete", "share"} {
+							accessFields := []string{"create", "read", "update", "delete", "share"}
+							for _, act := range accessFields {
 								auxVal, _ := _table[act].(bool)
 								_data[act] = dialect.GetBooleanValue(auxVal)
 								crudActs = append(crudActs, dialect.GetColumnName(act))
@@ -376,14 +379,14 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 							if table == "__order" {
 								continue
 							}
-							fmt.Println(t, table, _rlas)
+							// fmt.Println(t, table, _rlas)
 							_data["table"] = table
 							role_app_menu_table := map[string]any{}
 							dialectTbl := dialect.GetTableName("table")
 							sql = fmt.Sprintf(`select * from role_app_menu_table where role_id = :role_id and app_id = :app_id and menu_id = :menu_id and table_id in (select table_id from %s where %s = :table)`, dialectTbl, dialectTbl)
 							_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 							if err != nil {
-								return nil, fmt.Errorf("find role failed: %w", err)
+								return nil, fmt.Errorf("find role failed: %s", err)
 							} else if len(_res) > 0 {
 								role_app_menu_table = _res
 								// _data["table_id"] = role_app_menu_table["table_id"]
@@ -393,7 +396,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 								sql := fmt.Sprintf(`select * from %s where %s = :table and db = :db`, dialectTbl, dialectTbl)
 								_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
 								if err != nil {
-									return nil, fmt.Errorf("find table failed: %s -> %s -> %s %w", app, menu, table, err)
+									return nil, fmt.Errorf("find table failed: %s -> %s -> %s %s", app, menu, table, err)
 								} else if len(_res) > 0 {
 									_data["table_id"] = _res["table_id"]
 									_data["created_at"] = time.Now().In(etlx.TimeZone)
@@ -419,6 +422,94 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 									return nil, err
 								}
 								_data["role_app_menu_table_id"] = role_app_menu_table_id
+							}
+							// RLA
+							if len(_rlas) > 0 {
+								// menu_table
+								_data["requires_rla"] = dialect.GetBooleanValue(true)
+								sql = `select * from menu_table where app_id = :app_id and menu_id = :menu_id and table_id = :table_id and excluded = :excluded and requires_rla = :requires_rla`
+								_res, err := etlx.NamedQuerySingleRow(adminDb, sql, _data)
+								if err != nil {
+									return nil, fmt.Errorf("find menu_table check rla failed: %s -> %s -> %s", menu, table, err)
+								} else if len(_res) == 0 {
+									return nil, fmt.Errorf("%s -> %s -> %s has no RLA active!", app, menu, table)
+								} else {
+									fmt.Println(menu, table, "HAS RLA ACTIVE")
+									for _, _rla := range _rlas {
+										rla, ok := _rla.(map[string]any)
+										if !ok {
+											continue
+										}
+										// PK
+										pkfield, ok := tablesPKFields[table].(string)
+										if !ok {
+											pksql := dialect.GetPrimaryKeyAutoIncrementQuery(table)
+											pk, _, err := dbConn.QuerySingleRow(pksql, []any{}...)
+											if err != nil {
+												return nil, fmt.Errorf("failed to query for PK Field %s %s: %w", table, pksql, err)
+											}
+											if len(*pk) == 0 {
+												return nil, fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+											}
+											pkfield, ok = (*pk)["column_name"].(string)
+											if !ok {
+												return nil, fmt.Errorf("failed to get the PK Field %s %s", table, pksql)
+											}
+										}
+										// normally the first desc field has the same name as table
+										rlaFieldUsedAsKey := ""
+										if _, ok := rla[pkfield]; ok {
+											rlaFieldUsedAsKey = pkfield
+										} else if _, ok := rla[table]; ok {
+											rlaFieldUsedAsKey = table
+										} else {
+											for key := range rla {
+												if !strings.Contains(strings.Join(accessFields, ""), key) {
+													rlaFieldUsedAsKey = key
+													break
+												}
+											}
+										}
+										sql = fmt.Sprintf(`select %s from %s where %s = :%s`, dialect.GetColumnName(pkfield), dialectTbl, dialect.GetColumnName(rlaFieldUsedAsKey), rlaFieldUsedAsKey)
+										fmt.Println("RLA:", table, sql, rla[rlaFieldUsedAsKey])
+										_res, err := etlx.NamedQuerySingleRow(dbConn, sql, rla)
+										if err != nil {
+											return nil, fmt.Errorf("find role_row_level_access failed: %s -> %s -> %s", menu, table, err)
+										} else if len(_res) == 0 {
+											return nil, fmt.Errorf("%s -> %s -> %s -> RLA no row_id matched for %s = '%s'!", app, menu, table, rlaFieldUsedAsKey, rla[rlaFieldUsedAsKey])
+										}
+										_data["row_id"] = _res[pkfield]
+										// get existin role_row_level_access
+										sql = `select * from role_row_level_access where role_id = :role_id and app_id = :app_id and table_id = :table_id and row_id = :row_id`
+										_res, err = etlx.NamedQuerySingleRow(adminDb, sql, _data)
+										if err != nil {
+											return nil, fmt.Errorf("find role_row_level_access failed: %s -> %s -> %s", menu, table, err)
+										} else if len(_res) > 0 {
+											//return nil, fmt.Errorf("%s -> %s -> %s has no RLA active!", app, menu, table)
+											_data["role_row_level_access_id"] = _res["role_row_level_access"]
+										}
+										for _, act := range accessFields {
+											auxVal, _ := rla[act].(bool)
+											_data[act] = dialect.GetBooleanValue(auxVal)
+										}
+										if _, ok := _data["role_row_level_access_id"]; !ok {
+											_data["created_at"] = time.Now().In(etlx.TimeZone)
+											_data["updated_at"] = time.Now().In(etlx.TimeZone)
+											sql := fmt.Sprintf(`insert into role_row_level_access (role_id, user_id, table_id, table, db, row_id, %s[2], %s[3], %s[4], %s[5], created_at, updated_at, excluded) values (:role_id, :user_id, :table_id, :table, :db, :row_id, :read, :update, :delete, :share, :created_at, :updated_at, :excluded)`, crudActs...)
+											_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+											if err != nil {
+												return nil, err
+											}
+										} else {
+											_data["updated_at"] = time.Now().In(etlx.TimeZone)
+											sql := `update role_row_level_access set %s[2] = :read, %s[3] = :update, %s[4] = :delete, %s[5] = :share, updated_at = :updated_at, excluded = :excluded where role_row_level_access_id = :role_row_level_access_id`
+											_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
+											if err != nil {
+												return nil, err
+											}
+										}
+									}
+								}
 							}
 						}
 						//*/
@@ -620,7 +711,7 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 		_sql := `select * from role where role = ?`
 		_roleData, _, err := adminDb.QuerySingleRow(_sql, []any{role, dialect.GetBooleanValue(false)}...)
 		if err != nil {
-			return nil, fmt.Errorf("find role failed: %w", err)
+			return nil, fmt.Errorf("find role failed: %s", err)
 		}
 		if len(*_roleData) == 0 {
 			ins_sql := `insert into role (role, role_desc, created_at, updated_at, excluded) values (:role, :role_desc, :created_at, :updated_at, :excluded)`
@@ -634,7 +725,7 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 			} else {
 				_roleData, _, err := adminDb.QuerySingleRow(_sql, []any{role, dialect.GetBooleanValue(false)}...)
 				if err != nil {
-					return nil, fmt.Errorf("find role failed: %w", err)
+					return nil, fmt.Errorf("find role failed: %s", err)
 				}
 				roleData = *_roleData
 			}
@@ -657,20 +748,23 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 		}
 		_data := roleData
 		for _, user := range users.([]any) {
+			//fmt.Println(roleData["role_id"], user)
 			_sql := `select * from user_role where role_id = ? and user_id in (select user_id from users where username = ? or email = ?)`
-			userData, _, err := adminDb.QuerySingleRow(_sql, []any{roleData["role_id"], user, user}...)
+			userData, _, err := adminDb.QuerySingleRow(_sql, []any{_data["role_id"], user, user}...)
+			// fmt.Println(userData)
 			if err != nil {
-				return nil, fmt.Errorf("find user failed: %w", err)
+				return nil, fmt.Errorf("find user failed: %s -> %s", user, err)
 			} else if len(*userData) == 0 {
+				//fmt.Println("USER_ROLE MATCHES!")
 				// continue
-				// return nil, fmt.Errorf("find user failed: %s -> %w", user, err)
-				_sql := `select * from users where username = ? or email = ?)`
+				// return nil, fmt.Errorf("find user failed: %s -> %s", user, err)
+				_sql := `select user_id from users where username = ? or email = ?`
 				userData, _, err = adminDb.QuerySingleRow(_sql, []any{user, user}...)
 				if err != nil {
-					return nil, fmt.Errorf("find user failed: %w", err)
+					return nil, fmt.Errorf("find user failed: %s -> %s", user, err)
 				} else if len(*userData) == 0 {
 					// continue
-					return nil, fmt.Errorf("find user failed: %s -> %w", user, err)
+					return nil, fmt.Errorf("find user failed: %s", user)
 				} else {
 					_data = etlx.MergeMapStringAny(_data, (*userData))
 				}
@@ -682,7 +776,7 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 			if !ok {
 				_data["created_at"] = time.Now().In(etlx.TimeZone)
 				_data["updated_at"] = time.Now().In(etlx.TimeZone)
-				sql := `insert into role_app (role_id, user_id, active, created_at, updated_at, excluded) values (:role_id, :user_id, :active, :created_at, :updated_at, :excluded)`
+				sql := `insert into user_role (role_id, user_id, active, created_at, updated_at, excluded) values (:role_id, :user_id, :active, :created_at, :updated_at, :excluded)`
 				_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 				if err != nil {
 					return nil, err

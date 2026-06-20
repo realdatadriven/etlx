@@ -5,6 +5,7 @@ description: Role Model
 database: ADMIN #RLA may need to access records on other DBs
 runs_as: ROLE
 admin_conn: '@DB_DRIVER_NAME:@DB_DSN'
+active: true
 ```
 
 ## ANONYMOUS
