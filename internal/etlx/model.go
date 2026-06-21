@@ -774,7 +774,7 @@ func (s *SQLiteDialect) GetTableFiledsQuery(databaseName, tableName string) stri
 	p.type AS type,
 	(p."notnull" = 0 AND p.pk = 0) AS nullable,
 	(p.pk > 0) AS pk,
-	(UPPER(m.sql) LIKE '%%AUTOINCREMENT%%' AND p.pk = 1) AS autoincrement,
+	(UPPER(m.sql) LIKE '%%AUTOINCREMENT%%' AND p.pk = 1) AS "autoincrement",
 	p.dflt_value AS "default",
 	CASE
 		WHEN fk."table" IS NOT NULL THEN fk."table" || '.' || fk."to"
@@ -2801,9 +2801,9 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"mem_sys_start":         mem_sys,
 				"num_gc_start":          num_gc,
 			}
-
 			schemaAtual, err := etlx.GetTableSchema(dbConn, database, table)
 			if err != nil {
+				fmt.Println("etlx.GetTableSchema(dbConn, database, table):", database, table, err)
 				return nil, err
 			}
 			tableSql := generateCreateTableSQL(driver, table, comment, create_all, columns, dbConn)
@@ -2814,10 +2814,10 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 					if err == nil && len(alterQueries) > 0 {
 						for _, q := range alterQueries {
 							fmt.Printf("Alter failed for %s.%s\n", table, q)
-							/*_, err = dbConn.ExecuteQuery(q)
+							_, err = dbConn.ExecuteQuery(q)
 							if err != nil {
 								fmt.Printf("Alter failed for %s.%s: %v\n", table, q, err)
-							}*/
+							}
 						}
 					}
 				}
