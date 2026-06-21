@@ -440,6 +440,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 										if !ok {
 											continue
 										}
+										//fmt.Println("RLA:", rla)
 										// PK
 										pkfield, ok := tablesPKFields[table].(string)
 										if !ok {
@@ -464,13 +465,16 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 											rlaFieldUsedAsKey = table
 										} else {
 											for key := range rla {
+												if key == "__order" {
+													continue
+												}
 												if !strings.Contains(strings.Join(accessFields, ""), key) {
 													rlaFieldUsedAsKey = key
 													break
 												}
 											}
 										}
-										sql = fmt.Sprintf(`select %s from %s where %s = :%s`, dialect.GetColumnName(pkfield), dialectTbl, dialect.GetColumnName(rlaFieldUsedAsKey), rlaFieldUsedAsKey)
+										sql = fmt.Sprintf(`select %s from %s where %s = :%s`, dialect.GetColumnName(pkfield), dialect.GetColumnName(table), dialect.GetColumnName(rlaFieldUsedAsKey), rlaFieldUsedAsKey)
 										fmt.Println("RLA:", table, sql, rla[rlaFieldUsedAsKey])
 										_res, err := etlx.NamedQuerySingleRow(dbConn, sql, rla)
 										if err != nil {
@@ -486,26 +490,29 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 											return nil, fmt.Errorf("find role_row_level_access failed: %s -> %s -> %s", menu, table, err)
 										} else if len(_res) > 0 {
 											//return nil, fmt.Errorf("%s -> %s -> %s has no RLA active!", app, menu, table)
-											_data["role_row_level_access_id"] = _res["role_row_level_access"]
+											_data["role_row_level_access_id"] = _res["role_row_level_access_id"]
 										}
 										for _, act := range accessFields {
 											auxVal, _ := rla[act].(bool)
 											_data[act] = dialect.GetBooleanValue(auxVal)
 										}
+										aux := []any{dialectTbl, crudActs[1], crudActs[2], crudActs[3], crudActs[4]}
 										if _, ok := _data["role_row_level_access_id"]; !ok {
 											_data["created_at"] = time.Now().In(etlx.TimeZone)
 											_data["updated_at"] = time.Now().In(etlx.TimeZone)
-											sql := fmt.Sprintf(`insert into role_row_level_access (role_id, user_id, table_id, table, db, row_id, %s[2], %s[3], %s[4], %s[5], created_at, updated_at, excluded) values (:role_id, :user_id, :table_id, :table, :db, :row_id, :read, :update, :delete, :share, :created_at, :updated_at, :excluded)`, crudActs...)
+											sql := fmt.Sprintf(`insert into role_row_level_access (role_id, user_id, table_id, %s, db, app_id, row_id, %s, %s, %s, %s, created_at, updated_at, excluded) values (:role_id, :user_id, :table_id, :table, :db, :app_id, :row_id, :read, :update, :delete, :share, :created_at, :updated_at, :excluded)`, aux...)
+											// fmt.Println(sql)
 											_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 											if err != nil {
-												return nil, err
+												return nil, fmt.Errorf("insert role_row_level_access failed: %s -> %s -> %s", menu, table, err)
 											}
 										} else {
 											_data["updated_at"] = time.Now().In(etlx.TimeZone)
-											sql := `update role_row_level_access set %s[2] = :read, %s[3] = :update, %s[4] = :delete, %s[5] = :share, updated_at = :updated_at, excluded = :excluded where role_row_level_access_id = :role_row_level_access_id`
+											sql := fmt.Sprintf(`update role_row_level_access set %s = :table, %s = :read, %s = :update, %s = :delete, %s = :share, updated_at = :updated_at, excluded = :excluded where role_row_level_access_id = :role_row_level_access_id`, aux...)
+											// fmt.Println("role_row_level_access_id:", _data["role_row_level_access_id"], sql)
 											_, err := adminDb.ExecuteNamedQuery(sql, dialect.DataTypeConversion(_data))
 											if err != nil {
-												return nil, err
+												return nil, fmt.Errorf("update role_row_level_access failed: %s -> %s -> %s ->", menu, table, err)
 											}
 										}
 									}

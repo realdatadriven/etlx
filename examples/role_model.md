@@ -15,7 +15,7 @@ description: Anonymous Role
 access:
   - ADMIN:
     - Arrow Flight:
-      - {table: flight_catalog, read: true, rla: [{flight_schema: admin, read: true, share: true}]}
+      - {table: flight_catalog, read: true, rla: [{flight_catalog: admin, read: true, share: false}]}
       - flight_schema
       - flight_schema_table
 active: true
