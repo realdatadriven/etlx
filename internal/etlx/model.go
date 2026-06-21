@@ -35,6 +35,7 @@ type SQLDialect interface {
 	DataTypeConversion(row map[string]any) map[string]any
 	GetBooleanValue(value bool) any
 	GetPrimaryKeyAutoIncrementQuery(tableName string) string
+	GetTableFiledsQuery(tableName string) string
 }
 
 // BaseDialect provides common implementations for SQLDialect interface.
@@ -138,6 +139,11 @@ func (b *BaseDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
 	return ""
 }
 
+func (b *BaseDialect) GetTableFiledsQuery(tableName string) string {
+	// Default implementation - may be overridden by specific dialects
+	return ""
+}
+
 // PostgresDialect implements SQLDialect for PostgreSQL.
 type PostgresDialect struct{ BaseDialect }
 
@@ -237,6 +243,54 @@ func (p *PostgresDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) stri
 		  AND NOT a.attisdropped
 		ORDER BY a.attnum
 		LIMIT 1;
+	`, tableName)
+}
+
+func (p *PostgresDialect) GetTableFiledsQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT
+			c.table_name AS "table",
+			c.column_name AS field,
+			c.data_type AS type,
+			(c.is_nullable = 'YES') AS nullable,
+			(pk.column_name IS NOT NULL) AS pk,
+			(c.is_identity = 'YES' OR c.column_default LIKE 'nextval(%%') AS autoincrement,
+			c.column_default AS "default",
+			CASE
+				WHEN fk.referred_table IS NOT NULL THEN fk.referred_table || '.' || fk.referred_column
+				ELSE NULL
+			END AS fk,
+			c.ordinal_position AS field_order
+		FROM information_schema.columns c
+		LEFT JOIN (
+			SELECT kcu.table_name, kcu.column_name
+			FROM information_schema.table_constraints tc
+			JOIN information_schema.key_column_usage kcu
+				ON kcu.constraint_name = tc.constraint_name
+				AND kcu.constraint_schema = tc.constraint_schema
+			WHERE tc.constraint_type = 'PRIMARY KEY'
+		) pk
+			ON pk.table_name = c.table_name
+			AND pk.column_name = c.column_name
+		LEFT JOIN (
+			SELECT
+				kcu.table_name,
+				kcu.column_name,
+				ccu.table_name AS referred_table,
+				ccu.column_name AS referred_column
+			FROM information_schema.table_constraints tc
+			JOIN information_schema.key_column_usage kcu
+				ON kcu.constraint_name = tc.constraint_name
+				AND kcu.constraint_schema = tc.constraint_schema
+			JOIN information_schema.constraint_column_usage ccu
+				ON ccu.constraint_name = tc.constraint_name
+				AND ccu.constraint_schema = tc.constraint_schema
+			WHERE tc.constraint_type = 'FOREIGN KEY'
+		) fk
+			ON fk.table_name = c.table_name
+			AND fk.column_name = c.column_name
+		WHERE c.table_name = '%s'
+		ORDER BY c.ordinal_position;
 	`, tableName)
 }
 
@@ -348,6 +402,54 @@ func (d *DuckDBDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string
 	`, tableName)
 }
 
+func (d *DuckDBDialect) GetTableFiledsQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT
+			c.table_name AS "table",
+			c.column_name AS field,
+			c.data_type AS type,
+			(c.is_nullable = 'YES') AS nullable,
+			(pk.column_name IS NOT NULL) AS pk,
+			(c.is_identity = 'YES' OR c.column_default LIKE 'nextval(%%') AS autoincrement,
+			c.column_default AS "default",
+			CASE
+				WHEN fk.referred_table IS NOT NULL THEN fk.referred_table || '.' || fk.referred_column
+				ELSE NULL
+			END AS fk,
+			c.ordinal_position AS field_order
+		FROM information_schema.columns c
+		LEFT JOIN (
+			SELECT kcu.table_name, kcu.column_name
+			FROM information_schema.table_constraints tc
+			JOIN information_schema.key_column_usage kcu
+				ON kcu.constraint_name = tc.constraint_name
+				AND kcu.constraint_schema = tc.constraint_schema
+			WHERE tc.constraint_type = 'PRIMARY KEY'
+		) pk
+			ON pk.table_name = c.table_name
+			AND pk.column_name = c.column_name
+		LEFT JOIN (
+			SELECT
+				kcu.table_name,
+				kcu.column_name,
+				ccu.table_name AS referred_table,
+				ccu.column_name AS referred_column
+			FROM information_schema.table_constraints tc
+			JOIN information_schema.key_column_usage kcu
+				ON kcu.constraint_name = tc.constraint_name
+				AND kcu.constraint_schema = tc.constraint_schema
+			JOIN information_schema.constraint_column_usage ccu
+				ON ccu.constraint_name = tc.constraint_name
+				AND ccu.constraint_schema = tc.constraint_schema
+			WHERE tc.constraint_type = 'FOREIGN KEY'
+		) fk
+			ON fk.table_name = c.table_name
+			AND fk.column_name = c.column_name
+		WHERE c.table_name = '%s'
+		ORDER BY c.ordinal_position;
+	`, tableName)
+}
+
 // MySQLDialect implements SQLDialect for MySQL.
 type MySQLDialect struct{ BaseDialect }
 
@@ -439,6 +541,34 @@ func (m *MySQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string 
 	`, tableName)
 }
 
+func (m *MySQLDialect) GetTableFiledsQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT
+			c.table_name AS `+"`table`"+`,
+			c.column_name AS field,
+			c.data_type AS type,
+			(c.is_nullable = 'YES') AS nullable,
+			(c.column_key = 'PRI') AS pk,
+			(c.extra LIKE '%%auto_increment%%') AS autoincrement,
+			c.column_default AS `+"`default`"+`,
+			CASE
+				WHEN kcu.referenced_table_name IS NOT NULL
+				THEN CONCAT(kcu.referenced_table_name, '.', kcu.referenced_column_name)
+				ELSE NULL
+			END AS fk,
+			c.ordinal_position AS field_order
+		FROM information_schema.columns c
+		LEFT JOIN information_schema.key_column_usage kcu
+			ON kcu.table_schema = c.table_schema
+			AND kcu.table_name = c.table_name
+			AND kcu.column_name = c.column_name
+			AND kcu.referenced_table_name IS NOT NULL
+		WHERE c.table_name = '%s'
+		  AND c.table_schema = DATABASE()
+		ORDER BY c.ordinal_position;
+	`, tableName)
+}
+
 // SQLiteDialect implements SQLDialect for SQLite.
 type SQLiteDialect struct{ BaseDialect }
 
@@ -521,6 +651,30 @@ WHERE m.type = 'table'
 	AND m.name = '%s'
 	AND UPPER(m.sql) LIKE '%%AUTOINCREMENT%%'
 	AND p.pk = 1;`, tableName)
+	return sql
+}
+
+func (s *SQLiteDialect) GetTableFiledsQuery(tableName string) string {
+	sql := fmt.Sprintf(`SELECT
+	m.name AS "table",
+	p.name AS field,
+	p.type AS type,
+	(p."notnull" = 0 AND p.pk = 0) AS nullable,
+	(p.pk > 0) AS pk,
+	(UPPER(m.sql) LIKE '%%AUTOINCREMENT%%' AND p.pk = 1) AS autoincrement,
+	p.dflt_value AS "default",
+	CASE
+		WHEN fk."table" IS NOT NULL THEN fk."table" || '.' || fk."to"
+		ELSE NULL
+	END AS fk,
+	(p.cid + 1) AS field_order
+FROM sqlite_master m
+JOIN pragma_table_info(m.name) p
+LEFT JOIN pragma_foreign_key_list(m.name) fk
+	ON fk."from" = p.name
+WHERE m.type = 'table'
+	AND m.name = '%s'
+ORDER BY p.cid;`, tableName)
 	return sql
 }
 
@@ -647,6 +801,49 @@ func (ms *MSSQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string
 		      AND ic.column_id = c.column_id
 		      AND i.is_primary_key = 1
 		  );
+	`, tableName)
+}
+
+func (ms *MSSQLDialect) GetTableFiledsQuery(tableName string) string {
+	return fmt.Sprintf(`
+		SELECT
+			t.name AS [table],
+			c.name AS field,
+			ty.name AS type,
+			c.is_nullable AS nullable,
+			CASE WHEN pk.column_id IS NOT NULL THEN 1 ELSE 0 END AS pk,
+			c.is_identity AS autoincrement,
+			dc.definition AS [default],
+			CASE
+				WHEN rt.name IS NOT NULL THEN rt.name + '.' + rc.name
+				ELSE NULL
+			END AS fk,
+			c.column_id AS field_order
+		FROM sys.tables t
+		JOIN sys.columns c ON c.object_id = t.object_id
+		JOIN sys.types ty ON ty.user_type_id = c.user_type_id
+		LEFT JOIN sys.default_constraints dc
+			ON dc.parent_object_id = c.object_id
+			AND dc.parent_column_id = c.column_id
+		LEFT JOIN (
+			SELECT ic.object_id, ic.column_id
+			FROM sys.indexes i
+			JOIN sys.index_columns ic
+				ON ic.object_id = i.object_id
+				AND ic.index_id = i.index_id
+			WHERE i.is_primary_key = 1
+		) pk
+			ON pk.object_id = c.object_id
+			AND pk.column_id = c.column_id
+		LEFT JOIN sys.foreign_key_columns fkc
+			ON fkc.parent_object_id = c.object_id
+			AND fkc.parent_column_id = c.column_id
+		LEFT JOIN sys.tables rt ON rt.object_id = fkc.referenced_object_id
+		LEFT JOIN sys.columns rc
+			ON rc.object_id = fkc.referenced_object_id
+			AND rc.column_id = fkc.referenced_column_id
+		WHERE t.name = '%s'
+		ORDER BY c.column_id;
 	`, tableName)
 }
 
