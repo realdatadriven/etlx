@@ -35,7 +35,12 @@ type SQLDialect interface {
 	DataTypeConversion(row map[string]any) map[string]any
 	GetBooleanValue(value bool) any
 	GetPrimaryKeyAutoIncrementQuery(tableName string) string
-	GetTableFiledsQuery(tableName string) string
+	GetTableFiledsQuery(databaseName, tableName string) string
+	GetAddColumnQuery(tableName, columnName string, field map[string]any, dbCon db.DBInterface) string
+	GetAlterColumnQuery(tableName, columnName string, oldField, newField map[string]any, dbCon db.DBInterface) string
+	GetDropColumnQuery(tableName, columnName string) string
+	IsColumnDifferent(oldCol, newCol map[string]any) bool
+	NormalizeColumnDef(col map[string]any) map[string]any
 }
 
 // BaseDialect provides common implementations for SQLDialect interface.
@@ -139,9 +144,57 @@ func (b *BaseDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string {
 	return ""
 }
 
-func (b *BaseDialect) GetTableFiledsQuery(tableName string) string {
+func (b *BaseDialect) GetTableFiledsQuery(databaseName, tableName string) string {
 	// Default implementation - may be overridden by specific dialects
 	return ""
+}
+
+func (b *BaseDialect) GetAddColumnQuery(tableName, columnName string, field map[string]any, dbCon db.DBInterface) string {
+	cloned := cloneFieldMap(field)
+	cloned["name"] = columnName
+	cloned["table"] = tableName
+	return fmt.Sprintf("ALTER TABLE %s ADD COLUMN %s %s%s%s;",
+		b.GetTableName(tableName),
+		b.GetColumnName(columnName),
+		b.GetColumnType(cloned, dbCon),
+		b.GetNullable(cloned),
+		b.GetDefaultValue(cloned),
+	)
+}
+
+func (b *BaseDialect) GetAlterColumnQuery(tableName, columnName string, oldField, newField map[string]any, dbCon db.DBInterface) string {
+	return ""
+}
+
+func (b *BaseDialect) GetDropColumnQuery(tableName, columnName string) string {
+	return fmt.Sprintf("ALTER TABLE %s DROP COLUMN %s;", b.GetTableName(tableName), b.GetColumnName(columnName))
+}
+
+func (b *BaseDialect) IsColumnDifferent(oldCol, newCol map[string]any) bool {
+	// Compare key properties
+	if getString(oldCol, "type", "") != getString(newCol, "type", "") {
+		return true
+	}
+	if getBool(oldCol, "nullable", true) != getBool(newCol, "nullable", true) {
+		return true
+	}
+	if getString(oldCol, "default", "") != getString(newCol, "default", "") {
+		return true
+	}
+	if getInt(oldCol, "length", 0) != getInt(newCol, "len", 0) {
+		return true
+	}
+	// Add more comparisons as needed (length, fk, etc.)
+	return false
+}
+
+func (b *BaseDialect) NormalizeColumnDef(col map[string]any) map[string]any {
+	normalized := cloneFieldMap(col)
+	// Ensure consistent keys
+	if _, ok := normalized["nullable"]; !ok {
+		normalized["nullable"] = true
+	}
+	return normalized
 }
 
 // PostgresDialect implements SQLDialect for PostgreSQL.
@@ -246,9 +299,10 @@ func (p *PostgresDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) stri
 	`, tableName)
 }
 
-func (p *PostgresDialect) GetTableFiledsQuery(tableName string) string {
+func (p *PostgresDialect) GetTableFiledsQuery(databaseName, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT
+			c.table_catalog AS db,
 			c.table_name AS "table",
 			c.column_name AS field,
 			c.data_type AS type,
@@ -263,17 +317,22 @@ func (p *PostgresDialect) GetTableFiledsQuery(tableName string) string {
 			c.ordinal_position AS field_order
 		FROM information_schema.columns c
 		LEFT JOIN (
-			SELECT kcu.table_name, kcu.column_name
+			SELECT kcu.table_catalog, kcu.table_schema, kcu.table_name, kcu.column_name
 			FROM information_schema.table_constraints tc
 			JOIN information_schema.key_column_usage kcu
 				ON kcu.constraint_name = tc.constraint_name
 				AND kcu.constraint_schema = tc.constraint_schema
+				AND kcu.constraint_catalog = tc.constraint_catalog
 			WHERE tc.constraint_type = 'PRIMARY KEY'
 		) pk
-			ON pk.table_name = c.table_name
+			ON pk.table_catalog = c.table_catalog
+			AND pk.table_schema = c.table_schema
+			AND pk.table_name = c.table_name
 			AND pk.column_name = c.column_name
 		LEFT JOIN (
 			SELECT
+				kcu.table_catalog,
+				kcu.table_schema,
 				kcu.table_name,
 				kcu.column_name,
 				ccu.table_name AS referred_table,
@@ -282,16 +341,43 @@ func (p *PostgresDialect) GetTableFiledsQuery(tableName string) string {
 			JOIN information_schema.key_column_usage kcu
 				ON kcu.constraint_name = tc.constraint_name
 				AND kcu.constraint_schema = tc.constraint_schema
+				AND kcu.constraint_catalog = tc.constraint_catalog
 			JOIN information_schema.constraint_column_usage ccu
 				ON ccu.constraint_name = tc.constraint_name
 				AND ccu.constraint_schema = tc.constraint_schema
+				AND ccu.constraint_catalog = tc.constraint_catalog
 			WHERE tc.constraint_type = 'FOREIGN KEY'
 		) fk
-			ON fk.table_name = c.table_name
+			ON fk.table_catalog = c.table_catalog
+			AND fk.table_schema = c.table_schema
+			AND fk.table_name = c.table_name
 			AND fk.column_name = c.column_name
-		WHERE c.table_name = '%s'
+		WHERE c.table_catalog = '%s'
+			AND c.table_name = '%s'
 		ORDER BY c.ordinal_position;
-	`, tableName)
+	`, databaseName, tableName)
+}
+
+func (p *PostgresDialect) GetAlterColumnQuery(tableName, columnName string, oldField, newField map[string]any, dbCon db.DBInterface) string {
+	cloned := cloneFieldMap(newField)
+	cloned["name"] = columnName
+	cloned["table"] = tableName
+	columnType := p.GetColumnType(cloned, dbCon)
+	parts := []string{
+		fmt.Sprintf("ALTER COLUMN %s TYPE %s", p.GetColumnName(columnName), columnType),
+	}
+	if getBool(newField, "nullable", true) {
+		parts = append(parts, fmt.Sprintf("ALTER COLUMN %s DROP NOT NULL", p.GetColumnName(columnName)))
+	} else {
+		parts = append(parts, fmt.Sprintf("ALTER COLUMN %s SET NOT NULL", p.GetColumnName(columnName)))
+	}
+	if def := p.GetDefaultValue(cloned); def != "" {
+		defaultExpr := strings.TrimSpace(strings.TrimPrefix(def, "DEFAULT"))
+		parts = append(parts, fmt.Sprintf("ALTER COLUMN %s SET DEFAULT %s", p.GetColumnName(columnName), defaultExpr))
+	} else {
+		parts = append(parts, fmt.Sprintf("ALTER COLUMN %s DROP DEFAULT", p.GetColumnName(columnName)))
+	}
+	return fmt.Sprintf("ALTER TABLE %s %s;", p.GetTableName(tableName), strings.Join(parts, ", "))
 }
 
 // DuckDBDialect implements SQLDialect for DuckDB.
@@ -402,9 +488,10 @@ func (d *DuckDBDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string
 	`, tableName)
 }
 
-func (d *DuckDBDialect) GetTableFiledsQuery(tableName string) string {
+func (d *DuckDBDialect) GetTableFiledsQuery(databaseName, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT
+			c.table_catalog AS db,
 			c.table_name AS "table",
 			c.column_name AS field,
 			c.data_type AS type,
@@ -419,17 +506,22 @@ func (d *DuckDBDialect) GetTableFiledsQuery(tableName string) string {
 			c.ordinal_position AS field_order
 		FROM information_schema.columns c
 		LEFT JOIN (
-			SELECT kcu.table_name, kcu.column_name
+			SELECT kcu.table_catalog, kcu.table_schema, kcu.table_name, kcu.column_name
 			FROM information_schema.table_constraints tc
 			JOIN information_schema.key_column_usage kcu
 				ON kcu.constraint_name = tc.constraint_name
 				AND kcu.constraint_schema = tc.constraint_schema
+				AND kcu.constraint_catalog = tc.constraint_catalog
 			WHERE tc.constraint_type = 'PRIMARY KEY'
 		) pk
-			ON pk.table_name = c.table_name
+			ON pk.table_catalog = c.table_catalog
+			AND pk.table_schema = c.table_schema
+			AND pk.table_name = c.table_name
 			AND pk.column_name = c.column_name
 		LEFT JOIN (
 			SELECT
+				kcu.table_catalog,
+				kcu.table_schema,
 				kcu.table_name,
 				kcu.column_name,
 				ccu.table_name AS referred_table,
@@ -438,16 +530,21 @@ func (d *DuckDBDialect) GetTableFiledsQuery(tableName string) string {
 			JOIN information_schema.key_column_usage kcu
 				ON kcu.constraint_name = tc.constraint_name
 				AND kcu.constraint_schema = tc.constraint_schema
+				AND kcu.constraint_catalog = tc.constraint_catalog
 			JOIN information_schema.constraint_column_usage ccu
 				ON ccu.constraint_name = tc.constraint_name
 				AND ccu.constraint_schema = tc.constraint_schema
+				AND ccu.constraint_catalog = tc.constraint_catalog
 			WHERE tc.constraint_type = 'FOREIGN KEY'
 		) fk
-			ON fk.table_name = c.table_name
+			ON fk.table_catalog = c.table_catalog
+			AND fk.table_schema = c.table_schema
+			AND fk.table_name = c.table_name
 			AND fk.column_name = c.column_name
-		WHERE c.table_name = '%s'
+		WHERE c.table_catalog = '%s'
+			AND c.table_name = '%s'
 		ORDER BY c.ordinal_position;
-	`, tableName)
+	`, databaseName, tableName)
 }
 
 // MySQLDialect implements SQLDialect for MySQL.
@@ -541,9 +638,10 @@ func (m *MySQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string 
 	`, tableName)
 }
 
-func (m *MySQLDialect) GetTableFiledsQuery(tableName string) string {
+func (m *MySQLDialect) GetTableFiledsQuery(databaseName, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT
+			c.table_schema AS db,
 			c.table_name AS `+"`table`"+`,
 			c.column_name AS field,
 			c.data_type AS type,
@@ -564,9 +662,22 @@ func (m *MySQLDialect) GetTableFiledsQuery(tableName string) string {
 			AND kcu.column_name = c.column_name
 			AND kcu.referenced_table_name IS NOT NULL
 		WHERE c.table_name = '%s'
-		  AND c.table_schema = DATABASE()
+		  AND c.table_schema = '%s'
 		ORDER BY c.ordinal_position;
-	`, tableName)
+	`, tableName, databaseName)
+}
+
+func (m *MySQLDialect) GetAlterColumnQuery(tableName, columnName string, oldField, newField map[string]any, dbCon db.DBInterface) string {
+	cloned := cloneFieldMap(newField)
+	cloned["name"] = columnName
+	cloned["table"] = tableName
+	return fmt.Sprintf("ALTER TABLE %s MODIFY COLUMN %s %s%s%s;",
+		m.GetTableName(tableName),
+		m.GetColumnName(columnName),
+		m.GetColumnType(cloned, dbCon),
+		m.GetNullable(cloned),
+		m.GetDefaultValue(cloned),
+	)
 }
 
 // SQLiteDialect implements SQLDialect for SQLite.
@@ -654,9 +765,11 @@ WHERE m.type = 'table'
 	return sql
 }
 
-func (s *SQLiteDialect) GetTableFiledsQuery(tableName string) string {
-	sql := fmt.Sprintf(`SELECT
-	m.name AS "table",
+func (s *SQLiteDialect) GetTableFiledsQuery(databaseName, tableName string) string {
+	if databaseName == "" {
+		databaseName = "main"
+	}
+	sql := fmt.Sprintf(`SELECT	m.name AS "table",
 	p.name AS field,
 	p.type AS type,
 	(p."notnull" = 0 AND p.pk = 0) AS nullable,
@@ -804,9 +917,10 @@ func (ms *MSSQLDialect) GetPrimaryKeyAutoIncrementQuery(tableName string) string
 	`, tableName)
 }
 
-func (ms *MSSQLDialect) GetTableFiledsQuery(tableName string) string {
+func (ms *MSSQLDialect) GetTableFiledsQuery(databaseName, tableName string) string {
 	return fmt.Sprintf(`
 		SELECT
+			DB_NAME() AS db,
 			t.name AS [table],
 			c.name AS field,
 			ty.name AS type,
@@ -842,9 +956,26 @@ func (ms *MSSQLDialect) GetTableFiledsQuery(tableName string) string {
 		LEFT JOIN sys.columns rc
 			ON rc.object_id = fkc.referenced_object_id
 			AND rc.column_id = fkc.referenced_column_id
-		WHERE t.name = '%s'
+		WHERE DB_NAME() = '%s'
+			AND t.name = '%s'
 		ORDER BY c.column_id;
-	`, tableName)
+	`, databaseName, tableName)
+}
+
+func cloneFieldMap(_map map[string]any) map[string]any {
+	return _map
+}
+
+func (ms *MSSQLDialect) GetAlterColumnQuery(tableName, columnName string, oldField, newField map[string]any, dbCon db.DBInterface) string {
+	cloned := cloneFieldMap(newField)
+	cloned["name"] = columnName
+	cloned["table"] = tableName
+	return fmt.Sprintf("ALTER TABLE %s ALTER COLUMN %s %s%s;",
+		ms.GetTableName(tableName),
+		ms.GetColumnName(columnName),
+		ms.GetColumnType(cloned, dbCon),
+		ms.GetNullable(cloned),
+	)
 }
 
 // GetDialect returns the appropriate SQLDialect implementation.
@@ -1648,6 +1779,15 @@ func getString(m map[string]any, key string, fallback string) string {
 	return fallback
 }
 
+func getInt(m map[string]any, key string, fallback int) int {
+	if v, ok := m[key]; ok {
+		if s, ok := v.(int); ok {
+			return s
+		}
+	}
+	return fallback
+}
+
 func getBool(m map[string]any, key string, fallback bool) bool {
 	if v, ok := m[key]; ok {
 		if b, ok := v.(bool); ok {
@@ -2340,6 +2480,84 @@ func getFloat64(m map[string]any, key string, fallback float64) float64 {
 	return fallback
 }
 
+func (etlx ETLX) GetTableSchema(dbConn db.DBInterface, database, table string) ([]map[string]any, error) {
+	dialect := etlx.GetDialect(dbConn.GetDriverName())
+	sql := dialect.GetTableFiledsQuery(database, table)
+	res, _, err := dbConn.QueryMultiRows(sql, []any{}...)
+	if err != nil {
+		return nil, err
+	}
+	return *res, nil
+}
+
+func getAlterSchema(dbConn db.DBInterface, table string, schemaAtual []map[string]any, newSchema map[string]any) ([]string, error) {
+	listOfSeqDDLQueries := []string{}
+	dialect := GetDialect(dbConn.GetDriverName())
+
+	// Build lookup maps
+	currentMap := make(map[string]map[string]any)
+	for _, col := range schemaAtual {
+		if field, ok := col["field"].(string); ok && field != "" {
+			currentMap[field] = col
+		}
+	}
+	newMap := make(map[string]map[string]any)
+	orderAny, _ := newSchema["__order"].([]any)
+	var columnOrder []string
+	if len(orderAny) > 0 {
+		for _, o := range orderAny {
+			if s, ok := o.(string); ok {
+				columnOrder = append(columnOrder, s)
+			}
+		}
+	} else {
+		for k := range newSchema {
+			if k != "__order" && k != "__frontmatter" {
+				columnOrder = append(columnOrder, k)
+			}
+		}
+	}
+	for _, colName := range columnOrder {
+		if colDefAny, ok := newSchema[colName]; ok {
+			if colDef, ok := colDefAny.(map[string]any); ok {
+				newMap[colName] = dialect.NormalizeColumnDef(colDef)
+			}
+		}
+	}
+	// 1. DROP columns that no longer exist in new schema
+	for colName := range currentMap {
+		if _, exists := newMap[colName]; !exists {
+			dropSQL := dialect.GetDropColumnQuery(table, colName)
+			if dropSQL != "" {
+				listOfSeqDDLQueries = append(listOfSeqDDLQueries, dropSQL)
+			}
+		}
+	}
+	// 2. ALTER existing columns (type, nullable, default, etc.)
+	for colName, newDef := range newMap {
+		if oldDef, exists := currentMap[colName]; exists {
+			if dialect.IsColumnDifferent(oldDef, newDef) {
+				alterSQL := dialect.GetAlterColumnQuery(table, colName, oldDef, newDef, dbConn)
+				if alterSQL != "" {
+					listOfSeqDDLQueries = append(listOfSeqDDLQueries, alterSQL)
+				}
+			}
+		}
+	}
+	// 3. ADD new columns (in defined order)
+	for _, colName := range columnOrder {
+		if _, exists := currentMap[colName]; !exists {
+			if newDef, ok := newMap[colName]; ok {
+				addSQL := dialect.GetAddColumnQuery(table, colName, newDef, dbConn)
+				if addSQL != "" {
+					listOfSeqDDLQueries = append(listOfSeqDDLQueries, addSQL)
+				}
+			}
+		}
+	}
+	return listOfSeqDDLQueries, nil
+}
+
 func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "MODEL"
 	process := "MODEL"
@@ -2511,7 +2729,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"num_gc_start":          num_gc,
 			}
 			dropTableSQL := generateDropTableSQL(dbConn.GetDriverName(), table)
-			_, err := dbConn.ExecuteQuery(dropTableSQL)
+			_, err = dbConn.ExecuteQuery(dropTableSQL)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			if err != nil {
 				fmt.Printf("%s ERR: dropping table %s: %s\n", key, table, err)
@@ -2583,9 +2801,29 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				"mem_sys_start":         mem_sys,
 				"num_gc_start":          num_gc,
 			}
-			createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns, dbConn)
+
+			schemaAtual, err := etlx.GetTableSchema(dbConn, database, table)
+			if err != nil {
+				return nil, err
+			}
+			tableSql := generateCreateTableSQL(driver, table, comment, create_all, columns, dbConn)
+			if len(schemaAtual) > 0 {
+				// getAlterSchema(dbConn, database, table, schemaAtual, columns)
+				if len(schemaAtual) > 0 && create_all != "replace" {
+					alterQueries, err := getAlterSchema(dbConn, table, schemaAtual, columns)
+					if err == nil && len(alterQueries) > 0 {
+						for _, q := range alterQueries {
+							fmt.Printf("Alter failed for %s.%s\n", table, q)
+							/*_, err = dbConn.ExecuteQuery(q)
+							if err != nil {
+								fmt.Printf("Alter failed for %s.%s: %v\n", table, q, err)
+							}*/
+						}
+					}
+				}
+			}
 			//fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
-			_, err := dbConn.ExecuteQuery(createTableSQL)
+			_, err = dbConn.ExecuteQuery(tableSql)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
@@ -2597,7 +2835,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
 				processLogs = append(processLogs, _log2)
-				fmt.Println(createTableSQL, _log2["msg"])
+				fmt.Println(tableSql, _log2["msg"])
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
