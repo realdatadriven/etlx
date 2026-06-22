@@ -495,9 +495,11 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				valid = false
 			}
 			if !okConn {
-				_log2["success"] = false
+				/*_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params conn", key, itemKey, _type)
-				valid = false
+				valid = false*/
+				conn = "duckdb:"
+				okConn = true
 			}
 			if !okSQLs {
 				_log2["success"] = false
