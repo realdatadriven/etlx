@@ -3,9 +3,11 @@ package etlxlib
 import (
 	"archive/zip"
 	"compress/gzip"
+	"fmt"
 	"io"
 	"os"
 	"path/filepath"
+	"strings"
 )
 
 func (etlx *ETLX) CompressToZip(files []string, output string) error {
@@ -60,10 +62,24 @@ func (etlx *ETLX) Unzip(zipPath string, destDir string) error {
 	}
 	defer r.Close()
 
+	destRoot, err := filepath.Abs(destDir)
+	if err != nil {
+		return err
+	}
+	destRoot = filepath.Clean(destRoot)
+	destPrefix := destRoot + string(os.PathSeparator)
+
 	for _, f := range r.File {
-		outPath := filepath.Join(destDir, f.Name)
+		outPath := filepath.Join(destRoot, f.Name)
+		outPath = filepath.Clean(outPath)
+		if outPath != destRoot && !strings.HasPrefix(outPath, destPrefix) {
+			return fmt.Errorf("invalid zip entry path: %s", f.Name)
+		}
+
 		if f.FileInfo().IsDir() {
-			os.MkdirAll(outPath, os.ModePerm)
+			if err := os.MkdirAll(outPath, os.ModePerm); err != nil {
+				return err
+			}
 			continue
 		}
 
