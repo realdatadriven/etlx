@@ -168,6 +168,17 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 							break
 						}
 					}
+				} else if _, okData := val["data"].([]any); okData && table != "" {
+					for _, d := range val["data"].([]any) {
+						if dMap, ok := d.(map[string]any); ok {
+							err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+							if err != nil {
+								break
+							}
+						}
+					}
+				} else {
+					fmt.Printf("UNABLE TO HANDLE CHILDREN DATA: %T\n", val)
 				}
 			}
 		case []map[string]any:
@@ -193,6 +204,17 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 								break
 							}
 						}
+					} else if _, okData := child["data"].([]any); okData && table != "" {
+						for _, d := range child["data"].([]any) {
+							if dMap, ok := d.(map[string]any); ok {
+								err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+								if err != nil {
+									break
+								}
+							}
+						}
+					} else {
+						fmt.Printf("UNABLE TO HANDLE CHILDREN DATA: %T\n", val)
 					}
 				}
 			}
