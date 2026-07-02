@@ -230,6 +230,16 @@ func (p *PostgresDialect) GetColumnType(field map[string]any, dbCon db.DBInterfa
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
 		if autoincrement, ok := field["autoincrement"].(bool); ok && autoincrement {
+			// If a start value is provided, create a sequence and use nextval as default
+			start := getInt(field, "start", 0)
+			increment := getInt(field, "increment", 1)
+			if start > 0 {
+				// store sequence creation SQL in the field map so caller can append it after table creation
+				seqName := fmt.Sprintf("%s_%s_seq", field["table"], field["name"])
+				field["autoincrement_sequence_sql"] = fmt.Sprintf("CREATE SEQUENCE IF NOT EXISTS \"%s\" START WITH %d INCREMENT BY %d;", seqName, start, increment)
+				field["autoincrement_default"] = fmt.Sprintf(" DEFAULT nextval('%s')", seqName)
+				return "INTEGER"
+			}
 			return "SERIAL"
 		}
 		return "INTEGER"
@@ -262,7 +272,9 @@ func (p *PostgresDialect) GetPrimaryKey(field map[string]any) string {
 }
 
 func (p *PostgresDialect) GetAutoIncrement(field map[string]any) string {
-	// Handled by SERIAL type in GetColumnType
+	if def, ok := field["autoincrement_default"].(string); ok && def != "" {
+		return def
+	}
 	return ""
 }
 
@@ -412,15 +424,21 @@ func (d *DuckDBDialect) GetColumnType(field map[string]any, dbCon db.DBInterface
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
 		if autoincrement, ok := field["autoincrement"].(bool); ok && autoincrement {
-			// GetColumnType(field map[string]any)
+			start := getInt(field, "start", 0)
+			increment := getInt(field, "increment", 1)
+			seqName := fmt.Sprintf("%s_%s_seq", field["table"], field["name"])
+			// Create sequence with provided start/increment when possible
+			create_seq := fmt.Sprintf(`CREATE SEQUENCE IF NOT EXISTS "%s" START WITH %d INCREMENT BY %d;`, seqName, func() int { if start > 0 { return start } else { return 1 } }(), increment)
 			if dbCon != nil {
-				create_seq := fmt.Sprintf(`CREATE SEQUENCE IF NOT EXISTS "%s_%s_seq" START WITH 1 INCREMENT BY 1;`, field["table"], field["name"])
 				_, err := dbCon.ExecuteQuery(create_seq, []any{}...)
 				if err != nil {
 					fmt.Println("Err creating SEQUENCE:", err)
 				}
-				return fmt.Sprintf(`INTEGER DEFAULT NEXTVAL('%s_%s_seq')`, field["table"], field["name"])
+				return fmt.Sprintf(`INTEGER DEFAULT NEXTVAL('%s')`, seqName)
 			}
+			// If no db connection available, store the sequence SQL in the field for later
+			field["autoincrement_sequence_sql"] = create_seq
+			return fmt.Sprintf(`INTEGER DEFAULT NEXTVAL('%s')`, seqName)
 		}
 		return "INTEGER"
 	case "VARCHAR", "STRING":
@@ -824,7 +842,9 @@ func (ms *MSSQLDialect) GetColumnType(field map[string]any, dbCon db.DBInterface
 	switch strings.ToUpper(sqlType) {
 	case "INTEGER":
 		if autoincrement, ok := field["autoincrement"].(bool); ok && autoincrement {
-			return "INT IDENTITY(1,1)"
+			start := getInt(field, "start", 1)
+			increment := getInt(field, "increment", 1)
+			return fmt.Sprintf("INT IDENTITY(%d,%d)", start, increment)
 		}
 		return "INT"
 	case "VARCHAR":
@@ -1020,6 +1040,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	var foreignKeyConstraints []string
 	var primaryKeyColumns []string
 	var postCreateTableSQL []string                // For comments or other post-creation statements
+	var tableAutoStart int = 0
 	filedsByOrder, ok := fields["__order"].([]any) // Get the field order from the special __order key
 	if !ok {
 		filedsByOrder = make([]any, 0)
@@ -1056,6 +1077,16 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 			}
 		}
 		columnDefs = append(columnDefs, columnDef)
+		// If a sequence creation SQL was stored in the field (Postgres/DuckDB), collect it for post-create
+		if seqSql, ok := field["autoincrement_sequence_sql"].(string); ok && seqSql != "" {
+			postCreateTableSQL = append(postCreateTableSQL, seqSql)
+		}
+		// If this field has autoincrement with a start value, remember it for dialects that need table-level options (MySQL/SQLite)
+		if autoincrementVal, ok := field["autoincrement"].(bool); ok && autoincrementVal {
+			if start := getInt(field, "start", 0); start > 0 && tableAutoStart == 0 {
+				tableAutoStart = start
+			}
+		}
 		// Collect primary key columns for a combined PK constraint
 		if pk, ok := field["pk"].(bool); ok && pk && primaryKey == "" {
 			primaryKeyColumns = append(primaryKeyColumns, name)
@@ -1082,8 +1113,21 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	columnDefs = append(columnDefs, foreignKeyConstraints...)
 	schema.WriteString(strings.Join(columnDefs, ",\n"))
 	schema.WriteString("\n)")
+	// For MySQL/MariaDB, honor table-level AUTO_INCREMENT start value
+	if (driver == "mysql" || driver == "mariadb") && tableAutoStart > 0 {
+		schema.WriteString(fmt.Sprintf(" AUTO_INCREMENT=%d", tableAutoStart))
+	}
 	schema.WriteString(end)
 	schema.WriteString(";\n")
+	// For SQLite, if a start value was provided for autoincrement, initialize sqlite_sequence
+	if (driver == "sqlite3" || driver == "sqlite") && tableAutoStart > 0 {
+		// sqlite_sequence.seq stores the last value used, so set it to start-1
+		seqVal := tableAutoStart - 1
+		if seqVal < 0 {
+			seqVal = 0
+		}
+		postCreateTableSQL = append(postCreateTableSQL, fmt.Sprintf("INSERT OR REPLACE INTO sqlite_sequence(name, seq) VALUES('%s', %d);", tableName, seqVal))
+	}
 	// Add table-level comments and other post-creation statements
 	if tableComment != "" && dialect.SupportsTableComment() {
 		schema.WriteString(dialect.GetTableComment(dialect.GetTableName(tableName), tableComment))
