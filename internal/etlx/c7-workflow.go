@@ -50,7 +50,7 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 			}
 			matchesInt := intPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
 			if len(matchesInt) == 2 {
-				fmt.Println("Int(x)->x", matchesInt[1], toInt(matchesInt[1]))
+				//fmt.Println("Int(x)->x", matchesInt[1], toInt(matchesInt[1]))
 				_data[colName] = toInt(matchesInt[1])
 			}
 			for key, value := range ids {
