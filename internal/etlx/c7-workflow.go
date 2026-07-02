@@ -14,6 +14,8 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
 	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
+	// get the number in Int(number) and convert to int
+	intPattern := regexp.MustCompile(`^Int\((\d+)\)$`)
 	if ids == nil {
 		ids = map[string]any{}
 	}
@@ -45,6 +47,11 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 			matchesParent := parentPatterm.FindStringSubmatch(strings.TrimSpace(input.(string)))
 			if len(matchesParent) == 1 {
 				_data[colName] = parent_id
+			}
+			matchesInt := intPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesInt) == 2 {
+				fmt.Println("Int(x)->x", matchesInt[1], toInt(matchesInt[1]))
+				_data[colName] = toInt(matchesInt[1])
 			}
 			for key, value := range ids {
 				spatt := fmt.Sprintf(`^%s\(\)$`, key)
