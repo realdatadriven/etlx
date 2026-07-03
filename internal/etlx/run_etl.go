@@ -740,7 +740,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
@@ -748,7 +748,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
 				return fmt.Errorf("deactivated %s", "")
 			}
 		}
@@ -760,7 +762,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
-			processLogs = append(processLogs, map[string]any{
+			logEntry := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
@@ -768,13 +770,15 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
 				"msg":     "Missing metadata in item",
-			})
+			}
+			processLogs = append(processLogs, logEntry)
+			formatProcessLogEntry(logEntry)
 			return nil
 		}
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -782,7 +786,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Deactivated",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
 				return nil
 			}
 		}
@@ -791,7 +797,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			//fmt.Println("ONLY", only, len(only.([]string)))
 			if len(only.([]string)) == 0 {
 			} else if !etlx.Contains(only.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -799,7 +805,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Excluded from the process",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
 				return nil
 			}
 		}
@@ -807,7 +815,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			//fmt.Println("SKIP", skip, len(skip.([]string)))
 			if len(skip.([]string)) == 0 {
 			} else if etlx.Contains(skip.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -815,7 +823,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
 					"msg":     "Excluded from the process",
-				})
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
 				return nil
 			}
 		}
@@ -987,6 +997,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3["mem_sys_end"] = mem_sys
 				_log3["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log3)
+				formatProcessLogEntry(_log3)
 				//return fmt.Errorf("%s -> %s -> %s ERR: connecting to %s in : %s", key, step, itemKey, conn, err)
 				continue
 			}
@@ -1085,6 +1096,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						_log3["mem_sys_end"] = mem_sys
 						_log3["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log3)
+						formatProcessLogEntry(_log3)
 						//return fmt.Errorf("%s -> %s -> %s ERR: Before: %s", key, step, itemKey, err)
 						continue
 					}
@@ -1100,6 +1112,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["num_gc_end"] = num_gc
 				}
 				processLogs = append(processLogs, _log3)
+				formatProcessLogEntry(_log3)
 			}
 			// check condition
 			condition, okCondition := itemMetadata[step+"_condition"].(string)
@@ -1118,6 +1131,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["mem_sys_end"] = mem_sys
 					_log3["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log3)
+					formatProcessLogEntry(_log3)
 					// return fmt.Errorf("%s", _log3["msg"])
 					failedCondition = true
 				} else if !cond {
@@ -1134,6 +1148,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 						_log3["msg"] = fmt.Sprintf("%s -> %s -> %s COND: failed %s", key, step, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 					}
 					processLogs = append(processLogs, _log3)
+					formatProcessLogEntry(_log3)
 					//return fmt.Errorf("%s", _log3["msg"])
 					failedCondition = true
 				}
@@ -1169,6 +1184,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							}
 							if !rule_active {
 								processLogs = append(processLogs, _log3)
+								formatProcessLogEntry(_log3)
 								continue
 							}
 							//fmt.Println(_valid["type"].(string), _valid["sql"].(string), _valid["msg"].(string))
@@ -1192,6 +1208,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
+									formatProcessLogEntry(_log3)
 									processLogs = append(processLogs, _log3)
 									break
 								} else if len(*res) == 0 && _valid["type"].(string) == "trow_if_empty" {
@@ -1200,6 +1217,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									_log3["end_at"] = time.Now().In(etlx.TimeZone)
 									_log3["duration"] = time.Since(start4).Seconds()
 									isValid = false
+									formatProcessLogEntry(_log3)
 									processLogs = append(processLogs, _log3)
 									break
 								} else {
@@ -1213,6 +1231,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3["mem_total_alloc_end"] = mem_total_alloc
 							_log3["mem_sys_end"] = mem_sys
 							_log3["num_gc_end"] = num_gc
+							formatProcessLogEntry(_log3)
 							processLogs = append(processLogs, _log3)
 						}
 					}
@@ -1308,6 +1327,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["num_gc_end"] = num_gc
 				}
 				processLogs = append(processLogs, _log3)
+				formatProcessLogEntry(_log3)
 			}
 			// Process CLEAN SQL
 			if clean.(bool) && okClean {
@@ -1345,6 +1365,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["num_gc_end"] = num_gc
 				}
 				processLogs = append(processLogs, _log3)
+				formatProcessLogEntry(_log3)
 			}
 			// Process DROP SQL
 			if drop.(bool) && okDrop {
@@ -1382,6 +1403,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["num_gc_end"] = num_gc
 				}
 				processLogs = append(processLogs, _log3)
+				formatProcessLogEntry(_log3)
 			}
 			// Process ROWS SQL
 			if rows.(bool) && okRows {
@@ -1434,6 +1456,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					_log3["mem_sys_end"] = mem_sys
 					_log3["num_gc_end"] = num_gc
 				}
+				formatProcessLogEntry(_log3)
 				processLogs = append(processLogs, _log3)
 			}
 			// Process after SQL
@@ -1512,6 +1535,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			}
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
+			formatProcessLogEntry(_log3)
 			processLogs = append(processLogs, _log3)
 		}
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1522,6 +1546,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		_log1["mem_sys_end"] = mem_sys
 		_log1["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log1)
+		formatProcessLogEntry(_log1)
 		return nil
 	}
 	// Check if the input conf is nil or empty
