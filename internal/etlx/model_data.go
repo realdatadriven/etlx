@@ -269,7 +269,7 @@ func (etlx *ETLX) NamedToPositional(sql string, data map[string]any) (string, []
 	return result, args, nil
 }
 func formatProcessLogEntry(entry map[string]any) {
-	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" || os.Getenv("ETLX_LOG_LEVEL") != "" {
 		startAt := time.Time{}
 		if v, ok := entry["start_at"].(time.Time); ok {
 			startAt = v
@@ -303,8 +303,20 @@ func formatProcessLogEntry(entry map[string]any) {
 		if v, ok := entry["msg"].(string); ok {
 			msg = v
 		}
+		printLogs := true
+		if strings.ToLower(os.Getenv("ETLX_LOG_LEVEL")) == "error" {
+			if v, ok := entry["success"].(bool); ok && v {
+				printLogs = false
+			}
+		}
+		success := ""
+		if v, ok := entry["success"].(bool); ok {
+			success = fmt.Sprintf("success:%t ", v)
+		}
+		if printLogs {
+			fmt.Printf("%s %.3fs - %s%s: %s%s\n", startAt.Format(time.RFC3339), duration, key, itemKey, success, msg)
 
-		fmt.Printf("%s %.3fs - %s%s: %s\n", startAt.Format(time.RFC3339), duration, key, itemKey, msg)
+		}
 	}
 }
 

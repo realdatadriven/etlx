@@ -428,7 +428,13 @@ func (d *DuckDBDialect) GetColumnType(field map[string]any, dbCon db.DBInterface
 			increment := getInt(field, "increment", 1)
 			seqName := fmt.Sprintf("%s_%s_seq", field["table"], field["name"])
 			// Create sequence with provided start/increment when possible
-			create_seq := fmt.Sprintf(`CREATE SEQUENCE IF NOT EXISTS "%s" START WITH %d INCREMENT BY %d;`, seqName, func() int { if start > 0 { return start } else { return 1 } }(), increment)
+			create_seq := fmt.Sprintf(`CREATE SEQUENCE IF NOT EXISTS "%s" START WITH %d INCREMENT BY %d;`, seqName, func() int {
+				if start > 0 {
+					return start
+				} else {
+					return 1
+				}
+			}(), increment)
 			if dbCon != nil {
 				_, err := dbCon.ExecuteQuery(create_seq, []any{}...)
 				if err != nil {
@@ -1039,7 +1045,7 @@ func generateCreateTableSQL(driver, tableName, tableComment, createAll string, f
 	var columnDefs []string
 	var foreignKeyConstraints []string
 	var primaryKeyColumns []string
-	var postCreateTableSQL []string                // For comments or other post-creation statements
+	var postCreateTableSQL []string // For comments or other post-creation statements
 	var tableAutoStart int = 0
 	filedsByOrder, ok := fields["__order"].([]any) // Get the field order from the special __order key
 	if !ok {
@@ -2791,6 +2797,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 	} else {
 		for _, itemKey := range order {
@@ -2879,50 +2886,49 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
 				processLogs = append(processLogs, _log2)
-				fmt.Println(tableSql, _log2["msg"])
+				//fmt.Println(tableSql, _log2["msg"])
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
 				processLogs = append(processLogs, _log2)
-				// ADD DATA
-				dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
-				if okData {
-					start3 = time.Now().In(etlx.TimeZone)
-					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-					_log2 = map[string]any{
-						"process":               process,
-						"name":                  fmt.Sprintf("%s->%s", key, itemKey),
-						"description":           fmt.Sprintf("Inserting data into %s", table),
-						"key":                   key,
-						"item_key":              itemKey,
-						"start_at":              start3,
-						"ref":                   dtRef,
-						"mem_alloc_start":       mem_alloc,
-						"mem_total_alloc_start": mem_total_alloc,
-						"mem_sys_start":         mem_sys,
-						"num_gc_start":          num_gc,
-					}
-					err = etlx.InsertData(dbConn, table, columns, dataRows)
-					if err != nil {
-						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
-						processLogs = append(processLogs, _log2)
-						fmt.Println(_log2["msg"])
-					} else {
-						_log2["success"] = true
-						_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
-					}
-					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-					_log2["end_at"] = time.Now().In(etlx.TimeZone)
-					_log2["duration"] = time.Since(start3).Seconds()
-					_log2["mem_alloc_end"] = mem_alloc
-					_log2["mem_total_alloc_end"] = mem_total_alloc
-					_log2["mem_sys_end"] = mem_sys
-					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-				} else {
-					// fmt.Printf("No data to insert for %s->%s\n", key, itemKey)
+			}
+			formatProcessLogEntry(_log2)
+			dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
+			if okData {
+				start3 = time.Now().In(etlx.TimeZone)
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+				_log2 = map[string]any{
+					"process":               process,
+					"name":                  fmt.Sprintf("%s->%s", key, itemKey),
+					"description":           fmt.Sprintf("Inserting data into %s", table),
+					"key":                   key,
+					"item_key":              itemKey,
+					"start_at":              start3,
+					"ref":                   dtRef,
+					"mem_alloc_start":       mem_alloc,
+					"mem_total_alloc_start": mem_total_alloc,
+					"mem_sys_start":         mem_sys,
+					"num_gc_start":          num_gc,
 				}
+				err = etlx.InsertData(dbConn, table, columns, dataRows)
+				if err != nil {
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
+					processLogs = append(processLogs, _log2)
+					fmt.Println(_log2["msg"])
+				} else {
+					_log2["success"] = true
+					_log2["msg"] = fmt.Sprintf("%s: data inserted into %s", key, table)
+				}
+				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+				_log2["end_at"] = time.Now().In(etlx.TimeZone)
+				_log2["duration"] = time.Since(start3).Seconds()
+				_log2["mem_alloc_end"] = mem_alloc
+				_log2["mem_total_alloc_end"] = mem_total_alloc
+				_log2["mem_sys_end"] = mem_sys
+				_log2["num_gc_end"] = num_gc
+				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 		}
 	}
@@ -2955,6 +2961,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 		} else {
 			defer adminDb.Close()
@@ -2987,6 +2994,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 		} else {
 			defer adminDb.Close()
@@ -3030,6 +3038,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	cs_app, ok := metadata["cs_app"].(map[string]any)
 	if drop_all == "" && ok && updateTableMetadataSQL {
@@ -3053,11 +3062,11 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		version, _ := metadata["version"].(string)
 		err = etlx.LoadOrSyncMenusFromConfig(adminDb, cs_app, database, 1, app_desc, version)
 		if err != nil {
-			fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
+			// fmt.Printf("%s ERR: loading/syncing menus from config: %s\n", key, err)
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: loading/syncing menus from config: %s", key, err)
 		} else {
-			fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
+			// fmt.Printf("%s: menus loaded/synced from config successfully\n", key)
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: menus loaded/synced from config successfully", key)
 		}
@@ -3069,6 +3078,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	// CUSTOM DATA
 	if drop_all == "" && updateTableMetadataSQL {
@@ -3107,6 +3117,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
