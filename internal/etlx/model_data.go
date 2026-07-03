@@ -178,7 +178,11 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 						}
 					}
 				} else {
-					fmt.Printf("UNABLE TO HANDLE CHILDREN DATA: %T\n", val)
+					formatProcessLogEntry(map[string]any{
+						"start_at": time.Now().In(etlx.TimeZone),
+						"key":      key,
+						"msg":      fmt.Sprintf("UNABLE TO HANDLE CHILDREN DATA: %T", val),
+					})
 				}
 			}
 		case []map[string]any:
@@ -214,7 +218,11 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 							}
 						}
 					} else {
-						fmt.Printf("UNABLE TO HANDLE CHILDREN DATA: %T\n", val)
+						formatProcessLogEntry(map[string]any{
+							"start_at": time.Now().In(etlx.TimeZone),
+							"key":      key,
+							"msg":      fmt.Sprintf("UNABLE TO HANDLE CHILDREN DATA: %T", val),
+						})
 					}
 				}
 			}
@@ -260,6 +268,46 @@ func (etlx *ETLX) NamedToPositional(sql string, data map[string]any) (string, []
 	})
 	return result, args, nil
 }
+func formatProcessLogEntry(entry map[string]any) {
+	if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		startAt := time.Time{}
+		if v, ok := entry["start_at"].(time.Time); ok {
+			startAt = v
+		}
+
+		duration := 0.0
+		switch v := entry["duration"].(type) {
+		case float64:
+			duration = v
+		case float32:
+			duration = float64(v)
+		case int:
+			duration = float64(v)
+		case int64:
+			duration = float64(v)
+		case int32:
+			duration = float64(v)
+		}
+
+		key := ""
+		if v, ok := entry["key"].(string); ok {
+			key = v
+		}
+
+		itemKey := ""
+		if v, ok := entry["item_key"].(string); ok {
+			itemKey = "/" + v
+		}
+
+		msg := ""
+		if v, ok := entry["msg"].(string); ok {
+			msg = v
+		}
+
+		fmt.Printf("%s %.3fs - %s%s: %s\n", startAt.Format(time.RFC3339), duration, key, itemKey, msg)
+	}
+}
+
 func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "MODEL_DATA"
 	process := "MODEL_DATA"
@@ -296,7 +344,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 	// ACTIVE
 	if active, okActive := metadata["active"]; okActive {
 		if !active.(bool) {
-			processLogs = append(processLogs, map[string]any{
+			log2 := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("KEY %s", key),
 				"description": metadata["description"].(string),
@@ -305,7 +353,9 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				"end_at":      time.Now().In(etlx.TimeZone),
 				"success":     true,
 				"msg":         "Deactivated",
-			})
+			}
+			processLogs = append(processLogs, log2)
+			formatProcessLogEntry(log2)
 			return nil, fmt.Errorf("%s deactivated", key)
 		}
 	}
@@ -372,6 +422,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -399,6 +450,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {
 		defer adminDb.Close()
@@ -484,7 +536,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 				processLogs = append(processLogs, _log2)
 			}
-			fmt.Println(table, _log2["msg"])
+			formatProcessLogEntry(_log2)
 		case []map[string]any:
 			for _, val := range data.([]map[string]any) {
 				start3 = time.Now().In(etlx.TimeZone)
@@ -522,7 +574,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 					_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 					processLogs = append(processLogs, _log2)
 				}
-				fmt.Println(table, _log2["msg"])
+				formatProcessLogEntry(_log2)
 			}
 		default:
 			// pass
