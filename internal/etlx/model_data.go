@@ -40,6 +40,7 @@ func ResolveFileContentSafe(filename string, allowedDir string) (string, error) 
 	}
 	return string(content), nil
 }
+
 func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string, data map[string]any) (any, error) {
 	var whereClause string
 	var whereClause2 string
@@ -274,6 +275,7 @@ func (etlx *ETLX) NamedToPositional(sql string, data map[string]any) (string, []
 	})
 	return result, args, nil
 }
+
 func formatProcessLogEntry(entry map[string]any) {
 	if os.Getenv("ETLX_DEBUG_QUERY") == "true" || os.Getenv("ETLX_DEBUG_LOG_LEVEL") != "" {
 		startAt := time.Time{}
