@@ -161,11 +161,14 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 				}
 				if _, okData := val["data"].(map[string]any); okData && table != "" {
 					err = etlx.LoadModelData(dbConn, val["data"].(map[string]any), app, table, key, cond, insertId, ids)
+					if err != nil {
+						return err
+					}
 				} else if _, okData := val["data"].([]map[string]any); okData && table != "" {
 					for _, d := range val["data"].([]map[string]any) {
 						err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
 						if err != nil {
-							break
+							return err
 						}
 					}
 				} else if _, okData := val["data"].([]any); okData && table != "" {
@@ -173,7 +176,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 						if dMap, ok := d.(map[string]any); ok {
 							err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
 							if err != nil {
-								break
+								return err
 							}
 						}
 					}
@@ -201,11 +204,14 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					}
 					if _, okData := child["data"].(map[string]any); okData && table != "" {
 						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId, ids)
+						if err != nil {
+							return err
+						}
 					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
 						for _, d := range child["data"].([]map[string]any) {
 							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
 							if err != nil {
-								break
+								return err
 							}
 						}
 					} else if _, okData := child["data"].([]any); okData && table != "" {
@@ -213,7 +219,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 							if dMap, ok := d.(map[string]any); ok {
 								err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
 								if err != nil {
-									break
+									return err
 								}
 							}
 						}
