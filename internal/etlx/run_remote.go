@@ -8,6 +8,7 @@ import (
 	"os"
 	"time"
 
+	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
 )
 
@@ -55,17 +56,17 @@ func (r *Runner) Ping(ctx context.Context) error {
 
 // upload file
 func (r *Runner) Upload(ctx context.Context, localPath, remotePath string) error {
-	session, err := r.client.NewSession()
+	client, err := sftp.NewClient(r.client)
 	if err != nil {
-		return err
+		return fmt.Errorf("SFTP client creation failed: %w", err)
 	}
-	defer session.Close()
+	defer client.Close()
 	srcFile, err := os.Open(localPath)
 	if err != nil {
 		return fmt.Errorf("could not open source file: %w", err)
 	}
 	defer srcFile.Close()
-	dstFile, err := session.Create(remotePath)
+	dstFile, err := client.Create(remotePath)
 	if err != nil {
 		return fmt.Errorf("could not create remote file: %w", err)
 	}
@@ -73,6 +74,29 @@ func (r *Runner) Upload(ctx context.Context, localPath, remotePath string) error
 	_, err = io.Copy(dstFile, srcFile)
 	if err != nil {
 		return fmt.Errorf("upload failed: %w", err)
+	}
+	return nil
+}
+
+func (r *Runner) Download(ctx context.Context, localPath, remotePath string) error {
+	client, err := sftp.NewClient(r.client)
+	if err != nil {
+		return fmt.Errorf("SFTP client creation failed: %w", err)
+	}
+	defer client.Close()
+	srcFile, err := client.Open(remotePath)
+	if err != nil {
+		return fmt.Errorf("could not open remote file: %w", err)
+	}
+	defer srcFile.Close()
+	dstFile, err := os.Create(localPath)
+	if err != nil {
+		return fmt.Errorf("could not create local file: %w", err)
+	}
+	defer dstFile.Close()
+	_, err = io.Copy(dstFile, srcFile)
+	if err != nil {
+		return fmt.Errorf("download failed: %w", err)
 	}
 	return nil
 }
