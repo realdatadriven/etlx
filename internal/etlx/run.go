@@ -48,8 +48,12 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 			if _, ok := _key_conf_metadata["runs_as"]; !ok {
 				_key_conf_metadata["runs_as"] = strings.ToUpper(key)
 			}
+			ignoreNext := false
 			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
-				fmt.Printf("%s RUN AS %s:\n", key, runs_as)
+				// fmt.Printf("%s RUN AS %s:\n", key, runs_as)
+				if ignoreNext {
+					continue
+				}
 				if etlx.Contains(_keys, runs_as) {
 					switch runs_as {
 					case "ETL", "ELT":
@@ -239,6 +243,7 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 							logs = append(logs, _logs...)
 						}
 					case "REMOTE", "REMOTE_EXEC":
+						ignoreNext = true
 						// fmt.Printf("%s AS %s START:\n", key, runs_as)
 						_logs, err := etlx.RunREMOTE(dateRef, nil, extraConf, key)
 						if err != nil {

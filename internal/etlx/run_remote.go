@@ -404,7 +404,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			for _, _file := range job.uploadFiles {
 				localPath, ok := _file.(map[string]any)["source"].(string)
 				if !ok {
-					return fmt.Errorf("upload_files error %s section %s source file", key, job.name)
+					return fmt.Errorf("upload_files error %s section %s source file %s", key, job.name, localPath)
 				}
 				if content, ok := job.item[localPath].(string); ok && content != "" {
 					_file, err := etlx.TempFIle("", content, fmt.Sprintf("%s.*.md", localPath))
@@ -415,12 +415,12 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 				localPath = etlx.ReplaceQueryStringDate(localPath, dateRef)
 				remoteFile, ok := _file.(map[string]any)["dest"].(string)
 				if !ok {
-					return fmt.Errorf("upload_files error %s section %s est file", key, job.name)
+					return fmt.Errorf("upload_files error %s section %s dest file %s", key, job.name, remoteFile)
 				}
 				remoteFile = etlx.ReplaceQueryStringDate(remoteFile, dateRef)
 				err := sshInstance.Upload(context.Background(), localPath, fmt.Sprintf(`%s/%s`, job.workingDir, remoteFile))
 				if err != nil {
-					return fmt.Errorf("SSH Err upload file in %s section %s %s", key, job.name, err.Error())
+					return fmt.Errorf("SSH Err upload file in %s section %s %s %s", key, job.name, err.Error(), remoteFile)
 				}
 			}
 		}
@@ -449,7 +449,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 				remoteFile = etlx.ReplaceQueryStringDate(remoteFile, dateRef)
 				err := sshInstance.Download(context.Background(), localPath, fmt.Sprintf(`%s/%s`, job.workingDir, remoteFile))
 				if err != nil {
-					return fmt.Errorf("SSH Err download file in %s section %s %s", key, job.name, err.Error())
+					return fmt.Errorf("SSH Err download file in %s section %s %s %s", key, job.name, err.Error(), remoteFile)
 				}
 			}
 		}
