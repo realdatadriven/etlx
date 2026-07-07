@@ -325,15 +325,39 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if !ok {
 			continue
 		}
+		working_dir, ok := itemMetadata.(map[string]any)["working_dir"].(string)
+		if !ok {
+			return nil, fmt.Errorf("no working_dir %s section %s", key, itemKey)
+		}
+		// commands
+		commands, ok := itemMetadata.(map[string]any)["commands"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("no commands %s section %s", key, itemKey)
+		}
+		upload_files, ok := itemMetadata.(map[string]any)["upload_files"].([]any)
+		if !ok {
+			//return nil, fmt.Errorf("no upload_files %s section %s", key, itemKey)
+		}
+		download_files, ok := itemMetadata.(map[string]any)["download_files"].([]any)
+		if !ok {
+			//return nil, fmt.Errorf("no download_files %s section %s", key, itemKey)
+		}
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
 		}
 		sshIntance, err := NewSSH(fmt.Sprintf(`%s:%s`, host, port), user, keyFile)
 		if err != nil {
-			return nil, fmt.Errorf("SSH connection error in %s section", key)
+			return nil, fmt.Errorf("SSH connection error in %s section %s", key, itemKey)
 		}
-		fmt.Println(desc, sshIntance)
+		defer sshIntance.Close()
+		if working_dir != "" {
+			err := sshIntance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, working_dir))
+			if err != nil {
+				return nil, fmt.Errorf("SSH working dir error in %s section %s %s", key, itemKey, err.Error())
+			}
+		}
+		fmt.Println(desc, sshIntance, working_dir, commands, upload_files, download_files)
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
