@@ -759,13 +759,13 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		if !okMainConn {
 			mainConn = "duckdb:"
 		}
-		mainDescription = metadata["description"].(string)
+		mainDescription, ok := metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			logEntry := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
-				"description": itemMetadata["description"].(string),
+				"description": mainDescription,
 				"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
 				"end_at":  time.Now().In(etlx.TimeZone),
 				"success": true,
@@ -775,13 +775,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			formatProcessLogEntry(logEntry)
 			return nil
 		}
+		itemDesc, ok := itemMetadata["description"].(string)
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
 				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
@@ -800,7 +801,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
@@ -818,7 +819,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				logEntry := map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
 					"end_at":  time.Now().In(etlx.TimeZone),
 					"success": true,
@@ -834,7 +835,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		_log1 := map[string]any{
 			"process":     process,
 			"name":        fmt.Sprintf("%s->%s", key, itemKey),
-			"description": itemMetadata["description"].(string),
+			"description": itemDesc,
 			"key":         key, "item_key": itemKey, "start_at": start2,
 			"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 		}
@@ -875,7 +876,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					processLogs = append(processLogs, map[string]any{
 						"process":     process,
 						"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
-						"description": itemMetadata["description"].(string),
+						"description": itemDesc,
 						"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
 						"end_at":  time.Now().In(etlx.TimeZone),
 						"success": true,
@@ -889,7 +890,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log2 := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s->%s", key, itemKey, step),
-				"description": itemMetadata["description"].(string),
+				"description": itemDesc,
 				"key":         key, "item_key": itemKey, "start_at": start2,
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
@@ -980,7 +981,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log3 := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s->%s:Conn", key, itemKey, step),
-				"description": itemMetadata["description"].(string),
+				"description": itemDesc,
 				"key":         key, "item_key": itemKey, "start_at": start4,
 				"ref":             dtRef,
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1013,7 +1014,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			_log3["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log3)
 			// FILE
-			table := itemMetadata["table"].(string)
+			table, ok := itemMetadata["table"].(string)
+			if !ok {
+				table, ok = itemMetadata["name"].(string)
+			}
 			fname := fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 			itemHasFile := false
 			if okMetaFile && metadataFile != "" {
@@ -1041,7 +1045,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:Before", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1169,7 +1173,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							_log3 = map[string]any{
 								"process":     process,
 								"name":        fmt.Sprintf("%s->%s->%s:Valid", key, itemKey, step),
-								"description": itemMetadata["description"].(string),
+								"description": itemDesc,
 								"key":         key, "item_key": itemKey, "start_at": start4,
 								"ref":             dtRef,
 								"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1241,7 +1245,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:Main", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1336,7 +1340,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:CLEAN", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1374,7 +1378,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:DROP", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1412,7 +1416,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:ROWS", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
@@ -1466,7 +1470,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				_log3 = map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s->%s:After", key, itemKey, step),
-					"description": itemMetadata["description"].(string),
+					"description": itemDesc,
 					"key":         key, "item_key": itemKey, "start_at": start4,
 					"ref":             dtRef,
 					"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,

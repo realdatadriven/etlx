@@ -1,6 +1,7 @@
 package etlxlib
 
 import (
+	"fmt"
 	"strings"
 	"time"
 )
@@ -48,7 +49,7 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 				_key_conf_metadata["runs_as"] = strings.ToUpper(key)
 			}
 			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
-				// fmt.Printf("%s RUN AS %s:\n", key, runs_as)
+				fmt.Printf("%s RUN AS %s:\n", key, runs_as)
 				if etlx.Contains(_keys, runs_as) {
 					switch runs_as {
 					case "ETL", "ELT":
@@ -238,10 +239,11 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 							logs = append(logs, _logs...)
 						}
 					case "REMOTE", "REMOTE_EXEC":
-						//fmt.Printf("%s AS %s START:\n", key, runs_as)
+						// fmt.Printf("%s AS %s START:\n", key, runs_as)
 						_logs, err := etlx.RunREMOTE(dateRef, nil, extraConf, key)
 						if err != nil {
-							//fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+							break
 						} else {
 							if _, ok := etlx.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
 								_, err := etlx.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
@@ -250,6 +252,7 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 								}
 							}
 							logs = append(logs, _logs...)
+							break
 						}
 					default:
 						//

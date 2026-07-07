@@ -291,43 +291,6 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	if processLogs[0]["ref"] == nil {
 		processLogs[0]["ref"] = dtRef
 	}
-	conn, okCon := metadata["connection"].(string)
-	if !okCon {
-		conn, okCon = metadata["conn"].(string)
-		if !okCon {
-			return nil, fmt.Errorf("%s err no connection defined", key)
-		}
-	}
-	start3 := time.Now().In(etlx.TimeZone)
-	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-	_log2 := map[string]any{
-		"process":               process,
-		"name":                  key,
-		"description":           metadata["description"].(string),
-		"key":                   key,
-		"start_at":              start3,
-		"ref":                   dtRef,
-		"mem_alloc_start":       mem_alloc,
-		"mem_total_alloc_start": mem_total_alloc,
-		"mem_sys_start":         mem_sys,
-		"num_gc_start":          num_gc,
-	}
-	dbConn, err := etlx.GetDB(conn)
-	mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-	_log2["mem_alloc_end"] = mem_alloc
-	_log2["mem_total_alloc_end"] = mem_total_alloc
-	_log2["mem_sys_end"] = mem_sys
-	_log2["num_gc_end"] = num_gc
-	if err != nil {
-		_log2["success"] = false
-		_log2["msg"] = fmt.Sprintf("%s ERR: connecting to %s in : %s", key, conn, err)
-		_log2["end_at"] = time.Now().In(etlx.TimeZone)
-		_log2["duration"] = time.Since(start3).Seconds()
-		processLogs = append(processLogs, _log2)
-		formatProcessLogEntry(_log2)
-		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
-	}
-	defer dbConn.Close()
 	// fmt.Println("CONN:", conn)
 	order := []string{}
 	__order, okOrder := data["__order"].([]any)
@@ -421,7 +384,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			run:           run,
 		})
 	}
-	err = runRemoteJobs(jobs, func(job remoteExecutionJob) error {
+	err := runRemoteJobs(jobs, func(job remoteExecutionJob) error {
 		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile)
 		if err != nil {
 			return fmt.Errorf("SSH connection error in %s section %s", key, job.name)
@@ -462,6 +425,9 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			}
 		}
 		if len(job.commands) > 0 {
+			/*for _, _run := range job.run {
+				fmt.Sprintf(`etlx --config pipeline.md --only %s`, _run)
+			}*/
 			for _, _cmd := range job.commands {
 				err := sshInstance.Run(context.Background(), etlx.ReplaceQueryStringDate(_cmd.(string), dateRef))
 				if err != nil {

@@ -25,6 +25,7 @@ download_files:
   - {source: temp.db , dest: ./database/temp.db  }
 commands:
   - curl https://realdatadriven.github.io/etlxdocs/install.sh | sh 
+  - etlx --config pipeline.md --only EXTRACTX,TRFX
 ```
 
 ## 127.0.0.2
@@ -44,6 +45,7 @@ download_files:
   - {source: temp.db , dest: ./database/temp.db  }
 commands:
   - curl https://realdatadriven.github.io/etlxdocs/install.sh | sh 
+  - etlx --config pipeline.md --only EXTRACTY,TRFY
 ```
 
 ```env .env
@@ -79,7 +81,7 @@ extract_after_sql: "DETACH DB;"
 name: TRFX
 extract_conn: "duckdb:"
 extract_before_sql: "INSTALL SQLITE;ATTACH 'ETL.db' AS DB (TYPE SQLITE);"
-extract_sql: 'CREATE OR REPLACE TABLE DB."<table>" AS SELECT version() || '<table>' AS "VERSION" FROM "EXTRACTX";'
+extract_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM EXTRACTX;"
 extract_after_sql: "DETACH DB;"
 ```
 
@@ -88,6 +90,6 @@ extract_after_sql: "DETACH DB;"
 name: TRFY
 extract_conn: "duckdb:"
 extract_before_sql: "INSTALL SQLITE;ATTACH 'ETL.db' AS DB (TYPE SQLITE);"
-extract_sql: 'CREATE OR REPLACE TABLE DB."<table>" AS SELECT version() || '<table>' AS "VERSION" FROM "EXTRACTY";'
+extract_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM EXTRACTY;"
 extract_after_sql: "DETACH DB;"
 ```
