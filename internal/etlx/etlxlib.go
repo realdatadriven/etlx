@@ -370,6 +370,34 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						} else {
 							current[key] = content.String()
 						}
+					} else if strings.HasPrefix(info, "env") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "env"))
+						if key == "" {
+							fmt.Printf("missing query name for env block: %s", content.String())
+						} else {
+							current[key] = content.String()
+						}
+					} else if strings.HasPrefix(info, "tf") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "tf"))
+						if key == "" {
+							fmt.Printf("missing query name for tf block: %s", content.String())
+						} else {
+							current[key] = content.String()
+						}
+					} else if strings.HasPrefix(info, "latex") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "latex"))
+						if key == "" {
+							fmt.Printf("missing query name for latex block: %s", content.String())
+						} else {
+							current[key] = content.String()
+						}
+					} else if strings.HasPrefix(info, "tex") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "tex"))
+						if key == "" {
+							fmt.Printf("missing query name for tex block: %s", content.String())
+						} else {
+							current[key] = content.String()
+						}
 					}
 				}
 			}
