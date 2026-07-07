@@ -6,6 +6,7 @@ import (
 	"fmt"
 	"io"
 	"os"
+	"sync"
 	"time"
 
 	"github.com/pkg/sftp"
@@ -178,6 +179,53 @@ func (r *Runner) Logs(ctx context.Context, service string, lines int) (string, e
 	return r.RunOutput(ctx, fmt.Sprintf("journalctl --user -u %s -n %d --no-pager", service, lines))
 }
 
+type remoteExecutionJob struct {
+	name          string
+	host          string
+	port          string
+	user          string
+	keyFile       string
+	workingDir    string
+	commands      []any
+	uploadFiles   []any
+	downloadFiles []any
+	description   string
+	key           string
+	itemKey       string
+	item          map[string]any
+	md            string
+}
+
+func runRemoteJobs(jobs []remoteExecutionJob, fn func(remoteExecutionJob) error) error {
+	if len(jobs) == 0 {
+		return nil
+	}
+
+	results := make(chan error, len(jobs))
+	var wg sync.WaitGroup
+	wg.Add(len(jobs))
+
+	for _, job := range jobs {
+		job := job
+		go func() {
+			defer wg.Done()
+			results <- fn(job)
+		}()
+	}
+
+	go func() {
+		wg.Wait()
+		close(results)
+	}()
+
+	for err := range results {
+		if err != nil {
+			return err
+		}
+	}
+	return nil
+}
+
 func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "REMOTE"
 	process := "REMOTE"
@@ -293,11 +341,11 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		}
 	}
 
+	var jobs []remoteExecutionJob
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
 		}
-		// fmt.Println("ITEM KEY:", itemKey)
 		item := data[itemKey]
 		if _, isMap := item.(map[string]any); !isMap {
 			continue
@@ -306,7 +354,6 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if !ok {
 			continue
 		}
-		// ACTIVE
 		if active, okActive := itemMetadata.(map[string]any)["active"]; okActive {
 			if !active.(bool) {
 				continue
@@ -321,7 +368,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			port = fmt.Sprintf("%v", p)
 		}
 		user, _ := itemMetadata.(map[string]any)["user"].(string)
-		keyFile, ok := itemMetadata.(map[string]any)["key"].(string) //.(map[string]any)
+		keyFile, ok := itemMetadata.(map[string]any)["key"].(string)
 		if !ok {
 			continue
 		}
@@ -329,35 +376,52 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if !ok {
 			return nil, fmt.Errorf("no working_dir %s section %s", key, itemKey)
 		}
-		// commands
 		commands, ok := itemMetadata.(map[string]any)["commands"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("no commands %s section %s", key, itemKey)
 		}
-		upload_files, ok := itemMetadata.(map[string]any)["upload_files"].([]any)
-		if !ok {
-			//return nil, fmt.Errorf("no upload_files %s section %s", key, itemKey)
-		}
-		download_files, ok := itemMetadata.(map[string]any)["download_files"].([]any)
-		if !ok {
-			//return nil, fmt.Errorf("no download_files %s section %s", key, itemKey)
-		}
+		upload_files, _ := itemMetadata.(map[string]any)["upload_files"].([]any)
+		download_files, _ := itemMetadata.(map[string]any)["download_files"].([]any)
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
 		}
-		sshIntance, err := NewSSH(fmt.Sprintf(`%s:%s`, host, port), user, keyFile)
+
+		jobs = append(jobs, remoteExecutionJob{
+			name:          itemKey,
+			host:          host,
+			port:          port,
+			user:          user,
+			keyFile:       keyFile,
+			workingDir:    working_dir,
+			commands:      commands,
+			uploadFiles:   upload_files,
+			downloadFiles: download_files,
+			description:   desc,
+			key:           key,
+			itemKey:       itemKey,
+			item:          item.(map[string]any),
+			md:            etlx.MD,
+		})
+	}
+
+	err = runRemoteJobs(jobs, func(job remoteExecutionJob) error {
+		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile)
 		if err != nil {
-			return nil, fmt.Errorf("SSH connection error in %s section %s", key, itemKey)
+			return fmt.Errorf("SSH connection error in %s section %s", key, job.name)
 		}
-		defer sshIntance.Close()
-		if working_dir != "" {
-			err := sshIntance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, working_dir))
+		defer sshInstance.Close()
+		if job.workingDir != "" {
+			err := sshInstance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, job.workingDir))
 			if err != nil {
-				return nil, fmt.Errorf("SSH working dir error in %s section %s %s", key, itemKey, err.Error())
+				return fmt.Errorf("SSH working dir error in %s section %s %s", key, job.name, err.Error())
 			}
 		}
-		fmt.Println(desc, sshIntance, working_dir, commands, upload_files, download_files)
+		fmt.Println(job.description, sshInstance, job.workingDir, job.commands, job.uploadFiles, job.downloadFiles)
+		return nil
+	})
+	if err != nil {
+		return nil, err
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()
 	processLogs[0] = map[string]any{
