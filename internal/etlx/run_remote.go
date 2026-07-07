@@ -189,9 +189,9 @@ type remoteExecutionJob struct {
 	commands      []any
 	uploadFiles   []any
 	downloadFiles []any
+	run           []any
 	description   string
 	key           string
-	itemKey       string
 	item          map[string]any
 	md            string
 }
@@ -340,7 +340,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			order = append(order, itemKey.(string))
 		}
 	}
-
+	remote_executed := []string{}
 	var jobs []remoteExecutionJob
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
@@ -376,17 +376,34 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if !ok {
 			return nil, fmt.Errorf("no working_dir %s section %s", key, itemKey)
 		}
+		run, ok := itemMetadata.(map[string]any)["run"].([]any)
+		if !ok {
+			return nil, fmt.Errorf("there was not specifc actions to run in %s section %s", key, itemKey)
+		}
+		if len(run) == 0 {
+			return nil, fmt.Errorf("there was not specifc actions to run in %s section %s", key, itemKey)
+		}
+		for _, _run := range run {
+			remote_executed = append(remote_executed, _run.(string))
+		}
 		commands, ok := itemMetadata.(map[string]any)["commands"].([]any)
 		if !ok {
 			return nil, fmt.Errorf("no commands %s section %s", key, itemKey)
 		}
-		upload_files, _ := itemMetadata.(map[string]any)["upload_files"].([]any)
+		upload_files, ok := itemMetadata.(map[string]any)["upload_files"].([]any)
+		if !ok {
+			upload_files = []any{}
+		}
+		_file, err := etlx.TempFIle("", etlx.MD, "pipeline.*.md")
+		if err != nil {
+			return nil, err
+		}
+		upload_files = append(upload_files, map[string]any{"source": _file, "dest": "pipeline.md"})
 		download_files, _ := itemMetadata.(map[string]any)["download_files"].([]any)
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
 		}
-
 		jobs = append(jobs, remoteExecutionJob{
 			name:          itemKey,
 			host:          host,
@@ -399,12 +416,11 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			downloadFiles: download_files,
 			description:   desc,
 			key:           key,
-			itemKey:       itemKey,
 			item:          item.(map[string]any),
 			md:            etlx.MD,
+			run:           run,
 		})
 	}
-
 	err = runRemoteJobs(jobs, func(job remoteExecutionJob) error {
 		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile)
 		if err != nil {
@@ -414,10 +430,64 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if job.workingDir != "" {
 			err := sshInstance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, job.workingDir))
 			if err != nil {
-				return fmt.Errorf("SSH working dir error in %s section %s %s", key, job.name, err.Error())
+				return fmt.Errorf("SSH Err working dir error in %s section %s %s", key, job.name, err.Error())
+			}
+			err = sshInstance.Run(context.Background(), fmt.Sprintf(`cd %s`, job.workingDir))
+			if err != nil {
+				return fmt.Errorf("SSH Err cd to working dir error in %s section %s %s", key, job.name, err.Error())
 			}
 		}
-		fmt.Println(job.description, sshInstance, job.workingDir, job.commands, job.uploadFiles, job.downloadFiles)
+		if len(job.uploadFiles) > 0 {
+			for _, _file := range job.uploadFiles {
+				localPath, ok := _file.(map[string]any)["source"].(string)
+				if !ok {
+					return fmt.Errorf("upload_files error %s section %s source file", key, job.name)
+				}
+				if content, ok := job.item[localPath].(string); ok && content != "" {
+					_file, err := etlx.TempFIle("", content, fmt.Sprintf("%s.*.md", localPath))
+					if err == nil {
+						localPath = _file
+					}
+				}
+				localPath = etlx.ReplaceQueryStringDate(localPath, dateRef)
+				remoteFile, ok := _file.(map[string]any)["dest"].(string)
+				if !ok {
+					return fmt.Errorf("upload_files error %s section %s est file", key, job.name)
+				}
+				remoteFile = etlx.ReplaceQueryStringDate(remoteFile, dateRef)
+				err := sshInstance.Upload(context.Background(), localPath, fmt.Sprintf(`%s/%s`, job.workingDir, remoteFile))
+				if err != nil {
+					return fmt.Errorf("SSH Err upload file in %s section %s %s", key, job.name, err.Error())
+				}
+			}
+		}
+		if len(job.commands) > 0 {
+			for _, _cmd := range job.commands {
+				err := sshInstance.Run(context.Background(), etlx.ReplaceQueryStringDate(_cmd.(string), dateRef))
+				if err != nil {
+					return fmt.Errorf("SSH Err runnig command %s in %s section %s %s", _cmd, key, job.name, err.Error())
+				}
+			}
+		}
+		if len(job.downloadFiles) > 0 {
+			for _, _file := range job.downloadFiles {
+				localPath, ok := _file.(map[string]any)["source"].(string)
+				if !ok {
+					return fmt.Errorf("download_files error %s section %s source file", key, job.name)
+				}
+				localPath = etlx.ReplaceQueryStringDate(localPath, dateRef)
+				remoteFile, ok := _file.(map[string]any)["dest"].(string)
+				if !ok {
+					return fmt.Errorf("download_files error %s section %s est file", key, job.name)
+				}
+				remoteFile = etlx.ReplaceQueryStringDate(remoteFile, dateRef)
+				err := sshInstance.Download(context.Background(), localPath, fmt.Sprintf(`%s/%s`, job.workingDir, remoteFile))
+				if err != nil {
+					return fmt.Errorf("SSH Err download file in %s section %s %s", key, job.name, err.Error())
+				}
+			}
+		}
+		//fmt.Println(job.description, sshInstance, job.workingDir, job.commands, job.uploadFiles, job.downloadFiles)
 		return nil
 	})
 	if err != nil {
@@ -440,6 +510,20 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		"mem_total_alloc_end":   mem_total_alloc2,
 		"mem_sys_end":           mem_sys2,
 		"num_gc_end":            num_gc2,
+	}
+	if _, ok := extraConf["skip"]; !ok {
+		extraConf["skip"] = []string{}
+	}
+	for _, k := range remote_executed {
+		extraConf["skip"] = append(extraConf["skip"].([]string), k)
+	}
+	delete(etlx.Config, key)
+	logs, err := etlx.RunETLX(extraConf, dateRef)
+	if err != nil {
+		return nil, err
+	}
+	for _, l := range logs {
+		processLogs = append(processLogs, l)
 	}
 	return processLogs, nil
 }

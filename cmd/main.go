@@ -81,281 +81,44 @@ func main() {
 	if *steps != "" {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
-	logs := []map[string]any{}
-	//_keys := []string{"NOTIFY", "LOGS", "SCRIPTS", "MULTI_QUERIES", "EXPORTS", "DATA_QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "MODEL"}
-	_keys := []string{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "C7MODEL", "MODEL_DATA", "MODEL_SQL", "CSDATA", "C7DATA", "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW", "C7ROLE", "ROLE", "CSROLE", "C7ROLE_USERS", "CSROLE_USERS", "ROLE_USERS"}
-	__order, ok := etlxlib.Config["__order"].([]string)
-	hasOrderedKeys := false
-	if !ok {
-		__order2, ok := etlxlib.Config["__order"].([]any)
-		if ok {
-			hasOrderedKeys = true
-			__order = []string{}
-			for _, key := range __order2 {
-				__order = append(__order, key.(string))
-			}
-		}
-	} else {
-		etlxlib.Config["__order"] = []any{}
-		for key := range etlxlib.Config {
-			etlxlib.Config["__order"] = append(etlxlib.Config["__order"].([]any), key)
-		}
-		//hasOrderedKeys = true
-	}
-	// fmt.Println("LEVEL 1 H:", __order, len(__order))
-	if !hasOrderedKeys {
-	} else if len(__order) > 0 {
-		//fmt.Print("LEVEL 1 H:", __order)
-		for _, key := range __order {
-			if key == "metadata" || key == "__order" || key == "__frontmatter" || key == "order" {
-				continue
-			}
-			//if !etlxlib.Contains(_keys, any(key)) {
-			_key_conf, ok := etlxlib.Config[key].(map[string]any)
-			if !ok {
-				continue
-			}
-			_key_conf_metadata, ok := _key_conf["metadata"].(map[string]any)
-			if !ok {
-				continue
-			}
-			if _, ok := _key_conf_metadata["runs_as"]; !ok {
-				_key_conf_metadata["runs_as"] = strings.ToUpper(key)
-			}
-			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
-				fmt.Printf("%s RUN AS %s:\n", key, runs_as)
-				if etlxlib.Contains(_keys, runs_as) {
-					switch runs_as {
-					case "ETL", "ELT":
-						_logs, err := etlxlib.RunETL(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "DATA_QUALITY", "DATAQUALITY", "QUALITY":
-						_logs, err := etlxlib.RunDATA_QUALITY(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "MULTI_QUERIES", "STACKED_QUERIES":
-						_logs, _, err := etlxlib.RunMULTI_QUERIES(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "EXPORTS":
-						_logs, err := etlxlib.RunEXPORTS(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "NOTIFY", "NOTIFICATION":
-						_logs, err := etlxlib.RunNOTIFY(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "ACTIONS":
-						_logs, err := etlxlib.RunACTIONS(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "SCRIPTS", "MODEL_SQL":
-						_logs, err := etlxlib.RunSCRIPTS(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "LOGS", "OBSERVABILITY":
-						_logs, err := etlxlib.RunLOGS(dateRef, nil, logs, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "REQUIRES", "IMPORTS":
-						_logs, err := etlxlib.LoadREQUIRES(nil, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "MODEL", "CSMODEL", "C7MODEL":
-						_logs, err := etlxlib.RunMODEL(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "MODEL_DATA", "CSDATA", "C7DATA":
-						//fmt.Printf("%s AS %s START:\n", key, runs_as)
-						_logs, err := etlxlib.RunMODEL_DATA(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW":
-						fmt.Printf("%s AS %s START:\n", key, runs_as)
-						_logs, err := etlxlib.RunWORKFLOW(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "C7ROLE", "CSROLE", "ROLE":
-						fmt.Printf("%s AS %s START:\n", key, runs_as)
-						_logs, err := etlxlib.RunC7ROLE(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					case "C7ROLE_USERS", "CSROLE_USERS", "ROLE_USERS":
-						fmt.Printf("%s AS %s START:\n", key, runs_as)
-						_logs, err := etlxlib.RunC7ROLE_USERS(dateRef, nil, extraConf, key)
-						if err != nil {
-							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-						} else {
-							if _, ok := etlxlib.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
-								_, err := etlxlib.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
-								if err != nil {
-									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-								}
-							}
-							logs = append(logs, _logs...)
-						}
-					default:
-						//
-					}
-				}
-			}
-			//}
-		}
-	}
+	// logs, err :=
+	etlxlib.RunETLX(extraConf, dateRef)
 	// GENERATE GRAPH NODES AND EDGES MERMAID FLOWCHART
-	fmt.Println("Generating Graph Nodes and Edges | Mermaid flowchart...")
+	// fmt.Println("Generating Graph Nodes and Edges | Mermaid flowchart...")
 	// fmt.Println(etlxlib.MD)
 	mdData, err := etlxlib.QueryETLXMD("")
 	if err != nil {
-		fmt.Println("QueryETLXMD: ", err)
+		// fmt.Println("QueryETLXMD: ", err)
 		return
 	}
 	nodes, ok := mdData["nodes"]
 	if !ok {
-		fmt.Println("No nodes data found")
+		// fmt.Println("No nodes data found")
 		return
 	}
 	edges, ok := mdData["edges"]
 	if !ok {
-		fmt.Println("No edges data found")
+		// fmt.Println("No edges data found")
 		return
 	}
 	if len(nodes) == 0 {
 		nodes, ok = mdData["nodes_est"]
 		if !ok {
-			fmt.Println("No nodes data found")
+			// fmt.Println("No nodes data found")
 			return
 		}
 	}
 	if len(edges) == 0 {
 		edges, ok = mdData["edges_est"]
 		if !ok {
-			fmt.Println("No edges data found")
+			// fmt.Println("No edges data found")
 			return
 		}
 	}
 	flow := etlxlib.GenerateMermaidFlowchart(nodes, edges)
-	f, err := etlxlib.TempFIle("", flow, "flowchart.*.mmd")
+	etlxlib.TempFIle("", flow, "flowchart.*.mmd")
 	//if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-	fmt.Println("Mermaid Flowchart:\n", f)
+	//fmt.Println("Mermaid Flowchart:\n", f)
 	//}
 
 	// fmt.Println("GenerateMermaidFlowchart: ", flow)
