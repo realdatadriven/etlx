@@ -565,7 +565,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		extraConf["skip"] = append(extraConf["skip"].([]string), k)
 	}
 	delete(etlx.Config, key)
-	logs, err := etlx.RunETLX(extraConf, dateRef)
+	logs, _, err := etlx.RunETLX(extraConf, dateRef)
 	if err != nil {
 		return nil, err
 	}
