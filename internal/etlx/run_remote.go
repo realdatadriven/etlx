@@ -195,6 +195,7 @@ type remoteExecutionJob struct {
 	port          string
 	user          string
 	keyFile       string
+	hostKey       string
 	workingDir    string
 	commands      []any
 	uploadFiles   []any
@@ -345,6 +346,10 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		if !ok {
 			continue
 		}
+		hostKey, ok := itemMetadata.(map[string]any)["host_key"].(string)
+		if !ok {
+			continue
+		}
 		working_dir, ok := itemMetadata.(map[string]any)["working_dir"].(string)
 		if !ok {
 			return nil, fmt.Errorf("no working_dir %s section %s", key, itemKey)
@@ -383,6 +388,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			port:          port,
 			user:          user,
 			keyFile:       keyFile,
+			hostKey:       hostKey,
 			workingDir:    working_dir,
 			commands:      commands,
 			uploadFiles:   upload_files,
@@ -395,7 +401,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		})
 	}
 	err := runRemoteJobs(jobs, func(job remoteExecutionJob) error {
-		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile)
+		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile, job.hostKey)
 		if err != nil {
 			return fmt.Errorf("SSH connection error in %s section %s", key, job.name)
 		}

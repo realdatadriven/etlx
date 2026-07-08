@@ -16,6 +16,7 @@ port: 22
 user: ubuntu
 key: $HOME/.ssh/id...
 working_dir: $HOME/etlx
+host_key: ~/.ssh/known_hosts
 run:
   - EXTRACTX
   - TRFX
@@ -36,6 +37,8 @@ port: 22
 user: ubuntu
 key: $HOME/.ssh/id...
 working_dir: $HOME/etlx
+host_key: ~/.ssh/known_hosts
+host_key
 run:
   - EXTRACTY
   - TRFY
