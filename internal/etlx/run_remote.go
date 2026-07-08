@@ -17,7 +17,7 @@ type Runner struct {
 	client *ssh.Client
 }
 
-func NewSSH(host, user, keyFile string) (*Runner, error) {
+func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
 	key, err := os.ReadFile(os.ExpandEnv(keyFile))
 	if err != nil {
 		key = []byte(keyFile)
@@ -26,12 +26,22 @@ func NewSSH(host, user, keyFile string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
+
+	hostKeyBytes, err := os.ReadFile(os.ExpandEnv(hostKey))
+	if err != nil {
+		hostKeyBytes = []byte(hostKey)
+	}
+	hostPublicKey, _, _, _, err := ssh.ParseAuthorizedKey(hostKeyBytes)
+	if err != nil {
+		return nil, err
+	}
+
 	cfg := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		HostKeyCallback: ssh.InsecureIgnoreHostKey(),
+		HostKeyCallback: ssh.FixedHostKey(hostPublicKey),
 	}
 	client, err := ssh.Dial("tcp", host, cfg)
 	if err != nil {
