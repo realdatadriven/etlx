@@ -357,6 +357,46 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 				continue
 			}
 		}
+		itemDesc, ok := itemMetadata.(map[string]any)["description"].(string)
+		if !ok {
+			itemDesc = itemKey
+		}
+		if only, okOnly := extraConf["only"]; okOnly {
+			//fmt.Println("ONLY", only, len(only.([]string)))
+			if len(only.([]string)) == 0 {
+			} else if !etlx.Contains(only.([]string), itemKey) {
+				logEntry := map[string]any{
+					"process":     process,
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemDesc,
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
+					"success": true,
+					"msg":     "Excluded from the process",
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
+				return processLogs, nil
+			}
+		}
+		if skip, okSkip := extraConf["skip"]; okSkip {
+			//fmt.Println("SKIP", skip, len(skip.([]string)))
+			if len(skip.([]string)) == 0 {
+			} else if etlx.Contains(skip.([]string), itemKey) {
+				logEntry := map[string]any{
+					"process":     process,
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemDesc,
+					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
+					"end_at":  time.Now().In(etlx.TimeZone),
+					"success": true,
+					"msg":     "Excluded from the process",
+				}
+				processLogs = append(processLogs, logEntry)
+				formatProcessLogEntry(logEntry)
+				return processLogs, nil
+			}
+		}
 		host, ok := itemMetadata.(map[string]any)["host"].(string)
 		if !ok {
 			continue
@@ -441,7 +481,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 				return fmt.Errorf("SSH Err cd to working dir error in %s section %s: %s", key, job.name, err.Error())
 			}*/
 		} else {
-
+			sshInstance.WorkDir = ""
 		}
 		if len(job.uploadFiles) > 0 {
 			for _, _file := range job.uploadFiles {
@@ -520,6 +560,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	if _, ok := extraConf["skip"]; !ok {
 		extraConf["skip"] = []string{}
 	}
+	extraConf["skip"] = append(extraConf["skip"].([]string), key)
 	for _, k := range remote_executed {
 		extraConf["skip"] = append(extraConf["skip"].([]string), k)
 	}

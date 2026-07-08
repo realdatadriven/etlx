@@ -776,6 +776,9 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			return nil
 		}
 		itemDesc, ok := itemMetadata["description"].(string)
+		if !ok {
+			itemDesc = itemKey
+		}
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
