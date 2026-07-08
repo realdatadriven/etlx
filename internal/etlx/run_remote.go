@@ -11,13 +11,16 @@ import (
 
 	"github.com/pkg/sftp"
 	"golang.org/x/crypto/ssh"
+	"golang.org/x/crypto/ssh/knownhosts"
 )
 
 type Runner struct {
-	client *ssh.Client
+	client  *ssh.Client
+	WorkDir string
 }
 
 func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
+	// fmt.Println(host, user, keyFile, hostKey)
 	key, err := os.ReadFile(os.ExpandEnv(keyFile))
 	if err != nil {
 		key = []byte(keyFile)
@@ -26,29 +29,42 @@ func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-
-	hostKeyBytes, err := os.ReadFile(os.ExpandEnv(hostKey))
-	if err != nil {
-		hostKeyBytes = []byte(hostKey)
-	}
-	hostPublicKey, _, _, _, err := ssh.ParseAuthorizedKey(hostKeyBytes)
+	callback, err := knownhosts.New(os.ExpandEnv(hostKey))
 	if err != nil {
 		return nil, err
 	}
-
 	cfg := &ssh.ClientConfig{
 		User: user,
 		Auth: []ssh.AuthMethod{
 			ssh.PublicKeys(signer),
 		},
-		HostKeyCallback: ssh.FixedHostKey(hostPublicKey),
+		HostKeyCallback: callback,
 	}
+	/*
+		hostKeyBytes, err := os.ReadFile(os.ExpandEnv(hostKey))
+		if err != nil {
+			hostKeyBytes = []byte(hostKey)
+		}
+		// fmt.Println(hostKey, string(hostKeyBytes))
+		hostPublicKey, _, _, _, err := ssh.ParseAuthorizedKey(hostKeyBytes)
+		if err != nil {
+			return nil, err
+		}
+		cfg := &ssh.ClientConfig{
+			User: user,
+			Auth: []ssh.AuthMethod{
+				ssh.PublicKeys(signer),
+			},
+			HostKeyCallback: ssh.FixedHostKey(hostPublicKey),
+		}
+	*/
 	client, err := ssh.Dial("tcp", host, cfg)
 	if err != nil {
 		return nil, err
 	}
 	return &Runner{
-		client: client,
+		client:  client,
+		WorkDir: "",
 	}, nil
 }
 
@@ -126,8 +142,15 @@ func (r *Runner) Run(ctx context.Context, cmd string) error {
 	if err != nil {
 		return err
 	}
-	if err := session.Start(cmd); err != nil {
-		return err
+	if r.WorkDir == "" {
+		if err := session.Start(cmd); err != nil {
+			return err
+		}
+	} else {
+		// fmt.Printf("COMMAND: %s\n", fmt.Sprintf(`cd %s && %s`, r.WorkDir, cmd))
+		if err := session.Start(fmt.Sprintf(`cd %s && %s`, r.WorkDir, cmd)); err != nil {
+			return err
+		}
 	}
 	go io.Copy(os.Stdout, stdout)
 	go io.Copy(os.Stderr, stderr)
@@ -153,7 +176,12 @@ func (r *Runner) RunOutput(ctx context.Context, cmd string) (string, error) {
 	var out bytes.Buffer
 	session.Stdout = &out
 	session.Stderr = &out
-	err = session.Run(cmd)
+	if r.WorkDir == "" {
+		err = session.Run(cmd)
+	} else {
+		// fmt.Printf("COMMAND: %s\n", fmt.Sprintf(`cd %s && %s`, r.WorkDir, cmd))
+		err = session.Run(fmt.Sprintf(`cd %s && %s`, r.WorkDir, cmd))
+	}
 	return out.String(), err
 }
 
@@ -211,11 +239,9 @@ func runRemoteJobs(jobs []remoteExecutionJob, fn func(remoteExecutionJob) error)
 	if len(jobs) == 0 {
 		return nil
 	}
-
 	results := make(chan error, len(jobs))
 	var wg sync.WaitGroup
 	wg.Add(len(jobs))
-
 	for _, job := range jobs {
 		job := job
 		go func() {
@@ -223,12 +249,10 @@ func runRemoteJobs(jobs []remoteExecutionJob, fn func(remoteExecutionJob) error)
 			results <- fn(job)
 		}()
 	}
-
 	go func() {
 		wg.Wait()
 		close(results)
 	}()
-
 	for err := range results {
 		if err != nil {
 			return err
@@ -403,18 +427,21 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	err := runRemoteJobs(jobs, func(job remoteExecutionJob) error {
 		sshInstance, err := NewSSH(fmt.Sprintf(`%s:%s`, job.host, job.port), job.user, job.keyFile, job.hostKey)
 		if err != nil {
-			return fmt.Errorf("SSH connection error in %s section %s", key, job.name)
+			return fmt.Errorf("SSH connection error in %s section %s: %s", key, job.name, err.Error())
 		}
 		defer sshInstance.Close()
 		if job.workingDir != "" {
-			err := sshInstance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, job.workingDir))
+			sshInstance.WorkDir = job.workingDir
+			/*err := sshInstance.Run(context.Background(), fmt.Sprintf(`mkdir -p %s`, job.workingDir))
 			if err != nil {
-				return fmt.Errorf("SSH Err working dir error in %s section %s %s", key, job.name, err.Error())
+				return fmt.Errorf("SSH Err working dir error in %s section %s: %s", key, job.name, err.Error())
 			}
 			err = sshInstance.Run(context.Background(), fmt.Sprintf(`cd %s`, job.workingDir))
 			if err != nil {
-				return fmt.Errorf("SSH Err cd to working dir error in %s section %s %s", key, job.name, err.Error())
-			}
+				return fmt.Errorf("SSH Err cd to working dir error in %s section %s: %s", key, job.name, err.Error())
+			}*/
+		} else {
+
 		}
 		if len(job.uploadFiles) > 0 {
 			for _, _file := range job.uploadFiles {
@@ -441,9 +468,6 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 			}
 		}
 		if len(job.commands) > 0 {
-			/*for _, _run := range job.run {
-				fmt.Sprintf(`etlx --config pipeline.md --only %s`, _run)
-			}*/
 			for _, _cmd := range job.commands {
 				err := sshInstance.Run(context.Background(), etlx.ReplaceQueryStringDate(_cmd.(string), dateRef))
 				if err != nil {

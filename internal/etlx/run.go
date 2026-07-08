@@ -32,6 +32,7 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 	if !hasOrderedKeys {
 	} else if len(__order) > 0 {
 		//fmt.Print("LEVEL 1 H:", __order)
+		ignoreNext := false
 		for _, key := range __order {
 			if key == "metadata" || key == "__order" || key == "__frontmatter" || key == "order" {
 				continue
@@ -48,7 +49,6 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 			if _, ok := _key_conf_metadata["runs_as"]; !ok {
 				_key_conf_metadata["runs_as"] = strings.ToUpper(key)
 			}
-			ignoreNext := false
 			if runs_as, ok := _key_conf_metadata["runs_as"]; ok {
 				// fmt.Printf("%s RUN AS %s:\n", key, runs_as)
 				if ignoreNext {
