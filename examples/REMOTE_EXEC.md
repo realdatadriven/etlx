@@ -85,7 +85,7 @@ load_after_sql: "DETACH DB;"
 name: TRFX
 load_conn: "duckdb:"
 load_before_sql: "INSTALL SQLITE;ATTACH 'ETL.db' AS DB (TYPE SQLITE);"
-load_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM EXTRACTX;"
+load_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM DB.EXTRACTX;"
 load_after_sql: "DETACH DB;"
 ```
 
@@ -94,6 +94,6 @@ load_after_sql: "DETACH DB;"
 name: TRFY
 load_conn: "duckdb:"
 load_before_sql: "INSTALL SQLITE;ATTACH 'ETL.db' AS DB (TYPE SQLITE);"
-load_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM EXTRACTY;"
+load_sql: "CREATE OR REPLACE TABLE DB.<table> AS SELECT version() || '<table>' AS VERSION FROM DB.EXTRACTY;"
 load_after_sql: "DETACH DB;"
 ```

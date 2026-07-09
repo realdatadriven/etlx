@@ -283,19 +283,19 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 						_logs, err := etlx.RunREMOTE(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
-							break
+							if strings.Contains(err.Error(), "deactivated") {
+								ignoreNext = false
+							}
+							// break
 						} else {
 							if _, ok := etlx.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
 								_, err := etlx.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
 								if err != nil {
 									// fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
-									if strings.Contains(err.Error(), "deactivated") {
-										ignoreNext = false
-									}
 								}
 							}
 							logs = append(logs, _logs...)
-							break
+							// break
 						}
 					default:
 						//
