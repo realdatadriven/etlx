@@ -382,6 +382,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			return nil
 		}
 		defer dbConn.Close()
@@ -390,6 +391,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		// FILE
 		table := itemMetadata["name"].(string)
 		path, okPath := itemMetadata["path"].(string)
@@ -399,6 +401,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				path, okPath = itemMetadata["file"].(string)
 			}
 		}
+		PDF, okPDF := itemMetadata["pdf"].(map[string]any)
 		fname := fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
 		if okPath && path != "" && !isEmpty(path) {
 			fname = path
@@ -442,6 +445,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 		// CHECK CONDITION
 		condition, okCondition := itemMetadata["condition"].(string)
@@ -465,6 +469,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			} else if !cond {
@@ -476,6 +481,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 				}
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				// return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			}
@@ -526,6 +532,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		} else if okTemplate && okMapping && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -559,6 +566,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			} else {
 				ext := filepath.Ext(template.(string))
@@ -573,6 +581,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				}
 				// Open or create a new workbook
@@ -591,6 +600,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
+						formatProcessLogEntry(_log2)
 						return nil
 					}
 					defer func() {
@@ -609,6 +619,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				}
 				_mapp := []map[string]any{}
@@ -624,6 +635,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				case string:
 					// Single query reference
@@ -646,6 +658,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
+						formatProcessLogEntry(_log2)
 						return nil
 					}
 					_mapp = *rows
@@ -664,6 +677,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				}
 				if len(_mapp) == 0 {
@@ -677,6 +691,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				}
 				for _, detail := range _mapp {
@@ -747,6 +762,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							_log2["mem_sys_end"] = mem_sys
 							_log2["num_gc_end"] = num_gc
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 							continue
 						}
 					}
@@ -965,6 +981,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1052,6 +1069,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 				}
 				if _, ok := itemMetadata["data"].(map[string]any); ok {
 					for key, d := range itemMetadata["data"].(map[string]any) {
@@ -1068,46 +1086,90 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						tmpl = string(_data)
 					}
 				}
-				// render template
-				parsedTmpl, err := etlx.RenderTemplate(tmpl, data)
-				//fmt.Println(parsedTmpl)
-				if err != nil {
-					mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-					_log2["success"] = false
-					_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
-					_log2["end_at"] = time.Now().In(etlx.TimeZone)
-					_log2["duration"] = time.Since(start3).Seconds()
-					_log2["mem_alloc_end"] = mem_alloc
-					_log2["mem_total_alloc_end"] = mem_total_alloc
-					_log2["mem_sys_end"] = mem_sys
-					_log2["num_gc_end"] = num_gc
-					fmt.Println(0, _log2["msg"])
-				} else {
-					fname = etlx.ReplaceQueryStringDate(fname, dateRef)
-					// Create the file (or truncate if it exists)
-					file, err := os.Create(fname)
-					if err != nil {
+				fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+				if strings.HasSuffix(fname, ".pdf") {
+					latex := false
+					if okPDF {
+						if tex, ok := PDF["latex"].(bool); ok && tex {
+							latex = tex
+						}
+					}
+					if latex {
+						parsedTmpl, err := etlx.RenderTextTemplate(tmpl, data)
+						//fmt.Println(parsedTmpl)
+						if err != nil {
+							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
+							_log2["end_at"] = time.Now().In(etlx.TimeZone)
+							_log2["duration"] = time.Since(start3).Seconds()
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+							fmt.Println(0, _log2["msg"])
+						}
+						err = etlx.GenPDFFromLatex(parsedTmpl, fname)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-						_log2["success"] = false
-						_log2["msg"] = fmt.Sprintf("%s -> %s -> Error creating file: %s", key, itemKey, err)
-						_log2["end_at"] = time.Now().In(etlx.TimeZone)
-						_log2["duration"] = time.Since(start3).Seconds()
+						if err != nil {
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to generate the pdf from latex: %s", key, itemKey, err)
+							_log2["end_at"] = time.Now().In(etlx.TimeZone)
+							_log2["duration"] = time.Since(start3).Seconds()
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+							//fmt.Println(0, _log2["msg"])
+						} else {
+							_log2["success"] = true
+							_log2["msg"] = fmt.Sprintf("%s -> %s: TXT TMPL Generate!", key, itemKey)
+							_log2["end_at"] = time.Now().In(etlx.TimeZone)
+							_log2["duration"] = time.Since(start3).Seconds()
+							if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
+								_log2["content"] = parsedTmpl
+							}
+							fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+							if !filepath.IsAbs(path) {
+								if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
+									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+								} else {
+									fname = etlx.ReplaceQueryStringDate(path, dateRef)
+								}
+							}
+							_log2["fname"] = fname
+						}
 						_log2["mem_alloc_end"] = mem_alloc
 						_log2["mem_total_alloc_end"] = mem_total_alloc
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
-						//fmt.Println(1, _log2["msg"])
 					} else {
-						defer file.Close() // Close the file after the function completes
-						// Write the text to the file
-						_, err = io.WriteString(file, parsedTmpl)
+						parsedTmpl, err := etlx.RenderTemplate(tmpl, data)
+						//fmt.Println(parsedTmpl)
+						if err != nil {
+							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
+							_log2["end_at"] = time.Now().In(etlx.TimeZone)
+							_log2["duration"] = time.Since(start3).Seconds()
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+							fmt.Println(0, _log2["msg"])
+						}
+						err = etlx.GenPDFFromHTML(parsedTmpl, fname)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 						if err != nil {
 							_log2["success"] = false
-							_log2["msg"] = fmt.Sprintf("%s -> %s -> Error writing to file: %s", key, itemKey, err)
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to generate the pdf from html: %s", key, itemKey, err)
 							_log2["end_at"] = time.Now().In(etlx.TimeZone)
 							_log2["duration"] = time.Since(start3).Seconds()
-							//fmt.Println(2, _log2["msg"])
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+							//fmt.Println(0, _log2["msg"])
 						} else {
 							_log2["success"] = true
 							_log2["msg"] = fmt.Sprintf("%s -> %s: TXT TMPL Generate!", key, itemKey)
@@ -1131,8 +1193,73 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
 					}
+				} else {
+					// render template
+					parsedTmpl, err := etlx.RenderTemplate(tmpl, data)
+					//fmt.Println(parsedTmpl)
+					if err != nil {
+						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+						_log2["success"] = false
+						_log2["msg"] = fmt.Sprintf("%s -> %s -> failed to parse the template: %s", key, itemKey, err)
+						_log2["end_at"] = time.Now().In(etlx.TimeZone)
+						_log2["duration"] = time.Since(start3).Seconds()
+						_log2["mem_alloc_end"] = mem_alloc
+						_log2["mem_total_alloc_end"] = mem_total_alloc
+						_log2["mem_sys_end"] = mem_sys
+						_log2["num_gc_end"] = num_gc
+						//fmt.Println(0, _log2["msg"])
+					} else {
+						// Create the file (or truncate if it exists)
+						file, err := os.Create(fname)
+						if err != nil {
+							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+							_log2["success"] = false
+							_log2["msg"] = fmt.Sprintf("%s -> %s -> Error creating file: %s", key, itemKey, err)
+							_log2["end_at"] = time.Now().In(etlx.TimeZone)
+							_log2["duration"] = time.Since(start3).Seconds()
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+							//fmt.Println(1, _log2["msg"])
+						} else {
+							defer file.Close() // Close the file after the function completes
+							// Write the text to the file
+							_, err = io.WriteString(file, parsedTmpl)
+							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
+							if err != nil {
+								_log2["success"] = false
+								_log2["msg"] = fmt.Sprintf("%s -> %s -> Error writing to file: %s", key, itemKey, err)
+								_log2["end_at"] = time.Now().In(etlx.TimeZone)
+								_log2["duration"] = time.Since(start3).Seconds()
+								//fmt.Println(2, _log2["msg"])
+							} else {
+								_log2["success"] = true
+								_log2["msg"] = fmt.Sprintf("%s -> %s: TXT TMPL Generate!", key, itemKey)
+								_log2["end_at"] = time.Now().In(etlx.TimeZone)
+								_log2["duration"] = time.Since(start3).Seconds()
+								if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
+									_log2["content"] = parsedTmpl
+								}
+								fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+								if !filepath.IsAbs(path) {
+									if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
+										fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+									} else {
+										fname = etlx.ReplaceQueryStringDate(path, dateRef)
+									}
+								}
+								_log2["fname"] = fname
+							}
+							_log2["mem_alloc_end"] = mem_alloc
+							_log2["mem_total_alloc_end"] = mem_total_alloc
+							_log2["mem_sys_end"] = mem_sys
+							_log2["num_gc_end"] = num_gc
+						}
+					}
 				}
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 		} else {
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1145,6 +1272,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			//fmt.Println(4, _log2["msg"])
 		}
 		// QUERIES TO RUN AT THE END
@@ -1176,6 +1304,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 		return nil
 	}
