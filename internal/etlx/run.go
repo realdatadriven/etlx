@@ -289,6 +289,9 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 								_, err := etlx.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
 								if err != nil {
 									// fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+									if strings.Contains(err.Error(), "deactivated") {
+										ignoreNext = false
+									}
 								}
 							}
 							logs = append(logs, _logs...)

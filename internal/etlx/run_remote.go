@@ -294,13 +294,17 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	if !ok {
 		return nil, fmt.Errorf("missing metadata in %s section", key)
 	}
+	mainDesc, ok := metadata["description"].(string)
+	if !ok {
+		mainDesc = key
+	}
 	// ACTIVE
 	if active, okActive := metadata["active"]; okActive {
 		if !active.(bool) {
 			log2 := map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("KEY %s", key),
-				"description": metadata["description"].(string),
+				"description": mainDesc,
 				"key":         key,
 				"start_at":    time.Now().In(etlx.TimeZone),
 				"end_at":      time.Now().In(etlx.TimeZone),
@@ -517,14 +521,14 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 		}
 		if len(job.downloadFiles) > 0 {
 			for _, _file := range job.downloadFiles {
-				localPath, ok := _file.(map[string]any)["source"].(string)
+				localPath, ok := _file.(map[string]any)["dest"].(string)
 				if !ok {
-					return fmt.Errorf("download_files error %s section %s source file", key, job.name)
+					return fmt.Errorf("download_files error %s section %s dest file", key, job.name)
 				}
 				localPath = etlx.ReplaceQueryStringDate(localPath, dateRef)
-				remoteFile, ok := _file.(map[string]any)["dest"].(string)
+				remoteFile, ok := _file.(map[string]any)["source"].(string)
 				if !ok {
-					return fmt.Errorf("download_files error %s section %s est file", key, job.name)
+					return fmt.Errorf("download_files error %s section %s source file", key, job.name)
 				}
 				remoteFile = etlx.ReplaceQueryStringDate(remoteFile, dateRef)
 				err := sshInstance.Download(context.Background(), localPath, fmt.Sprintf(`%s/%s`, job.workingDir, remoteFile))
@@ -543,7 +547,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	processLogs[0] = map[string]any{
 		"process":               process,
 		"name":                  key,
-		"description":           metadata["description"].(string),
+		"description":           mainDesc,
 		"key":                   key,
 		"start_at":              processLogs[0]["start_at"],
 		"end_at":                time.Now().In(etlx.TimeZone),
