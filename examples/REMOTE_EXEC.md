@@ -5,7 +5,6 @@
 ```yaml
 name: RemoteExec
 runs_as: REMOTE_EXEC
-timeout: 10_000
 ```
 
 ## 127.0.0.1
