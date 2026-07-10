@@ -267,6 +267,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 	if len(keys) > 0 && keys[0] != "" {
 		key = keys[0]
 	}
+	etlx.RemoteSkiped = false
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
 	start := time.Now().In(etlx.TimeZone)
@@ -311,6 +312,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 				"success":     true,
 				"msg":         "Deactivated",
 			}
+			etlx.RemoteSkiped = true
 			processLogs = append(processLogs, log2)
 			formatProcessLogEntry(log2)
 			return nil, fmt.Errorf("%s deactivated", key)
@@ -373,11 +375,14 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemDesc,
-					"key":         key, "item_key": itemKey, "start_at": time.Now().In(etlx.TimeZone),
-					"end_at":  time.Now().In(etlx.TimeZone),
-					"success": true,
-					"msg":     "Excluded from the process",
+					"key":         key,
+					"item_key":    itemKey,
+					"start_at":    time.Now().In(etlx.TimeZone),
+					"end_at":      time.Now().In(etlx.TimeZone),
+					"success":     true,
+					"msg":         "Excluded from the process",
 				}
+				etlx.RemoteSkiped = true
 				processLogs = append(processLogs, logEntry)
 				formatProcessLogEntry(logEntry)
 				return processLogs, nil
@@ -396,6 +401,7 @@ func (etlx *ETLX) RunREMOTE(dateRef []time.Time, conf map[string]any, extraConf 
 					"success": true,
 					"msg":     "Excluded from the process",
 				}
+				etlx.RemoteSkiped = true
 				processLogs = append(processLogs, logEntry)
 				formatProcessLogEntry(logEntry)
 				return processLogs, nil

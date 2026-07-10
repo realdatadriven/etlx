@@ -28,6 +28,7 @@ type ETLX struct {
 	autoLogsDisabled bool
 	MetadataOrder    bool
 	TimeZone         *time.Location
+	RemoteSkiped     bool
 }
 
 func addAutoLoggs(md string) string {
@@ -186,7 +187,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 	// Extract frontmatter as map[string]any
 	data := frontmatter.Get(ctx)
 	if data == nil {
-		fmt.Println("No frontmatter found")
+		// fmt.Println("No frontmatter found")
 	} else if err := data.Decode(&meta); err != nil {
 		fmt.Println("Error decoding frontmatter:", err)
 	}

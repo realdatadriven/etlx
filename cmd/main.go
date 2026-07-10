@@ -81,6 +81,7 @@ func main() {
 	if *steps != "" {
 		extraConf["steps"] = strings.Split(*steps, ",")
 	}
+	etlxlib.RemoteSkiped = false
 	// logs, err :=
 	etlxlib.RunETLX(extraConf, dateRef)
 	// GENERATE GRAPH NODES AND EDGES MERMAID FLOWCHART

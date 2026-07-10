@@ -297,6 +297,10 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 							logs = append(logs, _logs...)
 							// break
 						}
+						if etlx.RemoteSkiped {
+							ignoreNext = false
+						}
+						// fmt.Println("etlx.RemoteSkiped:", etlx.RemoteSkiped, "ignoreNext:", ignoreNext, _logs)
 					default:
 						//
 					}

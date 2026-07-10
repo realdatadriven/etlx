@@ -55,6 +55,6 @@ func GetDB(conn string) (DBInterface, error) {
 func LoadDotEnv() {
 	_err := godotenv.Load()
 	if _err != nil {
-		fmt.Println("Error loading .env file")
+		fmt.Printf("Error loading .env file: %s!", _err.Error())
 	}
 }
