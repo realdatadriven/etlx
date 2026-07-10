@@ -118,5 +118,5 @@ extract_sql: CREATE OR REPLACE TABLE DB."<table>" AS SELECT * FROM DB1.TRFX UNIO
 extract_after_sql: 
   - DETACH DB
   - DETACH DB1
-  - DETACH D2
+  - DETACH DB2
 ```
