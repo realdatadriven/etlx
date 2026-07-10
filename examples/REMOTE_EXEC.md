@@ -113,7 +113,7 @@ extract_before_sql:
   - INSTALL SQLITE
   - ATTACH 'database/ETL_REMOTE_RESULTS.db' AS DB (TYPE SQLITE)
   - ATTACH 'database/ETL1.db' AS DB1 (TYPE SQLITE)
-  - ATTACH 'database/ETL2.db' AS DB1 (TYPE SQLITE)
+  - ATTACH 'database/ETL2.db' AS DB2 (TYPE SQLITE)
 extract_sql: CREATE OR REPLACE TABLE DB."<table>" AS SELECT * FROM DB1.TRFX UNION SELECT * FROM DB2.TRFY
 extract_after_sql: 
   - DETACH DB
