@@ -233,6 +233,55 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					}
 				}
 			}
+		case []any:
+			// fmt.Println("CHILDREN IS []any")
+			if len(val) > 0 {
+				for _, _child := range val {
+					child, ok := _child.(map[string]any)
+					if !ok {
+						continue
+					}
+					child["parent_id"] = insertId
+					if _, okTable := child["table"].(string); okTable {
+						table = child["table"].(string)
+					} else {
+						table = ""
+					}
+					if _, ok := child["cond"].(string); ok {
+						cond = child["cond"].(string)
+					} else {
+						cond = ""
+					}
+					if _, okData := child["data"].(map[string]any); okData && table != "" {
+						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId, ids)
+						if err != nil {
+							return err
+						}
+					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
+						for _, d := range child["data"].([]map[string]any) {
+							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
+							if err != nil {
+								return err
+							}
+						}
+					} else if _, okData := child["data"].([]any); okData && table != "" {
+						for _, d := range child["data"].([]any) {
+							if dMap, ok := d.(map[string]any); ok {
+								err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+								if err != nil {
+									return err
+								}
+							}
+						}
+					} else {
+						formatProcessLogEntry(map[string]any{
+							"start_at": time.Now().In(etlx.TimeZone),
+							"key":      key,
+							"msg":      fmt.Sprintf("UNABLE TO HANDLE CHILDREN DATA: %T", val),
+						})
+					}
+				}
+			}
 		default:
 			// pass
 		}
