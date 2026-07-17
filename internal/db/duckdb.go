@@ -41,6 +41,18 @@ func ScanRowToMap(rows *sql.Rows) (map[string]any, error) {
 	return rowMap, nil
 }
 
+func EnvExpand(s string) string {
+	var reEnvVar = regexp.MustCompile(`\$\w+`)
+	return reEnvVar.ReplaceAllStringFunc(s, func(match string) string {
+		// fmt.Println(match, match[1:])
+		name := match[1:] // strip leading "$"
+		if value, exists := os.LookupEnv(name); exists {
+			return value
+		}
+		return match // leave as-is if not set
+	})
+}
+
 func NewDuckDB(dsn string) (*DuckDB, error) {
 	/*if os.Getenv("ETLX_DUCKDB_OPTIONS") != "" {
 		_extra_opts := os.Getenv("ETLX_DUCKDB_OPTIONS")
@@ -60,12 +72,6 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		if dsn == "" {
 			dsn = ":memory:"
 		}
-		dir, _err := os.Getwd()
-		if _err != nil {
-			dir = ""
-		}
-		//fmt.Println("CWD", dir)
-		os.Setenv("CWD", dir)
 		//fmt.Println(1, "ETLX SECURY ENV:", dsn)
 		c, err := duckdb.NewConnector(dsn, func(execer driver.ExecerContext) error {
 			//fmt.Println(2, "ETLX SECURY ENV:", dsn)
@@ -83,10 +89,10 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 				bootQueries = append(bootQueries, os.Getenv("ETLX_DUCKDB_SECURITY_CONFIGS"))
 			}
 			for _, query := range bootQueries {
-				// fmt.Println(os.ExpandEnv(query))
-				_, err := execer.ExecContext(context.Background(), os.ExpandEnv(query), nil)
+				// fmt.Println(EnvExpand(query))
+				_, err := execer.ExecContext(context.Background(), EnvExpand(query), nil)
 				if err != nil {
-					fmt.Println("ERROR:", os.ExpandEnv(query), err)
+					fmt.Println("ERROR:", EnvExpand(query), err)
 					return err
 				}
 			}

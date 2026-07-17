@@ -2,6 +2,8 @@ package etlxlib
 
 import (
 	"fmt"
+	"os"
+	"regexp"
 	"strings"
 	"time"
 )
@@ -310,4 +312,16 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 		}
 	}
 	return logs, data, nil
+}
+
+func EnvExpand(s string) string {
+	var reEnvVar = regexp.MustCompile(`\$\w+`)
+	return reEnvVar.ReplaceAllStringFunc(s, func(match string) string {
+		// fmt.Println(match, match[1:])
+		name := match[1:] // strip leading "$"
+		if value, exists := os.LookupEnv(name); exists {
+			return value
+		}
+		return match // leave as-is if not set
+	})
 }
