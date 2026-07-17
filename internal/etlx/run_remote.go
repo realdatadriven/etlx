@@ -21,7 +21,7 @@ type Runner struct {
 
 func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
 	// fmt.Println(host, user, keyFile, hostKey)
-	key, err := os.ReadFile(os.ExpandEnv(keyFile))
+	key, err := os.ReadFile(EnvExpand(keyFile))
 	if err != nil {
 		key = []byte(keyFile)
 	}
@@ -29,7 +29,7 @@ func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
 	if err != nil {
 		return nil, err
 	}
-	callback, err := knownhosts.New(os.ExpandEnv(hostKey))
+	callback, err := knownhosts.New(EnvExpand(hostKey))
 	if err != nil {
 		return nil, err
 	}
@@ -41,7 +41,7 @@ func NewSSH(host, user, keyFile, hostKey string) (*Runner, error) {
 		HostKeyCallback: callback,
 	}
 	/*
-		hostKeyBytes, err := os.ReadFile(os.ExpandEnv(hostKey))
+		hostKeyBytes, err := os.ReadFile(EnvExpand(hostKey))
 		if err != nil {
 			hostKeyBytes = []byte(hostKey)
 		}

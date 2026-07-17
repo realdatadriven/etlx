@@ -2,7 +2,6 @@ package etlx
 
 import (
 	"fmt"
-	"os"
 
 	"github.com/joho/godotenv"
 	"github.com/realdatadriven/etlx/internal/db"
@@ -58,11 +57,4 @@ func LoadDotEnv() {
 	if _err != nil {
 		fmt.Printf("Error loading .env file: %s!", _err.Error())
 	}
-	dir, err := os.Getwd()
-	if err != nil {
-		dir = ""
-	}
-	//fmt.Println("CWD", dir)
-	os.Setenv("CWD", dir)
-	//fmt.Println(os.Getenv("CWD"), os.ExpandEnv("$CWD"), os.ExpandEnv("SET secret_directory='$CWD/duckdb_secret"))
 }
