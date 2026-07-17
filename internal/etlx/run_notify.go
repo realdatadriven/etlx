@@ -104,6 +104,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			return nil
 		}
 		defer dbConn.Close()
@@ -112,6 +113,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		// FILE
 		table := itemMetadata["name"].(string)
 		path, okPath := itemMetadata["path"].(string)
@@ -155,6 +157,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 		// CHECK CONDITION
 		condition, okCondition := itemMetadata["condition"].(string)
@@ -168,6 +171,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			} else if !cond {
@@ -179,6 +183,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 				}
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				// return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			}
@@ -278,6 +283,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 			}
 			//fmt.Println(key, _log2["msg"])
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 		// QUERIES TO RUN AT THE END
 		if okAfter {
@@ -301,6 +307,7 @@ func (etlx *ETLX) RunNOTIFY(dateRef []time.Time, conf map[string]any, extraConf 
 				_log2["duration"] = time.Since(start3).Seconds()
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		}
 		// fmt.Println(processLogs)
 		return nil

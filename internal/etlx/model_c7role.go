@@ -150,6 +150,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -177,6 +178,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {
 		defer adminDb.Close()
@@ -658,6 +660,7 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -685,6 +688,7 @@ func (etlx *ETLX) RunC7ROLE_USERS(dateRef []time.Time, conf map[string]any, extr
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {
 		defer adminDb.Close()

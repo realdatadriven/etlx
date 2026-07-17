@@ -492,6 +492,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		formatProcessLogEntry(_log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -519,6 +520,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {
@@ -600,10 +602,12 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 			formatProcessLogEntry(_log2)
 		case []map[string]any:
@@ -638,10 +642,12 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 				} else {
 					_log2["success"] = true
 					_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 				}
 				formatProcessLogEntry(_log2)
 			}

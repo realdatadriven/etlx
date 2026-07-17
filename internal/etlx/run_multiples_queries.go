@@ -171,6 +171,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -179,6 +180,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 	_log2["end_at"] = time.Now().In(etlx.TimeZone)
 	_log2["duration"] = time.Since(start3).Seconds()
 	processLogs = append(processLogs, _log2)
+	formatProcessLogEntry(_log2)
 	//  QUERIES TO RUN AT beginning
 	if okBefore {
 		start3 := time.Now().In(etlx.TimeZone)
@@ -212,6 +214,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	// MAIN QUERY
 	unionKey, ok := metadata["union_key"].(string)
@@ -250,6 +253,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			//return fmt.Errorf("%s", _log2["msg"])
 			failedCondition = true
 		} else if !cond {
@@ -261,6 +265,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, "", etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
 			}
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			// return fmt.Errorf("%s", _log2["msg"])
 			failedCondition = true
 		}
@@ -325,6 +330,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 			_log2["num_gc_end"] = num_gc
 		}
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	} else if !failedCondition {
 		rows, _, err := etlx.Query(dbConn, sql, data, "", "", dateRef)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -345,6 +351,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	//  QUERIES TO RUN AT THE END
 	if okAfter {
@@ -379,6 +386,7 @@ func (etlx *ETLX) RunMULTI_QUERIES(dateRef []time.Time, conf map[string]any, ext
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 	}
 	return processLogs, processData, nil
 }

@@ -190,6 +190,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -217,6 +218,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {
 		defer adminDb.Close()
@@ -283,7 +285,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 			continue
 		}
-		fmt.Println("ITEM KEY:", itemKey)
+		// fmt.Println("ITEM KEY:", itemKey)
 		item := data[itemKey]
 		if _, isMap := item.(map[string]any); !isMap {
 			continue
@@ -382,10 +384,12 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			_log2["success"] = false
 			_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 		} else {
 			_log2["success"] = true
 			_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			if table == "workflow_step" {
 				if insert_id == any(nil) || insert_id == 0 {
 					sql := fmt.Sprintf(`SELECT * FROM %s WHERE step = ? AND excluded = false`, dialect.GetTableName(table))
@@ -504,10 +508,12 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						} else {
 							_log2["success"] = true
 							_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						}
 					}
 				}
@@ -587,10 +593,12 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						} else {
 							_log2["success"] = true
 							_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						}
 					}
 				}
@@ -690,10 +698,12 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							_log2["success"] = false
 							_log2["msg"] = fmt.Sprintf("%s ERR: insert/update table %s: %s", key, table, err)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						} else {
 							_log2["success"] = true
 							_log2["msg"] = fmt.Sprintf("%s: table %s %s", key, table, desc)
 							processLogs = append(processLogs, _log2)
+							formatProcessLogEntry(_log2)
 						}
 					}
 				}

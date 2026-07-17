@@ -558,6 +558,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["mem_sys_end"] = mem_sys_end
 		_log2["num_gc_end"] = num_gc_end
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil
 	}
 	// Check if the input conf is nil or empty

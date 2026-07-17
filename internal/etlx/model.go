@@ -2723,6 +2723,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -2797,6 +2798,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			formatProcessLogEntry(_log2)
 		}
 	} else {
@@ -2886,11 +2888,13 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s ERR: creating table %s: %s", key, table, err)
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				//fmt.Println(tableSql, _log2["msg"])
 			} else {
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s: table %s created or already exists", key, table)
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 			formatProcessLogEntry(_log2)
 			dataRows, okData := itemMetadata.(map[string]any)["data"].([]any)
@@ -2915,6 +2919,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s ERR: inserting data into %s: %s", key, table, err)
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					fmt.Println(_log2["msg"])
 				} else {
 					_log2["success"] = true
@@ -2928,6 +2933,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				formatProcessLogEntry(_log2)
 			}
 		}
@@ -2962,6 +2968,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
 			formatProcessLogEntry(_log2)
+			formatProcessLogEntry(_log2)
 			return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 		} else {
 			defer adminDb.Close()
@@ -2994,6 +3001,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			formatProcessLogEntry(_log2)
 			return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 		} else {
@@ -3039,6 +3047,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
 		formatProcessLogEntry(_log2)
+		formatProcessLogEntry(_log2)
 	}
 	cs_app, ok := metadata["cs_app"].(map[string]any)
 	if drop_all == "" && ok && updateTableMetadataSQL {
@@ -3079,6 +3088,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
 		formatProcessLogEntry(_log2)
+		formatProcessLogEntry(_log2)
 	}
 	// CUSTOM DATA
 	if drop_all == "" && updateTableMetadataSQL {
@@ -3117,6 +3127,7 @@ func (etlx *ETLX) RunMODEL(dateRef []time.Time, conf map[string]any, extraConf m
 		_log2["mem_sys_end"] = mem_sys
 		_log2["num_gc_end"] = num_gc
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		formatProcessLogEntry(_log2)
 	}
 	mem_alloc2, mem_total_alloc2, mem_sys2, num_gc2 := etlx.RuntimeMemStats()

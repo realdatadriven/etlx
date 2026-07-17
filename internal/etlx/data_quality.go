@@ -284,6 +284,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			}
 			defer dbConn.Close()
@@ -296,6 +297,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
 				start3 := time.Now().In(etlx.TimeZone)
@@ -329,6 +331,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 			// CHECK CONDITION
 			condition, okCondition := itemMetadata["condition"].(string)
@@ -347,6 +350,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					failedCondition = true
 				} else if !cond {
 					_log2["success"] = false
@@ -361,6 +365,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 						_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, "", "", dateRef))
 					}
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					failedCondition = true
 				}
 			}
@@ -392,6 +397,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			} else if okFixOnly && fixOnly && okFix && !checkOnly && !failedCondition {
 				//fmt.Println("FIXES ONLY!")
 				res := etlx.DataQualityFix(dbConn, fixQuery, item, dateRef)
@@ -413,6 +419,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			} else if !failedCondition {
 				//fmt.Println("BOTH CHECK AND FIXES!")
 				res := etlx.DataQualityCheck(dbConn, query, item, dateRef)
@@ -452,6 +459,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 			//fmt.Println(_log2)
 			// QUERIES TO RUN AT THE END
@@ -487,6 +495,7 @@ func (etlx *ETLX) RunDATA_QUALITY(dateRef []time.Time, conf map[string]any, extr
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 		}
 		return nil

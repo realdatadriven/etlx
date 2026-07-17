@@ -90,6 +90,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			}
 			defer dbConn.Close()
@@ -98,6 +99,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			processLogs = append(processLogs, _log2)
+			formatProcessLogEntry(_log2)
 			//  QUERIES TO RUN AT BEGINING
 			if okBefore {
 				start3 := time.Now().In(etlx.TimeZone)
@@ -119,6 +121,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 			// MAIN QUERY
 			rows, _, err := etlx.Query(dbConn, query.(string), item, "", "", nil)
@@ -129,6 +132,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			}
 			if len(*rows) > 0 {
@@ -146,6 +150,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 						_log2["end_at"] = time.Now().In(etlx.TimeZone)
 						_log2["duration"] = time.Since(start3).Seconds()
 						processLogs = append(processLogs, _log2)
+						formatProcessLogEntry(_log2)
 						return nil
 					}
 				} else {
@@ -154,6 +159,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 					return nil
 				}
 			} else {
@@ -162,6 +168,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			}
 			// QUERIES TO RUN AT THE END
@@ -185,6 +192,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 					_log2["duration"] = time.Since(start3).Seconds()
 				}
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 			}
 		} else if path != nil && okPath {
 			if ok, _ := fileExists(path.(string)); ok {
@@ -195,6 +203,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
 					processLogs = append(processLogs, _log2)
+					formatProcessLogEntry(_log2)
 				}
 			} else {
 				_log2["success"] = false
@@ -202,6 +211,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
+				formatProcessLogEntry(_log2)
 				return nil
 			}
 		}
@@ -236,6 +246,7 @@ func (etlx *ETLX) LoadREQUIRES(conf map[string]any, keys ...string) ([]map[strin
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
+		formatProcessLogEntry(_log2)
 		return nil
 	}
 	// Check if the input conf is nil or empty
