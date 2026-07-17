@@ -13,6 +13,12 @@ import (
 
 func main() {
 	etlx.LoadDotEnv()
+	dir, _err := os.Getwd()
+	if _err != nil {
+		dir = ""
+	}
+	//fmt.Println("CWD", dir)
+	os.Setenv("CWD", dir)
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
