@@ -331,7 +331,6 @@ func formatProcessLogEntry(entry map[string]any) {
 		if v, ok := entry["start_at"].(time.Time); ok {
 			startAt = v
 		}
-
 		duration := 0.0
 		switch v := entry["duration"].(type) {
 		case float64:
@@ -345,17 +344,14 @@ func formatProcessLogEntry(entry map[string]any) {
 		case int32:
 			duration = float64(v)
 		}
-
 		key := ""
 		if v, ok := entry["key"].(string); ok {
 			key = v
 		}
-
 		itemKey := ""
 		if v, ok := entry["item_key"].(string); ok {
 			itemKey = "/" + v
 		}
-
 		msg := ""
 		if v, ok := entry["msg"].(string); ok {
 			msg = v
@@ -371,10 +367,13 @@ func formatProcessLogEntry(entry map[string]any) {
 			success = fmt.Sprintf("success:%t ", v)
 		}
 		if printLogs {
-			fmt.Printf("%s %.3fs - %s%s: %s%s\n", startAt.Format(time.RFC3339), duration, key, itemKey, success, msg)
-
+			fmt.Printf("%s %.3fs %s%s %s%s\n", startAt.Format(time.RFC3339), duration, key, itemKey, success, CleanWhitespace(msg))
 		}
 	}
+}
+
+func CleanWhitespace(s string) string {
+	return strings.Join(strings.Fields(s), " ")
 }
 
 func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
@@ -492,7 +491,6 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
 		formatProcessLogEntry(_log2)
-		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to %s in : %s", key, conn, err)
 	}
 	defer dbConn.Close()
@@ -520,7 +518,6 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
-		formatProcessLogEntry(_log2)
 		formatProcessLogEntry(_log2)
 		return nil, fmt.Errorf("%s ERR: connecting to ADMIN DB %s in : %s", key, adminConn, err)
 	} else {

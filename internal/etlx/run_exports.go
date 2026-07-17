@@ -383,7 +383,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
 			formatProcessLogEntry(_log2)
-			formatProcessLogEntry(_log2)
 			return nil
 		}
 		defer dbConn.Close()
@@ -392,7 +391,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
 		processLogs = append(processLogs, _log2)
-		formatProcessLogEntry(_log2)
 		formatProcessLogEntry(_log2)
 		// FILE
 		table := itemMetadata["name"].(string)
@@ -448,7 +446,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			processLogs = append(processLogs, _log2)
 			formatProcessLogEntry(_log2)
-			formatProcessLogEntry(_log2)
 		}
 		// CHECK CONDITION
 		condition, okCondition := itemMetadata["condition"].(string)
@@ -473,7 +470,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["duration"] = time.Since(start3).Seconds()
 				processLogs = append(processLogs, _log2)
 				formatProcessLogEntry(_log2)
-				formatProcessLogEntry(_log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			} else if !cond {
@@ -485,7 +481,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
 				}
 				processLogs = append(processLogs, _log2)
-				formatProcessLogEntry(_log2)
 				formatProcessLogEntry(_log2)
 				// return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
@@ -538,7 +533,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			processLogs = append(processLogs, _log2)
 			formatProcessLogEntry(_log2)
-			formatProcessLogEntry(_log2)
 		} else if okTemplate && okMapping && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -573,7 +567,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 				processLogs = append(processLogs, _log2)
 				formatProcessLogEntry(_log2)
-				formatProcessLogEntry(_log2)
 				return nil
 			} else {
 				ext := filepath.Ext(template.(string))
@@ -588,7 +581,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
 					formatProcessLogEntry(_log2)
 					return nil
 				}
@@ -609,7 +601,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
 						formatProcessLogEntry(_log2)
-						formatProcessLogEntry(_log2)
 						return nil
 					}
 					defer func() {
@@ -629,7 +620,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					formatProcessLogEntry(_log2)
-					formatProcessLogEntry(_log2)
 					return nil
 				}
 				_mapp := []map[string]any{}
@@ -645,7 +635,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
 					formatProcessLogEntry(_log2)
 					return nil
 				case string:
@@ -670,7 +659,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["num_gc_end"] = num_gc
 						processLogs = append(processLogs, _log2)
 						formatProcessLogEntry(_log2)
-						formatProcessLogEntry(_log2)
 						return nil
 					}
 					_mapp = *rows
@@ -690,7 +678,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
 					formatProcessLogEntry(_log2)
-					formatProcessLogEntry(_log2)
 					return nil
 				}
 				if len(_mapp) == 0 {
@@ -704,7 +691,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
 					formatProcessLogEntry(_log2)
 					return nil
 				}
@@ -776,7 +762,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							_log2["mem_sys_end"] = mem_sys
 							_log2["num_gc_end"] = num_gc
 							processLogs = append(processLogs, _log2)
-							formatProcessLogEntry(_log2)
 							formatProcessLogEntry(_log2)
 							continue
 						}
@@ -997,7 +982,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			processLogs = append(processLogs, _log2)
 			formatProcessLogEntry(_log2)
-			formatProcessLogEntry(_log2)
 		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1085,7 +1069,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
 					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
 					formatProcessLogEntry(_log2)
 				}
 				if _, ok := itemMetadata["data"].(map[string]any); ok {
@@ -1277,7 +1260,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				}
 				processLogs = append(processLogs, _log2)
 				formatProcessLogEntry(_log2)
-				formatProcessLogEntry(_log2)
 			}
 		} else {
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1290,7 +1272,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
 			formatProcessLogEntry(_log2)
 			//fmt.Println(4, _log2["msg"])
 		}
@@ -1323,7 +1304,6 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
 			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
 			formatProcessLogEntry(_log2)
 		}
 		return nil

@@ -19,6 +19,7 @@ func main() {
 	}
 	//fmt.Println("CWD", dir)
 	os.Setenv("CWD", dir)
+	os.Setenv("TMP", os.TempDir())
 	// Config file path
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
