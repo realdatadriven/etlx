@@ -254,6 +254,9 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 		tablesPKFields := map[string]any{}
 		// role_app
 		for _, _app := range access.([]any) {
+			if _, ok := _app.(map[string]any); !ok {
+				return nil, fmt.Errorf("App data type %T (%v) object/map expected!", _app, _app)
+			}
 			for app, _menus := range _app.(map[string]any) {
 				// fmt.Println(1, app, _menus)
 				if app == "__order" {
@@ -306,6 +309,9 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 				}
 				// role_app_menu
 				for _, _menu := range _menus.([]any) {
+					if _, ok := _menu.(map[string]any); !ok {
+						return nil, fmt.Errorf("Menu data type %T (%v) object/map expected!", _menu, _menu)
+					}
 					for menu, _tables := range _menu.(map[string]any) {
 						if menu == "__order" {
 							continue
@@ -436,7 +442,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 								} else if len(_res) == 0 {
 									return nil, fmt.Errorf("%s -> %s -> %s has no RLA active!", app, menu, table)
 								} else {
-									fmt.Println(menu, table, "HAS RLA ACTIVE")
+									// fmt.Println(menu, table, "HAS RLA ACTIVE")
 									for _, _rla := range _rlas {
 										rla, ok := _rla.(map[string]any)
 										if !ok {
@@ -477,7 +483,7 @@ func (etlx *ETLX) RunC7ROLE(dateRef []time.Time, conf map[string]any, extraConf 
 											}
 										}
 										sql = fmt.Sprintf(`select %s from %s where %s = :%s`, dialect.GetColumnName(pkfield), dialect.GetColumnName(table), dialect.GetColumnName(rlaFieldUsedAsKey), rlaFieldUsedAsKey)
-										fmt.Println("RLA:", table, sql, rla[rlaFieldUsedAsKey])
+										// fmt.Println("RLA:", table, sql, rla[rlaFieldUsedAsKey])
 										_res, err := etlx.NamedQuerySingleRow(dbConn, sql, rla)
 										if err != nil {
 											return nil, fmt.Errorf("find role_row_level_access failed: %s -> %s -> %s", menu, table, err)
