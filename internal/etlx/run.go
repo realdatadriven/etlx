@@ -320,7 +320,19 @@ func EnvExpand(s string) string {
 		// fmt.Println(match, match[1:])
 		name := match[1:] // strip leading "$"
 		if value, exists := os.LookupEnv(name); exists {
-			return value
+			return EnvExpand(value)
+		}
+		return match // leave as-is if not set
+	})
+}
+
+func (etlx *ETLX) EnvExpand(s string) string {
+	var reEnvVar = regexp.MustCompile(`\$\w+`)
+	return reEnvVar.ReplaceAllStringFunc(s, func(match string) string {
+		// fmt.Println(match, match[1:])
+		name := match[1:] // strip leading "$"
+		if value, exists := os.LookupEnv(name); exists {
+			return EnvExpand(value)
 		}
 		return match // leave as-is if not set
 	})
