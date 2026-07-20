@@ -742,6 +742,7 @@ func (etlx *ETLX) ReplaceQueryStringDate(query string, dateRef any) string {
 }
 
 func (etlx *ETLX) ReplaceEnvVariable(input string) string {
+	input = etlx.EnvExpand(input)
 	return etlx.ReplaceEnvVariableRec(input, 0)
 }
 
