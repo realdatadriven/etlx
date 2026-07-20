@@ -378,6 +378,13 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						} else {
 							current[key] = content.String()
 						}
+					} else if strings.HasPrefix(info, "dotenv") {
+						key := strings.TrimSpace(strings.TrimPrefix(info, "dotenv"))
+						if key == "" {
+							fmt.Printf("missing query name for dotenv block: %s", content.String())
+						} else {
+							current[key] = content.String()
+						}
 					} else if strings.HasPrefix(info, "tf") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "tf"))
 						if key == "" {
