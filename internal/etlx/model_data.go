@@ -106,7 +106,7 @@ func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string)
 	if _, ok := etlx.Models[fmt.Sprintf(`%s_%s`, db, table)]; ok {
 		return nil
 	}
-	sql := `select * from table_schema where db = ? and table = ?`
+	sql := `select * from table_schema where db = ? and "table" = ?`
 	res, _, err := adminCon.QueryMultiRows(sql, db, table)
 	if err != nil {
 		fmt.Printf("GetModelsFromSchema error: %s\n", err)
@@ -130,6 +130,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 	}
 	dialect := etlx.GetDialect(dbConn.GetDriverName())
 	var err error
+	data = etlx.LoadModelDefaults(data, table)
 	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id, ids)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 	if okChildren {

@@ -76,6 +76,28 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 	return _data
 }
 
+func (etlx *ETLX) LoadModelDefaults(data map[string]any, table string) map[string]any {
+	mdl, ok := etlx.Models[table]
+	if ok {
+		defaults := []any{"app_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by", "user_id"}
+		for colName := range mdl.(map[string]any) {
+			if _, ok := data[colName]; !ok && etlx.containsAny(defaults, colName) {
+				switch colName {
+				case "app_id":
+					data[colName] = "appId()"
+				case "created_at", "updated_at":
+					data[colName] = "Now()"
+				case "deleted_at":
+					data[colName] = nil
+				case "created_by", "updated_by", "deleted_by", "user_id":
+					data[colName] = 1
+				}
+			}
+		}
+	}
+	return data
+}
+
 func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "WORKFLOW"
 	process := "WORKFLOW"
@@ -263,6 +285,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_data["email_template"] = metadata["email"]
 	}
 	// insert or update workflow table with the metadata info, and get the workflow_id
+	_data = etlx.LoadModelDefaults(_data, table)
 	_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 	workflow_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 	if err != nil {
@@ -375,6 +398,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
+		_data = etlx.LoadModelDefaults(_data, table)
 		_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 		insert_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -499,6 +523,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_id = :workflow_id and workflow_step_id = :workflow_step_id and field = :field and excluded = :excluded`
+						_data = etlx.LoadModelDefaults(_data, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -584,6 +609,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_data = etlx.LoadModelDefaults(_data, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -689,6 +715,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						_data = etlx.LoadModelDefaults(_data, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
