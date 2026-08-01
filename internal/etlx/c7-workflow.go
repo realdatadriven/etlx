@@ -285,6 +285,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		_data["email_template"] = metadata["email"]
 	}
 	// insert or update workflow table with the metadata info, and get the workflow_id
+	etlx.GetModelsFromSchema(adminDb, database, table)
 	_data = etlx.LoadModelDefaults(_data, database, table)
 	_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 	workflow_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
@@ -398,6 +399,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 			"mem_sys_start":         mem_sys,
 			"num_gc_start":          num_gc,
 		}
+		etlx.GetModelsFromSchema(adminDb, database, table)
 		_data = etlx.LoadModelDefaults(_data, database, table)
 		_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 		insert_id, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
@@ -523,6 +525,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_id = :workflow_id and workflow_step_id = :workflow_step_id and field = :field and excluded = :excluded`
+						etlx.GetModelsFromSchema(adminDb, database, table)
 						_data = etlx.LoadModelDefaults(_data, database, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
@@ -609,6 +612,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						etlx.GetModelsFromSchema(adminDb, database, table)
 						_data = etlx.LoadModelDefaults(_data, database, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)
@@ -715,6 +719,7 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 							"num_gc_start":          num_gc,
 						}
 						cond = `WHERE workflow_step_id = :workflow_step_id and email = :email and excluded = :excluded`
+						etlx.GetModelsFromSchema(adminDb, database, table)
 						_data = etlx.LoadModelDefaults(_data, database, table)
 						_data = etlx.ResolveModelStringDataFunc(_data, app, key, nil, nil)
 						_, err := etlx.InsertOrUpdate(dbConn, table, cond, _data)

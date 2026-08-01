@@ -120,7 +120,7 @@ func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string)
 	return nil
 }
 
-func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, db, table, key, cond string, parent_id any, ids map[string]any) error {
+func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, adminCon db.DBInterface, data map[string]any, app map[string]any, db, table, key, cond string, parent_id any, ids map[string]any) error {
 	children, okChildren := data["children"]
 	if okChildren {
 		delete(data, "children")
@@ -184,19 +184,20 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 				} else {
 					table = ""
 				}
+				etlx.GetModelsFromSchema(adminCon, db, table)
 				if _, ok := val["cond"].(string); ok {
 					cond = val["cond"].(string)
 				} else {
 					cond = ""
 				}
 				if _, okData := val["data"].(map[string]any); okData && table != "" {
-					err = etlx.LoadModelData(dbConn, val["data"].(map[string]any), app, table, key, cond, insertId, ids)
+					err = etlx.LoadModelData(dbConn, adminCon, val["data"].(map[string]any), app, db, table, key, cond, insertId, ids)
 					if err != nil {
 						return err
 					}
 				} else if _, okData := val["data"].([]map[string]any); okData && table != "" {
 					for _, d := range val["data"].([]map[string]any) {
-						err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
+						err = etlx.LoadModelData(dbConn, adminCon, d, app, db, table, key, cond, insertId, ids)
 						if err != nil {
 							return err
 						}
@@ -204,7 +205,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 				} else if _, okData := val["data"].([]any); okData && table != "" {
 					for _, d := range val["data"].([]any) {
 						if dMap, ok := d.(map[string]any); ok {
-							err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+							err = etlx.LoadModelData(dbConn, adminCon, dMap, app, db, table, key, cond, insertId, ids)
 							if err != nil {
 								return err
 							}
@@ -227,19 +228,20 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					} else {
 						table = ""
 					}
+					etlx.GetModelsFromSchema(adminCon, db, table)
 					if _, ok := child["cond"].(string); ok {
 						cond = child["cond"].(string)
 					} else {
 						cond = ""
 					}
 					if _, okData := child["data"].(map[string]any); okData && table != "" {
-						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId, ids)
+						err = etlx.LoadModelData(dbConn, adminCon, child["data"].(map[string]any), app, db, table, key, cond, insertId, ids)
 						if err != nil {
 							return err
 						}
 					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
 						for _, d := range child["data"].([]map[string]any) {
-							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
+							err = etlx.LoadModelData(dbConn, adminCon, d, app, db, table, key, cond, insertId, ids)
 							if err != nil {
 								return err
 							}
@@ -247,7 +249,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					} else if _, okData := child["data"].([]any); okData && table != "" {
 						for _, d := range child["data"].([]any) {
 							if dMap, ok := d.(map[string]any); ok {
-								err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+								err = etlx.LoadModelData(dbConn, adminCon, dMap, app, db, table, key, cond, insertId, ids)
 								if err != nil {
 									return err
 								}
@@ -276,19 +278,20 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					} else {
 						table = ""
 					}
+					etlx.GetModelsFromSchema(adminCon, db, table)
 					if _, ok := child["cond"].(string); ok {
 						cond = child["cond"].(string)
 					} else {
 						cond = ""
 					}
 					if _, okData := child["data"].(map[string]any); okData && table != "" {
-						err = etlx.LoadModelData(dbConn, child["data"].(map[string]any), app, table, key, cond, insertId, ids)
+						err = etlx.LoadModelData(dbConn, adminCon, child["data"].(map[string]any), app, db, table, key, cond, insertId, ids)
 						if err != nil {
 							return err
 						}
 					} else if _, okData := child["data"].([]map[string]any); okData && table != "" {
 						for _, d := range child["data"].([]map[string]any) {
-							err = etlx.LoadModelData(dbConn, d, app, table, key, cond, insertId, ids)
+							err = etlx.LoadModelData(dbConn, adminCon, d, app, db, table, key, cond, insertId, ids)
 							if err != nil {
 								return err
 							}
@@ -296,7 +299,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 					} else if _, okData := child["data"].([]any); okData && table != "" {
 						for _, d := range child["data"].([]any) {
 							if dMap, ok := d.(map[string]any); ok {
-								err = etlx.LoadModelData(dbConn, dMap, app, table, key, cond, insertId, ids)
+								err = etlx.LoadModelData(dbConn, adminCon, dMap, app, db, table, key, cond, insertId, ids)
 								if err != nil {
 									return err
 								}
@@ -620,7 +623,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 			//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 			// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 			// each key in data
-			err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
+			err := etlx.LoadModelData(dbConn, adminDb, val, app, database, table, key, cond, nil, nil)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
@@ -660,7 +663,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 				//createTableSQL := generateCreateTableSQL(driver, table, comment, create_all, columns)
 				// fmt.Println("CREATE TABLE SQL:\n", createTableSQL)
 				// each key in data
-				err := etlx.LoadModelData(dbConn, val, app, table, key, cond, nil, nil)
+				err := etlx.LoadModelData(dbConn, adminDb, val, app, database, table, key, cond, nil, nil)
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
