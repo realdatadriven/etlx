@@ -103,7 +103,8 @@ func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string)
 	if etlx.Models == nil {
 		etlx.Models = map[string]any{}
 	}
-	if _, ok := etlx.Models[fmt.Sprintf(`%s_%s`, db, table)]; ok {
+	key := fmt.Sprintf(`%s_%s`, db, table)
+	if _, ok := etlx.Models[key]; ok {
 		return nil
 	}
 	sql := `select * from table_schema where db = ? and "table" = ?`
@@ -116,7 +117,7 @@ func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string)
 	for _, row := range *res {
 		aux_model[row["field"].(string)] = row
 	}
-	etlx.Models[fmt.Sprintf(`%s_%s`, db, table)] = aux_model
+	etlx.Models[key] = aux_model
 	return nil
 }
 
