@@ -143,7 +143,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 		}
 		ids[pkfield] = insertId
 		for key, value := range data {
-			if strings.HasSuffix(key, "_id") && value != nil {
+			if (strings.HasSuffix(key, "_id") || strings.HasSuffix(key, "ID") || strings.HasSuffix(key, "Id")) && value != nil {
 				if _, ok := ids[key]; !ok {
 					ids[key] = value
 				}
