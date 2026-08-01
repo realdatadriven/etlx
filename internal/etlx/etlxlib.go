@@ -24,6 +24,7 @@ import (
 type ETLX struct {
 	Config           map[string]any
 	Params           map[string]any
+	Models           map[string]any
 	MD               string
 	autoLogsDisabled bool
 	MetadataOrder    bool

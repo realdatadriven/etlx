@@ -99,6 +99,27 @@ func (etlx *ETLX) InsertOrUpdate(dbCon db.DBInterface, table string, cond string
 	return insertId, nil
 }
 
+func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string) error {
+	if etlx.Models == nil {
+		etlx.Models = map[string]any{}
+	}
+	if _, ok := etlx.Models[fmt.Sprintf(`%s_%s`, db, table)]; ok {
+		return nil
+	}
+	sql := `select * from table_schema where db = ? and table = ?`
+	res, _, err := adminCon.QueryMultiRows(sql, db, table)
+	if err != nil {
+		fmt.Printf("GetModelsFromSchema error: %s\n", err)
+		return nil
+	}
+	aux_model := map[string]any{}
+	for _, row := range *res {
+		etlx.Models[row["field"].(string)] = row
+	}
+	etlx.Models[fmt.Sprintf(`%s_%s`, db, table)] = aux_model
+	return nil
+}
+
 func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any, ids map[string]any) error {
 	children, okChildren := data["children"]
 	if okChildren {
@@ -573,6 +594,10 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		desc, okDesc := itemMetadata.(map[string]any)["description"].(string)
 		if !okDesc {
 			desc = fmt.Sprintf("%s->%s", key, itemKey)
+		}
+		err := etlx.GetModelsFromSchema(adminDb, database, table)
+		if err != nil {
+			return nil, fmt.Errorf("failed to get models from schema: %w", err)
 		}
 		switch val := data.(type) {
 		case map[string]any:
