@@ -114,13 +114,13 @@ func (etlx *ETLX) GetModelsFromSchema(adminCon db.DBInterface, db, table string)
 	}
 	aux_model := map[string]any{}
 	for _, row := range *res {
-		etlx.Models[row["field"].(string)] = row
+		aux_model[row["field"].(string)] = row
 	}
 	etlx.Models[fmt.Sprintf(`%s_%s`, db, table)] = aux_model
 	return nil
 }
 
-func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, table, key, cond string, parent_id any, ids map[string]any) error {
+func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app map[string]any, db, table, key, cond string, parent_id any, ids map[string]any) error {
 	children, okChildren := data["children"]
 	if okChildren {
 		delete(data, "children")
@@ -130,7 +130,7 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 	}
 	dialect := etlx.GetDialect(dbConn.GetDriverName())
 	var err error
-	data = etlx.LoadModelDefaults(data, table)
+	data = etlx.LoadModelDefaults(data, db, table)
 	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id, ids)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
 	if okChildren {
