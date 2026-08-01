@@ -142,6 +142,13 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, data map[string]any, app 
 			insertId = (*pkres)[pkfield]
 		}
 		ids[pkfield] = insertId
+		for key, value := range data {
+			if strings.HasSuffix(key, "_id") && value != nil {
+				if _, ok := ids[key]; !ok {
+					ids[key] = value
+				}
+			}
+		}
 		// fmt.Println("PKs:", ids[pkfield])
 		if toInt(insertId) == 0 {
 			return fmt.Errorf("Failed to add children because coulnt resolve PK: %s %s", table, cond)
