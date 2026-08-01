@@ -280,6 +280,10 @@ func (etlx *ETLX) RunWORKFLOW(dateRef []time.Time, conf map[string]any, extraCon
 		workflow_id = (*workflow)["workflow_id"]
 	}
 	fmt.Printf("Workflow: %s ID: %v Generated\n", name, workflow_id)
+	err = etlx.GetModelsFromSchema(adminDb, database, table)
+	if err != nil {
+		fmt.Printf("failed to get models from schema: %s \n", err.Error())
+	}
 	// ITENS CAN BE THE STEP, DEPENDECIES, SLA, ETC
 	for _, itemKey := range order {
 		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {

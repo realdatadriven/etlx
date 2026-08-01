@@ -597,7 +597,7 @@ func (etlx *ETLX) RunMODEL_DATA(dateRef []time.Time, conf map[string]any, extraC
 		}
 		err := etlx.GetModelsFromSchema(adminDb, database, table)
 		if err != nil {
-			return nil, fmt.Errorf("failed to get models from schema: %w", err)
+			fmt.Printf("failed to get models from schema: %s \n", err.Error())
 		}
 		switch val := data.(type) {
 		case map[string]any:
