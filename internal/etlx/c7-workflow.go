@@ -2,6 +2,8 @@ package etlxlib
 
 import (
 	"fmt"
+	"mime"
+	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
@@ -9,8 +11,20 @@ import (
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
+func MimeType(path string) string {
+	ext := filepath.Ext(path)
+	if ext == "" {
+		return "application/octet-stream"
+	}
+	if mt := mime.TypeByExtension(ext); mt != "" {
+		return mt
+	}
+	return "application/octet-stream"
+}
+
 func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key string, parent_id any, ids map[string]any) map[string]any {
 	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
+	mimeTypePattern := regexp.MustCompile(`^MimeType\((.+)\)$`)
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
 	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
@@ -34,6 +48,15 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 					if err != nil {
 						fmt.Printf("%s ERR: resolving file content for %s: %s %v", key, filename, err, v)
 					}
+				}
+			}
+			matchesMine := mimeTypePattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matchesMine) != 2 {
+				// pass
+			} else {
+				filename := strings.TrimSpace(matchesMine[1])
+				if filename != "" {
+					_data[colName] = MimeType(filename)
 				}
 			}
 			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
