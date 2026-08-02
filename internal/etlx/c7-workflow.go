@@ -79,7 +79,7 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 func (etlx *ETLX) LoadModelDefaults(data map[string]any, db, table string) map[string]any {
 	mdl, ok := etlx.Models[fmt.Sprintf(`%s_%s`, db, table)]
 	if ok {
-		defaults := []any{"app_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by", "user_id"}
+		defaults := []any{"app_id", "created_at", "updated_at", "deleted_at", "created_by", "updated_by", "deleted_by", "user_id", "excluded"}
 		for colName := range mdl.(map[string]any) {
 			if _, ok := data[colName]; !ok && etlx.containsAny(defaults, colName) {
 				switch colName {
@@ -91,6 +91,8 @@ func (etlx *ETLX) LoadModelDefaults(data map[string]any, db, table string) map[s
 					data[colName] = nil
 				case "created_by", "updated_by", "deleted_by", "user_id":
 					data[colName] = 1
+				case "excluded":
+					data[colName] = false
 				}
 			}
 		}
