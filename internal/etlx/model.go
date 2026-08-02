@@ -1755,6 +1755,7 @@ func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order
 			}*/
 			return orderI < orderJ
 		})
+		_field_orders := []any{}
 		for i, field := range formFieldsOrdered {
 			/*if tableName == "app" {
 				fmt.Printf("Form field %d: %s (order %v)\n", i, field["name"], field["order"])
@@ -1762,11 +1763,17 @@ func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order
 			if i > 0 {
 				formConfigBuf.WriteByte(',')
 			}
+			_field_orders = append(_field_orders, field["name"])
 			formConfigBuf.WriteString(fmt.Sprintf(`"%s":`, field["name"]))
 			fieldJSON, _ := json.Marshal(field) // safe, it's a map
 			formConfigBuf.Write(fieldJSON)
 		}
 		formConfigBuf.WriteString(`}`)
+		if len(_field_orders) > 0 {
+			field_orders := marshalValue(_field_orders)
+			formConfigBuf.WriteString(`,"field_orders":`)
+			formConfigBuf.WriteString(field_orders)
+		}
 		// Optional parts – preserve order if they are maps (or sort if you want)
 		if layout, ok := tableDef["form_layout"]; ok {
 			layoutJSON := marshalValue(layout)
@@ -1788,15 +1795,22 @@ func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order
 			orderJ, _ := tableFieldsOrdered[j]["order"].(int)
 			return orderI < orderJ
 		})
+		_field_orders = []any{}
 		for i, field := range tableFieldsOrdered {
 			if i > 0 {
 				tableConfigBuf.WriteByte(',')
 			}
+			_field_orders = append(_field_orders, field["name"])
 			tableConfigBuf.WriteString(fmt.Sprintf(`"%s":`, field["name"]))
 			fieldJSON, _ := json.Marshal(field)
 			tableConfigBuf.Write(fieldJSON)
 		}
 		tableConfigBuf.WriteString(`}`)
+		if len(_field_orders) > 0 {
+			field_orders := marshalValue(_field_orders)
+			formConfigBuf.WriteString(`,"field_orders":`)
+			formConfigBuf.WriteString(field_orders)
+		}
 		if layout, ok := tableDef["table_layout"]; ok {
 			layoutJSON := marshalValue(layout)
 			tableConfigBuf.WriteString(`,"layout":`)
