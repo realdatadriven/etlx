@@ -1808,8 +1808,8 @@ func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order
 		tableConfigBuf.WriteString(`}`)
 		if len(_field_orders) > 0 {
 			field_orders := marshalValue(_field_orders)
-			formConfigBuf.WriteString(`,"field_orders":`)
-			formConfigBuf.WriteString(field_orders)
+			tableConfigBuf.WriteString(`,"field_orders":`)
+			tableConfigBuf.WriteString(field_orders)
 		}
 		if layout, ok := tableDef["table_layout"]; ok {
 			layoutJSON := marshalValue(layout)
