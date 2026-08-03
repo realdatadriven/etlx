@@ -7,6 +7,7 @@ import (
 	"regexp"
 	"strings"
 	"time"
+	"encoding/base64"
 
 	"github.com/realdatadriven/etlx/internal/db"
 )
@@ -22,9 +23,18 @@ func MimeType(path string) string {
 	return "application/octet-stream"
 }
 
+func FileToBase64(filename string) (string, error) {
+	data, err := os.ReadFile(filename)
+	if err != nil {
+		return "", err
+	}
+	return base64.StdEncoding.EncodeToString(data), nil
+}
+
 func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key string, parent_id any, ids map[string]any) map[string]any {
 	fileContentPattern := regexp.MustCompile(`^FileContent\((.+)\)$`)
 	mimeTypePattern := regexp.MustCompile(`^MimeType\((.+)\)$`)
+	base64Pattern := regexp.MustCompile(`^Base64\((.+)\)$`)
 	nowPattern := regexp.MustCompile(`^Now\(\)$`)
 	appPatterm := regexp.MustCompile(`^appId\(\)$`)
 	parentPatterm := regexp.MustCompile(`^parentId\(\)$`)
@@ -57,6 +67,15 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 				filename := strings.TrimSpace(matchesMine[1])
 				if filename != "" {
 					_data[colName] = MimeType(filename)
+				}
+			}
+			matcheBase64 := base64Pattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
+			if len(matcheBase64) != 2 {
+				// pass
+			} else {
+				filename := strings.TrimSpace(matcheBase64[1])
+				if filename != "" {
+					_data[colName] = FileToBase64(filename)
 				}
 			}
 			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
