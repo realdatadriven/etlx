@@ -1,13 +1,14 @@
 package etlxlib
 
 import (
+	"encoding/base64"
 	"fmt"
 	"mime"
+	"os"
 	"path/filepath"
 	"regexp"
 	"strings"
 	"time"
-	"encoding/base64"
 
 	"github.com/realdatadriven/etlx/internal/db"
 )
@@ -75,7 +76,10 @@ func (etlx *ETLX) ResolveModelStringDataFunc(_data, app map[string]any, key stri
 			} else {
 				filename := strings.TrimSpace(matcheBase64[1])
 				if filename != "" {
-					_data[colName] = FileToBase64(filename)
+					_data[colName], err = FileToBase64(filename)
+					if err != nil {
+						fmt.Printf("%s ERR: resolving file base64 for %s: %s %v", key, filename, err, v)
+					}
 				}
 			}
 			matchesNow := nowPattern.FindStringSubmatch(strings.TrimSpace(input.(string)))
