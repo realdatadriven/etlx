@@ -134,6 +134,9 @@ func (etlx *ETLX) LoadModelData(dbConn db.DBInterface, adminCon db.DBInterface, 
 	data = etlx.LoadModelDefaults(data, db, table)
 	data = etlx.ResolveModelStringDataFunc(data, app, key, parent_id, ids)
 	insertId, err := etlx.InsertOrUpdate(dbConn, table, cond, data)
+	if err != nil {
+		return err
+	}
 	if okChildren {
 		// fmt.Println("CHILDREN")
 		pksql := dialect.GetPrimaryKeyAutoIncrementQuery(table)
