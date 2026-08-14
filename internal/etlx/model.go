@@ -1610,7 +1610,7 @@ func (etlx *ETLX) generateCustomDataV2(parsedTables map[string]any, tables_order
 					referredColumn = parts[1]
 					if referredTable == tableName {
 						//isRefToSameTable = true
-						fmt.Println("SAME REF", referredTable)
+						// fmt.Println("SAME REF", referredTable)
 						fkAdded = append(fkAdded, referredColumn, tableName)
 					}
 					// fmt.Println(1, "FK:", tableName, referredTable, referredColumn)
