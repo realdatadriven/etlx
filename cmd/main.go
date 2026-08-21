@@ -87,10 +87,18 @@ func main() {
 		extraConf["only"] = elements
 	}
 	if *skip != "" {
-		extraConf["skip"] = strings.Split(*skip, ",")
+		elements := strings.Split(*skip, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		extraConf["skip"] = elements
 	}
 	if *steps != "" {
-		extraConf["steps"] = strings.Split(*steps, ",")
+		elements := strings.Split(*steps, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		extraConf["steps"] = elements
 	}
 	etlxlib.RemoteSkiped = false
 	// logs, err :=
