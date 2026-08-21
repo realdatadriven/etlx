@@ -80,7 +80,11 @@ func main() {
 		"file":  *file,
 	}
 	if *only != "" {
-		extraConf["only"] = strings.Split(*only, ",")
+		elements := strings.Split(*only, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		extraConf["only"] = elements
 	}
 	if *skip != "" {
 		extraConf["skip"] = strings.Split(*skip, ",")
