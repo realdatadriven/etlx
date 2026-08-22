@@ -2,16 +2,17 @@ package etlxlib
 
 import (
 	"fmt"
+	"regexp"
 	"strings"
 	"time"
 
 	"github.com/realdatadriven/etlx/internal/db"
 )
 
-// RunCATALOG imports the metadata of a normal ETLX pipeline into a database
-// created from examples/catalog_model.md.  It deliberately does not execute
-// the pipeline: a level-two section becomes a catalog asset, its schema (or
-// "main" when none is declared), and a data asset.
+// RunCATALOG imports every eligible level-one pipeline section into a database
+// created from examples/catalog_model.md. It deliberately never executes a
+// pipeline. CATALOG is global configuration only: its metadata supplies the
+// catalog connection and governance defaults for all imported sections.
 //
 // A CATALOG section needs catalog_connection (or catalog_conn) in its level-one
 // metadata.  Governance names may be supplied on that metadata and inherited
@@ -20,9 +21,6 @@ import (
 // to the respective, lazily-created "undefined" record.
 func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "CATALOG"
-	if len(keys) > 0 && keys[0] != "" {
-		key = keys[0]
-	}
 	if conf == nil {
 		conf = etlx.Config
 	}
@@ -48,33 +46,48 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 	defer catalogDB.Close()
 
 	loader := &catalogLoader{etlx: etlx, db: catalogDB, names: map[string]map[string]any{}}
-	order := catalogOrder(section)
-	logs := make([]map[string]any, 0, len(order)+1)
-	for _, itemKey := range order {
-		if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
+	logs := []map[string]any{}
+	for _, sectionKey := range catalogOrder(conf) {
+		if sectionKey == key || sectionKey == "metadata" || sectionKey == "__order" || sectionKey == "order" {
 			continue
 		}
-		item, ok := section[itemKey].(map[string]any)
+		pipeline, ok := conf[sectionKey].(map[string]any)
 		if !ok {
 			continue
 		}
-		itemMetadata, ok := item["metadata"].(map[string]any)
+		pipelineMetadata, ok := pipeline["metadata"].(map[string]any)
 		if !ok {
-			return logs, fmt.Errorf("%s.%s is missing metadata", key, itemKey)
-		}
-		if active, ok := itemMetadata["active"].(bool); ok && !active {
 			continue
 		}
-		start := time.Now().In(etlx.TimeZone)
-		if err := loader.loadAsset(key, itemKey, metadata, item, itemMetadata); err != nil {
-			return logs, fmt.Errorf("catalog %s.%s: %w", key, itemKey, err)
+		if !catalogPipelineCandidate(sectionKey, pipelineMetadata) {
+			continue
 		}
-		logs = append(logs, map[string]any{
-			"process": "CATALOG", "name": key + "->" + itemKey, "key": key,
-			"item_key": itemKey, "start_at": start, "end_at": time.Now().In(etlx.TimeZone),
-			"duration": time.Since(start).Seconds(), "success": true,
-			"msg": "catalog asset registered",
-		})
+		if active, ok := pipelineMetadata["active"].(bool); ok && !active {
+			continue
+		}
+		defaults := catalogMerged(pipelineMetadata, metadata)
+		for _, itemKey := range catalogOrder(pipeline) {
+			if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
+				continue
+			}
+			item, ok := pipeline[itemKey].(map[string]any)
+			if !ok {
+				continue
+			}
+			itemMetadata, ok := item["metadata"].(map[string]any)
+			if !ok {
+				continue
+			}
+			if active, ok := itemMetadata["active"].(bool); ok && !active {
+				continue
+			}
+			start := time.Now().In(etlx.TimeZone)
+			analysis := catalogDiscoverSQL(item, itemMetadata)
+			if err := loader.loadAsset(sectionKey, itemKey, defaults, itemMetadata, analysis); err != nil {
+				return logs, fmt.Errorf("catalog %s.%s: %w", sectionKey, itemKey, err)
+			}
+			logs = append(logs, map[string]any{"process": "CATALOG", "name": sectionKey + "->" + itemKey, "key": key, "item_key": itemKey, "start_at": start, "end_at": time.Now().In(etlx.TimeZone), "duration": time.Since(start).Seconds(), "success": true, "msg": analysis.Summary()})
+		}
 	}
 	return logs, nil
 }
@@ -85,7 +98,85 @@ type catalogLoader struct {
 	names map[string]map[string]any // table -> source name -> resolved ID
 }
 
-func (l *catalogLoader) loadAsset(sectionKey, itemKey string, parent, item map[string]any, itemMetadata map[string]any) error {
+// CatalogSQLAnalysis is the phase-one contract between SQL discovery and the
+// DuckDB parser_tools integration. Phase two will persist its table, field and
+// join results as data_assets, asset_fields and lineage relations.
+type CatalogSQLAnalysis struct {
+	Statements []string
+	Kinds      []string // select, create_table_as_select, insert_from_select
+}
+
+func (a CatalogSQLAnalysis) Summary() string {
+	if len(a.Kinds) == 0 {
+		return "catalog asset registered; no supported SQL discovered"
+	}
+	return "catalog asset registered; SQL: " + strings.Join(a.Kinds, ", ")
+}
+
+var (
+	catalogSQLKeyPattern = regexp.MustCompile(`(?i)(^sql$|^query$|(^|_)sql$|(^|_)query$|^step.*_(sql|query)$)`)
+	catalogSelectPattern = regexp.MustCompile(`(?is)^\s*(with\b.*?\bselect\b|select\b)`)
+	catalogCTASPattern   = regexp.MustCompile(`(?is)^\s*create\s+(or\s+replace\s+)?table\b.*?\bas\s+(with\b.*?\bselect\b|select\b)`)
+	catalogInsertPattern = regexp.MustCompile(`(?is)^\s*insert\s+into\b.*?\b(with\b.*?\bselect\b|select\b)`)
+)
+
+func catalogPipelineCandidate(sectionKey string, metadata map[string]any) bool {
+	for _, value := range []string{sectionKey, catalogString(metadata, "name"), catalogString(metadata, "runs_as")} {
+		switch strings.ToUpper(strings.TrimSpace(value)) {
+		case "ETL", "ELT", "ETL_PROCESS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "SCRIPTS", "MULTI_QUERIES", "STACKED_QUERIES":
+			return true
+		}
+	}
+	return false
+}
+
+// catalogDiscoverSQL resolves metadata references such as load_sql: my_query
+// against the named SQL block stored alongside metadata. Only SELECT, CTAS and
+// INSERT ... SELECT statements are phase-one candidates. parser_tools only
+// supports SELECT parsing, so CTAS/INSERT candidates are retained here for
+// later extraction of their SELECT source.
+func catalogDiscoverSQL(item, metadata map[string]any) CatalogSQLAnalysis {
+	result := CatalogSQLAnalysis{}
+	seen := map[string]bool{}
+	for metaKey, raw := range metadata {
+		if !catalogSQLKeyPattern.MatchString(metaKey) {
+			continue
+		}
+		value, ok := raw.(string)
+		if !ok {
+			continue
+		}
+		sql := strings.TrimSpace(value)
+		if named, ok := item[sql].(string); ok {
+			sql = strings.TrimSpace(named)
+		}
+		if sql == "" || seen[sql] {
+			continue
+		}
+		kind := ""
+		switch {
+		case catalogCTASPattern.MatchString(sql):
+			kind = "create_table_as_select"
+		case catalogInsertPattern.MatchString(sql):
+			kind = "insert_from_select"
+		case catalogSelectPattern.MatchString(sql):
+			kind = "select"
+		}
+		if kind != "" {
+			seen[sql] = true
+			result.Statements = append(result.Statements, sql)
+			result.Kinds = append(result.Kinds, kind)
+		}
+	}
+	return result
+}
+
+// DuckDBParserToolsSetupSQL is intentionally data-only in phase one. A later
+// analyzer can execute this against DuckDB and then query
+// SELECT * FROM parse_tables(?) for every eligible SELECT statement.
+const DuckDBParserToolsSetupSQL = "INSTALL parser_tools FROM community; LOAD parser_tools;"
+
+func (l *catalogLoader) loadAsset(sectionKey, itemKey string, parent, itemMetadata map[string]any, analysis CatalogSQLAnalysis) error {
 	governance := catalogMerged(parent, itemMetadata)
 	businessOwner, err := l.resolveStakeholder(catalogString(governance, "business_owner", "owner", "stakeholder"))
 	if err != nil {
@@ -135,24 +226,14 @@ func (l *catalogLoader) loadAsset(sectionKey, itemKey string, parent, item map[s
 	if schemaName == "" {
 		schemaName = "main"
 	}
-	schemaID, err := l.upsert("asset_schemas", "catalog_asset_id = :catalog_asset_id AND name = :name", map[string]any{
+	_, err = l.upsert("asset_schemas", "catalog_asset_id = :catalog_asset_id AND name = :name", map[string]any{
 		"catalog_asset_id": assetID, "name": schemaName, "description": catalogString(itemMetadata, "schema_description"),
 	})
 	if err != nil {
 		return err
 	}
-	dataAssetID, err := l.upsert("data_assets", "schema_id = :schema_id AND name = :name", map[string]any{
-		"schema_id": schemaID, "name": name, "asset_type": catalogStringOr(itemMetadata, "Table", "data_asset_type", "asset_type"),
-		"description": catalogString(itemMetadata, "description"), "domain_id": domain, "subdomain_id": subdomain,
-		"business_owner_id": businessOwner, "technical_owner_id": technicalOwner,
-	})
-	if err != nil {
-		return err
-	}
-	if err := l.mapTerms(dataAssetID, catalogStrings(governance, "glossary_terms", "glossary_term", "terms"), domain, businessOwner); err != nil {
-		return err
-	}
-	return l.loadFields(item, dataAssetID, domain, businessOwner, technicalOwner)
+	_ = analysis // reserved for parser_tools table/column/lineage persistence in phase two.
+	return nil
 }
 
 func (l *catalogLoader) loadFields(item map[string]any, dataAssetID any, domain, businessOwner, technicalOwner any) error {
@@ -258,7 +339,7 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 			return id, nil
 		}
 	}
-	id, err := l.upsert(table, fmt.Sprintf("where %s = :%s", nameColumn, nameColumn), undefined)
+	id, err := l.upsert(table, fmt.Sprintf("%s = :%s", nameColumn, nameColumn), undefined)
 	if err != nil {
 		return nil, err
 	}
@@ -268,7 +349,7 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 
 func (l *catalogLoader) upsert(table, condition string, data map[string]any) (any, error) {
 	l.defaults(data)
-	if _, err := l.etlx.InsertOrUpdate(l.db, table, condition, data); err != nil {
+	if _, err := l.etlx.InsertOrUpdate(l.db, table, "WHERE "+condition, data); err != nil {
 		return nil, err
 	}
 	primaryKey, ok := catalogPrimaryKeys[table]
