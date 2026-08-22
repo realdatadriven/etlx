@@ -33,7 +33,9 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 		return nil, fmt.Errorf("missing metadata in %s section", key)
 	}
 	if active, ok := metadata["active"].(bool); ok && !active {
-		return []map[string]any{{"process": "CATALOG", "key": key, "success": true, "msg": "Deactivated"}}, nil
+		logs := []map[string]any{}
+		catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "key": key, "success": true, "msg": "Deactivated"})
+		return logs, nil
 	}
 	conn := catalogString(metadata, "catalog_connection", "catalog_conn", "connection", "conn")
 	if conn == "" {
@@ -45,8 +47,8 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	defer catalogDB.Close()
 
-	loader := &catalogLoader{etlx: etlx, db: catalogDB, names: map[string]map[string]any{}}
 	logs := []map[string]any{}
+	loader := &catalogLoader{etlx: etlx, db: catalogDB, names: map[string]map[string]any{}, logs: &logs, catalogKey: key}
 	for _, sectionKey := range catalogOrder(conf) {
 		if sectionKey == key || sectionKey == "metadata" || sectionKey == "__order" || sectionKey == "order" {
 			continue
@@ -65,7 +67,10 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 		if active, ok := pipelineMetadata["active"].(bool); ok && !active {
 			continue
 		}
+		sectionStart := time.Now().In(etlx.TimeZone)
+		catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "name": key + "->" + sectionKey, "key": key, "item_key": sectionKey, "start_at": sectionStart, "success": true, "msg": "catalog pipeline section started"})
 		defaults := catalogMerged(pipelineMetadata, metadata)
+		itemCount := 0
 		for _, itemKey := range catalogOrder(pipeline) {
 			if itemKey == "metadata" || itemKey == "__order" || itemKey == "order" {
 				continue
@@ -83,19 +88,27 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 			}
 			start := time.Now().In(etlx.TimeZone)
 			analysis := catalogDiscoverSQL(item, itemMetadata)
+			loader.sectionKey, loader.itemKey = sectionKey, itemKey
 			if err := loader.loadAsset(sectionKey, itemKey, defaults, itemMetadata, analysis); err != nil {
+				catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "name": sectionKey + "->" + itemKey, "key": key, "item_key": itemKey, "start_at": start, "end_at": time.Now().In(etlx.TimeZone), "duration": time.Since(start).Seconds(), "success": false, "msg": err.Error()})
 				return logs, fmt.Errorf("catalog %s.%s: %w", sectionKey, itemKey, err)
 			}
-			logs = append(logs, map[string]any{"process": "CATALOG", "name": sectionKey + "->" + itemKey, "key": key, "item_key": itemKey, "start_at": start, "end_at": time.Now().In(etlx.TimeZone), "duration": time.Since(start).Seconds(), "success": true, "msg": analysis.Summary()})
+			itemCount++
+			catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "name": sectionKey + "->" + itemKey, "key": key, "item_key": itemKey, "start_at": start, "end_at": time.Now().In(etlx.TimeZone), "duration": time.Since(start).Seconds(), "success": true, "msg": analysis.Summary()})
 		}
+		catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "name": key + "->" + sectionKey, "key": key, "item_key": sectionKey, "start_at": sectionStart, "end_at": time.Now().In(etlx.TimeZone), "duration": time.Since(sectionStart).Seconds(), "success": true, "msg": fmt.Sprintf("catalog pipeline section completed: %d items", itemCount)})
 	}
 	return logs, nil
 }
 
 type catalogLoader struct {
-	etlx  *ETLX
-	db    db.DBInterface
-	names map[string]map[string]any // table -> source name -> resolved ID
+	etlx       *ETLX
+	db         db.DBInterface
+	names      map[string]map[string]any // table -> source name -> resolved ID
+	logs       *[]map[string]any
+	catalogKey string
+	sectionKey string
+	itemKey    string
 }
 
 // CatalogSQLAnalysis is the phase-one contract between SQL discovery and the
@@ -326,6 +339,7 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 		cacheKey = "undefined"
 	}
 	if id, ok := l.names[table][cacheKey]; ok {
+		l.logComponent(table, "resolved from cache")
 		return id, nil
 	}
 	if name != "" {
@@ -336,6 +350,7 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 		}
 		if id, ok := (*row)[idColumn]; ok {
 			l.names[table][cacheKey] = id
+			l.logComponent(table, "resolved")
 			return id, nil
 		}
 	}
@@ -368,7 +383,25 @@ func (l *catalogLoader) upsert(table, condition string, data map[string]any) (an
 	if !ok {
 		return nil, fmt.Errorf("upsert %s did not return %s", table, primaryKey)
 	}
+	l.logComponent(table, "registered")
 	return id, nil
+}
+
+func (l *catalogLoader) logComponent(component, message string) {
+	if l.logs == nil {
+		return
+	}
+	now := time.Now().In(l.etlx.TimeZone)
+	catalogAppendLog(l.logs, map[string]any{
+		"process": "CATALOG", "name": l.sectionKey + "->" + l.itemKey + "->" + component,
+		"key": l.catalogKey, "item_key": l.itemKey, "start_at": now, "end_at": now,
+		"duration": 0.0, "success": true, "msg": component + " " + message,
+	})
+}
+
+func catalogAppendLog(logs *[]map[string]any, entry map[string]any) {
+	*logs = append(*logs, entry)
+	formatProcessLogEntry(entry)
 }
 
 func (l *catalogLoader) defaults(data map[string]any) {
