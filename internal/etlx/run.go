@@ -8,6 +8,24 @@ import (
 	"time"
 )
 
+func (etlx *ETLX) CoalesceString(values ...string) string {
+	for _, v := range values {
+		if v != "" {
+			return v
+		}
+	}
+	return ""
+}
+
+func (etlx *ETLX) CoalesceAny(values ...any) any {
+	for _, v := range values {
+		if v != nil {
+			return v
+		}
+	}
+	return ""
+}
+
 func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[string]any, map[string]any, error) {
 	logs := []map[string]any{}
 	data := map[string]any{}
@@ -39,6 +57,11 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 			if key == "metadata" || key == "__order" || key == "order" {
 				continue
 			}
+			if sections, ok := extraConf["sections"].([]any); ok {
+				if len(sections) > 0 {
+
+				}
+			}
 			//if !app.contains(_keys, any(key)) {
 			_key_conf, ok := etlx.Config[key].(map[string]any)
 			if !ok {
@@ -47,6 +70,25 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 			_key_conf_metadata, ok := _key_conf["metadata"].(map[string]any)
 			if !ok {
 				continue
+			}
+			if sections, okSkip := extraConf["sections"]; okSkip {
+				//fmt.Println("SKIP", skip, len(skip.([]string)))
+				if len(sections.([]string)) == 0 {
+				} else if !etlx.Contains(sections.([]string), key) {
+					logEntry := map[string]any{
+						"process":     key,
+						"name":        etlx.CoalesceString(etlx.getMapString(_key_conf_metadata, "name"), key),
+						"description": etlx.CoalesceString(etlx.getMapString(_key_conf_metadata, "description", "desc"), key),
+						"key":         key,
+						"start_at":    time.Now().In(etlx.TimeZone),
+						"end_at":      time.Now().In(etlx.TimeZone),
+						"success":     true,
+						"msg":         "Excluded from the process",
+					}
+					logs = append(logs, logEntry)
+					formatProcessLogEntry(logEntry)
+					continue
+				}
 			}
 			if _, ok := _key_conf_metadata["runs_as"]; !ok {
 				_key_conf_metadata["runs_as"] = strings.ToUpper(key)

@@ -153,12 +153,11 @@ glossary_term: Taxi Zone
 ```
 
 # CATALOG
-
 ```yaml metadata
 name: CATALOG
 runs_as: CATALOG
 description: Import the EXTRACT_LOAD pipeline metadata into the catalog model.
-catalog_connection: "sqlite3:database/catalog.db"
+conn: "sqlite3:database/catalog.db"
 # These values override or supplement every eligible source section.
 business_unit: Analytics
 domain: Mobility

@@ -436,6 +436,7 @@ func catalogMerged(parent, child map[string]any) map[string]any {
 	}
 	return result
 }
+
 func catalogString(data map[string]any, keys ...string) string {
 	for _, key := range keys {
 		if value, ok := data[key].(string); ok {
@@ -443,6 +444,24 @@ func catalogString(data map[string]any, keys ...string) string {
 		}
 	}
 	return ""
+}
+
+func (etlx *ETLX) getMapString(data map[string]any, keys ...string) string {
+	for _, key := range keys {
+		if value, ok := data[key].(string); ok {
+			return strings.TrimSpace(value)
+		}
+	}
+	return ""
+}
+
+func (etlx *ETLX) getMapAny(data map[string]any, keys ...string) any {
+	for _, key := range keys {
+		if value, ok := data[key]; ok {
+			return value
+		}
+	}
+	return nil
 }
 
 func catalogStringOr(data map[string]any, fallback string, keys ...string) string {

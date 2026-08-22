@@ -24,6 +24,9 @@ func main() {
 	filePath := flag.String("config", "config.md", "Config File")
 	// date of reference
 	date_ref := flag.String("date", time.Now().AddDate(0, 0, -1).Format("2006-01-02"), "Date Reference format YYYY-MM-DD")
+	// to sections
+	sections := flag.String("sections", "", "The sections / level 1 to consider")
+	sec := flag.String("sec", "", "The sections / level 1 to consider")
 	// to skip
 	skip := flag.String("skip", "", "The keys to skip")
 	// to skip
@@ -78,6 +81,19 @@ func main() {
 		"drop":  *drop,
 		"rows":  *rows,
 		"file":  *file,
+	}
+	if *sections != "" {
+		elements := strings.Split(*sections, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		extraConf["sections"] = elements
+	} else if *sec != "" {
+		elements := strings.Split(*sec, ",")
+		for i := range elements {
+			elements[i] = strings.TrimSpace(elements[i])
+		}
+		extraConf["sections"] = elements
 	}
 	if *only != "" {
 		elements := strings.Split(*only, ",")
