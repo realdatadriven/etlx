@@ -41,6 +41,7 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 	if conn == "" {
 		return nil, fmt.Errorf("%s requires metadata.catalog_connection (or catalog_conn)", key)
 	}
+	fmt.Println("CATALOG CONN:", conn)
 	catalogDB, err := etlx.GetDB(etlx.ReplaceEnvVariable(conn))
 	if err != nil {
 		return nil, fmt.Errorf("connect catalog database: %w", err)
@@ -211,6 +212,13 @@ func (l *catalogLoader) loadAsset(sectionKey, itemKey string, parent, itemMetada
 	if err != nil {
 		return err
 	}
+	// Terms are registered in phase one so the supplied governance metadata is
+	// preserved. Their mappings to data assets/fields are added in phase two.
+	for _, term := range catalogStrings(governance, "glossary_terms", "glossary_term", "terms") {
+		if _, err := l.resolveTerm(term, domain, businessOwner); err != nil {
+			return err
+		}
+	}
 
 	name := catalogString(itemMetadata, "name")
 	if name == "" {
@@ -313,7 +321,36 @@ func (l *catalogLoader) mapFieldTerms(fieldID any, terms []string, domain, stewa
 }
 
 func (l *catalogLoader) resolveStakeholder(name string) (any, error) {
-	return l.resolve("stakeholders", name, "stakeholder_id", "full_name", map[string]any{"email": "undefined@etlx.local", "full_name": "undefined"})
+	if strings.TrimSpace(name) == "" {
+		return l.resolve("stakeholders", "", "stakeholder_id", "full_name", map[string]any{"email": "undefined@etlx.local", "full_name": "undefined"})
+	}
+	if l.names["stakeholders"] == nil {
+		l.names["stakeholders"] = map[string]any{}
+	}
+	if id, ok := l.names["stakeholders"][name]; ok {
+		l.logComponent("stakeholders", "resolved from cache")
+		return id, nil
+	}
+	email := name
+	if !strings.Contains(email, "@") {
+		email = catalogStakeholderEmail(name)
+	}
+	query := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ? OR %s = ? LIMIT 1", l.column("stakeholder_id"), l.table("stakeholders"), l.column("email"), l.column("full_name"))
+	row, _, err := l.db.QuerySingleRow(query, email, name)
+	if err != nil {
+		return nil, fmt.Errorf("find stakeholder %q: %w", name, err)
+	}
+	if id, ok := (*row)["stakeholder_id"]; ok {
+		l.names["stakeholders"][name] = id
+		l.logComponent("stakeholders", "resolved")
+		return id, nil
+	}
+	id, err := l.upsert("stakeholders", "email = :email", map[string]any{"email": email, "full_name": name})
+	if err != nil {
+		return nil, err
+	}
+	l.names["stakeholders"][name] = id
+	return id, nil
 }
 func (l *catalogLoader) resolveBusinessUnit(name string) (any, error) {
 	return l.resolve("business_units", name, "business_unit_id", "name", map[string]any{"name": "undefined", "description": "Fallback ETLX catalog business unit"})
@@ -328,8 +365,9 @@ func (l *catalogLoader) resolveTerm(name string, domain, steward any) (any, erro
 	return l.resolve("glossary_terms", name, "term_id", "term_name", map[string]any{"term_name": "undefined", "definition": "Fallback ETLX catalog glossary term", "domain_id": domain, "steward_id": steward})
 }
 
-// resolve never invents a supplied governance entity.  A found entity is used;
-// otherwise the supplied name maps to the catalog's explicit undefined record.
+// resolve uses an existing governance entity when available, creates one when
+// a named value is supplied, and only uses the explicit undefined record when
+// the metadata value is absent.
 func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefined map[string]any) (any, error) {
 	if l.names[table] == nil {
 		l.names[table] = map[string]any{}
@@ -346,7 +384,7 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 		query := fmt.Sprintf("SELECT %s FROM %s WHERE %s = ? LIMIT 1", l.column(idColumn), l.table(table), l.column(nameColumn))
 		row, _, err := l.db.QuerySingleRow(query, name)
 		if err != nil {
-			return nil, fmt.Errorf("find %s %q: %w", table, name, err)
+			return nil, fmt.Errorf("find %s %q %s: %w", table, name, query, err)
 		}
 		if id, ok := (*row)[idColumn]; ok {
 			l.names[table][cacheKey] = id
@@ -354,12 +392,30 @@ func (l *catalogLoader) resolve(table, name, idColumn, nameColumn string, undefi
 			return id, nil
 		}
 	}
-	id, err := l.upsert(table, fmt.Sprintf("%s = :%s", nameColumn, nameColumn), undefined)
+	data := undefined
+	if name != "" {
+		data = map[string]any{}
+		for key, value := range undefined {
+			data[key] = value
+		}
+		data[nameColumn] = name
+	}
+	id, err := l.upsert(table, fmt.Sprintf("%s = :%s", nameColumn, nameColumn), data)
 	if err != nil {
 		return nil, err
 	}
 	l.names[table][cacheKey] = id
 	return id, nil
+}
+
+func catalogStakeholderEmail(name string) string {
+	slug := strings.ToLower(strings.TrimSpace(name))
+	slug = regexp.MustCompile(`[^a-z0-9]+`).ReplaceAllString(slug, ".")
+	slug = strings.Trim(slug, ".")
+	if slug == "" {
+		slug = "stakeholder"
+	}
+	return slug + "@etlx.local"
 }
 
 func (l *catalogLoader) upsert(table, condition string, data map[string]any) (any, error) {
