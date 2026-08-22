@@ -41,13 +41,12 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 	if conn == "" {
 		return nil, fmt.Errorf("%s requires metadata.catalog_connection (or catalog_conn)", key)
 	}
-	fmt.Println("CATALOG CONN:", conn)
+	// fmt.Println("CATALOG CONN:", conn)
 	catalogDB, err := etlx.GetDB(etlx.ReplaceEnvVariable(conn))
 	if err != nil {
 		return nil, fmt.Errorf("connect catalog database: %w", err)
 	}
 	defer catalogDB.Close()
-
 	logs := []map[string]any{}
 	loader := &catalogLoader{etlx: etlx, db: catalogDB, names: map[string]map[string]any{}, logs: &logs, catalogKey: key}
 	for _, sectionKey := range catalogOrder(conf) {
@@ -69,7 +68,15 @@ func (etlx *ETLX) RunCATALOG(dateRef []time.Time, conf map[string]any, extraConf
 			continue
 		}
 		sectionStart := time.Now().In(etlx.TimeZone)
-		catalogAppendLog(&logs, map[string]any{"process": "CATALOG", "name": key + "->" + sectionKey, "key": key, "item_key": sectionKey, "start_at": sectionStart, "success": true, "msg": "catalog pipeline section started"})
+		catalogAppendLog(&logs, map[string]any{
+			"process":  "CATALOG",
+			"name":     key + "->" + sectionKey,
+			"key":      key,
+			"item_key": sectionKey,
+			"start_at": sectionStart,
+			"success":  true,
+			"msg":      "catalog pipeline section started",
+		})
 		defaults := catalogMerged(pipelineMetadata, metadata)
 		itemCount := 0
 		for _, itemKey := range catalogOrder(pipeline) {
@@ -233,8 +240,12 @@ func (l *catalogLoader) loadAsset(sectionKey, itemKey string, parent, itemMetada
 		}
 	}
 	assetID, err := l.upsert("catalog_assets", "name = :name", map[string]any{
-		"name": name, "asset_type": assetType, "description": catalogString(itemMetadata, "description"),
-		"domain_id": domain, "subdomain_id": subdomain, "business_owner_id": businessOwner,
+		"name":               name,
+		"asset_type":         assetType,
+		"description":        catalogString(itemMetadata, "description"),
+		"domain_id":          domain,
+		"subdomain_id":       subdomain,
+		"business_owner_id":  businessOwner,
 		"technical_owner_id": technicalOwner, "layer_path": sectionKey + "." + itemKey,
 		"orchestrator_type": catalogString(parent, "orchestrator_type", "orchestrator"),
 		"schedule_cron":     catalogString(itemMetadata, "schedule_cron", "cron"),
