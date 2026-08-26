@@ -935,7 +935,7 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 
 type RunnerFuncKey func(metadata map[string]any, key string, item map[string]any) error
 
-func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
+func (etlx *ETLX) _ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
 	data, ok := config[key].(map[string]any)
 	if !ok {
 		return fmt.Errorf("missing or invalid %s section", key)
@@ -982,6 +982,92 @@ func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerF
 	return nil
 }
 
+func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
+	data, ok := config[key].(map[string]any)
+	if !ok {
+		return fmt.Errorf("missing or invalid %s section", key)
+	}
+	metadata, ok := data["metadata"].(map[string]any)
+	if !ok {
+		return fmt.Errorf("missing metadata in %s section", key)
+	}
+	parallel := false
+	if v, ok := metadata["parallel"].(bool); ok {
+		parallel = v
+	}
+	order, okOrder := data["__order"].([]any)
+	// Build the list first. This also preserves __order.
+	var items []struct {
+		key  string
+		item map[string]any
+	}
+	addItem := func(itemKey string, item any) {
+		if itemKey == "metadata" ||
+			itemKey == "__order" ||
+			itemKey == "__frontmatter" ||
+			itemKey == "order" {
+			return
+		}
+		itemMap, ok := item.(map[string]any)
+		if !ok {
+			return
+		}
+		items = append(items, struct {
+			key  string
+			item map[string]any
+		}{
+			key:  itemKey,
+			item: itemMap,
+		})
+	}
+	if okOrder {
+		for _, key2 := range order {
+			itemKey, ok := key2.(string)
+			if !ok {
+				continue
+			}
+			if item, exists := data[itemKey]; exists {
+				addItem(itemKey, item)
+			}
+		}
+	} else {
+		for itemKey, item := range data {
+			addItem(itemKey, item)
+		}
+	}
+	// Sequential mode -- exactly the current behaviour.
+	if !parallel {
+		for _, item := range items {
+			if err := runner(metadata, item.key, item.item); err != nil {
+				return err
+			}
+		}
+		return nil
+	}
+	// Parallel mode.
+	var (
+		wg       sync.WaitGroup
+		errOnce  sync.Once
+		firstErr error
+	)
+	for _, item := range items {
+		// Important: create local copies for the goroutine.
+		itemKey := item.key
+		itemMap := item.item
+		wg.Add(1)
+		go func() {
+			defer wg.Done()
+			if err := runner(metadata, itemKey, itemMap); err != nil {
+				errOnce.Do(func() {
+					firstErr = err
+				})
+			}
+		}()
+	}
+	wg.Wait()
+	return firstErr
+}
+
 // Create a temporary file in the default temporary directory
 func (etlx *ETLX) TempFIle(dir string, content string, name string) (string, error) {
 	// Create a temporary file in the default temporary directory
@@ -991,7 +1077,6 @@ func (etlx *ETLX) TempFIle(dir string, content string, name string) (string, err
 	}
 	// Defer closing the file to ensure it's closed even if an error occurs
 	defer tempFile.Close()
-
 	// Write the content to the file
 	_, err = tempFile.WriteString(content)
 	if err != nil {
