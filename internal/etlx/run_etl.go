@@ -6,8 +6,8 @@ import (
 	"path/filepath"
 	"regexp"
 	"strings"
-	"time"
 	"sync"
+	"time"
 
 	"github.com/realdatadriven/etlx/internal/db"
 )
@@ -753,10 +753,14 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		"ref":      nil,
 	}
 	appendLog(logEntry)
+	// Check if the input conf is nil or empty
+	if conf == nil {
+		conf = etlx.Config
+	}
 	mainDescription := ""
-	if data, ok := config[key].(map[string]any); ok {
+	if data, ok := conf[key].(map[string]any); ok {
 		if metadata, ok := data["metadata"].(map[string]any); ok {
-			mainDescription, _ := metadata["description"].(string)
+			mainDescription, _ = metadata["description"].(string)
 		}
 	}
 	// Define the runner as a simple function
@@ -996,7 +1000,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					dtRef = itemDateRef[0].Format("2006-01-02")
 				}
 			}
-			setProcessRef(dtRef)			
+			setProcessRef(dtRef)
 			// CONNECTION
 			start4 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1560,13 +1564,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		appendLog(_log1)
 		return nil
 	}
-	// Check if the input conf is nil or empty
-	if conf == nil {
-		conf = etlx.Config
-	}
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 	// Process the MD KEY
-	err := etlx.ProcessMDKey(key, conf, ELTRunner)
+	//err := etlx.ProcessMDKey(key, conf, ELTRunner)
+	err := etlx.ProcessMDKeyV2(key, conf, ELTRunner)
 	if err != nil {
 		return processLogs, fmt.Errorf("%s failed: %v", key, err)
 	}

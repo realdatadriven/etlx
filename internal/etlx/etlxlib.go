@@ -9,6 +9,7 @@ import (
 	"regexp"
 	"runtime"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/BurntSushi/toml"
@@ -935,7 +936,7 @@ func (etlx *ETLX) RunQueries(conn string, sqlData any, item map[string]any, runn
 
 type RunnerFuncKey func(metadata map[string]any, key string, item map[string]any) error
 
-func (etlx *ETLX) _ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
+func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
 	data, ok := config[key].(map[string]any)
 	if !ok {
 		return fmt.Errorf("missing or invalid %s section", key)
@@ -982,7 +983,7 @@ func (etlx *ETLX) _ProcessMDKey(key string, config map[string]any, runner Runner
 	return nil
 }
 
-func (etlx *ETLX) ProcessMDKey(key string, config map[string]any, runner RunnerFuncKey) error {
+func (etlx *ETLX) ProcessMDKeyV2(key string, config map[string]any, runner RunnerFuncKey) error {
 	data, ok := config[key].(map[string]any)
 	if !ok {
 		return fmt.Errorf("missing or invalid %s section", key)
