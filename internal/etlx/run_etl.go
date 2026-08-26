@@ -733,6 +733,16 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		processLogs = append(processLogs, logEntry)
 		formatProcessLogEntry(logEntry)
 	}
+	setProcessRef := func(ref any) {
+		if ref == nil {
+			return
+		}
+		processLogsMu.Lock()
+		defer processLogsMu.Unlock()
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = ref
+		}
+	}
 	// fmt.Println(key, dateRef)
 	start := time.Now().In(etlx.TimeZone)
 	logEntry := map[string]any{
@@ -744,6 +754,11 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	}
 	appendLog(logEntry)
 	mainDescription := ""
+	if data, ok := config[key].(map[string]any); ok {
+		if metadata, ok := data["metadata"].(map[string]any); ok {
+			mainDescription, _ := metadata["description"].(string)
+		}
+	}
 	// Define the runner as a simple function
 	ELTRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
 		// ACTIVE
@@ -767,7 +782,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		if !okMainConn {
 			mainConn = "duckdb:"
 		}
-		mainDescription, ok := metadata["description"].(string)
+		//mainDescription, ok := metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
 			logEntry := map[string]any{
@@ -981,9 +996,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					dtRef = itemDateRef[0].Format("2006-01-02")
 				}
 			}
-			if processLogs[0]["ref"] == nil && dtRef != nil {
-				processLogs[0]["ref"] = dtRef
-			}
+			setProcessRef(dtRef)			
 			// CONNECTION
 			start4 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1575,6 +1588,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 		"mem_sys_end":           mem_sys2,
 		"num_gc_end":            num_gc2,
 	}
-	appendLog()
+	appendLog(logEntry)
 	return processLogs, nil
 }
