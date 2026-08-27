@@ -27,7 +27,7 @@ USE lake;
 name: PARALLEL
 runs_as: ETL
 description: This paralel section runs every item in parallel, good for extracting inputs 
-parallel: false
+parallel: true
 active: true
 ```
 

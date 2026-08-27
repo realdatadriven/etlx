@@ -93,7 +93,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 		// Handle quack driver specific logic
 		// to create expects dsn in the format quack:path/to/db.duckdb?token=value&name=value
 		filepath, params, err := etlx.ParseQuackFileDSN(_dsn)
-		fmt.Println("DSN:", conn, driver, dsn, filepath, params)
+		//fmt.Println("DSN:", conn, driver, dsn, filepath, params)
 		if err == nil {
 			host, ok := params["host"]
 			if !ok {
@@ -126,17 +126,25 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 			if !ok2 {
 				name = "remote"
 			}
+			fmt.Printf("etlx.IsPortOpen(%s, %v) = %v\n", host, port, etlx.IsPortOpen(host, port))
+			if etlx.IsPortOpen(host, port) && filepath != "" {
+				filepath = ""
+			}
 			dbConn, err = db.NewDuckDB(filepath)
-			//fmt.Println("FILEPATH:", filepath)
+			// fmt.Println("FILEPATH:", filepath)
 			if err != nil {
 				return nil, fmt.Errorf("%s Conn: %s", driver, err)
 			}
 			defer func() {
 				if dbConn != nil {
-					sql := fmt.Sprintf("DETACH %s", name)
+					_, err = dbConn.ExecuteQuery("USE memory;", []any{}...)
+					if err != nil {
+						fmt.Printf("%s Error USE memory: %s\n", driver, err)
+					}
+					sql := fmt.Sprintf("DETACH %s;", name)
 					_, err = dbConn.ExecuteQuery(sql, []any{}...)
 					if err != nil {
-						fmt.Printf("%s Error using QUACK: %s\n", driver, err)
+						fmt.Printf("%s %s Error using QUACK: %s\n", driver, sql, err)
 					}
 				}
 			}()
@@ -145,9 +153,10 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 				return nil, fmt.Errorf("%s INSTALL quack: %s", driver, err)
 			}
 			sql := fmt.Sprintf("CALL quack_serve('quack:%s:%s', token => '%s', allow_other_hostname => %s, disable_ssl => %s);", host, port, token, allowOtherHostnames, disableSSL)
+			fmt.Println(0, sql)
 			// CHECK IF PORT IS OPEN BEFORE TRYING TO SERVE IF PORT IS OPEN CHANCES ARE THAT THE INSTANCE IS ALREADY SERVING, IN THAT CASE JUST ATTACH
 			if !etlx.IsPortOpen(host, port) && (host == "localhost" || host == "127.0.0.1" || host == "::1" || host == "0.0.0.0") {
-				// fmt.Println(sql, etlx.IsPortOpen(host, port))
+				fmt.Println(1, sql, etlx.IsPortOpen(host, port))
 				_, err = dbConn.ExecuteQuery(sql, []any{}...)
 				if err != nil {
 					fmt.Printf("1 %s Error starting QUACK server: %s\n", driver, err)
@@ -155,7 +164,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 				}
 			}
 			sql = fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
-			// fmt.Println(sql)
+			fmt.Println(2, sql)
 			_, err = dbConn.ExecuteQuery(sql, []any{}...)
 			if err != nil {
 				fmt.Printf("2 %s Error starting QUACK server: %s\n", driver, err)
@@ -165,7 +174,8 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 			sql = fmt.Sprintf("USE %s", name)
 			_, err = dbConn.ExecuteQuery(sql, []any{}...)
 			if err != nil {
-				return nil, fmt.Errorf("%s Error using QUACK: %s", driver, err)
+				fmt.Printf("3 %s %s Error using QUACK: %s", driver, sql, err)
+				return nil, fmt.Errorf("%s %s Error using QUACK: %s", driver, sql, err)
 			}
 		} else {
 			// to connect to a remote duckdb instance with quack, the dsn should be in the format quack:host:port?token=value&name=value
@@ -206,6 +216,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 				return nil, fmt.Errorf("%s INSTALL quack: %s", driver, err)
 			}
 			sql := fmt.Sprintf("ATTACH 'quack:%s:%s' AS %s (TOKEN '%s', DISABLE_SSL %s)", host, port, name, token, disableSSL)
+			fmt.Println(4, sql)
 			_, err = dbConn.ExecuteQuery(sql, []any{}...)
 			if err != nil {
 				return nil, fmt.Errorf("%s Error setting up QUACK: %s", driver, err)
@@ -213,7 +224,7 @@ func (etlx *ETLX) GetDB(conn string) (db.DBInterface, error) {
 			sql = fmt.Sprintf("USE %s", name)
 			_, err = dbConn.ExecuteQuery(sql, []any{}...)
 			if err != nil {
-				return nil, fmt.Errorf("%s Error using QUACK: %s", driver, err)
+				return nil, fmt.Errorf("%s %s Error using QUACK: %s", driver, sql, err)
 			}
 		}
 	case "odbc":
