@@ -39,7 +39,7 @@ name: DDBPTEST
 description: Test query
 table: DDBPTEST
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'database/parallel.db' AS DB (TYPE SQLITE, BUSY_TIMEOUT 30000, JOURNAL_MODE 'WAL')"
+load_before_sql: "ATTACH 'ducklake:quack:localhost' AS DB (DATA_PATH 'database/lake');"
 load_sql: |
   CREATE OR REPLACE TABLE DB."<table>" AS SELECT  v1.x % 1000 AS category,  COUNT(*) AS Total, APPROX_COUNT_DISTINCT(v1.y) AS TotalDups, AVG(v1.z) AS _AVG
   FROM  (SELECT range AS x, random() AS y, random() * 100 AS z FROM range(100_000_000)) v1
@@ -56,7 +56,7 @@ name: DDBPTEST2
 description: Test query
 table: DDBPTEST2
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'database/parallel.db' AS DB (TYPE SQLITE, BUSY_TIMEOUT 30000, JOURNAL_MODE 'WAL')"
+load_before_sql: "ATTACH 'ducklake:quack:localhost' AS DB (DATA_PATH 'database/lake');"
 load_sql: |
   CREATE OR REPLACE TABLE DB."<table>" AS SELECT  v1.x % 1000 AS category,  COUNT(*) AS Total, APPROX_COUNT_DISTINCT(v1.y) AS TotalDups, AVG(v1.z) AS _AVG
   FROM  (SELECT range AS x, random() AS y, random() * 100 AS z FROM range(10_000_000)) v1
@@ -73,7 +73,7 @@ name: DDBPTEST3
 description: Test query
 table: DDBPTEST3
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'database/parallel.db' AS DB (TYPE SQLITE, BUSY_TIMEOUT 30000, JOURNAL_MODE 'WAL')"
+load_before_sql: "ATTACH 'ducklake:quack:localhost' AS DB (DATA_PATH 'database/lake');"
 load_sql: |
   CREATE OR REPLACE TABLE DB."<table>" AS SELECT  v1.x % 1000 AS category,  COUNT(*) AS Total, APPROX_COUNT_DISTINCT(v1.y) AS TotalDups, AVG(v1.z) AS _AVG
   FROM  (SELECT range AS x, random() AS y, random() * 100 AS z FROM range(20_000_000)) v1
@@ -90,7 +90,7 @@ name: DDBPTEST4
 description: Test query
 table: DDBPTEST4
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'database/parallel.db' AS DB (TYPE SQLITE, BUSY_TIMEOUT 30000, JOURNAL_MODE 'WAL')"
+load_before_sql: "ATTACH 'ducklake:quack:localhost' AS DB (DATA_PATH 'database/lake');"
 load_sql: |
   CREATE OR REPLACE TABLE DB."<table>" AS SELECT  v1.x % 1000 AS category,  COUNT(*) AS Total, APPROX_COUNT_DISTINCT(v1.y) AS TotalDups, AVG(v1.z) AS _AVG
   FROM  (SELECT range AS x, random() AS y, random() * 100 AS z FROM range(50_000_000)) v1
@@ -107,7 +107,7 @@ name: DDBPTEST5
 description: Test query
 table: DDBPTEST5
 load_conn: "duckdb:"
-load_before_sql: "ATTACH 'database/parallel.db' AS DB (TYPE SQLITE, BUSY_TIMEOUT 30000, JOURNAL_MODE 'WAL')"
+load_before_sql: "ATTACH 'ducklake:quack:localhost' AS DB (DATA_PATH 'database/lake');"
 load_sql: |
   CREATE OR REPLACE TABLE DB."<table>" AS SELECT  v1.x % 1000 AS category,  COUNT(*) AS Total, APPROX_COUNT_DISTINCT(v1.y) AS TotalDups, AVG(v1.z) AS _AVG
   FROM  (SELECT range AS x, random() AS y, random() * 100 AS z FROM range(80_000_000)) v1
