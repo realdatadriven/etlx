@@ -8,6 +8,7 @@ import (
 	"regexp"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 
 	"github.com/xuri/excelize/v2"
@@ -230,8 +231,25 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
+	var processLogsMu sync.Mutex
+	appendLog := func(logEntry map[string]any) {
+		processLogsMu.Lock()
+		defer processLogsMu.Unlock()
+		processLogs = append(processLogs, logEntry)
+		formatProcessLogEntry(logEntry)
+	}
+	setProcessRef := func(ref any) {
+		if ref == nil {
+			return
+		}
+		processLogsMu.Lock()
+		defer processLogsMu.Unlock()
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = ref
+		}
+	}
 	start := time.Now().In(etlx.TimeZone)
-	processLogs = append(processLogs, map[string]any{
+	appendLog(map[string]any{
 		"process": process,
 		"name":    key,
 		"key":     key, "start_at": start,
@@ -241,10 +259,11 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 	// Define the runner as a simple function
 	EXPORTSRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
 		// fmt.Println(metadata, itemKey, item)
+		itemDateRef := append([]time.Time(nil), dateRef...)
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
@@ -259,7 +278,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		// MAIN PATH
 		mainPath, okMainPath := metadata["path"].(string)
 		if okMainPath {
-			pth := etlx.ReplaceQueryStringDate(mainPath, dateRef)
+			pth := etlx.ReplaceQueryStringDate(mainPath, itemDateRef)
 			//fmt.Println("MAIN PATH", pth)
 			if ok, _ := pathExists(pth); !ok {
 				err := os.Mkdir(pth, 0755)
@@ -269,10 +288,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 		}
 		mainConn, _ := metadata["connection"].(string)
-		mainDescription = metadata["description"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		if !ok {
-			processLogs = append(processLogs, map[string]any{
+			appendLog(map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
@@ -286,7 +304,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -302,7 +320,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			//fmt.Println("ONLY", only, len(only.([]string)))
 			if len(only.([]string)) == 0 {
 			} else if !etlx.Contains(only.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -318,7 +336,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			//fmt.Println("SKIP", skip, len(skip.([]string)))
 			if len(skip.([]string)) == 0 {
 			} else if etlx.Contains(skip.([]string), itemKey) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -347,16 +365,14 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		if okDtRef && dtRef != "" {
 			_dt, err := time.Parse("2006-01-02", dtRef.(string))
 			if err == nil {
-				dateRef = append([]time.Time{}, _dt)
+				itemDateRef = []time.Time{_dt}
 			}
 		} else {
-			if len(dateRef) > 0 {
-				dtRef = dateRef[0].Format("2006-01-02")
+			if len(itemDateRef) > 0 {
+				dtRef = itemDateRef[0].Format("2006-01-02")
 			}
 		}
-		if processLogs[0]["ref"] == nil {
-			processLogs[0]["ref"] = dtRef
-		}
+		setProcessRef(dtRef)
 		start3 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
@@ -381,8 +397,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_total_alloc_end"] = mem_total_alloc
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 			return nil
 		}
 		defer dbConn.Close()
@@ -390,8 +405,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["msg"] = fmt.Sprintf("%s -> %s CONN: connection to %s successfull", key, itemKey, conn)
 		_log2["end_at"] = time.Now().In(etlx.TimeZone)
 		_log2["duration"] = time.Since(start3).Seconds()
-		processLogs = append(processLogs, _log2)
-		formatProcessLogEntry(_log2)
+		appendLog(_log2)
 		// FILE
 		table := itemMetadata["name"].(string)
 		path, okPath := itemMetadata["path"].(string)
@@ -415,7 +429,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, mainPath, table)
 		}
 		//fmt.Println(1, path, fname)
-		fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+		fname = etlx.SetQueryPlaceholders(fname, table, "", itemDateRef)
 		//fmt.Println(2, path, fname)
 		// QUERIES TO RUN AT beginning
 		if okBefore {
@@ -429,7 +443,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				"ref":             dtRef,
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
-			err = etlx.ExecuteQuery(dbConn, beforeSQL, item, fname, "", dateRef)
+			err = etlx.ExecuteQuery(dbConn, beforeSQL, item, fname, "", itemDateRef)
 			_log2["end_at"] = time.Now().In(etlx.TimeZone)
 			_log2["duration"] = time.Since(start3).Seconds()
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -444,8 +458,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["success"] = true
 				_log2["msg"] = fmt.Sprintf("%s -> %s Before ", key, itemKey)
 			}
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 		}
 		// CHECK CONDITION
 		condition, okCondition := itemMetadata["condition"].(string)
@@ -457,7 +470,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_total_alloc_start"] = mem_total_alloc
 			_log2["mem_sys_start"] = mem_sys
 			_log2["num_gc_start"] = num_gc
-			cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, fname, "", dateRef)
+			cond, err := etlx.ExecuteCondition(dbConn, condition, itemMetadata, fname, "", itemDateRef)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			_log2["mem_alloc_end"] = mem_alloc
 			_log2["mem_total_alloc_end"] = mem_total_alloc
@@ -468,8 +481,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, err)
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
-				processLogs = append(processLogs, _log2)
-				formatProcessLogEntry(_log2)
+				appendLog(_log2)
 				//return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			} else if !cond {
@@ -478,10 +490,9 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["end_at"] = time.Now().In(etlx.TimeZone)
 				_log2["duration"] = time.Since(start3).Seconds()
 				if okCondMsg && condMsg != "" {
-					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, dateRef))
+					_log2["msg"] = fmt.Sprintf("%s -> %s COND: failed %s", key, itemKey, etlx.SetQueryPlaceholders(condMsg, table, fname, itemDateRef))
 				}
-				processLogs = append(processLogs, _log2)
-				formatProcessLogEntry(_log2)
+				appendLog(_log2)
 				// return fmt.Errorf("%s", _log2["msg"])
 				failedCondition = true
 			}
@@ -498,7 +509,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				"ref":             dtRef,
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
-			err = etlx.ExecuteQuery(dbConn, exportSQL, item, fname, "", dateRef)
+			err = etlx.ExecuteQuery(dbConn, exportSQL, item, fname, "", itemDateRef)
 			if err != nil {
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 				_log2["success"] = false
@@ -511,13 +522,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["num_gc_end"] = num_gc
 			} else {
 				mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
-				fname = etlx.SetQueryPlaceholders(fname, table, "", dateRef)
+				fname = etlx.SetQueryPlaceholders(fname, table, "", itemDateRef)
 				// fmt.Println(1, fname)
 				if !filepath.IsAbs(path) {
 					if okTmpPrefix && tmpPrefix != "" {
-						fname = etlx.SetQueryPlaceholders(fmt.Sprintf("%s/%s", tmpPrefix, path), table, "", dateRef)
+						fname = etlx.SetQueryPlaceholders(fmt.Sprintf("%s/%s", tmpPrefix, path), table, "", itemDateRef)
 					} else {
-						fname = etlx.SetQueryPlaceholders(path, table, "", dateRef)
+						fname = etlx.SetQueryPlaceholders(path, table, "", itemDateRef)
 					}
 					// fmt.Println(2, fname)
 				}
@@ -531,8 +542,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 			}
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 		} else if okTemplate && okMapping && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -565,8 +575,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["mem_total_alloc_end"] = mem_total_alloc
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
-				processLogs = append(processLogs, _log2)
-				formatProcessLogEntry(_log2)
+				appendLog(_log2)
 				return nil
 			} else {
 				ext := filepath.Ext(template.(string))
@@ -580,8 +589,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 					return nil
 				}
 				// Open or create a new workbook
@@ -599,8 +607,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["mem_total_alloc_end"] = mem_total_alloc
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
-						processLogs = append(processLogs, _log2)
-						formatProcessLogEntry(_log2)
+						appendLog(_log2)
 						return nil
 					}
 					defer func() {
@@ -618,8 +625,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 					return nil
 				}
 				_mapp := []map[string]any{}
@@ -634,8 +640,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 					return nil
 				case string:
 					// Single query reference
@@ -644,8 +649,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					if _, ok := item[_map]; ok {
 						sql = item[sql].(string)
 					}
-					sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
-					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
+					sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
 					// Fetch data from the database using the provided SQL query
 					if err != nil {
 						mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -657,8 +662,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						_log2["mem_total_alloc_end"] = mem_total_alloc
 						_log2["mem_sys_end"] = mem_sys
 						_log2["num_gc_end"] = num_gc
-						processLogs = append(processLogs, _log2)
-						formatProcessLogEntry(_log2)
+						appendLog(_log2)
 						return nil
 					}
 					_mapp = *rows
@@ -676,8 +680,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 					return nil
 				}
 				if len(_mapp) == 0 {
@@ -690,8 +693,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 					return nil
 				}
 				for _, detail := range _mapp {
@@ -747,8 +749,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						if _, ok := item[sql]; ok {
 							sql = item[sql].(string)
 						}
-						sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
-						rows, columns, err = etlx.Query(dbConn, sql, item, fname, "", dateRef)
+						sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+						rows, columns, err = etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
 						// Fetch data from the database using the provided SQL query
 						if err != nil {
 							mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -761,8 +763,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							_log2["mem_total_alloc_end"] = mem_total_alloc
 							_log2["mem_sys_end"] = mem_sys
 							_log2["num_gc_end"] = num_gc
-							processLogs = append(processLogs, _log2)
-							formatProcessLogEntry(_log2)
+							appendLog(_log2)
 							continue
 						}
 					}
@@ -946,7 +947,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				} else if fname != "" && filepath.Base(fname) == "" && filepath.Dir(fname) != "" {
 					outputFile = filepath.Join(filepath.Dir(fname), "_", filepath.Base(template.(string)))
 				}
-				outputFile = etlx.ReplaceQueryStringDate(outputFile, dateRef)
+				outputFile = etlx.ReplaceQueryStringDate(outputFile, itemDateRef)
 				//fmt.Println(outputFile)
 				err = file.UpdateLinkedValue()
 				if err != nil {
@@ -964,13 +965,13 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["msg"] = fmt.Sprintf("Main: %s -> %s", key, itemKey)
 					_log2["end_at"] = time.Now().In(etlx.TimeZone)
 					_log2["duration"] = time.Since(start3).Seconds()
-					fname = etlx.ReplaceQueryStringDate(outputFile, dateRef)
+					fname = etlx.ReplaceQueryStringDate(outputFile, itemDateRef)
 					// fmt.Println(path, filepath.IsAbs(path))
 					if !filepath.IsAbs(path) {
 						if okTmpPrefix && tmpPrefix != "" {
-							fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+							fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), itemDateRef)
 						} else {
-							fname = etlx.ReplaceQueryStringDate(path, dateRef)
+							fname = etlx.ReplaceQueryStringDate(path, itemDateRef)
 						}
 					}
 					_log2["fname"] = fname
@@ -980,8 +981,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["mem_sys_end"] = mem_sys
 				_log2["num_gc_end"] = num_gc
 			}
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 		} else if okTemplate && textTemplate && okTextTemplate && !failedCondition {
 			start3 := time.Now().In(etlx.TimeZone)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1023,8 +1023,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					if _, ok := item[_map]; ok {
 						sql = item[sql].(string)
 					}
-					sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
-					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
+					sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
 					if err != nil {
 						data[_map] = map[string]any{
 							"success": false,
@@ -1043,8 +1043,8 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						if _, ok := item[_sql.(string)]; ok {
 							sql = item[_sql.(string)].(string)
 						}
-						sql = etlx.SetQueryPlaceholders(sql, table, fname, dateRef)
-						rows, _, err := etlx.Query(dbConn, sql, item, fname, "", dateRef)
+						sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+						rows, _, err := etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
 						if err != nil {
 							data[_sql.(string)] = map[string]any{
 								"success": false,
@@ -1068,8 +1068,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 					_log2["mem_total_alloc_end"] = mem_total_alloc
 					_log2["mem_sys_end"] = mem_sys
 					_log2["num_gc_end"] = num_gc
-					processLogs = append(processLogs, _log2)
-					formatProcessLogEntry(_log2)
+					appendLog(_log2)
 				}
 				if _, ok := itemMetadata["data"].(map[string]any); ok {
 					for key, d := range itemMetadata["data"].(map[string]any) {
@@ -1086,7 +1085,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						tmpl = string(_data)
 					}
 				}
-				fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+				fname = etlx.ReplaceQueryStringDate(fname, itemDateRef)
 				if strings.HasSuffix(fname, ".pdf") {
 					latex := false
 					if okPDF {
@@ -1129,12 +1128,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
 								_log2["content"] = parsedTmpl
 							}
-							fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+							fname = etlx.ReplaceQueryStringDate(fname, itemDateRef)
 							if !filepath.IsAbs(path) {
 								if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
-									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), itemDateRef)
 								} else {
-									fname = etlx.ReplaceQueryStringDate(path, dateRef)
+									fname = etlx.ReplaceQueryStringDate(path, itemDateRef)
 								}
 							}
 							_log2["fname"] = fname
@@ -1178,12 +1177,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 							if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
 								_log2["content"] = parsedTmpl
 							}
-							fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+							fname = etlx.ReplaceQueryStringDate(fname, itemDateRef)
 							if !filepath.IsAbs(path) {
 								if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
-									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+									fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), itemDateRef)
 								} else {
-									fname = etlx.ReplaceQueryStringDate(path, dateRef)
+									fname = etlx.ReplaceQueryStringDate(path, itemDateRef)
 								}
 							}
 							_log2["fname"] = fname
@@ -1241,12 +1240,12 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 								if return_content, ok := itemMetadata["return_content"].(bool); ok && return_content {
 									_log2["content"] = parsedTmpl
 								}
-								fname = etlx.ReplaceQueryStringDate(fname, dateRef)
+								fname = etlx.ReplaceQueryStringDate(fname, itemDateRef)
 								if !filepath.IsAbs(path) {
 									if okTmpPrefix && tmpPrefix != "" && tmpPrefix != nil {
-										fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), dateRef)
+										fname = etlx.ReplaceQueryStringDate(fmt.Sprintf("%s/%s", tmpPrefix, path), itemDateRef)
 									} else {
-										fname = etlx.ReplaceQueryStringDate(path, dateRef)
+										fname = etlx.ReplaceQueryStringDate(path, itemDateRef)
 									}
 								}
 								_log2["fname"] = fname
@@ -1258,8 +1257,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 						}
 					}
 				}
-				processLogs = append(processLogs, _log2)
-				formatProcessLogEntry(_log2)
+				appendLog(_log2)
 			}
 		} else {
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
@@ -1271,8 +1269,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_total_alloc_end"] = mem_total_alloc
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 			//fmt.Println(4, _log2["msg"])
 		}
 		// QUERIES TO RUN AT THE END
@@ -1286,7 +1283,7 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 				"ref":             dtRef,
 				"mem_alloc_start": mem_alloc, "mem_total_alloc_start": mem_total_alloc, "mem_sys_start": mem_sys, "num_gc_start": num_gc,
 			}
-			err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, "", dateRef)
+			err = etlx.ExecuteQuery(dbConn, afterSQL, item, fname, "", itemDateRef)
 			mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 			if err != nil {
 				_log2["success"] = false
@@ -1303,14 +1300,18 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			_log2["mem_total_alloc_end"] = mem_total_alloc
 			_log2["mem_sys_end"] = mem_sys
 			_log2["num_gc_end"] = num_gc
-			processLogs = append(processLogs, _log2)
-			formatProcessLogEntry(_log2)
+			appendLog(_log2)
 		}
 		return nil
 	}
 	// Check if the input conf is nil or empty
 	if conf == nil {
 		conf = etlx.Config
+	}
+	if data, ok := conf[key].(map[string]any); ok {
+		if metadata, ok := data["metadata"].(map[string]any); ok {
+			mainDescription, _ = metadata["description"].(string)
+		}
 	}
 	// Process the MD KEY
 	err := etlx.ProcessMDKey(key, conf, EXPORTSRunner)
