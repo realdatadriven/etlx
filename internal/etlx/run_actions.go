@@ -8,6 +8,7 @@ import (
 	"path/filepath"
 	"strconv"
 	"strings"
+	"sync"
 	"time"
 )
 
@@ -41,9 +42,26 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 	}
 	//fmt.Println(key, dateRef)
 	var processLogs []map[string]any
+	var processLogsMu sync.Mutex
+	appendLog := func(logEntry map[string]any) {
+		processLogsMu.Lock()
+		defer processLogsMu.Unlock()
+		processLogs = append(processLogs, logEntry)
+		formatProcessLogEntry(logEntry)
+	}
+	setProcessRef := func(ref any) {
+		if ref == nil {
+			return
+		}
+		processLogsMu.Lock()
+		defer processLogsMu.Unlock()
+		if processLogs[0]["ref"] == nil {
+			processLogs[0]["ref"] = ref
+		}
+	}
 	start := time.Now().In(etlx.TimeZone)
 	mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
-	processLogs = append(processLogs, map[string]any{
+	appendLog(map[string]any{
 		"process": process,
 		"name":    key,
 		"key":     key, "start_at": start,
@@ -57,10 +75,11 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 	// Define the runner as a simple function
 	ACTIONSRunner := func(metadata map[string]any, itemKey string, item map[string]any) error {
 		//fmt.Println(metadata, itemKey, item)
+		itemDateRef := append([]time.Time(nil), dateRef...)
 		// ACTIVE
 		if active, okActive := metadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("KEY %s", key),
 					"description": metadata["description"].(string),
@@ -73,12 +92,11 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 		}
 		//name, _ := metadata["name"].(string)
-		mainDescription = metadata["description"].(string)
 		mainPath, _ := metadata["path"].(string)
 		itemMetadata, ok := item["metadata"].(map[string]any)
 		//fmt.Println(itemMetadata, itemKey, item)
 		if !ok {
-			processLogs = append(processLogs, map[string]any{
+			appendLog(map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"],
@@ -92,7 +110,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		// ACTIVE
 		if active, okActive := itemMetadata["active"]; okActive {
 			if !active.(bool) {
-				processLogs = append(processLogs, map[string]any{
+				appendLog(map[string]any{
 					"process":     process,
 					"name":        fmt.Sprintf("%s->%s", key, itemKey),
 					"description": itemMetadata["description"].(string),
@@ -107,7 +125,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		_type, okType := itemMetadata["type"].(string)
 		params, okParams := itemMetadata["params"].(map[string]any)
 		if !okType {
-			processLogs = append(processLogs, map[string]any{
+			appendLog(map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
@@ -119,7 +137,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			return nil
 		}
 		if !okParams {
-			processLogs = append(processLogs, map[string]any{
+			appendLog(map[string]any{
 				"process":     process,
 				"name":        fmt.Sprintf("%s->%s", key, itemKey),
 				"description": itemMetadata["description"].(string),
@@ -134,16 +152,14 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		if okDtRef && dtRef != "" {
 			_dt, err := time.Parse("2006-01-02", dtRef.(string))
 			if err == nil {
-				dateRef = append([]time.Time{}, _dt)
+				itemDateRef = []time.Time{_dt}
 			}
 		} else {
-			if len(dateRef) > 0 {
-				dtRef = dateRef[0].Format("2006-01-02")
+			if len(itemDateRef) > 0 {
+				dtRef = itemDateRef[0].Format("2006-01-02")
 			}
 		}
-		if processLogs[0]["ref"] == nil {
-			processLogs[0]["ref"] = dtRef
-		}
+		setProcessRef(dtRef)
 		start3 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
 		_log2 := map[string]any{
@@ -166,14 +182,14 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: missing required params: source and/or target", key, itemKey, _type)
 				break
 			}
-			source = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			source = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
 			data, err := os.ReadFile(source)
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Failed to read source: %v", key, itemKey, _type, err)
 				break
 			}
-			target = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			target = addMainPath(etlx.SetQueryPlaceholders(target, "", "", itemDateRef), mainPath)
 			err = os.WriteFile(target, data, 0644)
 			if err != nil {
 				_log2["success"] = false
@@ -195,10 +211,10 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			filePaths := []string{}
 			for _, f := range files {
 				if str, ok := f.(string); ok {
-					filePaths = append(filePaths, addMainPath(etlx.SetQueryPlaceholders(str, "", "", dateRef), mainPath))
+					filePaths = append(filePaths, addMainPath(etlx.SetQueryPlaceholders(str, "", "", itemDateRef), mainPath))
 				}
 			}
-			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", dateRef), mainPath)
+			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", itemDateRef), mainPath)
 			switch compression {
 			case "zip":
 				err := etlx.CompressToZip(filePaths, output)
@@ -236,8 +252,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: decompress missing required params: compression, files, or output", key, itemKey, _type)
 				break
 			}
-			input = addMainPath(etlx.SetQueryPlaceholders(input, "", "", dateRef), mainPath)
-			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", dateRef), mainPath)
+			input = addMainPath(etlx.SetQueryPlaceholders(input, "", "", itemDateRef), mainPath)
+			output = addMainPath(etlx.SetQueryPlaceholders(output, "", "", itemDateRef), mainPath)
 			switch compression {
 			case "zip":
 				err := etlx.Unzip(input, output)
@@ -289,8 +305,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			port = etlx.ReplaceEnvVariable(port)
 			user = etlx.ReplaceEnvVariable(user)
 			password = etlx.ReplaceEnvVariable(password)
-			source = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
-			target = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			source = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
+			target = etlx.SetQueryPlaceholders(target, "", "", itemDateRef)
 			err := etlx.FTPUpload(host, port, user, password, source, target)
 			if err != nil {
 				_log2["success"] = false
@@ -321,8 +337,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 			port = etlx.ReplaceEnvVariable(port)
 			user = etlx.ReplaceEnvVariable(user)
 			password = etlx.ReplaceEnvVariable(password)
-			source = etlx.SetQueryPlaceholders(source, "", "", dateRef)
-			target = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			source = etlx.SetQueryPlaceholders(source, "", "", itemDateRef)
+			target = addMainPath(etlx.SetQueryPlaceholders(target, "", "", itemDateRef), mainPath)
 			if host == "" || source == "" || target == "" {
 				fmt.Println("ftp_download missing required params")
 				break
@@ -350,8 +366,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP missing required params (source | target)", key, itemKey, _type)
 				break
 			}
-			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
-			params["target"] = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
+			params["target"] = etlx.SetQueryPlaceholders(target, "", "", itemDateRef)
 			err := etlx.SFTPActionWithFixedHostKey("upload", params)
 			if err != nil {
 				_log2["success"] = false
@@ -368,8 +384,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: SFTP missing required params (source | target)", key, itemKey, _type)
 				break
 			}
-			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
-			params["target"] = etlx.SetQueryPlaceholders(target, "", "", dateRef)
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
+			params["target"] = etlx.SetQueryPlaceholders(target, "", "", itemDateRef)
 			err := etlx.SFTPActionWithFixedHostKey("download", params)
 			if err != nil {
 				_log2["success"] = false
@@ -385,7 +401,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP missing required params (source)", key, itemKey, _type)
 				break
 			}
-			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
 			err := etlx.HTTPAction("upload", params)
 			if err != nil {
 				_log2["success"] = false
@@ -401,7 +417,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: HTTP missing required params (source | target)", key, itemKey, _type)
 				break
 			}
-			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
+			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", itemDateRef), mainPath)
 			err := etlx.HTTPAction("download", params)
 			if err != nil {
 				_log2["success"] = false
@@ -419,8 +435,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: AWS missing required params (source | key | bucket)", key, itemKey, _type)
 				break
 			}
-			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", dateRef), mainPath)
-			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", dateRef)
+			params["source"] = addMainPath(etlx.SetQueryPlaceholders(source, "", "", itemDateRef), mainPath)
+			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", itemDateRef)
 			_, err := etlx.S3("upload", params)
 			if err != nil {
 				_log2["success"] = false
@@ -438,8 +454,8 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: AWS missing required params (target | key | bucket)", key, itemKey, _type)
 				break
 			}
-			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", dateRef), mainPath)
-			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", dateRef)
+			params["target"] = addMainPath(etlx.SetQueryPlaceholders(target, "", "", itemDateRef), mainPath)
+			params["key"] = etlx.SetQueryPlaceholders(_key, "", "", itemDateRef)
 			_, err := etlx.S3("download", params)
 			if err != nil {
 				_log2["success"] = false
@@ -456,7 +472,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB missing required params (source | target)", key, itemKey, _type)
 				break
 			}
-			err := etlx.DB2DB(params, item, dateRef)
+			err := etlx.DB2DB(params, item, itemDateRef)
 			if err != nil {
 				_log2["success"] = false
 				_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: DB2DB failed: %v", key, itemKey, _type, err)
@@ -507,7 +523,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 				valid = false
 			}
 			if valid {
-				results, err := etlx.ReadEmails(params, item, dateRef)
+				results, err := etlx.ReadEmails(params, item, itemDateRef)
 				if err != nil {
 					_log2["success"] = false
 					_log2["msg"] = fmt.Sprintf("%s -> %s -> %s: Get Emails failed: %v", key, itemKey, _type, err)
@@ -530,7 +546,7 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 							} else {
 								defer dbConn.Close()
 								fmt.Println(_file)
-								err = etlx.ExecuteQuery(dbConn, sqls, item, _file, "", dateRef)
+								err = etlx.ExecuteQuery(dbConn, sqls, item, _file, "", itemDateRef)
 								if err != nil {
 									_log2["success"] = false
 									_log2["msg"] = fmt.Sprintf("error executing queries: %s", err)
@@ -557,13 +573,17 @@ func (etlx *ETLX) RunACTIONS(dateRef []time.Time, conf map[string]any, extraConf
 		_log2["mem_total_alloc_end"] = mem_total_alloc_end
 		_log2["mem_sys_end"] = mem_sys_end
 		_log2["num_gc_end"] = num_gc_end
-		processLogs = append(processLogs, _log2)
-		formatProcessLogEntry(_log2)
+		appendLog(_log2)
 		return nil
 	}
 	// Check if the input conf is nil or empty
 	if conf == nil {
 		conf = etlx.Config
+	}
+	if data, ok := conf[key].(map[string]any); ok {
+		if metadata, ok := data["metadata"].(map[string]any); ok {
+			mainDescription, _ = metadata["description"].(string)
+		}
 	}
 	// Process the MD KEY
 	err := etlx.ProcessMDKey(key, conf, ACTIONSRunner)
