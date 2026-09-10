@@ -349,10 +349,25 @@ func (etlx *ETLX) RunEXPORTS(dateRef []time.Time, conf map[string]any, extraConf
 			}
 		}
 		beforeSQL, okBefore := itemMetadata["before_sql"]
+		if !okBefore {
+			beforeSQL, okBefore = itemMetadata["before"]
+		}
 		exportSQL, okExport := itemMetadata["export_sql"]
+		if !okExport {
+			exportSQL, okExport = itemMetadata["export"]
+		}
 		dataSQL, okData := itemMetadata["data_sql"]
+		if !okData {
+			dataSQL, okData = itemMetadata["data"]
+		}
 		afterSQL, okAfter := itemMetadata["after_sql"]
+		if !okAfter {
+			afterSQL, okAfter = itemMetadata["after"]
+		}
 		template, okTemplate := itemMetadata["template"]
+		if !okTemplate {
+			template, okTemplate = itemMetadata["tmpl"]
+		}
 		textTemplate, okTextTemplate := itemMetadata["text_template"].(bool)
 		/*tmplExt := ""
 		if okTemplate {
