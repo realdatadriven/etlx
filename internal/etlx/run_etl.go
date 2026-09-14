@@ -1237,7 +1237,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 								validErr = msg
 								mem_alloc, mem_total_alloc, mem_sys, num_gc = etlx.RuntimeMemStats()
 								//fmt.Println(len(*res), _valid["type"].(string), msg)
-								if len(*res) > 0 && _valid["type"].(string) == "trow_if_not_empty" {
+								if len(*res) > 0 && (_valid["type"].(string) == "trow_if_not_empty" || _valid["type"].(string) == "throw_if_not_empty") {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
 									_log3["end_at"] = time.Now().In(etlx.TimeZone)
@@ -1245,7 +1245,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 									isValid = false
 									appendLog(_log3)
 									break
-								} else if len(*res) == 0 && _valid["type"].(string) == "trow_if_empty" {
+								} else if len(*res) == 0 && (_valid["type"].(string) == "trow_if_empty" || _valid["type"].(string) == "throw_if_empty") {
 									_log3["success"] = false
 									_log3["msg"] = fmt.Sprintf("%s -> %s -> %s: Validation Error: %s", key, step, itemKey, msg)
 									_log3["end_at"] = time.Now().In(etlx.TimeZone)
