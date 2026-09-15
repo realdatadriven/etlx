@@ -24,6 +24,7 @@ import (
 	_ "github.com/mattn/go-sqlite3"
 	_ "github.com/microsoft/go-mssqldb"
 	_ "github.com/obaydullahmhs/go-db2"
+	//_ "turso.tech/database/tursogo"
 )
 
 // const defaultTimeout = 3 * time.Second
@@ -101,7 +102,7 @@ func New(driverName string, dsn string) (*DB, error) {
 	db.SetConnMaxLifetime(2 * time.Hour)
 	// fmt.Println(driverName)
 	switch driverName {
-	case "sqlite3", "sqlite":
+	case "sqlite3", "sqlite", "turso":
 		db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
 		db.ExecContext(ctx, "PRAGMA foreign_keys = ON")
 		db.ExecContext(ctx, "PRAGMA secure_delete = ON")

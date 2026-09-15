@@ -41,6 +41,7 @@ func main() {
 	drop := flag.Bool("drop", false, "To drop the table (execute drop_sql on every item, conditioned by only and skip)")
 	// To get number of rows in the table (execute rows_sql on every item, conditioned by only and skip)
 	rows := flag.Bool("rows", false, "To get number of rows in the table (execute rows_sql on every item, conditioned by only and skip)")
+	flowchart := flag.Bool("flowchart", false, "To generate a flowchart")
 	flag.Parse()
 	config := make(map[string]any)
 	// Parse the file content
@@ -122,40 +123,42 @@ func main() {
 	// GENERATE GRAPH NODES AND EDGES MERMAID FLOWCHART
 	// fmt.Println("Generating Graph Nodes and Edges | Mermaid flowchart...")
 	// fmt.Println(etlxlib.MD)
-	mdData, err := etlxlib.QueryETLXMD("")
-	if err != nil {
-		// fmt.Println("QueryETLXMD: ", err)
-		return
-	}
-	nodes, ok := mdData["nodes"]
-	if !ok {
-		// fmt.Println("No nodes data found")
-		return
-	}
-	edges, ok := mdData["edges"]
-	if !ok {
-		// fmt.Println("No edges data found")
-		return
-	}
-	if len(nodes) == 0 {
-		nodes, ok = mdData["nodes_est"]
+	if os.Getenv("ETLX_FLOW_CHART") == "true" || *flowchart {
+		mdData, err := etlxlib.QueryETLXMD("")
+		if err != nil {
+			// fmt.Println("QueryETLXMD: ", err)
+			return
+		}
+		nodes, ok := mdData["nodes"]
 		if !ok {
 			// fmt.Println("No nodes data found")
 			return
 		}
-	}
-	if len(edges) == 0 {
-		edges, ok = mdData["edges_est"]
+		edges, ok := mdData["edges"]
 		if !ok {
 			// fmt.Println("No edges data found")
 			return
 		}
-	}
-	flow := etlxlib.GenerateMermaidFlowchart(nodes, edges)
-	etlxlib.TempFIle("", flow, "flowchart.*.mmd")
-	//if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
-	//fmt.Println("Mermaid Flowchart:\n", f)
-	//}
+		if len(nodes) == 0 {
+			nodes, ok = mdData["nodes_est"]
+			if !ok {
+				// fmt.Println("No nodes data found")
+				return
+			}
+		}
+		if len(edges) == 0 {
+			edges, ok = mdData["edges_est"]
+			if !ok {
+				// fmt.Println("No edges data found")
+				return
+			}
+		}
+		flow := etlxlib.GenerateMermaidFlowchart(nodes, edges)
+		etlxlib.TempFIle("", flow, "flowchart.*.mmd")
+		//if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
+		//fmt.Println("Mermaid Flowchart:\n", f)
+		//}
 
-	// fmt.Println("GenerateMermaidFlowchart: ", flow)
+		// fmt.Println("GenerateMermaidFlowchart: ", flow)
+	}
 }
