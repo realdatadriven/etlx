@@ -70,7 +70,13 @@ func (etlx *ETLX) Unzip(zipPath string, destDir string) error {
 	destPrefix := destRoot + string(os.PathSeparator)
 
 	for _, f := range r.File {
-		outPath := filepath.Join(destRoot, f.Name)
+		cleanName := filepath.Clean(strings.ReplaceAll(f.Name, "\\", "/"))
+		if cleanName == "." || cleanName == "" || filepath.IsAbs(cleanName) ||
+			cleanName == ".." || strings.HasPrefix(cleanName, "../") || strings.HasPrefix(cleanName, `..\`) {
+			return fmt.Errorf("invalid zip entry path: %s", f.Name)
+		}
+
+		outPath := filepath.Join(destRoot, cleanName)
 		outPath = filepath.Clean(outPath)
 		if outPath != destRoot && !strings.HasPrefix(outPath, destPrefix) {
 			return fmt.Errorf("invalid zip entry path: %s", f.Name)
