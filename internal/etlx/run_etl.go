@@ -601,7 +601,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			query = queries
 			_sql, _, _, err := etlx.QueryBuilder(nil, queries)
 			if err != nil {
-				fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
+				//fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queries, err)
 				_q, _e := etlx.Config[queries].(string)
 				//fmt.Println(queries, "IS A LOADED SQL STR QUERY?", _q, _e)
 				if _e {
@@ -611,11 +611,15 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				query = _sql
 			}
 		} else if !ok {
-			query = queries
+			if data, err := os.ReadFile(queries); err == nil {
+				query = string(data)
+			} else {
+				query = queries
+			}
 		}
 		updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 		if err != nil {
-			fmt.Println("Error trying to get the placeholder:", err)
+			//fmt.Println("Error trying to get the placeholder:", err)
 		} else {
 			query = updatedSQL
 		}
@@ -623,7 +627,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		if os.Getenv("ETLX_DEBUG_QUERY") == "true" {
 			_file, err := etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", queries))
 			if err != nil {
-				fmt.Println(err)
+				//fmt.Println(err)
 				etlx.TempFIle("", query, fmt.Sprintf("query.%s.*.sql", ""))
 			}
 			fmt.Println(_file)
@@ -661,7 +665,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				query = queryKey
 				_sql, _, _, err := etlx.QueryBuilder(nil, queryKey)
 				if err != nil {
-					fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
+					//fmt.Printf("QUERY DOC ERR ON KEY %s: %v\n", queryKey, err)
 					_q, _e := etlx.Config[queryKey].(string)
 					//fmt.Println(queryKey, "IS A LOADED SQL STR QUERY?", _q, _e)
 					if _e {
@@ -671,11 +675,15 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 					query = _sql
 				}
 			} else if !ok {
-				query = queryKey
+				if data, err := os.ReadFile(queryKey); err == nil {
+					query = string(data)
+				} else {
+					query = queryKey
+				}
 			}
 			updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 			if err != nil {
-				fmt.Println("Error trying to get the placeholder:", err)
+				//fmt.Println("Error trying to get the placeholder:", err)
 			} else {
 				query = updatedSQL
 			}
