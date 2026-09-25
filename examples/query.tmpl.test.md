@@ -12,13 +12,13 @@ active: true
 name: "query.tmpl.test"
 description: "Test dynamic SQL generation"
 load_conn: "duckdb:"
-load_data: tmpl_dates
+load_data: tmplData
 load_sql: load_sql_tmpl
 ```
 
 
 ```sql
--- tmpl_dates
+-- tmplData
 SELECT *
 FROM (VALUES
     ('2026-09-20', 'A'),
@@ -29,14 +29,8 @@ FROM (VALUES
 
 ```sql
 -- load_sql_tmpl
-{{- range $i, $row := (index .data "load_data").data }}
-    {{- if $i }} UNION ALL {{ end }}
-    SELECT
-        DATE '{{$row.date_ref}}' AS date_ref,
-        '{{$row.source_type}}' AS source_type,
-        amount
-    FROM source_table
-    WHERE date_ref = DATE '{{$row.date_ref}}'
-    AND source_type = '{{$row.source_type}}'
+{{- range $i, $row := (index .tmplData).data }}
+{{- if $i }} UNION ALL {{ end }}
+SELECT DATE '{{$row.date_ref}}' AS date_ref, '{{$row.source_type}}' AS source_type
 {{- end }}
 ```

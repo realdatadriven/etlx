@@ -621,12 +621,13 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		_data, okData := item["data"].(map[string]any)
 		if IsGoTemplateSQL(query) && okData {
 			_sql, err := etlx.RenderTextTemplate(query, _data)
-			if err != nil {
-				fmt.Println("IsGoTemplateSQL:", query, _sql)
+			if err == nil {
+				// fmt.Println(1, "IsGoTemplateSQL:", query, _sql)
 				query = _sql
 			} else {
-				fmt.Println("IsGoTemplateSQL:", query, _sql)
+				fmt.Println(2, "IsGoTemplateSQL:", query, err, _data)
 			}
+			// fmt.Println(query)
 		}
 		updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 		if err != nil {
@@ -695,8 +696,8 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			_data, okData := item["data"].(map[string]any)
 			if IsGoTemplateSQL(query) && okData {
 				_sql, err := etlx.RenderTextTemplate(query, _data)
-				if err != nil {
-					fmt.Println("IsGoTemplateSQL:", query, _sql)
+				if err == nil {
+					//fmt.Println("IsGoTemplateSQL:", query, _sql)
 					query = _sql
 				} else {
 					fmt.Println("IsGoTemplateSQL:", query, _sql)
