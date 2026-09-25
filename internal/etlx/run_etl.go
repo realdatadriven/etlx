@@ -617,6 +617,16 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				query = queries
 			}
 		}
+		_data, okData := item["data"].(map[sring]any)
+		if IsGoTemplateSQL(query) && okData {
+			_sql, err := etlx.RenderTextTemplate(query, _data)
+			if err != nil {
+				fmt.Println("IsGoTemplateSQL:", query, _sql)
+				query = _sql
+			} else {
+				fmt.Println("IsGoTemplateSQL:", query, _sql)
+			}
+		}
 		updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 		if err != nil {
 			//fmt.Println("Error trying to get the placeholder:", err)
@@ -681,6 +691,16 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 					query = queryKey
 				}
 			}
+			_data, okData := item["data"].(map[sring]any)
+			if IsGoTemplateSQL(query) && okData {
+				_sql, err := etlx.RenderTextTemplate(query, _data)
+				if err != nil {
+					fmt.Println("IsGoTemplateSQL:", query, _sql)
+					query = _sql
+				} else {
+					fmt.Println("IsGoTemplateSQL:", query, _sql)
+				}
+			}
 			updatedSQL, err := etlx.ReplacePlaceholders(query, item)
 			if err != nil {
 				//fmt.Println("Error trying to get the placeholder:", err)
@@ -718,6 +738,15 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	default:
 		return fmt.Errorf("invalid SQL data type: %T", sqlData)
 	}
+}
+
+func IsGoTemplateSQL(sql string) bool {
+	if !strings.Contains(sql, "{{") {
+		return false
+	}
+
+	_, err := template.New("sql").Parse(sql)
+	return err == nil
 }
 
 func (etlx *ETLX) Contains(slice []string, element any) bool {
@@ -976,6 +1005,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 			if !okBefore {
 				afterSQL, okAfter = itemMetadata[step+"_cleanup"]
 			}
+			dataSQL, okData := itemMetadata[step+"_data"]
+			if !okData {
+				dataSQL, okData = itemMetadata[step+"_data_sql"]
+			}
 			onAfterErrPatt, okAfterErrPatt := itemMetadata[step+"_after_on_err_match_patt"]
 			onAfterErrSQL, okAfterErrSQL := itemMetadata[step+"_after_on_err_match_sql"]
 			validation, okValid := itemMetadata[step+"_validation"]
@@ -1197,6 +1230,66 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 					failedCondition = true
 				}
 			}
+			data := map[string]any{}
+			// MAIN QUERIES
+			if okData && !failedCondition {
+				start3 := time.Now().In(etlx.TimeZone)
+				_log2 := map[string]any{
+					"process":     process,
+					"name":        fmt.Sprintf("%s->%s", key, itemKey),
+					"description": itemMetadata["description"].(string),
+					"key":         key, "item_key": itemKey, "start_at": start3,
+				}
+				switch _map := dataSQL.(type) {
+				case string:
+					sql := _map
+					if _, ok := item[_map]; ok {
+						sql = item[sql].(string)
+					}
+					sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+					rows, _, err := etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
+					if err != nil {
+						data[_map] = map[string]any{
+							"success": false,
+							"msg":     fmt.Sprintf("failed to execute map query %s %s", _map, err),
+							"data":    []map[string]any{},
+						}
+					} else {
+						data[_map] = map[string]any{
+							"success": true,
+							"data":    *rows,
+						}
+					}
+				case []any:
+					for _, _sql := range dataSQL.([]any) {
+						sql := _sql.(string)
+						if _, ok := item[_sql.(string)]; ok {
+							sql = item[_sql.(string)].(string)
+						}
+						sql = etlx.SetQueryPlaceholders(sql, table, fname, itemDateRef)
+						rows, _, err := etlx.Query(dbConn, sql, item, fname, "", itemDateRef)
+						if err != nil {
+							data[_sql.(string)] = map[string]any{
+								"success": false,
+								"msg":     fmt.Sprintf("failed to execute map query %s %s", _map, err),
+								"data":    []map[string]any{},
+							}
+						} else {
+							data[_sql.(string)] = map[string]any{
+								"success": true,
+								"data":    *rows,
+							}
+						}
+					}
+				default:
+					_log2["success"] = false
+					_log2["msg"] = fmt.Sprintf("%s -> %s invalid queries data type: %T", key, itemKey, _map)
+					_log2["end_at"] = time.Now().In(etlx.TimeZone)
+					_log2["duration"] = time.Since(start3).Seconds()
+				}
+				//fmt.Println(key, _log2["msg"])
+				appendLog(_log2)
+			}
 			// Process main SQL
 			if okMain && !drop.(bool) && !clean.(bool) && !rows.(bool) && !failedCondition {
 				// VALIDATION
@@ -1368,6 +1461,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				}
 				appendLog(_log3)
 			}
+			item["data"] = data
 			// Process CLEAN SQL
 			if clean.(bool) && okClean {
 				start4 = time.Now().In(etlx.TimeZone)
