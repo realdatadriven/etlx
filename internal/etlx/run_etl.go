@@ -2,6 +2,7 @@ package etlxlib
 
 import (
 	"fmt"
+	"html/template"
 	"os"
 	"path/filepath"
 	"regexp"
@@ -617,7 +618,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				query = queries
 			}
 		}
-		_data, okData := item["data"].(map[sring]any)
+		_data, okData := item["data"].(map[string]any)
 		if IsGoTemplateSQL(query) && okData {
 			_sql, err := etlx.RenderTextTemplate(query, _data)
 			if err != nil {
@@ -691,7 +692,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 					query = queryKey
 				}
 			}
-			_data, okData := item["data"].(map[sring]any)
+			_data, okData := item["data"].(map[string]any)
 			if IsGoTemplateSQL(query) && okData {
 				_sql, err := etlx.RenderTextTemplate(query, _data)
 				if err != nil {
