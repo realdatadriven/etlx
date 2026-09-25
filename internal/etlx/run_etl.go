@@ -1290,6 +1290,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				//fmt.Println(key, _log2["msg"])
 				appendLog(_log2)
 			}
+			item["data"] = data
 			// Process main SQL
 			if okMain && !drop.(bool) && !clean.(bool) && !rows.(bool) && !failedCondition {
 				// VALIDATION
@@ -1461,7 +1462,6 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				}
 				appendLog(_log3)
 			}
-			item["data"] = data
 			// Process CLEAN SQL
 			if clean.(bool) && okClean {
 				start4 = time.Now().In(etlx.TimeZone)
