@@ -13,7 +13,8 @@ name: "query.tmpl.test"
 description: "Test dynamic SQL generation"
 load_conn: "duckdb:"
 load_data: tmplData
-load_sql: load_sql_tmpl
+load_sql: examples/load_sql_tmpl.sql
+__load_sql: load_sql_tmpl
 ```
 
 

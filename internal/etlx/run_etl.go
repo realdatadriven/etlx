@@ -572,12 +572,12 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		}
 	}
 	odbc2Csv := false
-	if _, ok := metadata["odbc_to_csv"]; ok {
-		odbc2Csv = metadata["odbc_to_csv"].(bool)
+	if to_csv, ok := metadata["odbc_to_csv"].(bool); ok {
+		odbc2Csv = to_csv
 	}
 	toCsv := false
-	if _, ok := metadata["to_csv"]; ok {
-		toCsv = metadata["to_csv"].(bool)
+	if to_csv, ok := metadata["to_csv"].(bool); ok {
+		toCsv = to_csv
 	}
 	if fname == "" {
 		fname = fmt.Sprintf(`%s/%s_{YYYYMMDD}.csv`, os.TempDir(), table)
@@ -613,6 +613,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 			}
 		} else if !ok {
 			if data, err := os.ReadFile(queries); err == nil {
+				// fmt.Println(queries, "READ FILE:")
 				query = string(data)
 			} else {
 				query = queries
@@ -746,7 +747,6 @@ func IsGoTemplateSQL(sql string) bool {
 	if !strings.Contains(sql, "{{") {
 		return false
 	}
-
 	_, err := template.New("sql").Parse(sql)
 	return err == nil
 }
