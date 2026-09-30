@@ -103,7 +103,7 @@ func New(driverName string, dsn string) (*DB, error) {
 	// fmt.Println(driverName)
 	switch driverName {
 	case "sqlite3", "sqlite", "turso":
-		db.ExecContext(ctx, "PRAGMA journal_mode = wal2")
+		db.ExecContext(ctx, "PRAGMA journal_mode = wal")
 		db.ExecContext(ctx, "PRAGMA foreign_keys = ON")
 		db.ExecContext(ctx, "PRAGMA secure_delete = ON")
 		//cache_size = -500 * 1024
@@ -111,9 +111,10 @@ func New(driverName string, dsn string) (*DB, error) {
 		db.ExecContext(ctx, fmt.Sprintf("PRAGMA cache_size = %d", -cache_size))
 		// db.ExecContext(ctx, "PRAGMA PAGE_SIZE = {}".format(cache_size))
 		// db.ExecContext(ctx, "PRAGMA mmap_size  = {}".format(500 * 1024))
-		db.ExecContext(ctx, "PRAGMA synchronous  = 0")
+		db.ExecContext(ctx, "PRAGMA synchronous  = NORMAL")
 		db.ExecContext(ctx, "PRAGMA TEMP_STORE  = 2")
-		db.ExecContext(ctx, "PRAGMA auto_vacuum = FULL")
+		//db.ExecContext(ctx, "PRAGMA auto_vacuum = FULL")
+		db.ExecContext(ctx, "PRAGMA auto_vacuum = NONE")
 		busy_timeout := 60 * 1000 * 3 // 60s
 		db.ExecContext(ctx, fmt.Sprintf("PRAGMA busy_timeout = %d", busy_timeout))
 	case "postgres", "pg", "postgresql":
