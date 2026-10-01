@@ -108,6 +108,7 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		err = db.Ping()
 		if err != nil {
 			fmt.Println("TEST PING ERR:", err)
+			return nil, err
 		}
 		/*_, err = db.ExecContext(context.TODO(), "INSTALL SQLITE;")
 		if err != nil {
@@ -115,12 +116,13 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		} else {
 			fmt.Println("TEST INSTALL SQLITE SUCCESS;")
 		}*/
-		// defer db.Close()
+		defer db.Close()
 	} else {
 		db, err = sql.Open("duckdb", dsn)
 		if err != nil {
 			return nil, err
 		}
+		defer db.Close()
 	}
 	defaultTimeoutDuckDB = time.Duration(env.GetInt("DUCKDB_DFLT_TIMEOUT", 15)) * time.Minute
 	//fmt.Println(driverName, dsn)
