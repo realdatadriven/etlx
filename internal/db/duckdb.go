@@ -116,13 +116,13 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 		} else {
 			fmt.Println("TEST INSTALL SQLITE SUCCESS;")
 		}*/
-		defer db.Close()
+		//defer db.Close()
 	} else {
 		db, err = sql.Open("duckdb", dsn)
 		if err != nil {
 			return nil, err
 		}
-		defer db.Close()
+		//defer db.Close()
 	}
 	defaultTimeoutDuckDB = time.Duration(env.GetInt("DUCKDB_DFLT_TIMEOUT", 15)) * time.Minute
 	//fmt.Println(driverName, dsn)
@@ -130,6 +130,7 @@ func NewDuckDB(dsn string) (*DuckDB, error) {
 	db.SetMaxIdleConns(25)
 	db.SetConnMaxIdleTime(defaultTimeoutDuckDB)
 	db.SetConnMaxLifetime(2 * time.Hour)
+	//defer db.Close()
 	return &DuckDB{db}, nil
 }
 
