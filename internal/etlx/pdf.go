@@ -8,7 +8,6 @@ import (
 	"path/filepath"
 	"strings"
 
-	"github.com/chromedp/cdproto/page"
 	"github.com/chromedp/chromedp"
 )
 
@@ -32,7 +31,7 @@ func (etlx *ETLX) GenPDFFromHTML(html, output_path string) error {
 	}
 	temptex.Close()
 	var pdf []byte
-	fmt.Println(html)
+	/*fmt.Println(html)
 	err = chromedp.Run(ctx,
 		chromedp.Navigate(fmt.Sprintf("file://%s", temptex.Name())),
 		chromedp.ActionFunc(func(ctx context.Context) error {
@@ -47,7 +46,23 @@ func (etlx *ETLX) GenPDFFromHTML(html, output_path string) error {
 				Do(ctx)
 			return err
 		}),
+	)*/
+	_, err = chromedp.Run(ctx,
+		chromedp.Navigate(fmt.Sprintf("file://%s", temptex.Name())),
 	)
+	if err != nil {
+		return err
+	}
+	pdf, err = chromedp.Run(ctx,
+		chromedp.PrintToPDF(
+			chromedp.PDFPrintBackground(),
+			// chromedp.PDFLandscape(),
+			chromedp.PDFMargins(0.4, 0.4, 0.4, 0.4),
+		),
+	)
+	if err != nil {
+		return err
+	}
 	err = os.WriteFile(output_path, pdf, 0644)
 	if err != nil {
 		return err

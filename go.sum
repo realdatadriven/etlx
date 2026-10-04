@@ -102,8 +102,12 @@ github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc h1:DGGf6Tq9Qz1g0k
 github.com/chromedp/cdproto v0.0.0-20260912003405-686a5c723acc/go.mod h1:3v4FIp5njIUyPDvqXsxEOxnB34lijG0up98/5kM1KaE=
 github.com/chromedp/cdproto v0.0.0-20260922220944-a19bff23514f h1:8PK9FM4bE0C8GMoWBW5lVsef3U7sPICjDg6JqngyYhk=
 github.com/chromedp/cdproto v0.0.0-20260922220944-a19bff23514f/go.mod h1:3v4FIp5njIUyPDvqXsxEOxnB34lijG0up98/5kM1KaE=
+github.com/chromedp/cdproto v0.157.4 h1:UleIu3RHfaQmhE0ri9GpCbHrGpe0HgV55HVhzhPWglI=
+github.com/chromedp/cdproto v0.157.4/go.mod h1:scNPhJ/A4T8BVkyR5k2Uocvoju3iBRZS4cg3uMlxuMk=
 github.com/chromedp/chromedp v0.16.0 h1:rOO4deOm4CbZgBCa8mD9g2rDyIoNs0BkgvNrlbp5ouk=
 github.com/chromedp/chromedp v0.16.0/go.mod h1:rbuGKFT1vMcFcFqKfPIO1GpX/N+2s8onm2qMxZLbU5U=
+github.com/chromedp/chromedp v0.19.1 h1:OAf0ukr4nC5LIwaYEWIv7JYXlpZIZt6ZSDsYXCdjGlc=
+github.com/chromedp/chromedp v0.19.1/go.mod h1:4Rs9XtapAMgXxg0s1PpixyQHf37kdnSdu2ov5G4FsZ0=
 github.com/chromedp/sysutil v1.1.0 h1:PUFNv5EcprjqXZD9nJb9b/c9ibAbxiYo4exNWZyipwM=
 github.com/chromedp/sysutil v1.1.0/go.mod h1:WiThHUdltqCNKGc4gaU50XgYjwjYIhKWoHGPTUfWTJ8=
 github.com/duckdb/duckdb-go-bindings v0.10505.0 h1:/0pPsTLrcCsTGxT0VrHgJWnOcPe1tQL1vrki1v3jbAI=
