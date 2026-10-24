@@ -621,6 +621,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 		}
 		_data, okData := item["data"].(map[string]any)
 		if IsGoTemplateSQL(query) && okData {
+			fmt.Println("IS TEMPLATE!")
 			_sql, err := etlx.RenderTextTemplate(query, _data)
 			if err == nil {
 				// fmt.Println(1, "IsGoTemplateSQL:", query, _sql)
@@ -657,9 +658,10 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 				_params = []any{}
 				_sql = query
 			}
-			_, err = conn.ExecuteQuery(_sql, _params)
+			// fmt.Println(_sql, _params)
+			_, err = conn.ExecuteQuery(_sql, _params...)
 			if err != nil {
-				fmt.Println("ERRORS:", _sql, _params, err)
+				// fmt.Println("ERRORS:", _sql, _params, err)
 				return err
 			}
 		}
@@ -730,7 +732,7 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 					_params = []any{}
 					_sql = query
 				}
-				_, err = conn.ExecuteQuery(_sql, _params)
+				_, err = conn.ExecuteQuery(_sql, _params...)
 				if err != nil {
 					//fmt.Println(query, err)
 					return err
@@ -1394,6 +1396,7 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 							err = etlx.ExecuteQuery(dbConn, mainSQL, item, fname, step, itemDateRef)
 						}
 					} else {
+						// fmt.Println("MAIN SQL:", mainSQL, data)
 						err = etlx.ExecuteQuery(dbConn, mainSQL, item, fname, step, itemDateRef)
 					}
 					if err != nil {

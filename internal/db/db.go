@@ -620,6 +620,7 @@ func (db *DB) ExecuteQuery(query string, data ...any) (int, error) {
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	query = adjustQuery(db.DriverName(), query)
+	// fmt.Println("ExecuteQuery adjustQuery:", query, data)
 	result, err := db.ExecContext(ctx, query, data...)
 	if err != nil {
 		return 0, err
