@@ -67,7 +67,7 @@ jobs:
         run: |
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS= -lduckdb -L$(Get-Location)\duckdb\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS= -L$(Get-Location)\duckdb\ -lduckdb" >> $env:GITHUB_ENV
 
       # Step 6: Verify DuckDB Library
       - name: Verify DuckDB Library
@@ -82,12 +82,12 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir dist
-          go build -tags=duckdb_use_lib -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
+          go build -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
-          echo "CGO_LDFLAGS= -lduckdb -L$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
+          echo "CGO_LDFLAGS= -L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
           echo "GOARCH=arm64" >> $env:GITHUB_ENV
-          go build -tags=duckdb_use_lib -o dist/etlx-windows-linking-arm64.exe ./cmd/main.go 
+          go build -o dist/etlx-windows-linking-arm64.exe ./cmd/main.go 
       #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
