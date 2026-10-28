@@ -2547,6 +2547,7 @@ func getFloat64(m map[string]any, key string, fallback float64) float64 {
 func (etlx ETLX) GetTableSchema(dbConn db.DBInterface, database, table string) ([]map[string]any, error) {
 	dialect := etlx.GetDialect(dbConn.GetDriverName())
 	sql := dialect.GetTableFiledsQuery(database, table)
+	// fmt.Println("GetTableSchema SQL:", dbConn.GetDriverName(), sql)
 	res, _, err := dbConn.QueryMultiRows(sql, []any{}...)
 	if err != nil {
 		return nil, err
