@@ -49,12 +49,12 @@ jobs:
       - name: Download DuckDB Library
         run: |
           $version = "v2.0.0"
-          $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/libduckdb-windows-amd64.zip"
+          $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/duckdb-shared-libs-windows-amd64.tar.gz"
           $destinationPath = "$(Get-Location)\duckdb"
           Invoke-WebRequest -Uri $duckdb_url -OutFile "duckdb.zip"
           Expand-Archive -Path "duckdb.zip" -DestinationPath $destinationPath
           Write-Host "DuckDB library extracted to $destinationPath"
-          $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/libduckdb-windows-arm64.zip"
+          $duckdb_url = "https://github.com/duckdb/duckdb/releases/download/$version/duckdb-shared-libs-windows-amd64.tar.gz"
           $destinationPath = "$(Get-Location)\duckdbarm64"
           Invoke-WebRequest -Uri $duckdb_url -OutFile "duckdb.zip"
           Expand-Archive -Path "duckdb.zip" -DestinationPath $destinationPath
