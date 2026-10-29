@@ -691,6 +691,7 @@ func (db *DB) ExecuteNamedQuery(query string, data map[string]any) (int, error) 
 }
 
 func (db *DB) QueryMultiRows(query string, params ...any) (*[]map[string]any, bool, error) {
+	// fmt.Println("QueryMultiRows:", query)
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeout)
 	defer cancel()
 	var result []map[string]any
@@ -700,7 +701,7 @@ func (db *DB) QueryMultiRows(query string, params ...any) (*[]map[string]any, bo
 	}
 	rows, err := db.QueryxContext(ctx, query, params...)
 	if err != nil {
-		//fmt.Println(1, err)
+		fmt.Println(1, err)
 		return nil, false, err
 	}
 	defer rows.Close()

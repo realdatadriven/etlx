@@ -327,9 +327,10 @@ func (db *DuckDB) QueryMultiRows(query string, params ...any) (*[]map[string]any
 	ctx, cancel := context.WithTimeout(context.Background(), defaultTimeoutDuckDB)
 	defer cancel()
 	var result []map[string]any
+	// fmt.Println("QueryMultiRows:", query, params)
 	rows, err := db.QueryContext(ctx, query, params...)
 	if err != nil {
-		//fmt.Println(1, err)
+		fmt.Println(1, "DDB QueryMultiRows:", err)
 		return nil, false, err
 	}
 	defer rows.Close()
