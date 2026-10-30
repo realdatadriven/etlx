@@ -82,12 +82,12 @@ jobs:
       - name: Build Windows Binary
         run: |
           mkdir dist
-          go build -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
+          go build -tags=duckdb_use_lib -o dist/etlx-windows-linking-amd64.exe ./cmd/main.go
           echo "CGO_ENABLED=1" >> $env:GITHUB_ENV
           echo "CGO_CFLAGS=-I$(Get-Location)\duckdbarm64\" >> $env:GITHUB_ENV
           echo "CGO_LDFLAGS= -L$(Get-Location)\duckdbarm64\ -lduckdb" >> $env:GITHUB_ENV
           echo "GOARCH=arm64" >> $env:GITHUB_ENV
-        #  go build -o dist/etlx-windows-linking-arm64.exe ./cmd/main.go 
+          go build -tags=duckdb_use_lib -o dist/etlx-windows-linking-arm64.exe ./cmd/main.go 
       #go build -tags=duckdb_use_lib -o dist/etlx-windows-amd64.exe ./cmd/main.go
         
       - name: Upload Artifacts
@@ -169,7 +169,7 @@ jobs:
   release:
     permissions: write-all
     runs-on: ubuntu-latest
-    needs: [build-linux, build-windows, build-darwin] #build-windows-linking, 
+    needs: [build-linux, build-windows, build-windows-linking, build-darwin] 
     steps:
       - name: Download Windows Binary with MSVC
         uses: actions/download-artifact@v4
@@ -186,11 +186,11 @@ jobs:
         with:
           name: linux-binary
           path: dist
-      # - name: Download Windows Binary With Linking
-      #  uses: actions/download-artifact@v4
-      #  with:
-      #    name: windows-binary-linking
-      #    path: dist
+      - name: Download Windows Binary With Linking
+        uses: actions/download-artifact@v4
+        with:
+          name: windows-binary-linking
+          path: dist
       - name: Changelog
         uses: scottbrenner/generate-changelog-action@master
         id: Changelog
@@ -203,8 +203,8 @@ jobs:
           zip -j dist/etlx-windows-amd64.zip dist/etlx-windows-amd64.exe
           zip -j dist/etlx-macos-arm64.zip dist/etlx-macos-arm64
           zip -j dist/etlx-windows-arm64.zip dist/etlx-windows-arm64.exe
-        #  zip -j dist/etlx-windows-linking-amd64.zip dist/etlx-windows-linking-amd64.exe
-        #  zip -j dist/etlx-windows-linking-arm64.zip dist/etlx-windows-linking-arm64.exe
+          zip -j dist/etlx-windows-linking-amd64.zip dist/etlx-windows-linking-amd64.exe
+          zip -j dist/etlx-windows-linking-arm64.zip dist/etlx-windows-linking-arm64.exe
       #zip -j dist/etlx-linux-arm64.zip dist/etlx-linux-arm64
       - name: Create Release
         uses: softprops/action-gh-release@v1
@@ -218,8 +218,8 @@ jobs:
             dist/etlx-windows-amd64.zip
             dist/etlx-windows-arm64.zip
             dist/etlx-macos-arm64.zip
-          #  dist/etlx-windows-linking-amd64.zip
-          #  dist/etlx-windows-linking-arm64.zip
+            dist/etlx-windows-linking-amd64.zip
+            dist/etlx-windows-linking-arm64.zip
       #      dist/etlx-linux-arm64.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
