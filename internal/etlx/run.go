@@ -29,7 +29,7 @@ func (etlx *ETLX) CoalesceAny(values ...any) any {
 func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[string]any, map[string]any, error) {
 	logs := []map[string]any{}
 	data := map[string]any{}
-	_keys := []any{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MODEL_SQL", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "C7MODEL", "MODEL_DATA", "CSDATA", "C7DATA", "CATALOG", "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW", "C7ROLE", "ROLE", "CSROLE", "C7ROLE_USERS", "CSROLE_USERS", "ROLE_USERS", "REMOTE", "REMOTE_EXEC"}
+	_keys := []any{"NOTIFY", "NOTIFICATION", "LOGS", "OBSERVABILITY", "SCRIPTS", "MODEL_SQL", "MULTI_QUERIES", "STACKED_QUERIES", "EXPORTS", "DATA_QUALITY", "DATAQUALITY", "QUALITY", "ETL", "ELT", "ACTIONS", "AUTO_LOGS", "REQUIRES", "IMPORTS", "MODEL", "CSMODEL", "C7MODEL", "MODEL_DATA", "CSDATA", "C7DATA", "CATALOG", "WORKFLOW", "C7WORKFLOW", "CSWORKFLOW", "C7ROLE", "ROLE", "CSROLE", "C7ROLE_USERS", "CSROLE_USERS", "ROLE_USERS", "BPM", "REMOTE", "REMOTE_EXEC"}
 	__order, ok := etlx.Config["__order"].([]string)
 	hasOrderedKeys := false
 	if !ok {
@@ -324,6 +324,19 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 								_, err := etlx.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
 								if err != nil {
 									// fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
+								}
+							}
+							logs = append(logs, _logs...)
+						}
+					case "BPM":
+						_logs, err := etlx.RunBPM(dateRef, nil, extraConf, key)
+						if err != nil {
+							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
+						} else {
+							if _, ok := etlx.Config["AUTO_LOGS"]; ok && len(_logs) > 0 {
+								_, err := etlx.RunLOGS(dateRef, nil, _logs, "AUTO_LOGS")
+								if err != nil {
+									fmt.Printf("INCREMENTAL AUTOLOGS ERR: %v\n", err)
 								}
 							}
 							logs = append(logs, _logs...)
