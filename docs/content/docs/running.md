@@ -69,6 +69,7 @@ Command execution is disabled by default. Enable it only for trusted ETL configu
 ````md
 ## RUN_SCRIPT
 ```yaml
+...
 cmd: python3 <file>
 file: script_py
 ```
