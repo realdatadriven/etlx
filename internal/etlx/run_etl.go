@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"html/template"
 	"os"
+	"os/exec"
 	"path/filepath"
 	"regexp"
 	"strings"
@@ -748,32 +749,6 @@ func (etlx *ETLX) ExecuteQuery(conn db.DBInterface, sqlData any, item map[string
 	}
 }
 
-func IsGoTemplateSQL(sql string) bool {
-	if !strings.Contains(sql, "{{") {
-		return false
-	}
-	_, err := template.New("sql").Parse(sql)
-	return err == nil
-}
-
-func (etlx *ETLX) Contains(slice []string, element any) bool {
-	for _, v := range slice {
-		if v == element {
-			return true
-		}
-	}
-	return false
-}
-
-func (etlx *ETLX) containsAny(slice []any, element any) bool {
-	for _, v := range slice {
-		if v == element {
-			return true
-		}
-	}
-	return false
-}
-
 func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map[string]any, keys ...string) ([]map[string]any, error) {
 	key := "ETL"
 	process := "ETL"
@@ -910,6 +885,10 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 				appendLog(logEntry)
 				return nil
 			}
+		}
+		if commandLog, handled, err := etlx.runConfiguredCommand(key, itemKey, item, dateRef); handled {
+			appendLog(commandLog)
+			return err
 		}
 		start2 := time.Now().In(etlx.TimeZone)
 		mem_alloc, mem_total_alloc, mem_sys, num_gc := etlx.RuntimeMemStats()
@@ -1712,4 +1691,212 @@ func (etlx *ETLX) RunETL(dateRef []time.Time, conf map[string]any, extraConf map
 	}
 	appendLog(logEntry)
 	return processLogs, nil
+}
+
+func (etlx *ETLX) resolveETLCommandFile(fileRef string, item map[string]any) (string, func(), error) {
+	fileRef = etlx.ReplaceEnvVariable(strings.TrimSpace(fileRef))
+	if info, err := os.Stat(fileRef); err == nil {
+		if !info.Mode().IsRegular() {
+			return "", nil, fmt.Errorf("%q is not a regular file", fileRef)
+		}
+		path, err := filepath.Abs(fileRef)
+		return path, nil, err
+	} else if !os.IsNotExist(err) {
+		return "", nil, fmt.Errorf("inspect %q: %w", fileRef, err)
+	}
+
+	var content string
+	found := false
+	if value, ok := item[fileRef].(string); ok {
+		content, found = value, true
+	} else if metadata, ok := item["metadata"].(map[string]any); ok {
+		content, found = metadata[fileRef].(string)
+	}
+	if !found {
+		return "", nil, fmt.Errorf("%q is neither an existing file nor a named text block", fileRef)
+	}
+	extension := filepath.Ext(fileRef)
+	tempFile, err := os.CreateTemp("", "etlx-command-*"+extension)
+	if err != nil {
+		return "", nil, fmt.Errorf("create temporary file: %w", err)
+	}
+	if _, err := tempFile.WriteString(content); err != nil {
+		_ = tempFile.Close()
+		_ = os.Remove(tempFile.Name())
+		return "", nil, fmt.Errorf("write temporary file: %w", err)
+	}
+	if err := tempFile.Close(); err != nil {
+		_ = os.Remove(tempFile.Name())
+		return "", nil, fmt.Errorf("close temporary file: %w", err)
+	}
+	return tempFile.Name(), func() { _ = os.Remove(tempFile.Name()) }, nil
+}
+
+func parseETLCommandArgs(command string) ([]string, error) {
+	var args []string
+	var current strings.Builder
+	var quote rune
+	started := false
+	runes := []rune(command)
+
+	for i := 0; i < len(runes); i++ {
+		char := runes[i]
+		if char == '\\' && quote != '\'' {
+			if i+1 < len(runes) {
+				next := runes[i+1]
+				if next == '\\' || next == '\'' || next == '"' || next == ' ' || next == '\t' || next == '\n' || next == '\r' {
+					current.WriteRune(next)
+					i++
+					started = true
+					continue
+				}
+			}
+			current.WriteRune(char)
+			started = true
+			continue
+		}
+		if char == '\'' || char == '"' {
+			if quote == 0 {
+				quote = char
+				started = true
+				continue
+			}
+			if quote == char {
+				quote = 0
+				continue
+			}
+		}
+		if (char == ' ' || char == '\t' || char == '\n' || char == '\r') && quote == 0 {
+			if started {
+				args = append(args, current.String())
+				current.Reset()
+				started = false
+			}
+			continue
+		}
+		current.WriteRune(char)
+		started = true
+	}
+	if quote != 0 {
+		return nil, fmt.Errorf("unmatched %c quote in command", quote)
+	}
+	if started {
+		args = append(args, current.String())
+	}
+	if len(args) == 0 || args[0] == "" {
+		return nil, fmt.Errorf("command must start with an executable")
+	}
+	return args, nil
+}
+
+func (etlx *ETLX) runConfiguredCommand(sectionKey, itemKey string, item map[string]any, dateRef []time.Time) (map[string]any, bool, error) {
+	metadata, ok := item["metadata"].(map[string]any)
+	if !ok {
+		return nil, false, nil
+	}
+	commandValue, hasCommand := metadata["cmd"]
+	if !hasCommand {
+		commandValue, hasCommand = metadata["command"]
+	}
+	if !hasCommand {
+		return nil, false, nil
+	}
+	start := time.Now().In(etlx.TimeZone)
+	memAlloc, memTotalAlloc, memSys, numGC := etlx.RuntimeMemStats()
+	logEntry := map[string]any{
+		"process":               "ETL",
+		"name":                  fmt.Sprintf("%s->%s->command", sectionKey, itemKey),
+		"key":                   sectionKey,
+		"item_key":              itemKey,
+		"start_at":              start,
+		"mem_alloc_start":       memAlloc,
+		"mem_total_alloc_start": memTotalAlloc,
+		"mem_sys_start":         memSys,
+		"num_gc_start":          numGC,
+	}
+	finishLog := func(success bool, message string) {
+		memAlloc, memTotalAlloc, memSys, numGC := etlx.RuntimeMemStats()
+		logEntry["success"] = success
+		logEntry["msg"] = message
+		logEntry["end_at"] = time.Now().In(etlx.TimeZone)
+		logEntry["duration"] = time.Since(start).Seconds()
+		logEntry["mem_alloc_end"] = memAlloc
+		logEntry["mem_total_alloc_end"] = memTotalAlloc
+		logEntry["mem_sys_end"] = memSys
+		logEntry["num_gc_end"] = numGC
+	}
+	if !strings.EqualFold(strings.TrimSpace(os.Getenv("ETLX_ALLOW_COMMAND_EXEC")), "true") {
+		err := fmt.Errorf("command execution is disabled; set ETLX_ALLOW_COMMAND_EXEC=true to enable it")
+		finishLog(false, err.Error())
+		return logEntry, true, err
+	}
+	command, ok := commandValue.(string)
+	if !ok || strings.TrimSpace(command) == "" {
+		err := fmt.Errorf("%s command/cmd must be a non-empty string", itemKey)
+		finishLog(false, err.Error())
+		return logEntry, true, err
+	}
+	fileRef, ok := metadata["file"].(string)
+	if !ok || strings.TrimSpace(fileRef) == "" {
+		err := fmt.Errorf("%s command requires a non-empty file path or named text block", itemKey)
+		finishLog(false, err.Error())
+		return logEntry, true, err
+	}
+	filePath, cleanup, err := etlx.resolveETLCommandFile(fileRef, item)
+	if err != nil {
+		finishLog(false, err.Error())
+		return logEntry, true, fmt.Errorf("%s command file: %w", itemKey, err)
+	}
+	if cleanup != nil {
+		defer cleanup()
+	}
+	command = etlx.ReplaceEnvVariable(command)
+	if len(dateRef) > 0 {
+		command = etlx.ReplaceQueryStringDate(command, dateRef)
+	}
+	args, err := parseETLCommandArgs(command)
+	if err != nil {
+		finishLog(false, err.Error())
+		return logEntry, true, fmt.Errorf("%s command: %w", itemKey, err)
+	}
+	for i := range args {
+		args[i] = etlx.ReplaceFileTablePlaceholder("file", args[i], filePath)
+	}
+	command = strings.Join(args, " ")
+	output, err := exec.Command(args[0], args[1:]...).CombinedOutput()
+	logEntry["command"] = command
+	logEntry["file"] = filePath
+	logEntry["output"] = string(output)
+	if err != nil {
+		finishLog(false, fmt.Sprintf("command failed: %v", err))
+		return logEntry, true, fmt.Errorf("%s command failed: %w", itemKey, err)
+	}
+	finishLog(true, "command completed")
+	return logEntry, true, nil
+}
+
+func IsGoTemplateSQL(sql string) bool {
+	if !strings.Contains(sql, "{{") {
+		return false
+	}
+	_, err := template.New("sql").Parse(sql)
+	return err == nil
+}
+
+func (etlx *ETLX) Contains(slice []string, element any) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
+}
+
+func (etlx *ETLX) containsAny(slice []any, element any) bool {
+	for _, v := range slice {
+		if v == element {
+			return true
+		}
+	}
+	return false
 }

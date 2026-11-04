@@ -60,6 +60,30 @@ The binary supports the following flags:
 etlx --config etl_config.md --date 2023-10-31 --only sales --steps extract,load
 ```
 
+## Opt-in ETL command execution
+
+An ETL item may define `cmd` (or `command`) and `file` metadata. The `file` value can be an existing path or the key of a text block in that item. For a named text block, ETLX writes the content to a temporary file and substitutes its path into the command's `<file>` placeholder. The command is split into an executable and arguments and invoked directly, without a shell. The command's combined output is added to the ETL logs, and the ETL run stops after that command item.
+
+Command execution is disabled by default. Enable it only for trusted ETL configurations by setting `ETLX_ALLOW_COMMAND_EXEC=true` in the environment:
+
+````md
+## RUN_SCRIPT
+```yaml
+cmd: python3 <file>
+file: script_py
+```
+
+```python script_py
+print("This text is saved to a temporary file and executed")
+```
+````
+
+```bash
+ETLX_ALLOW_COMMAND_EXEC=true etlx --config etl_config.md --only RUN_SCRIPT
+```
+
+The executable (for example, `python3`) must be available on the system running ETLX. Quoting can be used to group arguments containing spaces, but shell features such as pipes and `&&` are not interpreted. Enabling this variable allows configured executables to run with ETLX's operating-system permissions. Keep it unset for untrusted configurations.
+
 ---
 
 # 🐳 Running ETLX with Docker
