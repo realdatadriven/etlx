@@ -258,9 +258,12 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 				// Add to the current section
 				current := levels[len(levels)]
 				if current != nil {
-					if strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "toml") || strings.HasPrefix(info, "json") {
+					if strings.HasPrefix(info, "yml") || strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "toml") || strings.HasPrefix(info, "json") {
 						// Process YAML or TOML blocks
 						key := strings.TrimSpace(strings.TrimPrefix(info, "yaml"))
+						if strings.HasPrefix(info, "tml") {
+							key = strings.TrimSpace(strings.TrimPrefix(info, "tml"))
+						}
 						if strings.HasPrefix(info, "toml") {
 							key = strings.TrimSpace(strings.TrimPrefix(info, "toml"))
 						}
@@ -278,7 +281,7 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						}
 						metaData := make(map[string]any)
 						var err error
-						if strings.HasPrefix(info, "yaml") && etlx.MetadataOrder {
+						if (strings.HasPrefix(info, "yaml") || strings.HasPrefix(info, "yml")) && etlx.MetadataOrder {
 							// Parse YAML
 							// err = yaml.Unmarshal([]byte(contentFinal), &metaData)
 							var doc goyaml.MapSlice
@@ -387,8 +390,11 @@ func (etlx *ETLX) ParseMarkdownToConfig(reader text.Reader, content string) erro
 						} else {
 							current[key] = content.String()
 						}
-					} else if strings.HasPrefix(info, "tf") {
+					} else if strings.HasPrefix(info, "tf") || strings.HasPrefix(info, "terraform") {
 						key := strings.TrimSpace(strings.TrimPrefix(info, "tf"))
+						if key == "" {
+							key = strings.TrimSpace(strings.TrimPrefix(info, "terraform"))
+						}
 						if key == "" {
 							fmt.Printf("missing query name for tf block: %s", content.String())
 						} else {
