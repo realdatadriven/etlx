@@ -203,7 +203,7 @@ func (etlx *ETLX) RunETLX(extraConf map[string]any, dateRef []time.Time) ([]map[
 								"logs":    _logs,
 							}
 						}
-					case "SCRIPTS", "MODEL_SQL":
+					case "SCRIPTS", "MODEL_SQL", "SQL", "RUN_SQL":
 						_logs, err := etlx.RunSCRIPTS(dateRef, nil, extraConf, key)
 						if err != nil {
 							fmt.Printf("%s AS %s ERR: %v\n", key, runs_as, err)
